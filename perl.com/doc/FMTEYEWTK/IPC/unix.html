@@ -1,0 +1,114 @@
+
+<title>
+Unix-Domain TCP Clients and Servers</A>
+</title>
+
+<CENTER>
+<h1>
+<A NAME="perlipc_unix_domain_0">
+Unix-Domain TCP Clients and Servers</A>
+</H1>
+
+</CENTER>
+<P>
+
+That's fine for Internet-domain clients and servers, but what local
+communications?  While you can use the same setup, sometimes you don't
+want to.  Unix-domain sockets are local to the current host, and are often
+used internally to implement pipes.  Unlike Internet domain sockets, UNIX
+domain sockets can show up in the file system with an ls(1) listing.
+<p>
+<XMP>
+    $ ls -l /dev/log
+    srw-rw-rw-  1 root            0 Oct 31 07:23 /dev/log
+
+</XMP>
+<p>You can test for these with Perl's <STRONG>-S</STRONG> file test:
+<p>
+<XMP>
+    unless ( -S '/dev/log' ) {
+        die "something's wicked with the print system";
+    } 
+
+</XMP>
+<p>Here's a sample Unix-domain client:
+<p>
+<XMP>
+    #!/usr/bin/perl -w
+    require 5.002;
+    use Socket;
+    use strict;
+    my ($rendezvous, $line);
+    $rendezvous = shift || '/tmp/catsock';
+    socket(SOCK, PF_UNIX, SOCK_STREAM, 0)       || die "socket: $!";
+    connect(SOCK, sockaddr_un($remote))         || die "connect: $!";
+    while ($line = <SOCK>) {
+        print $line;
+    } 
+    exit;
+
+</XMP>
+<p>And here's a corresponding server.  
+<p>
+<XMP>
+    #!/usr/bin/perl -Tw
+    require 5.002;
+    use strict;
+    use Socket;
+    use Carp;
+    BEGIN { $ENV{PATH} = '/usr/ucb:/bin' }
+    my $NAME = '/tmp/catsock';
+    my $uaddr = sockaddr_un($NAME);
+    my $proto = getprotobyname('tcp');
+    socket(SERVER,PF_UNIX,SOCK_STREAM,0)        || die "socket: $!";
+    unlink($NAME);
+    bind  (SERVER, $uaddr)                      || die "bind: $!";
+    listen(SERVER,5)                    || die "listen: $!";
+    logmsg "server started on $NAME";
+    $SIG{CHLD} = \&REAPER;
+    for ( $waitedpid = 0; 
+          accept(CLIENT,SERVER) || $waitedpid; 
+          $waitedpid = 0, close CLIENT) 
+    {
+        next if $waitedpid;
+        logmsg "connection on $NAME";
+        spawn sub { 
+            print "Hello there, it's now ", scalar localtime, "\n";
+            exec '/usr/games/fortune' or die "can't exec fortune: $!";
+        };
+    } 
+
+</XMP>
+<p>As you see, it's remarkably similar to the Internet domain TCP server, so
+much so, in fact, that we've omitted several duplicate functions--<EM>spawn()</EM>,
+<EM>logmsg()</EM>, <EM>ctime()</EM>, and <EM>REAPER()</EM>--which are exactly the same as in the
+other server.
+<p>So why would you ever want to use a Unix domain socket instead of a
+simpler named pipe?  Because a named pipe doesn't give you sessions.  You
+can't tell one process's data from another's.  With socket programming,
+you get a separate session for each client: that's why <EM>accept()</EM> takes two
+arguments.
+<p>For example, let's say that you have a long running database server daemon
+that you want folks from the World Wide Web to be able to access, but only
+if they go through a CGI interface.  You'd have a small, simple CGI
+program that does whatever checks and logging you feel like, and then acts
+as a Unix-domain client and connects to your private server.
+<p>
+
+<HR>
+<P>
+<CENTER>
+<A HREF="perlipc.html"> overview </a> /
+<A HREF="signals.html"> signals </a> /
+<A HREF="fifo.html"> fifos </a> /
+<A HREF="popen.html">pipes</a> /
+<A HREF="safepopen.html">safe-pipes</a> /
+<A HREF="openplex.html">open2</a> /
+<A HREF="sockets.html">sockets</a> /
+<A HREF="inet.html">AF_INET</a> /
+<A HREF="udp.html">udp</a> /
+<A HREF="sysv.html">sys5</a>
+</CENTER>
+<P>
+
+</HTML>

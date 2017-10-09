@@ -1,0 +1,269 @@
+</P>
+
+<P>
+
+
+<!-- This week on perl5-porters (26 Mar--01 Apr 2001) -->
+
+<br />
+<!::field::date::><br />
+      <H3><a name="Notes">Notes</a></H3>
+
+</P>
+
+<P>
+
+You can subscribe to an email version of this summary by sending an
+empty message to 
+<a href="mailto:perl5-porters-digest-subscribe@netthink.co.uk"><tt>perl5-porters-digest-subscribe@netthink.co.uk</tt>.</a></P>
+
+<P>
+Please send corrections and additions to 
+<CODE>perl-thisweek-YYYYMM@simon-cozens.org</CODE> where 
+<CODE>YYYYMM</CODE> is the current year and month.  Changes and additions to the 
+<a href="http://simon-cozens.org/writings/whos-who.html">perl5-porters</a> biographies are particularly welcome.
+</P>
+
+<P>
+There were 446 messages this week.
+<H3><a name="Perl_and_HTMLParser">Perl and HTML::Parser</a></H3>
+
+</P>
+
+<P>
+
+<a href="http://simon-cozens.org/writings/whos-who.html#AAS">Gisle</a> complained that a recent snapshot of Perl broke 
+<CODE>HTML::Parser</CODE>. Apparently, his code did something like
+</P>
+
+<P>
+  sv_catpvf(sv, &quot;%c&quot;, 128);
+</P>
+
+<P>
+and Perl upgraded the SV to UTF8, which caused confusion when his
+C-level code then looked at the real value of the string. 
+<a href="http://simon-cozens.org/writings/whos-who.html#HIETANIEMI">Jarkko</a> asked
+why Gisle's code cared about the representation of the string, but it
+seemed like Gisle expected it to be non-UTF8. (I could argue that this
+was Perl's fault, and I could argue that it was Gisle's.)
+<a href="http://simon-cozens.org/writings/whos-who.html#GURUSAMY">Sarathy</a> warned
+ominously: &quot;We need to tread very carefully here, or 5.8.0 might break a
+lot of XS code out there.&quot; 
+<a href="http://simon-cozens.org/writings/whos-who.html#ING-SIMMONS">Nick I-S</a> pointed out the handy-looking 
+<CODE>SvPVbyte</CODE> macro which returned a non-UTF8 version of the string's contents, plus
+another way of doing things which was actually backwards compatible.
+<H3><a name="Autoloading_Errno">Autoloading Errno</a></H3>
+
+</P>
+
+<P>
+
+Last week, we covered the fact that using 
+<CODE>%!</CODE> should autoload the 
+<CODE>Errno</CODE> module but at the time, it failed to. Robin Houston fixed that, with
+another quotable analysis:
+<blockquote></P>
+
+<P>
+I must admit that I'm slightly dubious as to the wisdom of doing this. It's not
+needed for compatibility (it's never worked), and any code which uses 
+<CODE>%!</CODE> could simply put &quot;
+<CODE>use Errno;</CODE>&quot; at the top.
+</P>
+
+<P>
+The intention, presumably, is that code which doesn't make use of 
+<CODE>%!</CODE> shouldn't
+have to incur the penalty of loading 
+[Errno.pm].
+</P>
+
+<P>
+Currently cleverness only takes place when a glob is created. So, if you use a
+hash called 
+<CODE>%^E</CODE> then the magical scalar 
+<CODE>$^E</CODE> is set up, even though you don't use it.
+</P>
+
+<P>
+In this case though, we want 
+<CODE>Errno.pm</CODE> to be loaded
+<B>only</B> if <CODE>%!</CODE> is used. Loading the damned thing for every script which uses 
+<CODE>$!</CODE> would be Bad.
+</P>
+
+<P>
+The upshot of this all is that an extra test has to be inserted into the code
+which deals with creating new stash <B>variables</B> (not just the first variable of the particular glob). Even a marginal slowdown like this doesn't
+seem worth the insignificant benefit of not having to load Errno yourself.
+</blockquote></P>
+
+<P>
+However, Sarathy commented that the intention was simplicity and transparency;
+the 
+<CODE>%!</CODE> language feature should be implemented in a manner transparent to the end
+user, just like the loading of the Unicode swash tables. &quot;Besides,&quot; he 
+concluded, &quot;there is probably no precedent for forcing people to
+load a non-pragma to enable a language feature.&quot;
+</P>
+
+<P>
+Jarkko looked slightly guilty. &quot;Ummm, well, in other news, I may have
+have just created one&quot;, he said, referring to the new ability to export
+<CODE>IO::Socket::atmark</CODE> to 
+<CODE>sockatmark</CODE>. 
+</P>
+
+<P>
+Robin also added some more reporting to 
+<CODE>B::Debug</CODE>, and fixed up a parenthesis bug in 
+<CODE>B::Deparse</CODE>. 
+</P>
+
+<P>
+
+<H3><a name="MathBig">Math::Big*</a></H3>
+
+</P>
+
+<P>
+Tels and John Peacock have been working together to rewrite 
+<CODE>Math::BigInt</CODE> and 
+<CODE>Math::BigFloat</CODE>. Their version is 
+<a href="http://www.cpan.org/authors/id/T/TE/TELS/">on CPAN </a>. Jarkko seems understandably a little hestitant about replacing the in-core 
+version with this one; while we're assured that it will be backwards
+compatible (minus bugfixes, naturally) but obviously a complete rewrite
+isn't mature enough to be considered for core yet.
+<H3><a name="pack_and_unpack">pack and unpack</a></H3>
+
+</P>
+
+<P>
+
+Someone asked a (non-maintainance) question about 
+<CODE>pack</CODE> and 
+<CODE>unpack</CODE> which 
+<a href="http://simon-cozens.org/writings/whos-who.html#DOMINUS">MJD</a> dealt with; I took this as a cue to show my current work on a 
+<CODE>perlpacktut</CODE>. A few people produced useful suggestions for that, which I'll get
+finished when the next consignment of tuits arrives. There was a short
+diversion about what an 
+<CODE>asciz</CODE> string was; (see the documentation for the &quot;w&quot; pack format) it's
+actually a C-style null-terminated string.
+<H3><a name="Taint_testing">Taint testing</a></H3>
+
+</P>
+
+<P>
+
+For some reason, the usual way to detect taintedness in the test suite
+seems to be
+</P>
+
+</P><PRE>
+    eval { $possibly_tainted, kill 0; 1 }
+<a href="http://simon-cozens.org/writings/whos-who.html#CLARK">Nick Clark </a>thinks this sucks, but it's a bit too late to change it now.
+</PRE>
+
+<P>
+Of course, MacPerl doesn't have 
+<CODE>kill</CODE> so 
+<a href="http://simon-cozens.org/writings/whos-who.html#NANDOR">Chris</a> found that his test suite was going horribly wrong. He had a
+number of violent suggestions to fix this up, including having 
+<CODE>kill</CODE> be a no-op which died on tainted data. MJD suggested that 
+<CODE>kill</CODE> should do what it does already but be a no-op if it's passed a 0. The
+eventual solution was to have it return 0 but check for tainted data. He
+also hinted that this may be the precursor to Win32-like
+pseudoprocesses.
+<H3><a name="Various">Various</a></H3>
+
+</P>
+
+<P>
+
+Benjamin Sugars was at it again. He fixed a bug in 
+<CODE>socket</CODE> which leaked file descriptors, wrote a test suite for 
+<CODE>Cwd</CODE>, joined the bug admin team, patched up 
+<CODE>B::Terse</CODE> and
+<CODE>File::*</CODE> to be warnings-happy, produced another version of his XS 
+<CODE>Cwd</CODE> module. He didn't document
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01780.html">references in <CODE>@INC</CODE></a>, though, so he doesn't get the gold star.
+</P>
+
+<P>
+I zapped 
+<CODE>OPpRUNTIME</CODE>, a flag that was set but never tested!
+</P>
+
+<P>
+Stephen McCamant produced a couple of optimizations to 
+<CODE>peep()</CODE>, the optimizer. 
+</P>
+
+<P>
+Thomas Wegner and Chris Nandor fixed up 
+<CODE>File::Glob</CODE> for MacOS. 
+</P>
+
+<P>
+Jarkko floated the idea of a 
+<CODE>FETCHSLICE</CODE> and 
+<CODE>STORESLICE</CODE> for tied hashes and arrays to avoid multiple 
+<CODE>FETCH</CODE>/
+<CODE>STORE</CODE> operations; there was a little discussion about the syntax:
+</P>
+
+</P><PRE>
+    STORESLICE($thing, $nkeys, $nvalues, @keys, @values)
+</PRE>
+
+<P>
+would be more efficient but less user-friendly than
+</P>
+
+</P><PRE>
+    STORESLICE($thing, \@keys, \@values)
+</PRE>
+
+<P>
+but no implementation as yet.
+</P>
+
+<P>
+Schwern asked if we were going to document the fact that 
+<CODE>ref qr/Foo/</CODE> returns &quot;Regexp&quot;. Everyone went very quiet.
+</P>
+
+<P>
+Mark-Jason Dominus tried to introduce a new operator, 
+<CODE>epochtime</CODE>, which return the time of the system epoch; for instance, one could use
+</P>
+
+</P><PRE>
+    localtime(epochtime())
+</PRE>
+
+<P>
+to portably find out the date of the system epoch, allowing you to write
+epoch-independent code. Jarkko rejected the patch on the grounds that it
+was not sufficiently portable.
+</P>
+
+<P>
+Until next week, then,
+<B>squawk</B>,</P>
+
+<hr>
+
+<a href="mailto:simon@brecon.co.uk">Simon Cozens</a>
+
+
+<ul>
+  <li><a href="#Notes">Notes</a>
+  <li><a href="#Perl_and_HTMLParser">Perl and HTML::Parser</a>
+  <li><a href="#Autoloading_Errno">Autoloading Errno</a>
+  <li><a href="#MathBig">Math::Big*</a>
+  <li><a href="#pack_and_unpack">pack and unpack</a>
+  <li><a href="#Taint_testing">Taint testing</a>
+  <li><a href="#Various">Various</a>
+</ul>

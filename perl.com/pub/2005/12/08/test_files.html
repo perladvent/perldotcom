@@ -1,0 +1,983 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2005/12/08/test_files.html">
+<dc:title>Testing Files and Test Modules</dc:title>
+<dc:description> For the last several years, there has been more and more emphasis on automated testing. No self-respecting CPAN author can post a distribution without tests. Yet some things are hard to test. This article explains how writing Test::Files gave...</dc:description>
+<dc:creator>Phil Crow</dc:creator>
+<dc:date>2005-12-08T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2005/12/01/client_side_success.html" title="Perl Success Story: Client-Side Collection and Reporting" />
+    <link rel="next bookmark" href="/pub/2005/12/15/perl_prolog.html" title="Logic Programming with Perl and Prolog" />
+    
+    
+    <title>Testing Files and Test Modules - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-852" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Testing Files and Test Modules</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Phil Crow</span> on <abbr class="published" title="2005-12-08T00:00:00-08:00">December  8, 2005 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+<p>For the last several years, there has been more and more emphasis on automated testing. No self-respecting CPAN author can post a distribution without tests. Yet some things are hard to test. This article explains how writing <code>Test::Files</code> gave me a useful tool for validating one module's output and taught me a few things about the current state of Perl testing.</p>
+
+<h3>Introduction</h3>
+
+<p>My boss put me to work writing a moderately large suite in Perl. Among many other things, it needed to perform check out and commit operations on CVS repositories. In a quest to build quality tests for that module, I wrote <a href="http://search.cpan.org/perldoc/Test::Files"><code>Test::Files</code></a>, which is now on CPAN. This article explains how to use that module and, perhaps more importantly, how it tests itself.</p>
+
+<h3>Using <code>Test::Files</code></h3>
+
+<p>To use <code>Test::Files</code>, first use <a href="http://search.cpan.org/perldoc/Test::More"><code>Test::More</code></a> and tell it how many tests you want to run.</p>
+
+<pre><code>use strict;
+use warnings;
+use Test::More tests =&gt; 5;
+use Test::Files;</code></pre>
+
+<p>After you use the module, there are four things it can help you do:</p>
+
+<ul>
+<li>Compare one file to a string or to another file.</li>
+
+<li>Make sure that directories have the files you expect them to have.</li>
+
+<li>Compare all the files in one directory to all the files in another directory.</li>
+
+<li>Exclude some things from consideration.</li>
+</ul>
+
+<h3>Single Files</h3>
+
+<p>In the simplest case, you have written a file. Now it is time to validate it. That could look like this:</p>
+
+<pre><code>file_ok($file_name, "This is the\ntext\n",
+    "file one contents");</code></pre>
+
+<p>The <code>file_ok</code> function takes two (or optionally, and preferably, three) arguments. The first is the name of the file you want to validate. The second is a text string containing the text that should be in the file. The third is the name of the test. In the rush of writing, I'm likely to fail to mention the test names at some point, so let me say up front that all of the tests shown here take a name argument. Including a name makes finding the test easier.</p>
+
+<p>If the file agrees with the string, the test passes with only an OK message. Otherwise, the test will fail and diagnostic messages will show where the two differed. The diagnostic output is really the reason to use <code>Test::Files</code>.</p>
+
+<p>Some, including myself, prefer to check one file against another. I put one version in the distribution. The other one, my tests write. To compare two files, use:</p>
+
+<pre><code>compare_ok($file1, $file2, $name);</code></pre>
+
+<p>As with <code>file_ok</code>, if the files are the same, <code>Test::Files</code> only reports an OK message. Failure shows where the files differ.</p>
+
+<h3>Directory Structures</h3>
+
+<p>Sometimes, you need to validate that certain files are present in a directory. Other times, you need to make that check exclusive so that only known files are present. Finally, you might want to know that not only is the directory structure is the same, but that the files contain the same data.</p>
+
+<p>To look for some files in a directory by name, write:</p>
+
+<pre><code>dir_contains_ok($dir, [qw(list files here)], $name);</code></pre>
+
+<p>This will succeed, even if the directory has some other files you weren't looking for.</p>
+
+<p>To ensure that your list is exclusive, add only to the function name:</p>
+
+<pre><code>dir_only_contains_ok($dir, [qw(list all files here)], $name);</code></pre>
+
+<p>Both of these report a list of absent files if they fail due to them. The exclusive form also reports a list of unexpected files, if it sees any.</p>
+
+<!-- sidebar begins -->
+ <csperl file="grab" domain="on" record="b/1796" template="b/article_sidebar2.view">
+<!-- sidebar ends -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Directory Contents</h3>
+
+<p>If knowing that certain file names are present is not enough, use the <code>compare_dirs_ok</code> function to check the contents of all files in one directory against files in another directory. A typical module might build one directory during <code>make test</code>, with the other built ahead of time and shipped with the distribution.</p>
+
+<pre><code>compare_dirs_ok($test_built, $shipped, $name);</code></pre>
+
+<p>This will generate a separate diagnostic <code>diff</code> output for each pair of files that differs, in addition to listing files that are missing from either distribution. (If you need to know which files are missing from the built directory, either reverse the order of the directories or use <code>dir_only_contains_ok</code> in addition to <code>compare_dirs_ok</code>. This is a bug and might eventually be fixed.) Even though this could yield many diagnostic reports, all of those separate failures only count as one failed test.</p>
+
+<p>There are many times when testing <em>all</em> files in the directories is just wrong. In these cases, it is best to use <a href="http://search.cpan.org/perldoc/File::Find"><code>File::Find</code></a> or an equivalent, putting an exclusion criterion at the top of your wanted function and a call to <code>compare_ok</code> at the bottom. This probably requires you to use <code>no_plan</code> with <code>Test::More</code>:</p>
+
+<pre><code>use Test::More qw(no_plan);</code></pre>
+
+<p><code>Test::More</code> wants to know the exact number of tests you are about to run. If you tell it the wrong number, the test harness will think something is wrong with your test script, causing it to report failures. To avoid this confusion, use <code>no_plan</code>--but keep in mind that plans are there for a reason. If your test dies, the plan lets the harness know how many tests it missed. If you have <code>no_plan</code>, the harness doesn't always have enough information to keep score. Thus, you should put such tests in separate scripts, so that the harness can count your other tests properly.</p>
+
+<h3>Filtering</h3>
+
+<p>While the above list of functions seemed sufficient during planning, reality set in as soon as I tried it out on my CVS module. I wanted to compare two CVS repositories: one ready for shipment with the distribution, the other built during testing. As soon as I tried the test it failed, not because the operative parts of the module were not working, but because the CVS timestamps differed between the two versions.</p>
+
+<p>To deal with cosmetic differences that should not count as failures, I added two functions to the above list: one for single files and the other for directories. These new functions accept a code reference that receives each line prior to comparison. It performs any needed alterations, and then returns a line suitable for comparison. My example function below redacts the offending timestamps. With the filtered versions in place, the tests pass and fail when they should.</p>
+
+<p>My final tests for the CVS repository directories look like this:</p>
+
+<pre><code>compare_dirs_filter_ok(
+    't/cvsroot/CVSROOT',
+    't/sampleroot/CVSROOT',
+    \&amp;chop_dates,
+    "make repo"
+);</code></pre>
+
+<p>The code reference argument comes between the directory names and the test name. The <code>chop_dates</code> function is not particularly complex. It removes two kinds of dates favored by CVS, as shown in its comments.</p>
+
+<pre><code>sub chop_dates {
+    my $line =  shift;
+
+    #  2003.10.15.13.45.57 (year month day hour minute sec)
+    $line    =~ s/\d{4}(.\d\d){5}//;
+
+    #  Thu Oct 16 18:00:28 2003
+    $line    =~ s/\w{3} \w{3} \d\d? \d\d:\d\d:\d\d \d{4}//;
+
+    return $line;
+}</code></pre>
+
+<p>This shows the general behavior of filters. They receive a line of input which they must not directly change. Instead, they must return a new, corrected line.</p>
+
+<p>In addition to <code>compare_dirs_filter_ok</code> for whole directory structures, there is also <code>compare_filter_ok</code>, which works similarly for single file comparisons. (There is no <code>file_filter_ok</code>, but maybe there should be.)</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Testing a Test Module</h3>
+
+<p>The most interesting part of writing <code>Test::Files</code> was learning how to test it. Thanks to Schwern, I learned about <a href="http://search.cpan.org/perldoc/Test::Builder::Tester"><code>Test::Builder::Tester</code></a>, which eases the problems inherent in testing a Perl test module.</p>
+
+<p>The difficulty with testing Perl tests has to do with how they normally run. The venerable test harness scheme expects test scripts to produce pass and fail data on standard out and diagnostic help on standard error. This is a great design. The simplicity is exactly what you would expect from a Unix-inspired tool. Yet, it poses a problem for testing test modules.</p>
+
+<p>When eventual users use the test module, their harness expects it to write quite specific things to standard out and standard error. Among the things that must go to standard out are a sequence of lines such as <code>ok 1</code>. When you write a test of the test module, its harness also expects to see this sort of data on standard out and standard error. Having two different sources of <code>ok 1</code> is highly confusing, not least to the harness, which chokes on such duplications.</p>
+
+<p>Test module writers need a scheme to trap the output from the module being tested, check it for correct content, and report that result onto the actual standard channels for the harness to see. This is tricky, requiring care in diversion of file handles at the right moments without the knowledge of the module whose output is diverted. Doing this by hand is inelegant and prone to error. Further, multiple test scripts might have to recreate home-rolled solutions (introducing the oldest of known coding sins: duplication of code). Finally, the diagnostic output, in the event of failure, from homemade diverters is unlikely to be helpful when tests of the test module fail.</p>
+
+<p><em>Enter <code>Test::Builder::Tester</code>.</em>
+</p>
+
+<p>To help us test testers, Mark Fowler collected some code from Schwern, and used it to make <code>Test::Builder::Tester</code>. With it, tests of test modules are relatively painless and their failure diagnostics are highly informative. Here are two examples from the <code>Test::Files</code> test suite. The first shows a file comparison that should pass:</p>
+
+<pre><code>test_out("ok 1 - passing file");
+compare_ok("t/ok_pass.dat", "t/ok_pass.same.dat",
+    "passing file");
+test_test("passing file");</code></pre>
+
+<p>This test should work, generating <code>ok 1 - passing file</code> on standard output. To tell <code>Test::Builder::Tester</code> what the standard output should be, I called <code>test_out</code>. After the test, I called <code>test_test</code> with only the name of my test. (To avoid confusion, I made the test names the same.)</p>
+
+<p>Between the call to <code>test_out</code> and the one to <code>test_test</code>, <code>Test::Builder::Tester</code> diverted the regular output channels so the harness won't see them.</p>
+
+<p>The second example shows a failed test and how to check both standard out and standard error. The later contains the diagnostic data the module should generate.</p>
+
+<pre><code>test_out("not ok 1 - failing file");
+$line = line_num(+9);
+test_diag("    Failed test (t/03compare_ok.t at line $line)",
+'+---+--------------------+-------------------+',
+'|   |Got                 |Expected           |',
+'| Ln|                    |                   |',
+'+---+--------------------+-------------------+',
+'|  1|This file           |This file          |',
+'*  2|is for 03ok_pass.t  |is for many tests  *',
+'+---+--------------------+-------------------+'  );
+compare_ok("t/ok_pass.dat", "t/ok_pass.diff.dat",
+    "failing file");
+test_test("failing file");</code></pre>
+
+<p>Two new functions appear here. First, <code>line_num</code> returns the current line number plus or minus an offset. Because failing tests report the line number of the failure, checking standard error for an exact match requires matching that number. Yet, no one wants his tests to break because he inserted a new line at the top of the script. With <code>line_num</code>, you can obtain the line number of the test relative to where you are. Here, there are nine lines between the call to <code>line_num</code> and the actual test.</p>
+
+<p>The other new function is <code>test_diag</code>. It allows you to check the standard error output, where diagnostic messages appear. The easiest way to use it is to provide each line of output as a separate parameter.</p>
+
+<h3>Summary</h3>
+
+<p>Now you know how to use <code>Test::Files</code> and how to test modules that implement tests. There is one final way I use <code>Test::Files</code>. I use it outside of module testing any time I want to know how the contents of text files in two directory hierarchies compare. With this, I can quickly locate differences in archives, for example, enabling me to debug builders of those archives. In one example, I used it compare more than 400 text files in two WebSphere .ear archives. My program had only about 30 operative lines (there were also comments and blank lines) and performed the comparison in under five seconds. This is testament to the leverage of Perl and CPAN.</p>
+
+<p>(Since doing that comparison, I have moved to a new company. In the process I exchanged WebSphere for <code>mod_perl</code> and am generally happier with the latter.)</p>
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=File%20testing&amp;limit=20';return false;" rel="tag">File testing</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20test%20modules&amp;limit=20';return false;" rel="tag">Perl test modules</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20testing&amp;limit=20';return false;" rel="tag">Perl testing</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Test%3A%3ABuilder&amp;limit=20';return false;" rel="tag">Test::Builder</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Test%3A%3ABuilder%3A%3ATester&amp;limit=20';return false;" rel="tag">Test::Builder::Tester</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Test%3A%3AFiles&amp;limit=20';return false;" rel="tag">Test::Files</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

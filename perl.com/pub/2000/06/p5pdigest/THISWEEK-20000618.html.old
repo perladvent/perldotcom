@@ -1,0 +1,370 @@
+
+
+<!-- This week on perl5-porters (12--18 June 2000) -->
+
+<br />
+<!::field::date::><br />
+<ul>
+  <li><a href="#Notes">Notes</a>
+  <li><a href="#Method_Call_Speedups">Method Call Speedups</a>
+  <li><a href="#More_Attempts_to_Make_B::Bytecode_Faster">More Attempts to Make <code>B::Bytecode</code> Faster</a>
+  <li><a href="#Byte_Order_Marks_Continue">Byte-Order Marks Continue</a>
+  <li><a href="#Slurp_Bug">Slurp Bug</a>
+  <li><a href="#EPOC_Port">EPOC Port</a>
+  <li><a href="#READMEhpux"><code>README.hpux</code></a>
+  <li><a href="#Paths_in_MacPerl">Paths in MacPerl</a>
+  <li><a href="#Non_destructed_anonymous_functions">Non-destructed anonymous functions</a>
+  <li><a href="#Extensions_required_for_regression_tests">Extensions required for regression tests</a>
+  <li><a href="#Eudora_Problem">Eudora Problem</a>
+  <li><a href="#crypt_docs"><code>crypt</code> docs</a>
+  <li><a href="#Magic_Auto_Decrement">Magic Auto-Decrement</a>
+  <li><a href="#Various">Various</a>
+</ul>
+
+
+      <H3><a name="Notes">Notes</a></H3>
+
+</P>
+
+<P>
+
+You can subscribe to an email version of this summary by sending an
+empty message to 
+<a href="mailto:p5p-digest-subscribe@plover.com"><tt>p5p-digest-subscribe@plover.com</tt>.</a></P>
+
+<P>
+Please send corrections and additions to 
+<CODE>mjd-perl-thisweek-YYYYMM@plover.com</CODE> where 
+<CODE>YYYYMM</CODE> is the current year and month.
+</P>
+
+<P>
+This week's report is a little early, because I am going to San Diego
+Usenix tomorrow.  Next week's report will cover anything I missed this
+week, and may be late, since I will just have gotten back from YAPC.
+</P>
+
+<P>
+A really mixed bag this week.  Great work from Doug McEachern,
+Nicholas Clark, and Simon Cozens, and a lot of wasted yakkity yak from
+some other people.
+</P>
+
+<P>
+
+<H3><a name="Method_Call_Speedups">Method Call Speedups</a></H3>
+
+</P>
+
+<P>
+Doug McEachern wrote a patch to implement a compile-time optimization:
+Class method calls, and method calls on variables that have a declared
+class (as with 
+<CODE>my Dog $spot</CODE>) have the code for the method call rewritten as if you had requested
+an ordinary subroutine call.  For example, if you have
+</P>
+
+</P><PRE>
+        my Class $obj = ...;
+        $obj->method(...);
+</PRE>
+
+<P>
+and the 
+<CODE>method</CODE> that gets called is actually 
+<CODE>Parent::method</CODE>, then Perl will pretend that you actually wrote
+</P>
+
+</P><PRE>
+        my Class $obj = ...;
+        Parent::method($obj, ...)
+</PRE>
+
+<P>
+instead.  Doug found that the method calls did get much faster---in
+some cases faster than regular subroutine calls.  (I don't understand
+how this can possibly be the case, however.)  One side benefit (or
+maybe it's a malefit?) of Doug's approach is that you can now enable
+prototype checking on method calls.
+</P>
+
+<P>
+A lot of work remains to be done here.  Doug's patch does not actually
+speed up method calls; it replaces method calls with regular
+subroutine calls.  It would be good to see some work done on actually
+making method calls faster.
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00441.html">The patch.</a></P>
+
+<P>
+
+</P>
+
+<P>
+
+<H3><a name="More_Attempts_to_Make_B::Bytecode_Faster">More Attempts to Make <code>B::Bytecode</code> Faster</a></H3>
+
+</P>
+
+<P>
+The whole point of 
+<CODE>B::Bytecode</CODE> is to speed up the startup time of Perl programs.  Two weeks ago Benjamin
+ Stuhl reported that bytecoded files are actually 
+<em>slower</em> than regular source files, probably because the bytecoded files are
+ so big that it takes a lot of time to read them in.
+</P>
+
+<P>
+
+<a href="http://www.perl.com/pub/2000/06/p5pdigest/THISWEEK-20000604.html#B::Bytecode_is_Ineffective">Previous Summary</a></P>
+
+<P>
+Nicholas Clark looked into compressing the bytecode files.  He fixed
+[Byteloader.xs] so that it was a true filter, and could be installed
+atop another filter; in this case one that decompressed gzipped data.  
+</P>
+
+<P>
+It didn't work; the decompression overhead made the compressed
+bytecode files even slower than the uncompressed byecode files.
+Time Bunce pointed out that this is a bad test, since a lot of the
+modules that the byte compiler and byte loader will load are things
+that a larger script would have needed anyway, but that were not
+present at all in Nicholas' 
+<CODE>hello.pl</CODE> test.
+<blockquote><b>Nickolas Clark:</b><ol><li> Currently byte code is far to large compared with its script. (I think someone else mailed the list with improvements that reducethe amount of op tree information saved as bytecode, which should help) <li> For a simple script bytecode is slower than pure perl. <li> Using a general purpose data compression algorithm (zipdeflation) Bytecode only compresses by a factor of 3, which still leaves it much larger than its script. <li> Decompression filters written in perl run very slowly. (butare much easier to write than those in C) <li> Although a decompression filter written in C is much faster, it still  doesn't quite match the speed of reading and parsing thebytecode, let alone the original script (for this example). However, it'sclose to uncompressed bytecode. </ol></blockquote></P>
+
+<P>
+
+Nicholas' message contained many other interesting details about
+bytecodes.  
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00403.html">Read about it.</a></P>
+
+<P>
+
+<H3><a name="Byte_Order_Marks_Continue">Byte-Order Marks Continue</a></H3>
+
+</P>
+
+<P>
+Simon produced another revision to his patch to make Perl
+automatically handle
+source code written in various flavors of Unicodings.  He went to a
+lot of work to get the lexer to recognize the BOMs only at the very
+beginning of the file.  (One startling trivium here:  If you have
+</P>
+
+</P><PRE>
+        ...some code here...
+        #line 1
+        #!/usr/bin/perl -wT
+        ...more code...
+</PRE>
+
+<P>
+The 
+<CODE>#line 1</CODE> fools the lexer into thinking that what follows is the first line,
+and then Perl interprets the `command-line' options on the following
+comment even though they're not really on the first line of the file.)
+</P>
+
+<P>
+
+<blockquote><b>Simon:</b>Yes, the part in pp_ctl <em>does</em> have to be this complicated and order is important. If you're going to lie to the lexer, you have to be pretty damned convincing.</blockquote></P>
+
+<P>
+
+Apparently Simon later posted a different revision that was simpler
+and used 
+<CODE>tell</CODE> to see if the BOM was really at the beginning of the file, but it
+ didn't appear on p5p.
+</P>
+
+<P>
+
+<H3><a name="Slurp_Bug">Slurp Bug</a></H3>
+
+</P>
+
+<P>
+Last month Joey Hess reported a bug in Perl's slurping; it was reading
+line by line and it shouldn't have been.  
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00746.html">Original report and test case.</a></P>
+
+<P>
+
+Nobody has investigated this yet, and Sarathy said that was a pity,
+which I think whould be interpreted as a hint that someone should have
+a look at it.
+<H3><a name="EPOC_Port">EPOC Port</a></H3>
+
+</P>
+
+<P>
+
+Olaf Flebbe posted some enhancements to his port for EPOC, 
+which is an OS for palmtops and mobile phones.  (See 
+<CODE>README.epoc</CODE> in the Perl distribution for more details.)
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00364.html">The patch.</a><H3><a name="READMEhpux"><code>README.hpux</code></a></H3>
+
+</P>
+
+<P>
+
+</P>
+
+<P>
+Jeff Okamoto contributed a new one.
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00381.html">Here it is.</a></P>
+
+<P>
+
+<H3><a name="Paths_in_MacPerl">Paths in MacPerl</a></H3>
+
+</P>
+
+<P>
+Last week Peter Prymmer contributed a large patch 
+that attempts to make the test suite 
+work better on Macintoshes by replacing a lot of Unix-style pathnames
+like 
+<CODE>'../lib'</CODE> with constructions of the form 
+<CODE>($^O eq 'MacOS') ? '::lib:' : '../lib'</CODE>.  This sparked a discussion about better ways to approach this 
+problem.  Chris Nandor suggested a 
+<CODE>paths.pl</CODE> file which the suite could retquire that would set up the path
+strings correctly.  He pointed out that if this library were in the
+same directory as the script that required it, the 
+<CODE>require</CODE> would work on any platform.  He also said that having native support
+ for path translations was probably a bad idea.  (This would mean that 
+<CODE>require 'foo/bar.pm'</CODE> would actually load
+<CODE>foo:bar.pm</CODE>, which is the 'right thing' unless what you actually wanted
+was to require a file named 
+<CODE>foo/bar.pm</CODE>.)
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00325.html">Matthias reported on what he actually does do in MacPerl.</a></P>
+
+<P>
+
+It appeared that the issue about what to do about the test suite went
+unresolved.  I do not know yet if Peter's big patch went in.
+</P>
+
+<P>
+
+<H3><a name="Non_destructed_anonymous_functions">Non-destructed anonymous functions</a></H3>
+
+</P>
+
+<P>
+Last week Rocco Caputo reported that his blessed coderefs were not
+being 
+<CODE>DESTROY</CODE>ed, even at interpreter shutdown time.  Nick Ing-Simmons produced an
+explanation.   I suppose it could be called a feature.
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00340.html">The explanation.</a></P>
+
+<P>
+
+<H3><a name="Extensions_required_for_regression_tests">Extensions required for regression tests</a></H3>
+
+</P>
+
+<P>
+Nicholas Clark pointed out that if you don't build all the Perl
+standard extension modules, some of the regression tests fail, and
+that the regression tests shouldn't depend on the extension modules
+unless they are explicitly testing the extension modules.
+</P>
+
+<P>
+For example, the 
+<CODE>io/openpid.t</CODE> test file wants to use the 
+<CODE>Fcntl</CODE> module; if you decided not to build 
+<CODE>Fcntl</CODE>, it barfs.  Nick offered to make a patch, and Sarathy agreed it owuld
+be a good idea.  I have not seen the patch appear yet.
+</P>
+
+<P>
+
+</P>
+
+<P>
+
+<H3><a name="Eudora_Problem">Eudora Problem</a></H3>
+
+</P>
+
+<P>
+The problem with Eudora mangling patch files turns out to be more
+complicated than I originally reported.  If you use Eudora, you should
+probably read the following discussion.
+</P>
+
+<P>
+
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00290.html">Eudora discussion. </a><H3><a name="crypt_docs"><code>crypt</code> docs</a></H3>
+
+</P>
+
+<P>
+
+Ben Tilly made a trivial change to the documentation for the 
+<CODE>crypt</CODE> function that sparked a long and irrelevant discussion about password
+security policy.
+</P>
+
+<P>
+
+<H3><a name="Magic_Auto_Decrement">Magic Auto-Decrement</a></H3>
+
+</P>
+
+<P>
+
+The idle and pointless magic decrement discussion continued.
+</P>
+
+<P>
+
+<H3><a name="Various">Various</a></H3>
+
+</P>
+
+<P>
+A large collection of bug reports, bug fixes, non-bug reports,
+questions, answers, and a small amount and spam.   I think there was
+flamage, but it was in the thread I skipped.
+</P>
+
+<P>
+Until next week I remain, your humble and obedient servant,
+</P>
+
+<hr>
+
+<a href="mailto:mjd-perl-thisweek-200006+@plover.com">Mark-Jason Dominus</a>

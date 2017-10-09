@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use lib 'bin/lib';
+use Article;
+use Data::Dumper;
+use Text::CSV;
+use Path::Tiny;
+
+my @warnings;
+$SIG{__WARN__} = sub {
+  my $warning = $_[0];
+  chomp $warning;
+  push @warnings, $warning;
+};
+my $base_path = 'perl.com/pub';
+open my $article_list_new, '>:utf8', "$base_path/articles-new.csv" or die $!;
+my $csv = Text::CSV->new();
+$csv->eol("\n");
+
+# these articles are already indexed in a csv
+open my $article_list_old, '<:utf8', "$base_path/articles-old.csv" or die $!;
+my @column_names = qw(date title authors file status categories tags);
+while (my $cols = $csv->getline($article_list_old)) {
+  my %args = map { $column_names[$_] => $cols->[$_] } 0..$#$cols;
+  next unless $args{status} eq 'Final';
+  @warnings = ();
+
+  $args{file} = "$base_path/$args{file}";
+  my $a = eval { Article->new(\%args) };
+  my $warnings = join(',', @warnings);
+  print_article_summary($a, $warnings);
+}
+
+# these articles aren't indexed anywhere
+for my $y (qw(2010 2011 2012 2012 2014)) {
+  my $iter = path("$base_path/$y")->iterator({recurse=>1});
+  while (my $p = $iter->()) {
+    next unless $p->is_file && $p->basename =~ /\.html$/ && $p->basename ne 'index.html' && $p->relative !~ /\/mt-preview/;
+    @warnings = ();
+
+    my $a = Article->new({file=>"$p"});
+    my $warnings = join(',',@warnings);
+    print_article_summary($a, $warnings);
+  }
+}
+
+sub print_article_summary {
+  my ($a, $warnings) = @_;
+  $csv->print($article_list_new, [$a->{date}, $a->{title}, join(',', @{$a->{authors}}), $a->{path}->relative, $a->{categories}, join(',', @{$a->{tags}}), $warnings]);
+}

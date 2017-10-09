@@ -1,0 +1,132 @@
+From:         Tom Christiansen <tchrist@mox.perl.com>
+Organization: Perl Consulting and Training
+Subject:      Re: Setuid script problems
+Newsgroups:   comp.lang.perl.misc,comp.infosystems.www.authoring.cgi
+
+In comp.lang.perl.misc, mheins@bluestem.prairienet.org (Mike Heins) writes:
+:Don Reid (donr@cv.hp.com) wrote:
+:: : Taint checking is described in the perlsec(1) man page, and is also
+:: : covered in the Camel book.
+:
+:: :         /(.*)/;
+:
+:: And the perlsec page says not to use (.*) (which matches anything), but
+:: something like (\w*) which removes unwanted characters.  You probably
+:: want to create the most restrictive pattern that will fit the data you
+:: expect.
+:
+:Good clarification.  I prefer to check each user-entered item with
+:a more rigorous subroutine, but perhaps I should have emphasized it
+:a bit more.
+
+Agreed.
+
+:The problem with \w+ for most users is that it won't pass an email
+:address, which is the most common item that needs to be "scrubbed".
+
+OK, I've seen this whole thing too often.  It's making me nervous:
+I think everyone is going at the scrubbing bits the wrong way.
+
+Why do you need to "scrub" an email address?  I believe that scrubbing for
+shells is ab initio a fatally flawed concept. If you EVER EVER EVER call a
+program with a chance of a shell getting its hands on stuff, you're
+doomed.  You *MUST* use system() with a real list, not a string, or else
+the real exec() the same way (which is hard).  See the CGI security FAQ.
+
+For example, here's the wrong way to call a program if you're security
+minded:
+
+    system "program $arg1 @list";
+
+and here are right ways:
+
+    system "program", $arg1, @list;
+    system "program", split " " => $some_maybe_dangerous_string;
+
+    if ($?) { warn "program didn't exit nicely: $?" }
+
+Avoiding the shell entirely the only safe way.  For pipes and backticks, it's
+harder.  You'll can't just do this
+
+    @lines = `program $arg1 @list`;
+
+Because there is no way with backticks or popens to tell not to call
+the stupid shell and open up your front door to pillaging.
+
+Instead you need this:
+
+    if (open(PROGRAM, "-|")) {
+	@lines = <PROGRAM>;
+	close PROGRAM;
+	if ($?) { warn "PROGRAM didn't exit nicely: $?" }
+    } else {
+	exec("program", $arg1, @list) || die "can't exec program: $!";
+    } 
+
+For simple mailing, you should call sendmail in a way that will
+let it deal with the headers.  User mail agents will be a real
+pain, because you're likely to forget things like tilde escapes
+or dtiry shell characters.
+
+    open (SENDMAIL, "|/usr/lib/sendmail -oi -t") 
+	|| die "cannot fork: $!";
+
+    print SENDMAIL <<QQ_EOF_QQ;
+To: $him
+From: $me
+Subject: Whatever
+
+More text goes here.  Use your 
+$vars and @lists if you'd like
+to get your \$0.02 in, 
+and remember that of course
+that `backticks` DO NOT happen.
+
+--me
+
+    login\@host.domain
+
+QQ_EOF_QQ
+
+    close(SENDMAIL);
+    if ($?) { warn "sendmail didn't exit nicely: $?" }
+
+Notice how in all these mechanisms, the shell never pokes its problematic
+proboscis into your business.  It just can't.  This is critical.  Anything
+else is merely potentially flawed insurance, not a provable guarantee.
+
+If you're ever writing to a pipe, you may well want to install a pipe
+handler to catch things if the program on the other end bails -- 
+or isn't found.  Remember that popens return true even when the 
+program isn't found.
+
+    $SIG{PIPE} = sub {
+	my($signame) = $_[0];
+	my($package,$filename,$line) = caller;
+	my($fh);
+	for $fh ( \*STDOUT, \*STDERR ) { 
+	    print $fh "Received an unexpected SIG$signame at line ",
+			    "$line in $filename\n";
+	}
+	exit(1);
+    };
+
+Finally, any security conscious program, like setuid or setgid programs,
+network servers, or even simple CGI progams, should always with start
+something like this:
+
+    #!/usr/bin/perl -wT
+    require 5.001;
+    use strict;
+    $ENV{PATH} = join ':' => split(" ", <<'Q_EOPATH_Q');
+		    /usr/bin
+		    /usr/ucb
+		    /bin
+Q_EOPATH_Q
+
+My goodness, this is almost turning into a FMTEYEWTK on safely calling
+other programs while in a state of dubious security.
+
+--tom
+
+

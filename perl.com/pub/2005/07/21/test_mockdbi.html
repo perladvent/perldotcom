@@ -1,0 +1,1184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2005/07/21/test_mockdbi.html">
+<dc:title>An Introduction to Test::MockDBI</dc:title>
+<dc:description> Prelude How do you test DBI programs: Without having to modify your current program code or environment settings? Without having to set up multiple test databases? Without separating your test data from your test code? With tests for every...</dc:description>
+<dc:creator>Mark Leighton Fisher</dc:creator>
+<dc:date>2005-07-21T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2005/07/p6pdigest/20050714.html" title="This Week in Perl 6, July 5-12, 2005" />
+    <link rel="next bookmark" href="/pub/2005/07/p6pdigest/20050721.html" title="This Week in Perl 6, July 13-19, 2005" />
+    
+    
+    <title>An Introduction to Test::MockDBI - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-800" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">An Introduction to Test::MockDBI</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Mark Leighton Fisher</span> on <abbr class="published" title="2005-07-21T00:00:00-08:00">July 21, 2005 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+<h3>Prelude</h3>
+
+<p>How do you test DBI programs:</p>
+
+<ul>
+
+<li>Without having to modify your current program code or environment
+settings?</li>
+
+<li>Without having to set up multiple test databases?</li>
+
+<li>Without separating your test data from your test code?</li>
+
+<li>With tests for every bizarre value your program will ever have to
+face?</li>
+
+<li>With complete control over all database return values, along with all DBI
+method return values?</li>
+
+<li>With an easy, regex-based rules interface?</li>
+
+</ul>
+
+<p>You test with <a
+href="http://search.cpan.org/perldoc?Test::MockDBI">Test::MockDBI</a>, that's
+how. Test::MockDBI provides all of this by using Test::MockObject::Extends to
+mock up the entire DBI API.  Without a solution like Test::MockDBI--a
+solution that enables direct manipulation of the DBI--you'll have to trace
+DBI methods through a series of test databases.</p>
+
+<p>You can make test databases work, but:</p>
+
+<ul>
+
+<li>You'll need multiple (perhaps many) databases when you need multiple sets
+of mutually inconsistent values for complete test coverage.</li>
+
+<li>Some DBI failure modes are impossible to generate through any test
+database.</li>
+
+<li>Depending on the database toolset available, it may be difficult to insert
+all necessary test values--for example, Unicode values in ASCII applications,
+or bizarre file types in a document-manager application.</li>
+
+<li>Test databases, by definition, are separate from their corresponding test
+code. This increases the chance that the test code and the test data will fall
+out of sync with each other.</li>
+
+</ul>
+
+<p>Using Test::MockDBI avoids these problems. Read on to learn how
+Test::MockDBI eases the job of testing DBI applications.</p>
+
+<!-- sidebar begins -->
+ <csperl file="grab" domain="on" record="b/1795" template="b/article_sidebar.view">
+<!-- sidebar ends -->
+
+<h3>A Mock Up of the Entire DBI</h3>
+
+<p>Test::MockDBI mocks up the entire DBI API by using <a
+href="http://search.cpan.org/perldoc?Test::MockObject::Extends">Test::MockObject::Extends</a>
+to substitute a Test::MockObject::Extends object in place of the <a
+href="http://search.cpan.org/perldoc?DBI">DBI</a>. A feature of this approach
+is that if the DBI API changes (and you use that change), you will notice
+during testing if you haven't upgraded Test::MockDBI, as your program will
+complain about missing DBI API method(s).</p>
+
+<p>Mocking up the entire DBI means that you can add the DBI testing code into
+an existing application without changing the initial application code--using
+Test::MockDBI is entirely transparent to the rest of your application, as it
+neither knows nor cares that it's using Test::MockDBI in place of the DBI.
+This property of transparency is what drove me to develop Test::MockDBI, as it
+meant I could add the Test::MockDBI DBI testing code to existing client
+applications without modifying the existing code (handy, for us
+consultants).</p>
+
+<p>Further enhancing Test::MockDBI's transparency is the <code>DBI testing type</code>
+class value. Testing is only enabled when the DBI testing type is non-zero, so
+you can just leave the DBI testing code additions in your production code--users will not even know about your DBI testing code unless you tell them.</p>
+
+<p>Mocking up the entire DBI also means that you have complete control of the
+DBI's behavior during testing. Often, you can simulate a <code>SELECT</code>
+DBI transaction with a simple state machine that returns just a few rows from
+the (mocked up) database. Test::MockDBI lets you use a <code>CODEREF</code> to supply
+database return values, so you can easily put a simple state machine into the
+<code>CODEREF</code> to supply the necessary database values for testing. You could even put
+a delay loop into the <code>CODEREF</code> when you need to perform speed tests on your
+code.</p>
+
+<h3>Rules-Based DBI Testing</h3>
+
+<p>You control the mocked-up DBI of Test::MockDBI with one or more rules that
+you insert as Test::MockDBI method calls into your program. The default DBI
+method values provided by Test::MockDBI make the database appear to have a hole
+in the bottom of it--all method calls return OK, but you can't get any data
+out of the database. Rules for DBI methods that return database values (the
+<code>fetch*()</code> and <code>select*()</code> methods) can use either a
+value that they return directly for matching method calls, or a <code>CODEREF</code> called
+to provide a value each time that rule fires. A rule matches when its DBI
+testing type is the current testing type and the current SQL matches the rule's
+regular expression. Rules fire in the order in which you declare them, so
+usually you want to order your rules from most-specific to least-specific.</p>
+
+<p>The DBI testing type is an unsigned integer matching <code>/^d+$/</code>.
+When the DBI testing type is zero, there will be no DBI testing (or at least, no
+mocked-up DBI testing) performed, and the program will use the DBI normally. A
+zero DBI testing type value in a rule means the rule could fire for any
+non-zero DBI testing type value--that is, zero is the wildcard DBI testing
+type value for rules. Set the DBI testing type either by a first command-line
+argument of the form:</p>
+
+<pre><code>--dbitest[=DTT]</code></pre>
+
+<p>where the optional <code>DTT</code> is the DBI testing type (defaulting to
+one), or through Test::MockDBI's <code>set_dbi_test_type()</code> method.
+Setting the DBI testing type through a first command-line argument has the
+advantage of requiring no modifications to the code under test, as this
+command-line processing is done so early (during <code>BEGIN</code> time for
+Test::MockDBI) that the code under test should be ignorant of whether this
+processing ever happened.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>DBI Return Values</h3>
+
+<p>Test::MockDBI defaults to returning a success (true) value for all DBI
+method calls. This fits well with the usual techniques of DBI programming,
+where the first DBI error causes the program to stop what it is doing.
+Test::MockDBI's <code>bad_method()</code> method creates a rule that forces a
+failure return value on the specified DBI method when the current DBI testing
+type and SQL match those of the rule. Arbitrary DBI method return value
+failures like these are difficult (at best) to generate with a test database.</p>
+
+<p>Test::MockDBI's <code>set_retval_scalar()</code> and
+<code>set_retval_array()</code> methods create rules for what database values
+to return. Set rules for scalar return values (<code>arrayrefs</code> and <code>hashrefs</code>) with
+<code>set_retval_scalar()</code> and for array return value rules with
+<code>set_retval_array()</code>. You can supply a value to be returned every
+time the rule matches, which is good when extracting single rows out of the
+database, such as configuration parameters.  Alternatively, pass a <code>CODEREF</code> that
+will be called each time the rule fires to return a new value.  Commonly, with
+<code>SELECT</code> statements, the DBI returns one or more rows, then returns an empty row
+to signify the end of the data. A <code>CODEREF</code> can incorporate a state machine that
+implements this &quot;return 1+ rows, then a terminator&quot; behavior quite easily.
+Having individual state machines for each rule is much easier to develop with than
+having one master state machine embedded into Test::MockDBI's core. (An early
+alpha of Test::MockDBI used the master state machine approach, so I have
+empirical evidence of this result--I am not emptily theorizing here.)</p>
+
+<p>Depending on what tools you have for creating your test databases, it may be
+difficult to populate the test database with all of the values you need to test
+against. Although it is probably not so much the case today, only a few years
+ago populating a database with Unicode was difficult, given the
+national-charset-based tools of the day. Even today, a document management
+system might be difficult to populate with weird file types. Test::MockDBI
+makes these kinds of tests much easier to carry out, as you directly specify
+the data for the mock database to return rather than using a separate test
+database.</p>
+
+<p>This ease of database value testing also applies when you need to test
+against combinations of database values that are unlikely to occur in practice
+(the old &quot;comparing apples to battleships&quot; problem). If you need to handle
+database value corruption--as in network problems causing the return of
+partial values from a Chinese database when the program is in the U.S.--this ability to completely specify the database return values could be
+invaluable in testing. Test::MockDBI lets you take complete control of your
+database return values without separating test code and test data.</p>
+
+<h3>Simplicity: Test::MockDBI's Standard-Output-Based Interface</h3>
+
+<p>This modern incarnation of the age-old stubbed-functions technique also uses
+the old technique of &quot;<code>printf()</code> and scratch head&quot; as its output
+interface. This being Perl we are working with, and not FORTRAN IV (thank
+goodness), we have multiple options beyond the use of unvarnished standard
+output.</p>
+
+<p>One option that I think integrates well with DBI-using module testing is to
+redirect standard output into a string using <a
+href="http://search.cpan.org/perldoc?IO::String">IO::String</a>. You can then
+match the string against the regex you are looking for. As you have already
+guessed, use of pure standard output integrates well with command-line program
+testing.</p>
+
+<p>What you will look for, irrespective of where your code actually looks, is
+the output of each DBI method as it executes--the method name and arguments--along with anything else your code writes to standard output.</p>
+
+<h3>Bind Test Data to Test Code</h3>
+
+<p>Because DBI and database return values are bound to your test programs when
+using Test::MockDBI, there is less risk of test data getting out of sync with
+the test code. A separate test database introduces another point of failure in
+your testing process. Multiple test databases add yet another point of failure
+for each database. Whatever you use to generate the test databases also
+introduces another point of failure for each database.  I can imagine cases
+where special-purpose programs for generating test databases might create
+multiple points of failure, especially if the programs have to integrate data
+from multiple sources to generate the test data (such as a VMS Bill of Materials
+database and a Solaris PCB CAD file for a test database generation program
+running on Linux).</p>
+
+<p>One of the major advances in software engineering is the increasing ability
+to gather and control related information together--the 1990s advance of
+object-oriented programming in common languages is a testimony to this, from
+which we Perl programmers reap the benefits in our use of CPAN. For many
+testing purposes, there is no need for separate test databases. Without that
+need for a separate test database, separating test data from test code only
+complicates the testing process.  Test::MockDBI lets you bind together your
+test code and test data into one nice, neat package. Binding is even closer
+than code and comments, as comments can get out of sync with their code, while
+the test code and test data for Test::MockDBI cannot get out of sync too far
+without causing their tests to fail unexpectedly.</p>
+
+<h3>When to Use Test::MockDBI</h3>
+
+<p>DBI's <code>trace()</code>, <a
+href="http://search.cpan.org/perldoc?DBD::Mock">DBD::Mock</a>, and
+Test::MockDBI are complementary solutions to the problem of testing DBI
+software. DBI's <code>trace()</code> is a pure tracing mechanism, as it does
+not change the data returned from the database or the DBI method return values.
+DBD::Mock works at level of a database driver, so you have to look at your DBI
+testing from the driver's point of view, rather than the DBI caller's point of
+view. DBD::Mock also requires that your code supports configurable DBI DSNs,
+which may not be the case in all circumstances, especially when you must
+maintain or enhance legacy DBI software.</p>
+
+<p>Test::MockDBI works at the DBI caller's level, which is (IMHO) more natural
+for testing DBI-using software (possibly a matter of taste: TMTOWTDI).
+Test::MockDBI's interface with your DBI software is a set of easy-to-program,
+regex-based rules, which incorporate a lot of power into one or a few lines of
+code, thereby using Perl's built-in regex support to best advantage. This
+binds test data and test code tightly together, reducing the chance of
+synchronization problems between the test data and the test code. Using
+Test::MockDBI does not require modifying the current code of the DBI software
+being tested, as you only need additional code to enable Test::MockDBI-driven
+DBI testing.</p>
+
+<p>Test::MockDBI takes additional coding effort when you need to test DBI
+program performance.  It may be that for performance testing, you want to use
+test databases rather than Test::MockDBI. If you were in any danger of your
+copy of <em>DBI.pm</em> becoming corrupted, I don't know whether you could
+adequately test that condition with Test::MockDBI, depending on the corruption.
+You would probably have to create a special mock DBI to test corrupted DBI code
+handling, though you could start building the special mock DBI by inheriting
+from Test::MockDBI without any problems from Test::MockDBI's design, as it
+should be inheritance-friendly.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Some Examples</h3>
+
+<p>To make:</p>
+
+<pre><code>$dbh = DBI-&gt;connect(&quot;dbi:AZ:universe&quot;, &quot;mortal&quot;, &quot;(none)&quot;);</code></pre>
+
+<p>fail, add the rule:</p>
+
+<pre><code>$tmd-&gt;bad_method(&quot;connect&quot;, 1,
+    &quot;CONNECT TO dbi:AZ:universe AS mortal WITH \\(none\\)&quot;);</code></pre>
+
+<p>(where <code>$tmd</code> is the only Test::MockDBI object, which you obtain
+through Test::MockDBI's <code>get_instance()</code> method).</p>
+
+<p>To make a SQL <code>SELECT</code> failure when using
+<code>DBI::execute()</code>, use the rule:</p>
+
+<pre><code>$tmd-&gt;bad_method(&quot;execute&quot;, 1,
+    &quot;SELECT zip_plus_4 from zipcodes where state='IN'&quot;);</code></pre>
+
+<p>This rule implies that:</p>
+
+<ul>
+
+<li>The <code>DBI::connect()</code> <code>succeeded()</code>.</li>
+
+<li>The <code>DBI::prepare()</code> <code>succeeded()</code>.</li>
+
+<li>But the <code>DBI::execute()</code> failed as it should.</li>
+
+</ul>
+
+<p>A common use of direct scalar return values is returning configuration data,
+such as a U.S. zip code for an address:</p>
+
+<pre><code>$tmd-&gt;set_retval_scalar(1,
+ &quot;zip5.*'IN'.*'NOBLESVILLE'.*'170 WESTFIELD RD'&quot;,
+ [ 46062 ]);</code></pre>
+
+<p>This demonstrates using a regular expression, as matching SQL could then
+look like this:</p>
+
+<pre><code>SELECT
+  zip5
+FROM
+  zipcodes
+WHERE
+  state='IN' AND
+  city='NOBLESVILLE' AND
+  street_address='170 WESTFIELD RD'</code></pre>
+
+<p>and the rule would match.</p>
+
+<p><code>SELECT</code>s that return one or more rows from the database are the
+common case:</p>
+
+<pre><code>my $counter = 0;                    # name counter
+sub possibly_evil_names {
+    $counter++;
+    if ($counter == 1) {
+        return ('Adolf', 'Germany');
+    } elsif ($counter == 2) {
+        return ('Josef', 'U.S.S.R.');
+    } else {
+        return ();
+    }
+}
+$tmd-&gt;set_retval_array(1,
+   &quot;SELECT\\s+name,\\s+country.*possibly_evil_names&quot;,
+   \&amp;possibly_evil_names);</code></pre>
+
+<p>Using a <code>CODEREF</code> (<code>\&amp;possibly_evil_names</code>) lets you easily add
+the state machine for implementing a return of two names followed by an empty
+array (because the code uses <code>fetchrow_array()</code> to retrieve each
+row). SQL for this query could look like:</p>
+
+<pre><code>SELECT
+  name,
+  country
+FROM
+  possibly_evil_names
+WHERE
+  year &lt; 2000</code></pre>
+
+<h3>Summary</h3>
+
+<p>Albert Einstein once said, &quot;Everything should be made as simple as possible,
+but no simpler.&quot; This is what I have striven for while developing Test::MockDBI--the simplest possible useful module for testing DBI programs by mocking up
+the entire DBI.</p>
+
+<p>Test::MockDBI gives you:</p>
+
+<ul>
+
+<li>Complete control of DBI return values and database-returned data.</li>
+
+<li>Returned database values from either direct value specifications or
+<code>CODEREF</code>-generated values.</li>
+
+<li>Easy, regex-based rules that govern the DBI's behavior, along with
+intelligent defaults for the common cases.</li>
+
+<li>Complete transparency to other code, so the code under test neither knows
+nor cares that you are testing it with Test::MockDBI.</li>
+
+<li>Test data tightly bound to test code, which promotes cohesiveness in your
+testing environment, thereby reducing the chance that your tests might silently
+fail due to loss of synchronization between your test data and your test
+code.</li>
+
+</ul>
+
+<p>Test::MockDBI is a valuable addition to the arsenal of DBI testing
+techniques.</p>
+
+
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Database%20testing&amp;limit=20';return false;" rel="tag">Database testing</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=DBI%20testing&amp;limit=20';return false;" rel="tag">DBI testing</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=mock%20objects&amp;limit=20';return false;" rel="tag">mock objects</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20automated%20testing&amp;limit=20';return false;" rel="tag">Perl automated testing</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20testing&amp;limit=20';return false;" rel="tag">Perl testing</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Test%3A%3AMockDBI&amp;limit=20';return false;" rel="tag">Test::MockDBI</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

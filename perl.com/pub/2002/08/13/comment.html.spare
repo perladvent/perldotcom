@@ -1,0 +1,468 @@
+<pre><code>
+/*
+    This is a Perl comment
+*/
+</code></pre>
+
+<h3>Commenting in Perl</h3>
+
+<p>"But what?" I hear you think. "Perl doesn't have multiline comments!"</p>
+
+<p>That's true. Perl doesn't have multiline comments. But why? What
+is wrong with them? Mostly, it is because <a href="http://www.Perl.com/pub/a/2001/05/03/wall.html#rfc%20005:%20multiline%20comments%20for%20Perl">Larry
+doesn't like them</a>, and the reasons that we can have the same effect with
+POD and Perl doesn't need Yet Another Comment Marker.
+</p>
+
+<p>To illustrate, here we are at YAPC::America::North 2002, held in
+beautiful St. Louis. The weather is warm, the sun is shining, the sights
+are pretty and the beer is cold. In short, it's all things we've come to
+love and expect of a Perl conference. It's Thursday, the conference is
+winding down and <a href="http://www.Perlguy.net/images/kernel.jpg">Siv</a> is having a
+barbecue at his house. So a few of us end up in a car, headed to the
+barbecue. Uri Guttman is driving -- you know, the <a href="http://stemsystems.com">Stem guy</a> -- with myself riding
+shotgun, and Ann and Larry in the backseat.</p>
+
+<csinclude record="lc/47" field="html">
+
+<p>There's friendly chats from one topic to another. And
+at one point, Perl 6 is being discussed. Ann is asking questions about
+the new operators, techniques and generally how shiny Perl 6 will be. And
+there, Larry explains us new and wonderous things. Some already
+mentioned in 
+<a href="http://www.Perl.com/pub/au/Wall_Larry">the apocalypses</a>,
+some still ideas waiting to become firm concepts. And granted it does
+sound good, very good ... even if they are 
+<a href="http://www.Perl.com/pub/a/2001/05/03/wall.html#rfc%20009:%20highlander%20variable%20types"> taking away my beloved arrow operator</a>.
+Then, a question comes to mind, and I ask: "So Larry, tell me, does Perl
+6 have multiline comments?"
+</p>
+
+<p>All I hear from the backseat is some grumbling and the two words:  use POD!
+</p>
+
+<p>Needless to say, the tone was set, and I didn't see nor speak to Larry all evening.
+</p>
+
+<h3>Multiline Comments Emulation in Perl</h3>
+<p>But I disagree. I think multiline comments are good.
+</p>
+<p>I hate tinkering with the # sign and the 80 character-per-line limit; I write a comment over a few lines and prefix each with a #. Which, of course, means inserting a new line.
+</p>
+<p>Then I need to add a few words in the comments. The line becomes longer than 80 characters.
+I need to add another new line. And add a new # sign. Remove the former # sign.
+And now nothing is aligned anymore and I need to redo it.
+<b>*sigh*</b>
+</p>
+
+
+<p>And apparently I'm not the only one who has had a gripe with this. It's been a consistent request for change through out the development of Perl 5, and here's a post on Perlmonks <a href="http://Perlmonks.org/index.pl?node_id=100344">discussing exactly this.</a>
+</p>
+<p>The idea is to find a way of doing multiline comments in Perl, without breaking things.
+These are the four solutions they came up with to do multiline comments, and why I think they are bad:
+</p>
+
+
+
+<p><b>1. Use POD</b>.
+</p>
+
+<p>For example, you could use:
+</p>
+
+<pre><code>
+=for comment
+  Commented text
+=cut
+</code></pre>
+
+<p>It's POD. POD is documentation for users of your program. Pod is not
+meant to display things such as 'here I change <code>$var</code>' or 'this
+part will only be executed if <code>$foo</code> is true, which is
+determined by some_method()'; More over since the part you are
+commenting <b>on</b> is not in POD format, it won't be displayed in the
+first place. This will mean that the comments would be displayed in the
+POD, but the piece of code they refer to, will not be. Granted, most POD
+parsers are smart enough (or dumb, depending on how you look at it) that
+they see that the <code>=for</code> is not something valid and ignore
+it, while the Perl interpreter will say, 'Hey, it starts with
+<code>=</code>, so it must be POD.' In the end, if you have the 'proper'
+POD parser, then you will get sort of what you want.
+</p>
+
+<p>But you are really circumventing the problem here, since you are relying
+on the way any given POD parser parses POD; some might 'use warnings'
+and report an invalid <code>=for</code> tag on some lines. Others will
+just display them.
+</p>
+<p>And what we wanted was a way that would allow multiline comments
+without possibly breaking things.
+</p>
+
+<p><b>2. Any decent editor should allow you to put a # in front of n lines easily ... .</b>
+</p>
+<p>That's not an answer. We wanted multiline comments, not an editor trick that allows me to do multiple single-line comments.
+That and I'd rather not get into the 'vi is better than emacs' flamewar ;)
+</p>
+
+<p><b>3. use HERE-docs</b>
+</p>
+<pre><code>
+&lt;&lt;'#';
+this is a
+multiline
+comment
+#
+
+&lt;&lt; '*/';
+this is a
+multiline
+comment
+*/
+</code></pre>
+
+<p>This works, if you remembered to put a new line directly after the end
+marker. Well, more accurately: It parses correctly. That means that variables WILL get interpolated if you use a double
+quoted string.
+</p>
+
+<p>Meaning if you do something like this:
+</p>
+
+<pre><code>
+use strict;
+&lt;&lt;"#";
+this is a
+multiline
+comment
+about $foo
+#
+</code></pre>
+
+<p>It will blow up right in your face with a compile-time error.  Also,
+when running under 'use warnings' --which you <b>should</b>-- this will
+generate a '<code>Useless use of a constant in void context at foo.pl
+line X</code>' warning.
+</p>
+
+<p>So it's not completely foolproof. Plus it looks ugly ;)
+</p>
+
+<p><b>4. use quote operators</b>
+</p>
+
+<pre><code>
+q{
+    some
+    comment
+};
+</code></pre>
+
+<p>OK, a much more rigid solution and much more elegant.
+Does it work? Yes.
+</p>
+
+<p>Well, almost. It runs under strict. But I didn't expect anything else,
+since the guy who posted this (<a href="http://juerd.nl">juerd</a>) is an
+experienced Perl hacker and probably knows what he's doing. <b>But</b> it does
+cast warnings, just like the previous HERE-doc solution:
+</p>
+
+<pre><code>
+'Useless use of a constant in void context at foo.pl line X'
+</code></pre>
+
+<p>Now, your comment is supposed to be there to help other coders, not to
+be generating warnings. It's a <b>NO OP</b>! It shouldn't make them
+think things are going wrong!
+</p>
+
+<csinclude template="a/multipage_bottom.view">
+<!--CS_PAGE_INDEX-->
+<csinclude template="a/multipage_bottomb.view">
+<a href="<!--CS_NEXT_REF-->">
+<csinclude template="a/multipage_bottomc.view">
+
+<!--CS_PAGE_BREAK-->
+
+<csinclude template="a/multipage_top.view">
+<!--CS_PAGE_INDEX-->
+<csinclude template="a/multipage_topb.view">
+
+<h3>True multi-line comments: Acme::Comment</h3>
+
+<p>So is there an answer to this?
+</p>
+
+<p>Well, when Ann pointed this out, I began to think there must be some way
+to do multiline comments. I mean, many languages support it, why not
+Perl? We claim to make everything as easy as possible, yet the easy
+things aren't possible? That struck me as odd.
+</p>
+<p> This is where the writing of <code>Acme::Comment</code> began. First
+to provide a more usable solution to multiline commenting than the four
+mentioned above, and secondly to just prove Perl doesn't have to suffer
+from lack of multiline comments.
+</p>
+
+<p>And this is how you use it:
+</p>
+
+<pre><code>
+use Acme::Comment type =&gt; 'C++';
+
+/*
+    This is a comment ...
+
+    ... C++ style!
+*/
+</code></pre>
+
+<p> It's as simple as that. Now, to just do one language seemed a waste
+of this idea. Many languages have nice multiline comments or even single
+line comments. So, we decided to support a few more languages - in fact,
+<a href="http://search.cpan.org/author/KANE/Acme-Comment/"> 44 in total
+right now</a>
+</p>
+
+<p> Below are five styles of doing multi- or single-line comments in a
+language that <code>Acme::Comment</code> supports. So let's play a game
+of 'Name That Language'! (answers at the bottom)
+</p>
+
+<ul>
+  <li> This language uses <code>(*</code> and <code>*)</code> as delimiters for 
+    its multiline comments </li>
+  <li> <code>!</code> is used to denote a single line comment in this programming 
+    language </li>
+  <li> Simply the word '<code>comment</code>' indicates a one line comment in 
+    this language </li>
+  <li> A single line comment is indicated by preceding it with: <code>DO NOTE 
+    THAT</code> </li>
+  <li> <code>\/\/</code> is the way to do a one line comment in this language 
+  </li>
+</ul>
+
+<p>Contestants who answered all questions correct won a free subscription
+to the <a href="http://www.perl.com/pub/a/2001/05/29/tides.htm"> Perl
+beginners mailing list </a> at http://learn.perl.org, where they can
+share their knowledge with others!
+</p>
+
+<p>Also, did you know, there were programming languages called:
+Hugo, Joy, Elastic, Clean and Parrot?
+</p>
+
+<p>You can, of course, also create your own commenting style, by saying:
+</p>
+
+<pre><code>
+use Acme::Comment start =&gt; '[[', end =&gt; ']]';
+
+[[
+    This is a comment ...
+    ... made by me!
+]]
+</code></pre>
+
+<p>Putting the comment markers on their own line is always safest, since
+that reduces the possible ambiguity, but this is totally left up to the
+user. By default, you must put the comment markers on their own line
+(only whitespace may also be on the same line) and you may not end a
+comment marker on the line it begins.
+</p>
+
+<p>But if you were so inclined, then you could also do:
+</p>
+
+<pre><code>
+use Acme::Comment type =&gt; 'C++', one_line =&gt; 1, own_line =&gt; 0;
+
+/* my comment */
+
+/*  my
+    other
+    comment
+*/
+</code></pre>
+<h3>The Technology Behind This</h3>
+
+<p>So how does this all work anyway?
+</p>
+
+<p>Basically, <code>Acme::Comment</code> is a source filter. This means
+that BEFORE the Perl interpreter gets to look at the source code,
+<code>Acme::Comment</code> is given the chance to modify it.
+</p>
+
+<p>That means you can change <b>any</b> part of a source file into anything
+else. In <code>Acme::Comment</code>'s case, it removes the comments from
+the source, so they'll never be there when trying to compile.
+</p>
+
+<p> This is not something to be scared of, since comments are optimized
+away during compile time anyway (the interpreter has no need for your
+comments, why keep them?).
+</p>
+
+<p>Now, source filtering is not something that's terribly complicated and
+is one of the immensely powerful features of recent versions of Perl.
+It allows you to extend the language, simplify it it or even completely
+recast it.
+</p>
+
+
+<p>As an example, here are two other (famous) uses of source filters in Perl:
+</p>
+
+<dl>
+<dt>
+    <a href="http://search.cpan.org/author/DCONWAY/Lingua-Romana-Perligata-0.50/lib/Lingua/Romana/Perligata.pm">
+Lingua::Romana::Perligata</a>
+</dt><dd> Which allows you to program in latin</dd>
+
+<dt>
+    <a href="http://search.cpan.org/author/DCONWAY/Switch-2.09/Switch.pm">
+   Switch</a>
+   </dt><dd>
+    An extension to the Perl language, allowing you to use switch statements
+</dd>
+</dl>
+
+<p>Now, <code>Acme::Comment</code> has a spiffy import routine that
+determines what it needs to do with the options you passed it, and one
+big subroutine that parses out comments (the largest part of the code is
+spent on determining nested comments).
+</p>
+
+<p><code>Acme::Comment</code> uses, indirectly, the original source filter
+module  called <code>Filter::Util::Call</code>. This module provides a
+Perl interface to source filtering. It is very powerful, but not as
+simple as it could be. It works roughly like this:
+</p>
+<ol>
+
+  <li> Download, build, and install the <code>Filter::Util::Call</code> module. 
+    (It comes standard with Perl 5.8.0) </li>
+  <li> Then, set up a module that does a use <code>Filter::Util::Call</code>. 
+  </li>
+  <li> Within that module, create an <code>import</code> subroutine. </li>
+  <li> Within the <code>import</code> subroutine do a call to <code>filter_add</code>, 
+    passing it a subroutine reference. </li>
+  <li> Within the subroutine reference, call <code>filter_read</code> or <code>filter_read_exact</code> 
+    to "prime" <code>$_</code> with source code data from the source file that 
+    will use your module. </li>
+  <li> Check the status value returned to see if any source code was actually 
+    read in. </li>
+  <li> Then, process the contents of <code>$_</code> to change the source code 
+    in the desired manner. </li>
+  <li> Return the status value. </li>
+  <li> If the act of unimporting your module (via a <code>no</code>) should cause 
+    source code filtering to cease, create an <code>unimport</code> subroutine, 
+    and have it call <code>filter_del</code>. </li>
+  <li> Make sure that the call to <code>filter_read</code> or <code>filter_read_exact</code> 
+    in step 5 will not accidentally read past the <code>no</code>. Effectively 
+    this limits source code filters to line-by-line operation, unless the <code>import</code> 
+    subroutine does some fancy pre-pre-parsing of the source code it's filtering. 
+  </li>
+</ol>
+
+<p> As you can see, that's quite a few steps and things to think of when
+writing your source filter module. Of course, to make everyone's life
+easier when source filtering, <a href="http://conway.org">Damian</a>
+wrote a wrapper around the <code>Filter::Util::Call</code> module,
+called <code>Filter::Simple</code>. And although that limits the power you have
+somewhat, the interface is much nicer. Here's what you need to do:
+</p>
+
+<ol>
+  <li> Download and install the <code>Filter::Simple</code> module. (It comes standard 
+    with Perl 5.8.0) </li>
+  <li> Set up a module that does a <code>use Filter::Simple</code> and then calls 
+    <code>FILTER { ... }</code>. </li>
+  <li> Within the anonymous subroutine or block that is passed to <code>FILTER</code>, 
+    process the contents of <code>$_</code> to change the source code in the desired 
+    manner. </li>
+</ol>
+<p>And that's it.
+</p>
+
+
+<p> There is just one caveat to be mentioned: Due to the nature of
+source filters, they will not work if you <code>eval</code> the file
+the code is in.
+</p>
+
+<h3> How to make your own source filters</h3>
+
+<p>Finally, I'll discuss some examples on how to set up your own source filters.
+</p>
+
+<pre><code>
+package My::Filter;
+use Filter::Simple;
+
+### remove all that pesky 'use strict' and 'use warnings' ###
+FILTER {
+        s|^\s*use strict.+$||g;
+        s|^\s*use warnings.+$||g;
+    }
+</code></pre>
+
+<p>Now, if a module uses your My::Filter module, all mentions of 'use strict' and 'use warnings' will be removed, allowing for much easier compiling and running!
+</p>
+
+<p>Of course, <code>Filter::Simple</code> can do many more things. It can discriminate between different kinds of things it might find in source code. For example,
+</p>
+
+It can filter based on whether a part of text is:
+<ul>
+    <li> code (sections of source that are not quotelike, POD or __DATA__) </li>
+    <li> executable (sections of source that are not POD or __DATA__) </li>
+    <li> quotelike (sections that are Perl quotelikes as interpreted by Text::Balanced) 
+    </li>
+    <li> string (string literal parts of a Perl quotelike, like either half of 
+      tr///) </li>
+    <li> regex (sections of source that are regexes, like qr// and m//) </li>
+    <li> all (the default, behaves the same as the FILTER block) </li>
+</ul>
+
+
+<p>Also, you can apply the same filter multiple times, and it will be checked in order. For example, here's a simple macro-preprocessor that is only applied within regexes, with a final debugging pass that prints the resulting source code:
+</p>
+
+<pre><code>
+    use Regexp::Common;
+    FILTER_ONLY
+        regex =&gt; sub { s/!\[/[^/g },
+    	regex =&gt; sub { s/%d/$RE{num}{int}/g },
+    	regex =&gt; sub { s/%f/$RE{num}{real}/g },
+    	all   =&gt; sub { print if $::DEBUG };
+</code></pre>
+
+<p>It understands the 'no My::Filter' directive and does not filter that part of the source.
+</p>
+
+<p>So you can say:
+</p>
+<pre><code>
+    use My::Filter;
+
+        { .. this code is filtered .. }
+
+    no My::Filter
+
+        { .. this code is not .. }
+</code></pre>
+
+<p>If you want to learn more about source filtering, take a look at the <a href="http://search.cpan.org/author/DCONWAY/Filter-Simple-0.78/lib/Filter/Simple.pm"><code>Filter::Simple</code> manpage</a>.
+</p>
+<h3>Answers to the comment game</h3>
+
+<ol>
+    <li> Bliss </li>
+    <li> Fortran </li>
+    <li> Focal </li>
+    <li> Intercal </li>
+    <li> Pilot </li>
+</ol>

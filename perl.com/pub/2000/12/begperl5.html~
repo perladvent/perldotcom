@@ -1,0 +1,383 @@
+<HTML>
+<HEAD>
+<TITLE>article5.txt</TITLE>
+<LINK REV="made" HREF="mailto:mjd@plover.plover.com">
+</HEAD>
+
+<BODY>
+
+<A NAME="__index__"></A>
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<LI><A HREF="#objects and modules">Objects and modules</A></LI>
+	<UL>
+
+		<LI><A HREF="#what is an object">What is an object?</A></LI>
+		<LI><A HREF="#our goal">Our goal</A></LI>
+		<LI><A HREF="#starting off">Starting off</A></LI>
+		<LI><A HREF="#what does our object do">What does our object do?</A></LI>
+		<LI><A HREF="#our goal, part 2">Our goal, part 2</A></LI>
+		<LI><A HREF="#encapsulation">Encapsulation</A></LI>
+		<LI><A HREF="#play around!">Play around!</A></LI>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H1><A NAME="objects and modules">Objects and modules</A></H1>
+<P>So far, we've mostly stuck to writing everything for our programs ourselves.
+One of the big advantages of Perl is that you don't need to do this.
+More than a thousand people around the world have contributed more than
+5,000 utility packages, or <EM>modules</EM>, for common tasks.</P>
+<P>In this installment, we'll learn how modules work by building one of our own,
+and along the way we'll learn a bit about <EM>object-oriented programming</EM>
+in Perl.</P>
+<P>
+<H2><A NAME="what is an object">What is an object?</A></H2>
+<P>Think back to the first article in this series, when we discussed the two
+basic data types in Perl, strings and numbers.  There's a third basic data
+type: the <EM>object</EM>.</P>
+<P>Objects are a convenient way of packaging together information with the
+things you actually <EM>do</EM> with that information.  The information
+an object contains is called its <EM>properties</EM>, and the things you can do
+with that information are called <EM>methods</EM>.</P>
+<P>For example, you might have an <CODE>AddressEntry</CODE> object for an address book
+program - this object would contain <EM>properties</EM> that store a person's
+name, mailing address, phone number, and email address, and <EM>methods</EM> that
+print a nicely-formatted mailing label or let you change the person's
+phone number.</P>
+<P>Over the course of this article, we'll actually build a small, but useful,
+class: a container for configuration file information.</P>
+<P>
+<H2><A NAME="our goal">Our goal</A></H2>
+<P>So far, we've put the code for setting various options in our programs
+directly in the program's source code.  This isn't a good approach.  You
+may want to install a program and allow multiple users to run it, each
+with their own preferences, or you may want to store common sets of
+options for later.  What you need is a configuration file to store these
+options.</P>
+<P>We'll use a very simple plain text format, where name and value pairs
+are grouped in sections, and sections are indicated by a header name
+in brackets.  When we want to refer to the value of a specific key
+in our configuration file, we call the key <CODE>section.name</CODE>.  For instance,
+the value of <EM>author.firstname</EM> in this simple file is ``Doug'':</P>
+<PRE>
+   [author]
+   firstname=Doug
+   lastname=Sheppard
+
+   [site]
+   name=Perl.com
+   url=<A HREF="http://www.perl.com/">http://www.perl.com/</A></PRE>
+<P>(If you used Windows in the ancient days when versions had numbers, not years,
+you'll recognize this as being very similar to the format of INI files.)</P>
+<P>Now that we know the real-world purpose of our module, we need to think
+about what <EM>properties</EM> and <EM>methods</EM> it will have: what do
+<CODE>TutorialConfig</CODE> objects store, and what can we do with them?</P>
+<P>The first part is simple: we want the object's properties to be the
+values in our configuration file.</P>
+<P>The second part is a little more complex.  Let's start by doing
+the two things we <EM>need</EM> to do: read a configuration file, and get a
+value from it.  We'll call these two methods <CODE>read</CODE> and <CODE>get</CODE>.  Finally,
+we'll add another method which will let us set or change a value from
+within our program, which we'll call <CODE>set</CODE>.  These three methods will
+cover just about everything we want to do.</P>
+<P>
+<H2><A NAME="starting off">Starting off</A></H2>
+<P>We'll use the name <CODE>TutorialConfig</CODE> for our configuration file class.
+(Class names are normally named in this InterCapitalized style.)  Since
+Perl looks for a module by its filename, this means we'll call our module
+file <CODE>TutorialConfig.pm</CODE>.</P>
+<P>Put the following into a file called <CODE>TutorialConfig.pm</CODE>:</P>
+<PRE>
+    package TutorialConfig;
+
+    warn &quot;TutorialConfig is successfully loaded!\n&quot;;
+    1;</PRE>
+<P>(I'll be sprinkling debugging statements throughout the code.  You can
+take them out in practice.  The <CODE>warn</CODE> keyword is useful for warnings -
+things that you want to bring to the user's attention without ending
+the program the way <CODE>die</CODE> would.)</P>
+<P>The <CODE>package</CODE> keyword tells Perl the name of the class you're defining.
+This is generally the same as the module name.  (It doesn't <EM>have</EM> to
+be, but it's a good idea!)  The <CODE>1;</CODE> will return a true value to Perl,
+which indicates that the module was successfully loaded.</P>
+<P>You now have a simple module called <CODE>TutorialConfig</CODE>, which you can use
+in your own code with the <CODE>use</CODE> keyword.  Put the following into a very
+simple, one-line program:</P>
+<PRE>
+    use TutorialConfig;</PRE>
+<P>When we run this program, we see the following:</P>
+<PRE>
+    TutorialConfig is successfully loaded!</PRE>
+<P>
+<H2><A NAME="what does our object do">What does our object do?</A></H2>
+<P>Before we can create an object, we need to know <EM>how</EM> to create it.
+That means we must write a method called <CODE>new</CODE>, which will set up an
+object and return it to us.  This is also where you put any special
+initialization code that you might need to run for every object when
+it is created.</P>
+<P>The <CODE>new</CODE> method for our <CODE>TutorialConfig</CODE> class looks like this, and
+goes into <CODE>TutorialConfig.pm</CODE> right after the package declaration:</P>
+<PRE>
+    sub new {
+        my ($class_name) = @_;
+
+        my ($self) = {};
+        warn &quot;We just created our new variable...\n &quot;;
+
+        bless ($self, $class_name);
+        warn &quot;and now it's a $class_name object!\n&quot;;
+
+        $self-&gt;{'_created'} = 1;
+        return $self;
+    }</PRE>
+<P>(Again, you won't need those <CODE>warn</CODE> statements in actual practice.)</P>
+<P>Let's break this down line by line.</P>
+<P>First, notice that we define methods by using <CODE>sub</CODE>.  (All methods
+are really just a special sort of sub.)  When we call <CODE>new</CODE>, we pass
+it one parameter: the <EM>type</EM> of object we want to create.  We store this
+in a private variable called <CODE>$class_name</CODE>.  (You can also pass extra
+parameters to <CODE>new</CODE> if you want.  Some modules use this for special
+initialization routines.)</P>
+<P>Next, we tell Perl that <CODE>$self</CODE> is a hash.  The syntax <CODE>my ($self) = {};</CODE>
+is a special idiom that's used mostly in Perl object programming, and we'll
+see how it works in some of our methods.  (The technical term is that
+<CODE>$self</CODE> is an <EM>anonymous hash</EM>, if you want to read more about it elsewhere.)</P>
+<P>Third, we use the <CODE>bless</CODE> function.  You give this function two parameters:
+a variable that you want to make into an object, and the type of object you
+want it to be.  This is the line that actually makes the magic happen!</P>
+<P>Fourth, we'll set a <EM>property</EM> called ``_created''.  This property isn't
+really all that useful, but it does show the syntax for accessing the
+contents of an object:  <EM>$object_name-&gt;{property_name}</EM>.</P>
+<P>Finally, now that we've made <CODE>$self</CODE> into a new <CODE>TutorialConfig</CODE> object,
+we <CODE>return</CODE> it.</P>
+<P>Our program to create a <CODE>TutorialConfig</CODE> object looks like this:</P>
+<PRE>
+    use TutorialConfig;
+    $tut = new TutorialConfig;</PRE>
+<P>(You don't need to use parentheses here, unless your object's <CODE>new</CODE>
+method takes any extra parameters.  But if you feel more comfortable writing
+<CODE>$tut = new TutorialConfig();</CODE>, it'll work just as well.)</P>
+<P>When you run this code, you'll see:</P>
+<PRE>
+    TutorialConfig is successfully loaded!
+    We just created the variable...
+    and now it's a TutorialConfig object!
+</PRE>
+<P>Now that we have a class and we can create objects with it, let's start
+actually making our class <EM>do</EM> something!</P>
+<P>
+<H2><A NAME="our goal, part 2">Our goal, part 2</A></H2>
+<P>Look at our goals again.  We need to write three methods for our
+<CODE>TutorialConfig</CODE> module: <CODE>read</CODE>, <CODE>get</CODE>, and <CODE>set</CODE>.</P>
+<P>The first method, <CODE>read</CODE>, obviously requires that we tell it what
+file we want to read.  Notice that when we actually write the source code
+for this method, we must give it <EM>two</EM> parameters.  The first parameter
+is the object we're using, and the second is the filename we want to use.
+We'll use <CODE>return</CODE> to indicate whether or not the file was successfully
+read.</P>
+<PRE>
+    sub read {
+        my ($self, $file) = @_;
+        my ($line, $section);
+
+        open (CONFIGFILE, $file) or return 0;
+
+        # We'll set a special property that tells what filename we just read.
+        $self-&gt;{'_filename'} = $file;
+
+
+
+        while ($line = &lt;CONFIGFILE&gt;) {
+
+            # Are we entering a new section?
+            if ($line =~ /^\[(.*)\]/) {
+                $section = $1;
+            } elsif ($line =~ /^([^=]+)=(.*)/) {
+                my ($config_name, $config_val) = ($1, $2);
+                if ($section) {
+                    $self-&gt;{&quot;$section.$config_name&quot;} = $config_val;
+                } else {
+                    $self-&gt;{$config_name} = $config_val;
+                }
+            }
+        }
+
+        close CONFIGFILE;
+        return 1;
+    }</PRE>
+<P>Now that we've read a configuration file, we need to actually look at the
+values we just read.  We'll call this method <CODE>get</CODE>, and it doesn't have to
+be very complex:
+</P>
+<PRE>
+
+    sub get {
+        my ($self, $key) = @_;
+
+        return $self-&gt;{$key};
+    }</PRE>
+<P>These two methods are really all we need to begin experimenting with our
+<CODE>TutorialConfig</CODE> object.  Take the sample configuration file from above,
+put it in a file called <CODE>tutc.txt</CODE>, and then run this simple program:
+</P>
+<PRE>
+
+    use TutorialConfig;
+
+    $tut = new TutorialConfig;
+    $tut-&gt;read('tutc.txt') or die &quot;Couldn't read config file: $!&quot;;
+
+    print &quot;The author's first name is &quot;, $tut-&gt;get('author.firstname'), &quot;.\n&quot;;</PRE>
+<P>(Notice the syntax for calling an object's methods:
+<CODE>$object-&gt;method(parameters)</CODE>.)
+</P>
+
+When you run this program, you'll see something like this:
+
+<PRE>
+
+    TutorialConfig has been successfully loaded!
+    We just created the variable... 
+    and now it's a TutorialConfig object!
+    The author's first name is Doug.
+</PRE>
+<P>We now have an object that will read configuration files and show us values
+inside those files.  This is good enough, but we've decided to make it
+a bit better, by writing a <CODE>set</CODE> method that lets us add or change
+configuration values from within our program:</P>
+<PRE>
+    sub set {
+        my ($self, $key, $value) = @_;
+
+        $self-&gt;{$key} = $value;
+    }</PRE>
+<P>Now let's test it out:</P>
+<PRE>
+    use TutorialConfig;
+    $tut = new TutorialConfig;
+
+    $tut-&gt;read('tutc.txt') or die &quot;Can't read config file: $!&quot;;
+    $tut-&gt;set('author.country', 'Canada');
+
+    print $tut-&gt;get('author.firstname'), &quot; lives in &quot;,
+          $tut-&gt;get('author.country'), &quot;.\n&quot;;</PRE>
+<P>These three methods (<CODE>read</CODE>, <CODE>get</CODE>, and <CODE>set</CODE>) are everything we'll need
+for our <CODE>TutorialConfig.pm</CODE> module.  More complex modules might have
+dozens of methods!</P>
+<P>
+<H2><A NAME="encapsulation">Encapsulation</A></H2>
+<P>You may be wondering why we have <CODE>get</CODE> and <CODE>set</CODE> methods at all.  Why
+are we using <CODE>$tut-&gt;set('author.country', 'Doug')</CODE> when we could use
+<CODE>$tut-&gt;{'author.country'} = 'Doug'</CODE> instead?  There are two reasons
+to use methods instead of playing directly with an object's properties.</P>
+<P>First, you can generally trust that a module won't change its methods,
+no matter how much their implementation changes.  Someday, we might want to
+switch from using text files to hold configuration information to using a
+database like MySQL or Postgres.  Our new <CODE>TutorialConfig.pm</CODE> module
+might have <CODE>new</CODE>, <CODE>read</CODE>, <CODE>get</CODE>, and <CODE>set</CODE> methods that look something
+like this:</P>
+<PRE>
+      sub new {
+          my ($class) = @_;
+          my ($self) = {};
+          bless $self, $class;
+          return $self;
+      }
+
+      sub read {
+          my ($self, $file) = @_;
+          my ($db) = database_connect($file);
+          if ($db) {
+              $self-&gt;{_db} = $db;
+              return $db;
+          }
+          return 0;
+      }
+
+      sub get {
+          my ($self, $key) = @_;
+          my ($db) = $self-&gt;{_db};
+
+          my ($value) = database_lookup($db, $key);
+          return $value;
+      }
+
+      sub set {
+          my ($self, $key, $value) = @_;
+          my ($db) = $self-&gt;{_db};
+
+          my ($status) = database_set($db, $key, $value);
+          return $status;
+      }</PRE>
+<P>(Our module would define the <CODE>database_connect</CODE>, <CODE>database_lookup</CODE>, and
+<CODE>database_set</CODE> routines elsewhere.)</P>
+<P>Even though the entire module's source code has changed, all of
+our methods still have the same names and syntax.  Code that uses these
+methods will continue working just fine, but code that directly
+manipulates properties will break!</P>
+<P>For instance, let's say you have some code that contains this line to
+set a configuration value:</P>
+<PRE>
+     $tut-&gt;{'author.country'} = 'Canada';</PRE>
+<P>This works just fine with the original <CODE>TutorialConfig.pm</CODE> module,
+because when you call <CODE>$tut-&gt;get('author.country')</CODE>, it looks in the
+object's properties and returns ``Canada'' just like you expected.  So far, so
+good.  But when you upgrade to the new version that uses databases, the
+code will no longer return the correct result.  Instead of <CODE>get()</CODE> looking
+in the object's properties, it'll go to the database, which won't contain the
+correct value for ``author.country''!  If you'd used
+<CODE>$tut-&gt;set('author.country', 'Canada')</CODE> all along, things would work fine.</P>
+<P>As a module author, writing methods will let you make changes
+(bug fixes, enhancements, or even complete rewrites) without requiring
+that your module's users rewrite any of their own code.</P>
+<P>Second, using methods lets you avoid impossible values.  You might
+have an object that takes a person's age as a property.  A person's age
+must be a positive number (you can't be -2 years old!), so the
+<CODE>age()</CODE> method for this object will reject negative numbers.  If you
+bypass the method and just directly manipulate <CODE>$obj-&gt;{'age'}</CODE>, you
+might cause problems elsewhere in the code (a routine to calculate
+the person's birth year, for example, might fail or produce an odd result).</P>
+<P>As a module author, you can use methods to help programmers who use
+your module write better software.  You can write a good error-checking
+routine once, and it will be used many times.</P>
+<P>(Some languages, by the way, <EM>enforce</EM> encapsulation, by giving you the
+ability to make certain properties private.  Perl doesn't do this.
+In Perl, encapsulation isn't the law, it's just a very good idea.)</P>
+<P>
+<H2><A NAME="play around!">Play around!</A></H2>
+<P>1.  Our <CODE>TutorialConfig.pm</CODE> module could use a method that will write
+a new configuration file to any filename you desire.  Write your own
+<CODE>write()</CODE> method (use <CODE>keys %$self</CODE> to get the keys of the object's
+properties).  Be sure to use <CODE>or</CODE> to warn if the file couldn't be
+opened!</P>
+<P>2.  Write a <CODE>BankAccount.pm</CODE> module.  Your <CODE>BankAccount</CODE> object should have
+<CODE>deposit</CODE>, <CODE>withdraw</CODE>, and <CODE>balance</CODE> methods.  Make the <CODE>withdraw</CODE>
+method fail if you try to withdraw more money than you actually have,
+or deposit or withdraw a negative amount of money.</P>
+<P>3.  <CODE>CGI.pm</CODE> also lets you use objects if you want.  (Each object
+represents a single CGI query.)  The method names are the same as the CGI
+functions we used in the last article:</P>
+<PRE>
+    use CGI;
+    $cgi = new CGI;
+
+    print $cgi-&gt;header(), $cgi-&gt;start_html();
+    print &quot;The 'name' parameter is &quot;, $cgi-&gt;param('name'), &quot;.\n&quot;;
+    print $cgi-&gt;end_html();</PRE>
+<P>Try rewriting one of your CGI programs to use <CODE>CGI</CODE> objects instead of
+the CGI functions.</P>
+<P>4.  A big advantage of using CGI objects is that you can store and retrieve
+queries on disk.  Take a look in the <CODE>CGI.pm</CODE> documentation to learn
+how to use the <CODE>save()</CODE> method to store queries, and how to pass
+a filehandle to <CODE>new</CODE> to read them from disk.  Try writing a CGI
+program that saves recently-used queries for easy retrieval.</P>
+
+</BODY>
+
+</HTML>

@@ -1,0 +1,855 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2000/11/begperl3.html" title="Beginner's Introduction to Perl - Part 3" />
+    <link rel="next bookmark" href="/pub/2000/11/THISWEEK-20001127.html" title="This Week on p5p 2000/11/27" />
+    
+    
+    <title>This Week on p5p 2000/11/20 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1758" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">This Week on p5p 2000/11/20</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Simon Cozens</span> on <abbr class="published" title="2000-11-20T00:00:00-08:00">November 20, 2000 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        ></P>
+
+<P>
+
+
+<!-- This week on perl5-porters (13-20 Nov 2000) -->
+
+<br />
+<br /><ul>
+  <li><a href="#Notes">Notes</a>
+  <li><a href="#Fixing_the_Regexp_Engine">Fixing the Regexp Engine</a>
+  <li><a href="#UTF8_and_Charnames">UTF8 and Charnames</a>
+  <li><a href="#PerlIO_again">PerlIO (again)</a>
+  <li><a href="#head3_again">=head3 (again)</a>
+  <li><a href="#New_subspm">New subs.pm</a>
+  <li><a href="#Congratulations">Congratulations</a>
+  <li><a href="#Various">Various</a>
+</ul>
+
+      <H3><a name="Notes">Notes</a></H3>
+
+</P>
+
+<P>
+
+You can subscribe to an e-mail version of this summary by sending an
+empty message to 
+<a href="mailto:p5p-digest-subscribe@plover.com"><tt>p5p-digest-subscribe@plover.com</tt>.</a></P>
+
+<P>
+Please send corrections and additions to 
+<CODE>simon@brecon.co.uk</CODE></P>
+
+<P>
+There were more than 250 messages this week.
+<H3><a name="Fixing_the_Regexp_Engine">Fixing the Regexp Engine</a></H3>
+
+</P>
+
+<P>
+
+There's been a lot of work on the regular-expression engine this week,
+from Jarkko and Ilya. If you recall, there have been two major problems
+with the regular-expression engine. First, there's re-entrancy. What this means is that if you try to say
+</P>
+
+</P><PRE>
+    m/something(?{s|foo|bar|})bad/
+</PRE>
+
+<P>
+then by the time you get to 
+<CODE>bad</CODE>, the engine will be confused,
+because it can't restore context properly after the 
+<CODE>s|foo|bar</CODE>. It can now, thanks to Ilya, who noted:
+<blockquote></P>
+
+<P>
+ 
+Why such a trivial patch should wait for me to do it?!
+</P>
+
+<P>
+Doing a similar edit of regexec() is left as an exercise to the
+reader.
+</blockquote></P>
+
+<P>
+
+Jarkko retaliated, &quot;Most us mortals find the 
+<CODE>reg*.[hc]</CODE> rather daunting.&quot; I note that the &quot;trivial patch&quot; was 89k.
+</P>
+
+<P>
+The second problem is recursion; (See
+<a href="/pub/2000/11/p5pdigest/THISWEEK-20001107.html#The_Regex_Stack_Problem">coverage two weeks ago</a>)
+what this means is that things
+such as the pathological example that Dan Brumlevel produced this week
+causes stack overflows:
+</P>
+
+</P><PRE>
+    '' =~ ($re = qr((??{$i++ < 10e4 ? $re : ''})));
+</PRE>
+
+<P>
+Ilya also started work on &quot;flattening&quot; the regular expression engine to
+remove this recursion. While his patch doesn't solve the problem, it
+mitigates it considerably and also allows stack unwinding on things like
+alternation.
+</P>
+
+<P>
+The famous &quot;polymorphic regular expression&quot; problem also saw some work,
+thanks to Jarkko. This problem occurs when matching inside UTF8 strings;
+it goes a little like this: Given a character string which contains
+character 300, which is represented in UTF8 as character 196 followed by
+character 172, should character 172 match? Of course, it shouldn't, but
+it currently does. What's needed is to turn each &quot;node&quot; of a regular
+expression into something that can make sense as a character and
+also as a series of bytes, and then it can behave appropriately when matched
+in 
+<CODE>byte</CODE> mode and in character mode.  (See
+<a href="/pub/2000/07/p5pdigest/THISWEEK-20000702.html#Unicode_Regex_Matching">previous discussion of this</a>.)
+</P>
+
+<P>
+Jarkko reports that most of it is now working, apart from the special
+match variables (
+<CODE>$&</CODE>, 
+<CODE>$`</CODE> and 
+<CODE>$'</CODE>) and the POSIX character classes.
+<H3><a name="UTF8_and_Charnames">UTF8 and Charnames</a></H3>
+
+</P>
+
+<P>
+
+Andrew McNaughton found that 
+<CODE>Charnames</CODE> didn't produce UTF8-encoded strings on code points less than 255. He
+produced some patches to make it do so, but Nick and I
+didn't believe that it should be UTF8-encoding if it doesn't need
+to be. Perl's UTF8 encoding is done lazily - strings are upgraded if Perl
+can't avoid upgrading them.
+<H3><a name="PerlIO_again">PerlIO (again)</a></H3>
+
+</P>
+
+<P>
+
+Nick's sterling work on PerlIO continues, and this week he raised the
+question of where to store the defaults that 
+<CODE>use open</CODE> sets; currently, there are four bits set in the CV, two for input and two
+for output. However, since this only gives you four states, it's not
+exactly extensible to user-defined disciplines. The suggestion from
+Sarathy was to use the same area used by the lexical warnings pragma.
+The whole thread contains a good discussion about how the semantics of
+PerlIO disciplines will pad out.
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00780.html">Read about it.</a></P>
+
+<P>
+
+<H3><a name="head3_again">=head3 (again)</a></H3>
+
+</P>
+
+<P>
+Casey Tweten's unstinting drive to make POD support 
+<CODE>=head3</CODE> and further levels continues. He first patched the documentation, and
+then patched 
+<CODE>Pod::Checker</CODE> to make sure it wouldn't complain about the new levels. Russ Allbery
+ released a new version of the podlaters to support them.
+<H3><a name="New_subspm">New subs.pm</a></H3>
+
+</P>
+
+<P>
+
+Jeff Pinyan put forward a new 
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00822.html">version of subs.pm</a> which is supposed to deal with pre-declaring prototypes and attributes.
+It needed a little smoothing out, but it's looking quite good now.
+<H3><a name="Congratulations">Congratulations</a></H3>
+
+</P>
+
+<P>
+
+Two sets of congratulations are in order this week. First, to the
+dedicated team of bug squashers; there are now less than 1,000
+open bugs in Perl, and none of those is considered fatal.
+</P>
+
+<P>
+Congratulations are also due to Perl hacker Mark Fisher, who just
+become a daddy.
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00934.html">Read about it.</a></P>
+
+<P>
+
+<H3><a name="Various">Various</a></H3>
+
+</P>
+
+<P>
+Quite a lot of useful minor fixes, and a few noninteresting bug
+reports. Lots of the usual test results. Only two flames this week, and
+one each from your illustrious perl5-porters digest authors. You'd think
+we'd know better.
+</P>
+
+<P>
+Until next week I remain, your humble and obedient servant,
+</P>
+
+<hr>
+
+<a href="mailto:simon@brecon.co.uk">Simon Cozens</a>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/language-development/" rel="tag">Language Development</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

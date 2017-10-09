@@ -1,0 +1,1550 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    <title>Perl.com: Graphics Archives</title>
+
+
+</head>
+<body id="perl-com" class="mt-archive-listing mt-category-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+                            
+                            <h1 id="page-title" class="archive-title">Recently in <em>Graphics</em> Category</h1>
+
+
+
+
+
+
+                            
+                            <div id="entry-656" class="entry-asset asset hentry">
+    <div class="asset-header">
+        <h2 class="asset-name entry-title"><a href="/pub/2007/04/lightning-four.html" rel="bookmark">Lightning Strikes Four Times</a></h2>
+        <div class="asset-meta">
+            <span class="byline">
+    
+                By <span class="vcard author">Shlomi Fish</span> on <abbr class="published" title="2007-04-12T00:00:00-08:00">April 12, 2007 12:00 AM</abbr>
+    
+            </span>
+
+            
+            
+
+        </div>
+    </div>
+    <div class="asset-content entry-content">
+
+        <div class="asset-body">
+            
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+
+<p>by Mike Friedman</p>
+
+<p>Good software design principles tell us that we should work to separate unrelated concerns. For example, the popular Model-View-Controller (MVC) pattern is common in web application designs. In MVC, separate modular components form a <em>model</em>, which provides access to a data source, a <em>view</em>, which presents the data to the end user, and a <em>controller</em>, which implements the required features.</p>
+
+<p>Ideally, it's possible to replace any one of these components without breaking the whole system. A templating engine that translates the application's data into HTML (the <em>view</em>) could be replaced with one that generates YAML or a PDF file. The <em>model</em> and <em>controller</em> shouldn't be affected by changing the way that the <em>view</em> presents data to the user.</p>
+
+<p>Other concerns are difficult to separate. In the world of aspect-oriented programming, a <em>crosscutting concern</em> is a facet of a program which is difficult to modularize because it must interact with many disparate pieces of your system.</p>
+
+<p>Consider an application that logs copious trace data when in debugging mode. In order to ensure that it is operating correctly, you may want to log when it enters and exits each subroutine. A typical way to accomplish this is by conditionally executing a logging function based on the value of a constant, which turns debugging on and off.</p>
+
+<pre><code>    use strict;
+    use warnings;
+
+    use constant DEBUG =&gt; 1;
+
+    sub do_something { 
+        log_message("I'm doing something") if DEBUG;
+
+        # do something here
+
+        log_message("I'm done doing something") if DEBUG;
+    }</code></pre>
+
+<p>This solution is simple, but it presents a few problems. Perhaps most strikingly, it's simply a lot of code to write. For each subroutine that you want to log, you must write two nearly identical lines of code. In a large system with hundreds or thousands of subroutines, this gets tedious fast, and can lead to inconsistently formatted messages as every copy-paste-edit cycle tweaks them a little bit.</p>
+
+<p>Further, it offends the simple design goal of an MVC framework, because every component must talk to the logging system directly.</p>
+
+<p>One way to improve this technique is to automatically wrap every interesting subroutine in a special logging function. There are a few ways to go about this. One of the simplest is to use subroutine attributes to install a dynamically generated wrapper.</p>
+
+<h3>Attributes</h3>
+
+<p>Perl 5.6 introduced <em>attributes</em> that allow you to add arbitrary metadata to a variable. Attributes can be attached both to package variables, including subroutines, and lexical variables. Since Perl 5.8, attributes on lexical variables apply at runtime. Attributes on package variables activate at compile-time.</p>
+
+<p>The interface to Perl attributes is via the <a href="http://search.cpan.org/perldoc?attributes">attributes</a> pragma. (The older attrs is deprecated.) The CPAN module <a href="http://search.cpan.org/perldoc?Attribute::Handlers">Attribute::Handlers</a> makes working with attributes a bit easier. Here's an example of how you might rewrite the logging system using an attribute handler.</p>
+
+<pre><code>    use strict;
+    use warnings;
+
+    use constant DEBUG =&gt; 1;
+
+    use Attribute::Handlers;
+
+    sub _log : ATTR(CODE) {
+        my ($pkg, $sym, $code) = @_;
+
+        if( DEBUG ) {
+            my $name = *{ $sym }{NAME};
+
+            no warnings 'redefine';
+
+            *{ $sym } = sub {
+                log_message("Entering sub $pkg\:\:$name");
+                my @ret = $code-&gt;( @_ );
+                log_message("Leaving sub $pkg\:\:$name");
+                return @ret;
+            };
+        }
+    }
+
+    sub do_something : _log {
+        print "I'm doing something.\n";
+    }</code></pre>
+
+<p>Attributes are declared by placing a colon (:) and the attribute name after a variable or subroutine declaration. Optionally, the attribute can receive some data as a parameter; <code>Attribute::Handlers</code> goes to great lengths to massage the passed data for you if necessary.</p>
+
+<p>To set up an attribute handler, the code declares a subroutine, <code>_log</code>, with the <code>ATTR</code> attribute, passing the string <code>CODE</code> as a parameter. <code>Attribute::Handlers</code> provides <code>ATTR</code>, and the <code>CODE</code> parameter tells it that the new handler only applies to subroutines.</p>
+
+<p>During compile time, any subroutine declared with the <code>_log</code> attribute causes Perl to call the attribute handler with several parameters. The first three are the package in which the subroutine was compiled, a reference to the typeglob where its symbol lives, and a reference to the subroutine itself. These are sufficient for now.</p>
+
+<p>If the <code>DEBUG</code> constant is true, the handler sets to work wrapping the newly compiled subroutine. First, it grabs its name from the typeglob, then it adds a new subroutine to its spot in the symbol table. Because the code redefines a package symbol, it's important to turn off warnings for symbol redefinitions in within this block.</p>
+
+<p>Because the new function is a lexical closure over <code>$pkg</code>, <code>$name</code>, and most importantly <code>$code</code>, it can use those values to construct the logging messages and call the original function.</p>
+
+<p>All of this may seem like a lot of work, but once it's done, all you need to do to enable entry and exit logging for any function is to simply apply the <code>_log</code> attribute. The logging messages themselves get manufactured via closures when the program compiles, so we know they'll always be consistent. If you want to change them, you only have to do it in one place.</p>
+
+<p>Best of all, because attribute handlers get inherited, if you define your handler in a base class, any subclass can use it.</p>
+
+<h3>Caveats</h3>
+
+<p>Although this is a powerful technique, it isn't perfect. The code will not properly wrap anonymous subroutines, and it won't necessarily propagate calling context to the wrapped functions. Further, using this technique will significantly increase the number of subroutine dispatches that your program must execute during runtime. Depending on your program's complexity, this may significantly increase the size of your call stack. If blinding speed is a major design goal, this strategy may not be for you.</p>
+
+<h3>Going Further</h3>
+
+<p>Other common cross-cutting concerns are authentication and authorization systems. Subroutine attributes can wrap functions in a security checker that will refuse to call the functions to callers without the proper credentials.</p>
+<!-- prod: page break -->
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Perl Outperforms C with OpenGL</h3>
+
+<p>by Bob Free</p>
+
+<p>Desktop developers often assume that compiled languages always perform better than interpreted languages such as Perl.</p>
+
+<p>Conversely, most LAMP online service developers are familiar with mechanisms for preloading Perl interpreters modules (such as Apache mod_perl and ActivePerl/ISAPI), and know that Perl performance often approaches that of C/C++.</p>
+
+<p>However, few 3D developers think of Perl when it comes to performance. They should.</p>
+
+<p>GPUs are increasingly taking the load off of CPUs for number-crunching. Modern GPGPU processing leverages C-like programs and loads large data arrays onto the GPU, where processing executes independent of the CPU. As a result, the overall contribution of CPU-bound programs diminish, while Perl and C differences become statistically insignificant in terms of GPU performance.</p>
+
+<p>The author has recently published a open source update to CPAN's <a href="http://search.cpan.org/perldoc?OpenGL">OpenGL</a> module, adding support for GPGPU features. With this release, he has also posted OpenGL Perl versus C benchmarks--demonstrating cases where Perl outperforms C for OpenGL operations.</p>
+
+<h3>What Is OpenGL?</h3>
+
+<p>OpenGL is an industry-standard, cross-platform language for rendering 3D images. Originally developed by Silicon Graphics Inc. (SGI), it is now in wide use for 3D CAD/GIS systems, game development, and computer graphics (CG) effects in film.</p>
+
+<p>With the advent of Graphic Processing Units (GPU), realistic, real-time 3D rendering has become common--even in game consoles. GPUs are designed to process large arrays of data, such as 3D vertices, textures, surface normals, and color spaces.</p>
+
+<p>It quickly became clear that the GPU's ability to process large amounts of data could expand well beyond just 3D rendering, and could applied to General Purpose GPU (GPGPU) processing. GPGPUs can process complex physics problems, deal with particle simluations, provide database analytics, etc.</p>
+
+<p>Over the years, OpenGL has expanded to support GPGPU processing, making it simple to load C-like programs into GPU memory for fast execution, to load large arrays of data in the form of <em>textures</em>, and to quickly move data between the GPU and CPU via Frame Buffer Objects (FBO).</p>
+
+<p>While OpenGL is in itself a portable language, it provides no interfaces to operating system (OS) display systems. As a result, Unix systems generally rely on an X11-based library called GLX; Windows relies on a WGL interface. Several libraries, such as <a href="http://www.opengl.org/resources/libraries/glut/">GLUT</a>, help to abstract these differences. However, as OpenGL added new extensions, OS vendors (Microsoft in particular) provided different methods for accessing the new APIs, making it difficult to write cross-platform GPGPU code.</p>
+
+<h3>Perl OpenGL (POGL)</h3>
+
+<p>Bob Free of Graphcomp has just released a new, portable, open source Perl OpenGL module (POGL 0.55).</p>
+
+<p>This module adds support for 52 new OpenGL extensions, including many GPGPU features such as Vertex Arrays, Frame Buffer Objects, Vertext Programs, and Fragment Programs.</p>
+
+<p>In terms of 3D processing, these extensions allow developers to perform real-time dynamic vertex and texturemap generation and manipulation within the GPU. This module also simplifies GPGPU processing by moving data to and from the CPU through textures, and loading low-level, assembly-like instructions to the GPU.</p>
+
+<p>POGL 0.55 is a binary Perl module (written in C via XS), that has been tested on Windows (NT/XP/Vista) and Linux (Fedora 6. Ubuntu/Dapper). Source and binaries are available via SVN, PPM, tarball, and ZIP at the <a href="http://graphcomp.com/opengl">POGL homepage</a>.</p>
+
+<p>POGL OS Performance</p>
+
+<p>The POGL homepage includes initial benchmarks comparing POGL on Vista, Fedora, and Ubuntu. These tests show that static texture rendering on an animated object on Fedora was 10x faster than Vista; Ubuntu was 15x faster (using the same nVidia cards, drivers, and machine).</p>
+
+<p>A subsequent, tighter benchmark eliminated UI and FPS counters, and focused more on dynamic texturemap generation. These results, posted on <a href="http://graphcomp.com/opengl/bench.html">OpenGL C versus Perl benchmarks</a>, show comparable numbers for Fedora and Ubuntu, with both outperforming Vista by about 60 percent.</p>
+
+<p>Note: a further performance on these benchmarks could be available through the use of GPU vertex arrays.</p>
+
+<h3>Perl versus C Performance</h3>
+
+<p>These benchmarks also compare Perl against C code. It found no statistical difference between overall Perl and C performance on Linux. Inexplicably, Perl frequently outperformed C on Vista.</p>
+
+<p>In general, C performed better than Perl on Vertex/Fragment Shader operations, while Perl outperformed C on FBO operations. In this benchmark, overall performance was essentially equal between Perl and C.</p>
+
+<p>The similarity in performance is explained by several factors:</p>
+
+<ul>
+<li>GPU is performing the bulk of the number-crunching operations</li>
+
+<li>POGL is a compiled C module</li>
+
+<li>Non-GPU operations are minimal</li>
+</ul>
+
+<p>In cases where code dynamically generates or otherwise modifies the GPU's vetex/fragment shader code, it is conceivable that Perl would provide even better than C, due to Perl's optimized and interpreted string handling.</p>
+
+<h3>Perl Advantages</h3>
+
+<p>Given that GPGPU performance will be a wash in most cases, the primary reason for using a compiled language is to obfuscate source for intellectual property (IP) reasons.</p>
+
+<p>For server-side development, there's really no reason to use a compiled language for GPGPU operations, and several reasons to go with Perl:</p>
+
+<ul>
+<li>Perl OpenGL code is more portable than C; therefore there are fewer lines of code</li>
+
+<li>Numerous imaging modules for loading GPGPU data arrays (textures)</li>
+
+<li>Portable, open source modules for system and auxiliary functions</li>
+
+<li>Perl (under mod-perl/ISAPI) is generally faster than Java</li>
+
+<li>It is easier to port Perl to/from C than Python or Ruby</li>
+
+<li>As of this writing, there is no FBO support in Java, Python, or Ruby</li>
+</ul>
+
+<p>There is a side-by-side code comparison between C and Perl posted on the above benchmark page.</p>
+
+<p>Desktop OpenGL/GPU developers may find it faster to prototype code in Perl (e.g., simpler string handling and garbage collection), and then port their code to C later (if necessary). Developers can code in one window and execute in another--with no IDE, no compiling--allowing innovators/researchers to do real-time experiments with new shader algorithms.</p>
+
+<p>Physicists can quickly develop new models; researchers and media developers can create new experimental effects and reduce their time to market.</p>
+
+<h3>Summary</h3>
+
+<p>Performance is not a reason a reason to use C over Perl for OpenGL and GPGPU operations, and there are many cases where Perl is preferable to C (or Java/Python/Ruby).</p>
+
+<p>By writing your OpenGL/GPU code in Perl, you will likely:</p>
+
+<ul>
+<li>Reduce your R&amp;D costs and time to market</li>
+
+<li>Expand your platform/deployment options</li>
+
+<li>Accelerate your company's GPGPU ramp up</li>
+</ul>
+<!-- prod: page break -->
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Using Test::Count</h3>
+
+<p>by Shlomi Fish</p>
+
+<p>A typical <a href="http://search.cpan.org/perldoc?Test::More">Test::More</a> test script contains several checks. It is preferable to keep track of the number of checks that the script is running (using <code>use Test::More tests =&gt; $NUM_CHECKS</code> or the <code>plan tests =&gt; $NUM_CHECKS</code>), so that if some checks are not run (for whatever reason), the test script will still fail when being run by the harness.</p>
+
+<p>If you add more checks to a test file, then you have to remember to update the plan. However, how do you keep track of how many tests <em>should</em> run? I've already encountered a case where <a href="http://dbi.perl.org/">a DBI related module</a> had a different number of tests with an older version of DBI than with a more recent one.</p>
+
+<p>Enter <a href="http://search.cpan.org/dist/Test-Count/">Test::Count</a>. Test::Count originated from a <a href="http://www.vim.org/">Vim</a> script I wrote to keep track of the number of tests by using meta-comments such as <code># TEST</code> (for one test) or <code># TEST*3*5</code> (for 15 tests). However, there was a limit to what I could do with Vim's scripting language, as I wanted a richer syntax for specifying the tests as well as variables.</p>
+
+<p>Thus, I wrote the Test::Count module and placed it on CPAN. <a href="http://search.cpan.org/dist/Test-Count/lib/Test/Count/Filter.pm">Test::Count::Filter</a> acts as a filter, counts the tests, and updates them. Here's an example, taken from a code I wrote for a Perl Quiz of the Week:</p>
+
+<pre><code>#!/usr/bin/perl -w
+
+# This file implements various functions to remove
+# all periods ("."'s) except the last from a string.
+
+use strict;
+
+use Test::More tests =&gt; 5;
+use String::ShellQuote;
+
+sub via_split
+{
+    my $s = shift;
+    my @components = split(/\./, $s, -1);
+    if (@components == 1)
+    {
+        return $s;
+    }
+    my $last = pop(@components);
+    return join("", @components) . "." . $last;
+}
+
+# Other Functions snipped.
+
+# TEST:$num_tests=9
+# TEST:$num_funcs=8
+# TEST*$num_tests*$num_funcs
+foreach my $f (@funcs)
+{
+    my $ref = eval ("\\&amp;$f");
+    is($ref-&gt;("hello.world.txt"), "helloworld.txt", "$f - simple"); # 1
+    is($ref-&gt;("hello-there"), "hello-there", "$f - zero periods"); # 2
+    is($ref-&gt;("hello..too.pl"), "hellotoo.pl", "$f - double"); # 3
+    is($ref-&gt;("magna..carta"), "magna.carta", "$f - double at end"); # 4
+    is($ref-&gt;("the-more-the-merrier.jpg"),
+       "the-more-the-merrier.jpg", "$f - one period"); # 5
+    is($ref-&gt;("hello."), "hello.", "$f - one period at end"); # 6
+    is($ref-&gt;("perl.txt."), "perltxt.", "$f - period at end"); # 7
+    is($ref-&gt;(".yes"), ".yes", "$f - one period at start"); # 8
+    is($ref-&gt;(".yes.txt"), "yes.txt", "$f - period at start"); # 9
+}</code></pre>
+
+<p>Filtering this script through <code>Test::Count::Filter</code> provides the correct number of tests. I then add this to my <em>.vimrc</em>:</p>
+
+<pre><code>function! Perl_Tests_Count()
+    %!perl -MTest::Count::Filter -e 'Test::Count::Filter-&gt;new({})-&gt;process()'
+endfunction
+
+autocmd BufNewFile,BufRead *.t map &lt;F3&gt; :call Perl_Tests_Count()&lt;CR&gt;</code></pre>
+
+<p>Now I can press F3 to update the number of checks.</p>
+
+<p><code>Test::Count</code> supports +,-,*, /, as well as parentheses, so it is expressive enough for most needs.</p>
+
+<h3>Acknowledgements</h3>
+
+<p>Thanks to mrMister from <a href="http://www.freenode.net/">Freenode</a> for going over earlier drafts of this article and correcting some problems.</p>
+
+
+
+
+
+
+
+
+
+
+
+<h3>What's In that Scalar?</h3>
+
+<p>by brian d foy</p>
+
+<p>Scalars are simple, right? They hold single values, and you don't even have to care what those values are because Perl figures out if they are numbers or strings. Well, scalars show up just about anywhere and it's much more complicated than single values. I could have <code>undef</code>, a number or string, or a reference. That reference can be a normal reference, a blessed reference, or even a hidden reference as a tied variable.</p>
+
+<p>Perhaps I have a scalar variable which should be an object (a blessed reference, which is a single value), but before I call a method on it I want to ensure it is to avoid the "unblessed reference" error that kills my program. I might try the <code>ref</code> built-in to get the class name:</p>
+
+<pre><code>   if( ref $maybe_object ) { ... }</code></pre>
+
+<p>There's a bug there. <code>ref</code> returns an empty string if the scalar isn't an object. It might return <code>0</code>, a false value, and yes, some Perl people have figured out how to create a package named <code>0</code> just to mess with this. I might think that checking for defined-ness would work:</p>
+
+<pre><code>   if( defined ref $maybe_object ) { ... }</code></pre>
+
+<p>... but the empty string is also defined. I want all the cases where it is not the one value that means it's not a reference.</p>
+
+<pre><code>   unless( '' eq ref $maybe_object ) { ... }</code></pre>
+
+<p>This still doesn't tell me if I have an object. I know it's a reference, but maybe it's a regular data reference. The <code>blessed</code> function from <a href="http://search.cpan.org/perldoc?Scalar::Util">Scalar::Util</a> can help:</p>
+
+<pre><code>   if( blessed $maybe_object ) { ... }</code></pre>
+
+<p>This almost has the same problem as <code>ref</code>. <code>blessed</code> returns the package name if it's an object, and <code>undef</code> otherwise. I really need to check for defined-ness.</p>
+
+<pre><code>   if( defined blessed $maybe_object ) { ... }</code></pre>
+
+<p>Even if <code>blessed</code> returns <code>undef</code>, I still might have a hidden object. If the scalar is a tied variable, there's really an object underneath it, although the scalar acts as if it's a normal variable. Although I normally don't need to interact with the secret object, the <code>tied</code> built-in returns the secret object if there is one, and <code>undef</code> otherwise.</p>
+
+<pre><code>        my $secret_object = tied $maybe_tied_scalar;
+
+        if( defined $secret_object ) { ... }</code></pre>
+
+<p>Once I have the secret object in <code>$secret_object</code>, I treat it like any other object.</p>
+
+<p>Now I'm sure I have an object, but that doesn't mean I know which methods I can call. The <code>isa</code> function in the <code>UNIVERSAL</code> package supposedly can figure this out for me. It tells me if a class is somewhere in an object's inheritance tree. I want to know if my object can do what a <code>Horse</code> can do, even if I have a <code>RaceHorse</code>:</p>
+
+<pre><code>   if( UNIVERSAL::isa( $object, 'RaceHorse' ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>...what if the <code>RaceHorse</code> class is just a factory for objects in some other class that I'm not supposed to know about? I'll make a new object as a prototype just to get its reference:</p>
+
+<pre><code>   if( UNIVERSAL::isa( $object, ref RaceHorse-&gt;new() ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>A real object-oriented programmer doesn't care what sort of object it is as long as it can respond to the right method. I should use <code>can</code> instead:</p>
+
+<pre><code>   if( UNIVERSAL::can( $object, $method ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>This doesn't always work either. <code>can</code> only knows about defined subroutine names, and only looks in the inheritance tree for them. It can't detect methods from <code>AUTOLOAD</code> or traits. I could override the <code>can</code> method to handle those, but I have to call it as a method (this works for <code>isa</code> too):</p>
+
+<pre><code>   if( $object-&gt;can( $method ) ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>What if <code>$object</code> wasn't really an object? I just called a method on a non-object! I'm back to my original problem, but I don't want to use all of those tests I just went through. I'll fix this with an <code>eval</code>, which catches the error for non-objects:</p>
+
+<pre><code>   if( eval{ $object-&gt;can( $method ) } ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>...but what if someone installed a <code>__DIE__</code> handler that simply <code>exit</code>-ed instead of <code>die</code>-ing? Programmers do that sort of thing forgetting that it affects the entire program.</p>
+
+<pre><code>   $SIG{__DIE__} = sub { exit };</code></pre>
+
+<p>Now my <code>eval</code> tries to <code>die</code> because it caught the error, but the <code>__DIE__</code> handler says <code>exit</code>, so the program stops without an error. I have to localize the <code>__DIE__</code> handler:</p>
+
+<pre><code>   if( eval{ local $SIG{__DIE__}; $object-&gt;can( $method ) } ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>If I'm the guy responsible for the <code>__DIE__</code> handler, I could use <code>$^S</code> to see if I'm in an <code>eval</code>:</p>
+
+<pre><code>   $SIG{__DIE__} = sub { $^S ? die : exit };</code></pre>
+
+<p>That's solved it, right? Not quite. Why do all of that checking? I can just call the method and hope for the best. If I get an error, so be it:</p>
+
+<pre><code>   my $result = eval { $object-&gt;method };</code></pre>
+
+<p>Now I have to wrap all of my method calls in an eval. None of this would really be a problem if Perl were an object language. Or is it? The <a href="http://search.cpan.org/perldoc?autobox">autobox</a> module makes Perl data types look like objects:</p>
+
+<pre><code>   use autobox;
+
+   sub SCALAR::println { print $_[0], "\n" }
+
+   'Hello World'-&gt;println;</code></pre>
+
+<p>That works because it uses a special package <code>SCALAR</code>, although I need to define methods in it myself. I'll catch unknown methods with <code>AUTOLOAD</code>:</p>
+
+<pre><code>   sub SCALAR::AUTOLOAD {}</code></pre>
+
+<p>Or, I can just wait for Perl 6 when these things get much less murky because everything is an object.</p>
+
+
+
+
+
+
+        </div>
+
+
+
+    </div>
+    <div class="asset-footer"></div>
+</div>
+
+
+                            
+                            <div id="entry-692" class="entry-asset asset hentry">
+    <div class="asset-header">
+        <h2 class="asset-name entry-title"><a href="/pub/2006/05/charting-data.html" rel="bookmark">Charting Data at the Bottom of the World</a></h2>
+        <div class="asset-meta">
+            <span class="byline">
+    
+                By <span class="vcard author">Alex Gough</span> on <abbr class="published" title="2006-05-04T00:00:00-08:00">May  4, 2006 12:00 AM</abbr>
+    
+            </span>
+
+            
+            
+
+        </div>
+    </div>
+    <div class="asset-content entry-content">
+
+        <div class="asset-body">
+            
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+<p>I have an odd job: I'm the only programmer for about 500 miles. I look after experiments on <a href="http://www.bas.ac.uk/Living_and_Working/Stations/Halley/index.php">a remote Antarctic research station</a> and look after the data they produce. As well as the scientific stuff knocking about, we have between 20 and 70 people, most of them keen on the weather. Either because we can't work if its windy, or can enjoy a spot of kite skiing if it's just windy enough, everyone here wants to know what's going on outside.</p>
+
+<p>Luckily we have a few climate science experiments running, including a weather station. For a few years now, data from the weather station has been available on people's computers through a Perl Tk application and some slightly baroque shuttling of records between three different data servers and the network the office computers run on. All is well and good, and we leave it well alone, as it's worked well. Recently, a new experiment installed on the station provides an up-to-the-minute profile of wind speeds over the first 30 meters of the air. It's there to support research into interactions between snow and air in Antarctica, but it's also crucial information if you want to head out and whiz about behind a kite.</p>
+
+<p>The data from this mast goes to a remote machine that allows users to VNC in to check its health, and logs this data to a binary format of its own making. People around the station have taken to logging in to this machine before heading out, which is probably not the best way keep the data rolling in without interruption. Rather than forbidding access to this useful source of local data, we decided to upgrade our weather display system to include the major parameters recorded by the mast.</p>
+
+<p>Alas, while fairly nice to use, Tk is a bit fiddly and not exactly my cup of tea. Adding new displays to an existing application can be time-consuming, as you must re-learn the relations among each different widget, pane, and button. Added to this programming burden, even if we could find every copy of the application scattered around our network, we'd have to do so every time we added some other source of data. We settled instead on a complete rewrite as a CGI script and some automatically generated graphs. A fancier man than me might call that a three-tier application, but then, he'd probably be selling you something at the same time.</p>
+
+<h3>Mountains of Data</h3>
+
+<p>Before you can see what the weather is doing (beyond looking out of the window), you need to get at the raw numbers somehow. Ours are provided by state-of-the-art scientific instruments in state-of-the-art data formats; that is to say, partly as lines of ASCII data in columns, and partly as fixed-length records in a binary file. No matter, though. Perl and some friends from CPAN make fast work of building meaning from tumbled piles of data.</p>
+
+<p>Before doing anything, I set up a couple of objects to hold some data values. Each set of observations has a class corresponding to the experiment that generated it. The classes also contain <code>read_file</code> factory methods that read a file and produce a list of observations. To make things as quick (to write) as possible, I used <a href="http://search.cpan.org/perldoc?Class::Accessor"><code>Class::Accessor</code></a> to autogenerate <code>get</code> and <code>set</code> methods for my objects:</p>
+
+<pre><code> # Current weather data
+ package Z::Weather;
+ use base qw(Class::Accessor);
+ Z::Weather-&gt;mk_accessors( qw(time temp pressure wind dir) );</code></pre>
+
+<p>This automatically creates a <code>new()</code> method for <code>Z::Weather</code>. Call it as:</p>
+
+<pre><code> my $weather = Z::Weather-&gt;new({time =&gt; $time,
+                                temp =&gt; $temp,
+                                pressure =&gt; $pres,
+                                wind =&gt; $wind,
+                                dir</code></pre>
+
+<p>It also generates <code>get</code> and <code>set</code> accessors for each field:</p>
+
+<pre><code> # set
+ $weather-&gt;temp(30);
+ 
+ # get
+ my $temp = $weather-&gt;temp();</code></pre>
+
+<p>(The "codename" used when shipping items to our station is <code>Z</code>, so I've used that as my little local namespace, too.)</p>
+
+<p>From our mast, we have a number of observations taken at different heights, so I wanted a slightly more complicated representation, using a class to represent the mast and another to represent each level on the mast.</p>
+
+<pre><code> package Z::Mast;
+ use base qw(Class::Accessor);
+ 
+ Z::Mast-&gt;mk_accessors(qw(time values));
+ 
+ package Z::Mast::Level;
+ use base qw(Class::Accessor);
+ Z::Mast::Level-&gt;mk_accessors(qw(wind dir level));</code></pre>
+
+<p>Remember that <code>Z::Mast::values</code> will set and get a reference to an array of <code>::Level</code> objects. If I wanted to enforce that, I could override the methods provided by <code>Class::Accessor</code>, but that would create work that I can get away without doing for this simple case.</p>
+
+<p>Now that I know what the data will look like in Perl, I can wrench it from the covetous hands of our data loggers and turn it into something I can use.</p>
+
+<p>First, I decided to deal with the plain ASCII file. This contains single lines, with the time of observation first, then white-space-separated values for temperature, pressure, wind speed, direction, and a few others that I don't care about. <code>Z::Weather</code> needs to use a couple of modules and add a couple of methods:</p>
+
+<pre><code> use IO::All;
+ 
+ sub from_file {
+     my $class = shift;
+     my $io    = io(shift);
+     my @recs  = ();
+     
+     while (my $line = $io-&gt;readline()) {
+         chomp($line);
+         push @recs, $class-&gt;_line($line);
+     }
+     return @recs;
+ }</code></pre>
+
+<p>I expect to call this as:</p>
+
+<pre><code> my @weather_records = Z::Weather-&gt;fromfile("weather.data");</code></pre>
+
+<p>Using the <a href="http://search.cpan.org/perldoc?IO::All"><code>IO::All</code></a> module to access the files both makes it very easy to read the file and also allows <em>calling</em> code to instead supply an <code>IO::All</code> object of its own, or to call this method with a filehandle already opened to the data source. This will make it easy to obtain data from some other source; for instance, if the experiment changes to provide a socket from which to read the current values.</p>
+
+<p>Parsing the data is the responsibility of another method, <code>_line()</code>, which expects lines like:</p>
+
+<pre><code> 2006 02 06 01 25  -10.4  983.2  23.5 260.1
+
+ use DateTime;
+ sub _line {
+     my ($class, $line) = @_;
+     my @vals = split /\s+/, $line;
+
+     # extract time fields and turn into DateTime object
+     my($y, $m, $d, $h, $min)
+        = $line =~ /^(\d{4}) (\d\d) (\d\d) (\d\d) (\d\d)/;
+ 
+     my $t = DateTime-&gt;new(year=&gt;$y,month=&gt;$m,day=&gt;$d,hour=&gt;$h,minute=&gt;$min);
+ 
+     # return a new Z::Weather record, using the magic new() method
+     return $class-&gt;new({time =&gt; $t,
+                         temp     =&gt; $vals[5],
+                         pressure =&gt; $vals[6],
+                         wind     =&gt; $vals[7],
+                         dir      =&gt; $vals[8],  });
+ }</code></pre>
+
+<p><code>split</code> and Perl's magic make sense of the data points, and the <a href="http://search.cpan.org/perldoc?DateTime"><code>DateTime</code></a> module take cares of the details of when the record was produced. I find it much easier to turn any time-related value into a <code>DateTime</code> object at the soonest possible moment, so that the rest of my code can expect <code>DateTime</code> objects. It becomes easier to reuse in other projects. If you find yourself writing code to handle leap years every other day, then make using <code>DateTime</code> your number one new habit.</p>
+
+<p>I deal with the mast data in a similar way, except that the other format is fixed-length binary records. The time of the recording is stored in the first four bytes as the number of seconds into an arbitrary epoch. I correct this into Unix time when creating its <code>DateTime</code> object. Values are stored as two-byte, network-endian unsigned shorts stored as hundredths of the recorded values. <code>unpack()</code> comes to my aid here.</p>
+
+<pre><code> sub from_file {
+   my $class = shift;
+   my $io    = io(shift);
+   my ($rec, @recs);
+ 
+   while ($io-&gt;read($rec, 62) == 62) {
+     push @recs, $class-&gt;_record($rec);
+   }
+   return @recs;
+ }
+
+ # map height of reading to offsets in binary record
+ our %heights = qw(1 24  2 28 4 32  8 36  15 40  30 44);
+ use constant MAST_EPOCH =&gt; 2082844800;
+ 
+ sub _record {
+   my ($class, $rec) = @_;
+
+   # extract the time as a 4 byte network order integer, and correct epoch
+   my $crazy_time = unpack("N", $rec);
+   my $time       = DateTime-&gt;from_epoch(epoch=&gt;$crazy_time-MAST_EPOCH);
+
+   # then a series of (speed, dir) 2 byte pairs further into the record
+   my @vals;
+   foreach my $offset (sort values %heights) {
+     my ($speed, $dir) = unpack("nn", substr($rec, $offset));
+     push @vals,
+       Z::Mast::Level-&gt;new({wind=&gt;$speed*100,
+                            dir =&gt; $dir*100,
+                            level=&gt;$heights{$offset}});
+   }
+   return $class-&gt;new({time =&gt; $time,
+                       values =&gt; \@vals});
+ }</code></pre>
+
+<p>Again, I can call this using any one of the types supported by <code>IO::All</code>. Again, I wield <code>DateTime</code> to my advantage to turn a time stored in an unusual epoch quickly into an object which anything or anyone else can understand. There are a few magic numbers here, but that's what you end up with when you deal with other people's crazy file formats. The key thing is to record magic numbers in one place, to allow other people to change them if they need to, both in your code and from their own code (hence the <code>our</code> variable), and finally, to let values pass from undocumented darkness into visible, named objects as soon as possible.</p>
+
+<csperl file="grab" domain="on" record="b/1714" template="b/article_sidebar2.view">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Displaying Data</h3>
+
+<p>I now have hold of the weather data and have forced it into a form that I can follow. Now I get to show it to someone else. I did this in two different ways: as raw data through a web page and as a pre-generated chart embedded in the page.</p>
+
+<p>In each case, the code has to read in files to obtain the necessary data:</p>
+
+<pre><code> my @weather_records = Z::Weather-&gt;from_file('weather.data.dat');</code></pre>
+
+<p>Then it needs to produce the web page:</p>
+
+<pre><code> use Template;
+ my $template = Template-&gt;new();
+
+ print "Content-type: text/html\n\n";
+ 
+ $template-&gt;process(\*DATA, {
+                       now =&gt; $weather_records[-1],
+                       records =&gt; \@weather_records,
+                             })
+    || die "Could not process template: ".$template-&gt;error()."\n";</code></pre>
+
+<p>This isn't really all that interesting. In fact, it looks almost like this does nothing at all. I've pulled in the <code>Template</code> module, told it to build and output a template defined after the <code>__END__</code> of the script, and given it two template variables to play with. The template looks something like:</p>
+
+<pre><code> __END__
+ &lt;html&gt;&lt;head&gt;&lt;title&gt;Weather&lt;/title&gt;&lt;/head&gt;
+ &lt;body&gt;
+ &lt;h2&gt;Latest weather data at [% now.time %]&lt;a name="/h2"&gt;
+ 
+ &lt;P&gt;T: [% now.temp %] &amp;deg;C
+    P: [% now.pressure %] kPa
+    W: [% now.wind %] kts
+    D: [% now.dir %] &amp;deg;&lt;/p&gt;
+ 
+ &lt;P&gt;&lt;img src="/weather_chart.png"&gt;&lt;br&gt;
+    &lt;img src="/mast_chart.png"&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;tr&gt;&lt;th&gt; Time &lt;/th&gt;&lt;th&gt; Temp &lt;/th&gt;&lt;th&gt; Wind &lt;/th&gt;&lt;/tr&gt;
+ [% FOREACH rec IN records %]
+ &lt;tr&gt;
+  &lt;td&gt;[% rec.time %]&lt;/td&gt;
+  &lt;td&gt;[% rec.temp %]&lt;/td&gt;
+  &lt;td&gt;[% rec.wind %]&lt;/td&gt;
+ &lt;/tr&gt;
+ [% END %]
+ &lt;/table&gt;
+ &lt;/body&gt;&lt;/html&gt;</code></pre>
+
+<p>The template uses the syntax of the <a href="http://www.template-toolkit.org/"><code>Template-Toolkit</code></a>, a general-purpose templating framework. It's useful because it allows the separation of display and formatting of data from the code that generates it. There's no Perl code in the template, and no HTML will appear in any of my Perl code. While the output generated now is ugly and basic, it will be easy to make it flashy later, once I have the program working, without having to change anything in the program itself to do so. As I've prepared our data carefully as objects with sensible methods, I can just hand a bunch of these over to the template and let it suck out whatever it wants to show.</p>
+
+<h3>Pretty Pictures</h3>
+
+<p>Producing the charts is, again, a simple business (by now, the theme of this article should be emerging). Gone are the days when you'd have to scratch your head figuring out how to draw lines and plot points; gone even are the days when you have to bang your head hard against the confused API of some long-forgotten module. Taking the mast values as an example, I first need to read in the data:</p>
+
+<pre><code> my @mast_values = Z::Mast-&gt;from_file('mast.data.dat');</code></pre>
+
+<p>Because old weather is old news, I throw away any values older than three hours, using <code>DateTime</code> and <a href="http://search.cpan.org/perldoc?DateTime::Duration"><code>DateTime::Duration</code></a> methods in a <code>grep</code>:</p>
+
+<pre><code> use DateTime;
+ use DateTime::Duration;
+ 
+ my $now = DateTime-&gt;now();
+ my $age = DateTime::Duration-&gt;new(hours =&gt; 3);
+ 
+ @mast_values = grep { $_-&gt;time + $age &gt; $now } @mast_values;</code></pre>
+
+<p>This is so, so much easier than fiddling around with epochs and <code>3*3600</code> all over the place. If you find yourself writing 3600 anywhere in your code, you should be using <code>DateTime::Duration</code> instead. Next, I feed the data points into the <a href="http://search.cpan.org/perldoc?Chart::Lines"><code>Chart::Lines</code></a> module, a part of the <a href="http://search.cpan.org/search?query=Chart"><code>Chart</code></a> distribution. I use this in three phases. First, I create a new <code>Chart</code> and specify how large the resulting graphic should be:</p>
+
+<pre><code> use Chart::Lines;
+ my $chart = Chart::Lines-&gt;new($x_size, $y_size);</code></pre>
+
+<p>Then I set up a few options to tweak how the chart will display:</p>
+
+<pre><code> $chart-&gt;set(
+    legend          =&gt; 'none',
+    xy_plot         =&gt; 'true',
+    grey_background =&gt; 0,
+    y_label         =&gt; 'Wind kts',
+    x_label         =&gt; 'Hours ago',
+    colors          =&gt; {
+      y_label    =&gt; [0xff, 0xee, 0xee],
+      text       =&gt; [0xff,0xee,0xff],
+      dataset0   =&gt; [0xff,0,0],
+      dataset1   =&gt; [0,0xff,0xff],
+      dataset2   =&gt; [0,0,0xff],
+      background =&gt; [0x55, 0x00, 0x55],
+                },
+    );</code></pre>
+
+<p>These are mostly self-explanatory; the <code>Chart</code> documentation covers them in detail. I set <code>xy_plot</code> to <code>true</code> so that the module will use the first dataset as the <code>x</code> values and all of the other datasets as the <code>y</code> values for a line. I set a bunch of rather bright colors, to keep my avid customers cheerful, and set the text used to label the chart.</p>
+
+<pre><code> my @labels = map {($now-&gt;epoch - $_-&gt;time-&gt;epoch) / 60} @mast_values;</code></pre>
+
+<p>Finally, I used a series of <code>map</code> expressions to extract <code>x</code> and <code>y</code> values from the data. One turns the <code>DateTime</code> times into a number of minutes ago. These values are the <code>x</code> values. <code>y</code> values are the appropriate parameters extracted from the nested <code>Z::Mast</code> and <code>Z::Mast::Label</code> objects. The rest of the code provides the data to the plotting method of the chart, directing it to write out a .png file (Figure 1).</p>
+
+<pre><code> $chart-&gt;png("mast.png",
+               [ \@labels,
+                [map {$_-&gt;values()-&gt;[0]-&gt;wind} @mast_values],
+                [map {$_-&gt;values()-&gt;[1]-&gt;wind} @mast_values],
+                [map {$_-&gt;values()-&gt;[2]-&gt;wind} @mast_values],
+                  ]);</code></pre>
+
+<p><img src="/pub/2006/05/04/graphics/mast.png" width="500" height="260" alt="the resulting chart" /><br />
+<em>Figure 1.  The resulting chart</em></p>
+
+<p>All I need now is a working HTTP server and a <code>crontab</code> entry or two to run the graphic generation programs. It is possible to use the <code>Chart</code> modules to generate CGI output directly using the <code>Chart::cgi</code> method, but I found that this was too slow once lots of different clients accessed the weather data at the same time. It was a simple task to instead switch to a <code>crontab</code>-based approach for the graphs, with a CGI script still providing real-time access to the current values.</p>
+
+<h3>Conclusions</h3>
+
+<p>The <code>Chart</code> family of modules provides more than just an <code>x</code>-<code>y</code> plot. Pie, bar, Pareto, and mountain charts, amongst others, are available through the same API as I discussed in this article. They are just as easy to whip into being to satisfy even the most demanding of data consumers.</p>
+
+<p>The Template Toolkit is used mainly for more complicated websites and content management systems, but it will simplify the production of simple sites and pages, allowing you to concentrate on the detail of the problem by separating data and its presentation. Even though a problem is simple and allows a fast solution, you can reach your goal faster still by pulling in big tools to do little jobs.</p>
+
+<p>As for the <code>DateTime</code> module, I simply wouldn't go anywhere without it. These days, I find myself automatically typing <code>use DateTime;</code> along with <code>warnings</code> and <code>strict</code> at the head of every Perl program I write.</p>
+
+<p><code>Class::Accessors</code> makes the creation of data representation objects faster than typing in a C struct, provides some level of documentation about what the data you're dealing with, and allows for reuse. You could just stick everything into layers of nested hashes and arrays, but this is a certain path to eventual confusion. <code>Class::Accessors</code> will keep you sane and save your fingers at the same time.</p>
+
+<p><code>IO::All</code> should be a part of your day-to-day toolkit; the new idioms it provides will soon see you using it everywhere, even in one-liners.</p>
+
+<p>One of the many joys of programming lies in the satisfaction we receive when we make someone's life that little bit better. Perl makes it easy, fast, and fun for us to tread that path. Perl's greatest strength, the rock upon which its greatness is founded, is the speed with which we can take a problem, or a cool idea, and structure our half-formed thoughts into a soundly built solution.</p>
+
+<p><a href="/2006/05/04/examples/purple_code.pl">Download the example code</a> for this article.</p>
+
+
+        </div>
+
+
+
+    </div>
+    <div class="asset-footer"></div>
+</div>
+
+
+                            
+                            <div id="entry-838" class="entry-asset asset hentry">
+    <div class="asset-header">
+        <h2 class="asset-name entry-title"><a href="/pub/2005/10/wxperl-menus.html" rel="bookmark">Making Menus with wxPerl</a></h2>
+        <div class="asset-meta">
+            <span class="byline">
+    
+                By <span class="vcard author">Roberto Alamos</span> on <abbr class="published" title="2005-10-06T00:00:00-08:00">October  6, 2005 12:00 AM</abbr>
+    
+            </span>
+
+            
+            
+
+        </div>
+    </div>
+    <div class="asset-content entry-content">
+
+        <div class="asset-body">
+            
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+<br clear="all" />
+<p>In a previous article about wxPerl published on Perl.com, Jouke Visser taught <a href="/pub/a/2001/09/12/wxtutorial1.html">the very basics of wxPerl programming</a>. In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover the creation, editing, and erasure of menus with the <a href="http://search.cpan.org/perldoc?Wx::Menu">Wx::Menu</a> and Wx::MenuBar modules, and also will show examples of their use.</p>
+
+<h3>Conventions</h3>
+
+<p>I assume that you understand the wxPerl approach to GUI programming, so I won't explain it here. The following code is the base for the examples in this article:</p>
+
+<pre><code>use strict;
+use Wx;
+
+package WxPerlComExample;
+
+use base qw(Wx::App);
+
+sub OnInit {
+    my $self  = shift;
+    my $frame = WxPerlComExampleFrame-&gt;new(undef, -1, "WxPerl Example");
+
+    $frame-&gt;Show(1);
+    $self-&gt;SetTopWindow($frame);
+
+    return 1;
+}
+
+package WxPerlComExampleFrame;
+
+use base qw(Wx::Frame);
+
+use Wx qw( 
+    wxDefaultPosition wxDefaultSize wxDefaultPosition wxDefaultSize wxID_EXIT
+);
+
+use Wx::Event qw(EVT_MENU);
+
+our @id = (0 .. 100); # IDs array
+
+sub new {
+    my $class = shift;
+    my $self  = $class-&gt;SUPER::new( @_ );
+
+    ### CODE GOES HERE ###
+
+    return $self;
+}
+
+### PUT SUBROUTINES HERE ###
+
+package main;
+
+my($app) = WxPerlComExample-&gt;new();
+
+$app-&gt;MainLoop();</code></pre>
+
+<p><code>@id</code> is an array of integer numbers to use as unique identifier numbers. In addition, the following definitions are important:</p>
+
+<ul>
+<li><b>Menu bar</b>: The bar located at the top of the window where menus will appear. This is a particular instance of Wx::MenuBar.</li>
+
+<li><b>Menu</b>: A particular instance of Wx::Menu.</li>
+
+<li><b>Item</b>: An option inside of a (sub)menu.</li>
+</ul>
+
+<!-- sidebar begins -->
+ <csperl file="grab" domain="on" record="b/1714" template="b/article_sidebar2.view">
+<!-- sidebar ends -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>A Quick Example</h3>
+
+<p>Instead of wading through several pages of explanation before the first example, here is a short example that serves as a summary of this article. Note that I have divided it in two parts. Add this code to the base code in the <code>WxPerlComExampleFrame</code> constructor:</p>
+
+<pre><code># Create menus
+my $firstmenu = Wx::Menu-&gt;new();
+$firstmenu-&gt;Append($id[0], "Normal Item");
+$firstmenu-&gt;AppendCheckItem($id[1], "Check Item");
+$firstmenu-&gt;AppendSeparator();
+$firstmenu-&gt;AppendRadioItem($id[2], "Radio Item");
+
+my $secmenu   = Wx::Menu-&gt;new();
+$secmenu-&gt;Append(wxID_EXIT, "Exit\tCtrl+X");
+
+# Create menu bar
+my $menubar   = Wx::MenuBar-&gt;new();
+$menubar-&gt;Append($firstmenu, "First Menu");
+$menubar-&gt;Append($secmenu, "Exit Menu");
+
+# Attach menubar to the window
+$self-&gt;SetMenuBar($menubar);
+$self-&gt;SetAutoLayout(1);
+
+# Handle events only for Exit and Normal item
+EVT_MENU( $self, $id[0], \&amp;ShowDialog );
+EVT_MENU( $self, wxID_EXIT, sub {$_[0]-&gt;Close(1)} );</code></pre>
+
+<p>Insert the following code into the base code at the line <code>### PUT SUBROUTINES HERE ###</code>.</p>
+
+<pre><code>use Wx qw(wxOK wxCENTRE);
+
+# The following subroutine will be called when you click in the normal item
+
+sub ShowDialog {
+  my($self, $event) = @_;
+  Wx::MessageBox( "This is a dialog", 
+                  "Wx::MessageBox example", 
+                   wxOK|wxCENTRE, 
+                   $self
+               );
+}</code></pre>
+
+<p>Run this example to see something like Figures 1 and 2.</p>
+
+<p><img src="/pub/2005/10/06/graphics/qexample1.jpg" width="290" height="224" alt="a menu with complex sub-items" /><br />
+<em>Figure 1. A menu with complex sub-items</em>
+</p>
+
+<p><img src="/pub/2005/10/06/graphics/qexample2.jpg" width="290" height="224" alt="a menu with a single sub-item" /><br />
+<em>Figure 2. A menu with a single sub-item</em>
+</p>
+
+<h3>Programming Menus</h3>
+
+<p>To add a menu to your wxPerl application, you must know how to use two Perl modules that come with WxPerl: Wx::MenuBar and Wx::Menu. Wx::MenuBar creates and manages the bar that contains menus created with Wx::Menu. There is also a third module involved: Wx::MenuItem. This module, as its name implies, creates and manages menu items. You usually don't need to use it, because almost all of the operations you need for a menu item are available through Wx::Menu methods.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4>Using Wx::Menu</h4>
+
+<p>Creating a menu with Wx::Menu is as easy as:</p>
+
+<pre><code>my $menu = Wx::Menu-&gt;new();</code></pre>
+
+<p>Now <code>$menu</code> is a Wx::Menu object. WxPerl has five types of items. The first is the normal item, upon which you can click to get a response (a dialog or something else). The second is the check item, which has the Boolean property of being checked or not (independent of another check items). The third item is the radio item, which is an "exclusive check item;" if you check a particular radio item, other radio items in its radio group get unchecked instantly. The fourth type of item is the separator, which is just a straight line that acts as a barrier that separates groups of similar items inside of a menu. The fifth type is the submenu, an item that expands another menu when the mouse cursor is over it.</p>
+
+<h5>Setting Up Menu Items</h5>
+
+<p>To create a normal item for your menu, write:</p>
+
+<pre><code>$menu-&gt;Append($id, $label, $helpstr);</code></pre>
+
+<p>where <code>$id</code> is an unique integer that identifies this item, <code>$label</code> is the text to display on the menu, and <code>$helpstr</code> is a string to display in the status bar. (This last argument is optional.) Note that every menu item must have an unique identifier number in order to be able to operate with this item during the rest of the program. (From now on, <code>$id</code> will denote the unique identifier number of a menu item.)</p>
+
+<p>To create a check or radio item, the methods are analogous to <code>Append</code>--<code>AppendCheckItem</code> and <code>AppendRadioItem</code>, respectively. Add a separator with the <code>AppendSeparator</code> method; it does not expect arguments. Create a submenu with the <code>AppendSubMenu</code> method:</p>
+
+<pre><code>$menu-&gt;AppendSubMenu($id, $label, $submenu, $helpstr);</code></pre>
+
+<p>where <code>$submenu</code> is an instance to another Wx::Menu object. (Don't try to make that a submenu be a submenu of itself, because the Universe will crash or, in the best case, your program won't execute at all.)</p>
+
+<p>While append methods add menu items in the last position of your menus, Wx::Menu gives you methods to add menu items at any position you want. For instance, to add a normal item at some position in a menu:</p>
+
+<pre><code>$menu-&gt;Insert($pos, $id, $label, $helpstr);</code></pre>
+
+<p>where <code>$pos</code> is the position of the item, starting at 0. To add a radio item, check item, or separator, use the <code>InsertRadioItem</code>, <code>InsertCheckItem</code>, or <code>InsertSeparator</code> methods. As usual, the latter takes no arguments. To insert a submenu, use the <code>InsertSubMenu</code> method:</p>
+
+<pre><code>$menu-&gt;InsertSubMenu($pos, $id, $label, $submenu, $helpstr);</code></pre>
+
+<p>You can also insert an item at the first position by using the <code>Prepend</code> method:</p>
+
+<p>$menu-&gt;Prepend($id, $label, $helpstr);</p>
+
+<p><code>PrependRadioItem</code>, <code>PrependCheckItem</code>, and <code>PrependSeparator</code> methods are also available. As you might expect, there's a <code>PrependSubMenu</code> method that works like this:</p>
+
+<p><code>$menu-&gt;PrependSubMenu($id, $label, $submenu, $helpstr);</code>
+</p>
+
+<p>Sometimes, a menu grows to include too many menu items, and then it's impractical to show them all. For this problem, Wx::Menu has the <code>Break</code> method. When called, it causes Wx to place subsequently appended items into another column. Call this method like so:</p>
+
+<pre><code>$menu-&gt;Break();</code></pre>
+
+<h5>Menu Item Methods</h5>
+
+<p>Once you have created your items, you need some way to operate on them, such as finding information about them through their identifier numbers, getting or setting their labels or help strings, enabling or disabling them, checking or unchecking them, or removing them. For example, you may want to retrieve some specific menu item in some point of your program. To do this, use the <code>FindItem</code> method in either of two ways:</p>
+
+<pre><code>my $menuitem_with_the_given_id = $menu-&gt;FindItem($id);
+my ($menuitem, $submenu)        = $menu-&gt;FindItem($id);</code></pre>
+
+<p>where <code>$menuitem</code> is the corresponding Wx::MenuItem object with the identifier <code>$id</code>, and <code>$submenu</code> is the (sub)menu to which <code>$menuitem</code> belongs. You can also retrieve a menu item through the <code>FindItemByPosition</code> method (but remember that positions start at 0):</p>
+
+<pre><code>my $menuitem = $menu-&gt;FindItemByPosition($pos);</code></pre>
+
+<p>Wx::Menu provides methods to get or set properties of menu items. To set a property, there are two methods: <code>SetLabel</code> and <code>SetHelpString</code>. A <code>SetLabel</code> call might be:</p>
+
+<pre><code>$menu-&gt;SetLabel($id, $newlabel);</code></pre>
+
+<p><code>SetHelpString</code> works similarly:</p>
+
+<pre><code>$menu-&gt;SetHelpString($id, $newhelpstr);</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>To retrieve the label or help string of a particular item, use the <code>GetLabel</code> and <code>GetHelpString</code> methods. Both methods expect the menu item identifier number as the sole argument.</p>
+
+<p>Every menu item has an <em>enabled</em> property that makes an item available or unavailable. By default, all items are enabled. To enable or disable a particular menu item, use the <code>Enable</code> method:</p>
+
+<pre><code>$menu-&gt;Enable($id, $boolean);</code></pre>
+
+<p>where <code>$boolean</code> is 0 or 1, depending if you want to disable or enable it, respectively. Maybe your next question is how to check if a menu item is enabled; use the <code>IsEnabled</code> method:</p>
+
+<pre><code>$menu-&gt;IsEnabled($id);</code></pre>
+
+<p>This returns <code>TRUE</code> or <code>FALSE</code>, depending on the status of the menu item.</p>
+
+<p>Radio items and check items have the <em>checked</em> property that indicates the selection status of the item. By default, no check item is checked at the start of the execution of your program. For radio items, the first one created is checked at the start of execution. Use the <code>Check</code> method to check or uncheck a radio or check item:</p>
+
+<pre><code>$menu-&gt;Check($id, $boolean);</code></pre>
+
+<p>To determine if a menu item is checked, use <code>IsChecked</code>:</p>
+
+<pre><code>$menu-&gt;IsChecked($id);</code></pre>
+
+<p>This method, as does <code>IsEnabled</code>, returns <code>TRUE</code> or <code>FALSE</code>.</p>
+
+<p>It's also possible to get the number of menu items your menu has. For this, use the <code>GetMenuItemCount</code> method:</p>
+
+<pre><code>$menu-&gt;GetMenuItemCount();</code></pre>
+
+<p>note that if <code>@args</code> is the argument's array, then <code>$menu-&gt;Append(@args)</code> and <code>$menu-&gt;Insert($menu-&gt;GetMenuItemCount(), @args)</code> are the same.</p>
+
+<p>Finally, it's important to know that there are three ways to remove an item from a menu (honoring Larry Wall's phrase: "There's more than one way to do it"). The first is the <code>Delete</code> method, which just kills the menu item without compassion:</p>
+
+<pre><code>$menu-&gt;Delete($id);</code></pre>
+
+<p>This method returns nothing. Be careful--WxWidgets documentation says that the <code>Delete</code> method doesn't delete a menu item that's a submenu. Instead, the documentation recommends that you use the <code>Destroy</code> method to delete a submenu. In wxPerl, this isn't true. <code>Delete</code> is certainly capable of deleting a submenu, and is here equivalent to the <code>Destroy</code> method. I don't know the reason for this strange behavior.</p>
+
+<p>The <code>Destroy</code> method looks like this:</p>
+
+<pre>$menu-&gt;Destroy($id);</pre>
+
+<p>If you want to remove an item but not destroy it, then the <code>Remove</code> method is for you. It allows you to store the menu item that you want to delete in a variable for later use, and at the same time delete it from its original menu. Use it like so:</p>
+
+<pre><code>my $removed_item = $menu-&gt;Remove($id);</code></pre>
+
+<p>Now you have your menu item with the identifier <code>$id</code> in the <code>$removed_item</code> variable (it now contains a Wx::MenuItem object). You can now use this variable to relocate the removed item into another menu with the append methods. For example:</p>
+
+<pre><code>$other_menu-&gt;Append($removed_item);</code></pre>
+
+<p>does the same thing as:</p>
+
+<pre><code>$other_menu-&gt;Append($id_removed_item, $title_removed_item, 
+    $helpstr_removed_item);</code></pre>
+
+<p>but in a shorter way.</p>
+
+<p>Finally, it's useful to be able to remove a submenu's menu item. You can't use the <code>Destroy</code>, <code>Delete</code>, or <code>Remove</code> methods, because they don't work. Instead, you need to do something like this:</p>
+
+<pre><code>my ($mitem, $submenu) = $menu-&gt;FindItem($mitem_id);</code></pre>
+
+<p>where <code>$mitem_id</code> is the identifier number of the submenu's menu item you're looking for. <code>$submenu</code> is a Wx::Menu object, just as <code>$menu</code> is, and hence you can use all the methods mentioned here, so the only thing you have to do to remove <code>$mitem</code> from <code>$submenu</code> is:</p>
+
+<pre><code>$submenu-&gt;Delete($mitem_id);</code></pre>
+
+<p>As the good reader that I am sure you are, you already have realized that this isn't the only thing you can do with the <code>$submenu</code> object. In fact, you can now add new menu items to your submenu, delete another menu item, and in general do everything mentioned already.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4>Using Wx::MenuBar</h4>
+
+<p>You have created your menus and obviously want to use them. The last step to get the job done is to create the menu bar that will handle your menus. When you want to create a menu bar, the first step is to enable your code to handle menu events. This is the job of the Wx::Event module:</p>
+
+<pre><code>use Wx::Event qw(EVT_MENU)</code></pre>
+
+<p>Now create a Wx::MenuBar object:</p>
+
+<pre><code>my $menubar = Wx::MenuBar-&gt;new();</code></pre>
+
+<p>This object will contain all of the menus that you want to show on your window. To associate a menu bar with a frame, call the <code>SetMenuBar</code> method from Wx::Frame:</p>
+
+<pre><code>$self-&gt;SetMenuBar($menubar);</code></pre>
+
+<p>where <code>$self</code> is the Wx::Frame object inherited in <code>WxPerlComExampleFrame</code>'s constructor. Note that if your application has MDI characteristics, or has many windows, then you have to take in account that Wx first sends menu events to the focused window. (I won't cover this issue in this article, so for more information, review the WxWidgets documentation.) Finally, be sure to call the <code>EVT_MENU</code> subroutine as many times as you have menu items that execute some action when clicked:</p>
+
+<pre><code>EVT_MENU($self, $menu_item_id, \&amp;subroutine);</code></pre>
+
+<p>where <code>$self</code> is the object of your package's <code>new</code> method, <code>$menu_item_id</code> is the unique identifier of the menu item involved, and <code>subroutine</code> is the name of the subroutine that will handle the click event you want to catch.</p>
+
+<h5>Setting Up Menus</h5>
+
+<p>The first thing to do once you have created your menu bar is to attach your menus to the menu bar. There are two methods for this: <code>Append</code> and <code>Insert</code>. <code>Append</code>, as you might expect, attaches a menu in the last position:</p>
+
+<pre><code>$menubar-&gt;Append($menu, $label);</code></pre>
+
+<p>where <code>$menu</code> is the menu created in the previous section and <code>$label</code> is the name to display for this menu in the menu bar. To insert a menu in an arbitrary position, use the <code>Insert</code> method:</p>
+
+<pre><code>$menubar-&gt;Insert($pos, $menu, $label);</code></pre>
+
+<p>where <code>$pos</code> is the position of your menu, starting at 0.</p>
+
+<h5>Menu Methods</h5>
+
+<p>Wx::MenuBar provides some methods that are also present in Wx::Menu and work in the same way. This methods are <code>Check</code>, <code>Enable</code>, <code>FindItem</code>, <code>GetLabel</code>, <code>GetHelpString</code>, <code>SetLabel</code>, <code>SetHelpString</code>, <code>IsChecked</code>, and <code>IsEnabled</code>. Besides these methods, Wx::MenuBar has its own set of methods to manage the properties of the menu bar. For example, as a menu item, a menu has its own <em>enabled</em> property, which you toggle with the <code>EnableTop</code> method:</p>
+
+<pre><code>$menubar-&gt;EnableTop($pos, $boolean);</code></pre>
+
+<p>where <code>$pos</code> is the position of your menu (starting at 0) and <code>$boolean</code> is <code>TRUE</code> or <code>FALSE</code>, depending on whether you want that menu enabled. Note that you can use this method only after you attach your menu bar to the window through the <code>SetMenuBar</code> method.</p>
+
+<p>Wx::MenuBar has methods to retrieve an entire menu or menu item given its title or (menu title, menu item label) pair, respectively. In the first case, use the code:</p>
+
+<pre><code>$menu_with_the_given_title = $menubar-&gt;FindMenu($title);</code></pre>
+
+<p>In the second case:</p>
+
+<pre><code>$menu_item = $menubar-&gt;FindMenuItem($menu_title, $menu_item_label);</code></pre>
+
+<p>In both cases, the returned variables are Wx::Menu objects. You can also retrieve a menu if you provide its position (starting at 0):</p>
+
+<pre><code>$menu_with_the_given_pos = $menubar-&gt;GetMenu($pos);</code></pre>
+
+<p>As in the Wx::Menu case, Wx::MenuBar provides methods to set or get the label of a specific menu and to retrieve the number of menus in a menu bar. Those methods are <code>SetLabelTop</code>, <code>GetLabelTop</code>, and <code>GetMenuCount</code> respectively. Use them like this:</p>
+
+<pre><code>$menu-&gt;SetLabelTop($pos, $label);
+my $menu_label = $menu-&gt;GetLabelTop($pos);
+my $num_menu   = $menu-&gt;GetMenuCount();</code></pre>
+
+<p>where <code>$pos</code> is the position of the menu and <code>$label</code> is the new label that you want to put on your menu. Note that <code>GetLabelTop</code>'s result doesn't include accelerator characters inside the returned string.</p>
+
+<p>Finally, Wx::MenuBar gives two more choices to remove a menu. The first method is <code>Replace</code>, which replaces it with another menu:</p>
+
+<pre><code>$menubar-&gt;Replace($pos, $new_menu, $label);</code></pre>
+
+<p>where <code>$pos</code> is the position of the menu to remove, <code>$new_menu</code> is the new menu that will be in the <code>$pos</code> position, and <code>$label</code> is the label to display on the menu bar for <code>$new_menu</code>. The second choice is to remove a menu, just by removing it with the <code>Remove</code> method:</p>
+
+<pre><code>my $removed_menu = $menubar-&gt;Remove($pos);</code></pre>
+
+<p><code>Remove</code> returns the <code>$removed_menu</code> object, so if you need it in the future, it'll be still there waiting for you.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Example</h3>
+
+<p>With all of that explained, I can show a full, working example. As before, add this code to the base code in the blank spot in the <code>WxPerlComExampleFrame</code> constructor.</p>
+
+<pre><code># Create menus
+# Action's sub menu
+my $submenu = Wx::Menu-&gt;new();
+$submenu-&gt;Append($id[2], "New normal item");
+$submenu-&gt;Append($id[3], "Delete normal item");
+$submenu-&gt;AppendSeparator();
+$submenu-&gt;Append($id[4], "New check item");
+$submenu-&gt;Append($id[5], "Delete check item");
+$submenu-&gt;AppendSeparator();
+$submenu-&gt;Append($id[6], "New radio item");
+$submenu-&gt;Append($id[7], "Delete radio item");
+
+# Disable items for this submenu
+for(2..7) {
+    $submenu-&gt;Enable($id[$_], 0);
+}
+
+# Actions menu
+my $actionmenu = Wx::Menu-&gt;new();
+$actionmenu-&gt;Append($id[0], "Create Menu"); # Create new menu
+$actionmenu-&gt;Append($id[1], "Delete Menu"); # Delete New Menu
+$actionmenu-&gt;AppendSeparator();
+$actionmenu-&gt;AppendSubMenu($id[100], "New Item", $submenu); # Create item submenu
+$actionmenu-&gt;AppendSeparator();
+$actionmenu-&gt;Append(wxID_EXIT, "Exit\tCtrl+X"); # Exit
+
+# At first, disable the Delete Menu option
+$actionmenu-&gt;Enable($id[1], 0);
+
+# Create menu bar
+$self-&gt;{MENU} = Wx::MenuBar-&gt;new();
+$self-&gt;{MENU}-&gt;Append($actionmenu, "Actions");
+
+# Attach menubar to the window
+$self-&gt;SetMenuBar($self-&gt;{MENU});
+$self-&gt;SetAutoLayout(1);
+
+# Handle events
+EVT_MENU($self, $id[0], \&amp;MakeActionMenu);
+EVT_MENU($self, $id[1], \&amp;MakeActionMenu);
+EVT_MENU($self, $id[2], \&amp;MakeActionNormal);
+EVT_MENU($self, $id[3], \&amp;MakeActionNormal);
+EVT_MENU($self, $id[4], \&amp;MakeActionCheck);
+EVT_MENU($self, $id[5], \&amp;MakeActionCheck);
+EVT_MENU($self, $id[6], \&amp;MakeActionRadio);
+EVT_MENU($self, $id[7], \&amp;MakeActionRadio);
+
+EVT_MENU($self, wxID_EXIT, sub {$_[0]-&gt;Close(1)});</code></pre>
+
+<p>This code creates a menu called <em>Actions</em> with the following options inside:</p>
+
+<ul>
+<li><b>Create Menu</b>: When a user clicks this option, the program creates a new menu called <em>New Menu</em> at the right side of the <em>Actions</em> menu. The <em>Create Menu</em> option is enabled by default, but creating the menu disables this option.</li>
+
+<li><b>Delete Menu</b>: Deletes the menu created with <em>Create Menu</em>. This option is disabled by default and is enabled when <em>New Menu</em> exists.</li>
+
+<li><b>New normal item</b>: This option creates the <em>Normal item</em> option on <em>New Menu</em> when it exists. It is disabled by default.</li>
+
+<li><b>Delete normal item</b>: Deletes <em>Normal item</em> when it exists. It is disabled by default.</li>
+
+<li><b>New check item</b>: Creates the <em>Check item</em> option on <em>New Menu</em> when it exists. It is disabled by default. <em>Check item</em> is unchecked by default.</li>
+
+<li><b>Delete check item</b>: Deletes <em>Check item</em> when it exists. It is disabled by default.</li>
+
+<li><b>New radio item</b>: Creates the <em>Radio item</em> option on <em>New Menu</em> when it exists. It is disabled by default. <em>Radio item</em> is checked by default.</li>
+
+<li><b>Delete radio item</b>: Deletes <em>Radio item</em> when it exists. It is disabled by default.</li>
+
+<li><b>Exit</b>: Exits the program.</li>
+</ul>
+
+<p>Once the code has created the menu, it attaches the menu to the menu bar saved on <code>$self-&gt;{MENU}</code>, then calls the <code>EVT_MENU</code> subroutine eight times to handle all of the menu events from <em>Action</em>'s menu items. Add the following code to the base code where it says <code>### PUT SUBROUTINES HERE ###</code>:</p>
+
+<pre><code># Subroutine that handles menu creation/erasure
+sub MakeActionMenu {
+    my($self, $event) = @_;
+
+    # Get Actions menu
+    my $actionmenu    = $self-&gt;{MENU}-&gt;GetMenu(0);
+
+    # Now check if we have to create or delete the New Menu
+    if ($self-&gt;{MENU}-&gt;GetMenuCount() == 1) {
+        # New Menu doesn't exist
+
+        # Create menu
+        my $newmenu = Wx::Menu-&gt;new();
+        $self-&gt;{MENU}-&gt;Append($newmenu, "New Menu");       
+
+        # Disable and Enable options
+        $actionmenu-&gt;Enable($id[0], 0); # New menu
+        $actionmenu-&gt;Enable($id[1], 1); # Delete menu
+        $actionmenu-&gt;Enable($id[2], 1); # New normal item
+        $actionmenu-&gt;Enable($id[3], 0); # Delete normal item
+        $actionmenu-&gt;Enable($id[4], 1); # New check item
+        $actionmenu-&gt;Enable($id[5], 0); # Delete check item
+        $actionmenu-&gt;Enable($id[6], 1); # New radio item
+        $actionmenu-&gt;Enable($id[7], 0); # Delete radio item
+    } else {
+        # New Menu exists
+
+        # Remove menu
+       $self-&gt;{MENU}-&gt;Remove(1);
+
+        # Enable and disable options
+        $actionmenu-&gt;Enable($id[0], 1);
+
+        for(1..7) {
+               $actionmenu-&gt;Enable($id[$_], 0);
+        }
+    }
+
+    return 1;
+}
+
+# Subroutine that handles normal item creation/erasure
+sub MakeActionNormal {
+    my($self, $event) = @_;
+    # Check if New Menu exists
+    if($self-&gt;{MENU}-&gt;GetMenuCount() == 2) {
+        # New menu exists
+
+        # Get Action menu
+        my $actionmenu = $self-&gt;{MENU}-&gt;GetMenu(0);
+        my $newmenu    = $self-&gt;{MENU}-&gt;GetMenu(1);
+
+        # Check if we have to create or delete a menu item
+        if($actionmenu-&gt;IsEnabled($id[2])) {
+            # Create normal menu item
+            $newmenu-&gt;Append($id[50], "Normal item");           
+
+            # Disable and Enable options
+            $actionmenu-&gt;Enable($id[2], 0);
+            $actionmenu-&gt;Enable($id[3], 1);
+        } else {
+            # Delete menu item
+               $newmenu-&gt;Delete($id[50]);
+
+            # Enable and disable options
+            $actionmenu-&gt;Enable($id[2], 1);
+            $actionmenu-&gt;Enable($id[3], 0);
+        }
+    }
+
+    return 1;
+}
+
+# Subroutine that handles check item creation/erasure
+sub MakeActionCheck {
+    my($self, $event) = @_;
+
+    # Check if New Menu exists
+    if($self-&gt;{MENU}-&gt;GetMenuCount() == 2) {
+        # New menu exists
+
+        # Get Action menu
+        my $actionmenu = $self-&gt;{MENU}-&gt;GetMenu(0);
+        my $newmenu    = $self-&gt;{MENU}-&gt;GetMenu(1);
+
+        # Check if we have to create or delete a menu item
+        if($actionmenu-&gt;IsEnabled($id[4])) {
+            # Create check item
+               $newmenu-&gt;AppendCheckItem($id[51], "Check item");
+
+           # Disable and Enable options
+           $actionmenu-&gt;Enable($id[4], 0);
+           $actionmenu-&gt;Enable($id[5], 1);
+        } else {
+           # Delete menu item
+           $newmenu-&gt;Delete($id[51]);
+
+              # Enable and disable options
+              $actionmenu-&gt;Enable($id[4], 1);
+              $actionmenu-&gt;Enable($id[5], 0);
+        }
+    }
+
+    return 1;
+}
+
+# Subroutine that handles radio item creation/erasure
+
+sub MakeActionRadio {
+    my($self, $event) = @_;
+
+    # Check if New Menu exists
+    if($self-&gt;{MENU}-&gt;GetMenuCount() == 2) {
+        # New menu exists
+
+        # Get Action menu
+        my $actionmenu = $self-&gt;{MENU}-&gt;GetMenu(0);
+        my $newmenu    = $self-&gt;{MENU}-&gt;GetMenu(1);
+
+        # Check if we have to create or delete a menu item
+        if ($actionmenu-&gt;IsEnabled($id[6])) {
+               # Create radio item
+              $newmenu-&gt;AppendRadioItem($id[52], "Radio item");
+
+              # Disable and Enable options
+              $actionmenu-&gt;Enable($id[6], 0);
+              $actionmenu-&gt;Enable($id[7], 1);
+        } else {
+              # Delete menu item
+              $newmenu-&gt;Delete($id[52]);
+
+              # Enable and disable options
+              $actionmenu-&gt;Enable($id[6], 1);
+              $actionmenu-&gt;Enable($id[7], 0);
+        }
+    }
+
+    return 1;
+}</code></pre>
+
+<p>The <code>MakeActionMenu</code> subroutine handles events for the <em>New Menu</em> and <em>Delete Menu</em> items. It first gets the <em>Actions</em> menu and checks whether the <em>New Menu</em> exists by retrieving the number of menus attached to the <code>$self-&gt;{MENU}</code> menu bar. If the new menu doesn't exist, the number of menus in the menu bar is equal to 1, and the subroutine then creates <em>New Menu</em>. If it exists, the subroutine deletes <em>New Menu</em>.</p>
+
+<p>The <code>MakeActionNormal</code>, <code>MakeActionCheck</code>, and <code>MakeActionRadio</code> subroutines are almost identical. They differ only in the involved identifier numbers. These subroutines handle events for <em>New normal item</em>, <em>Delete normal item</em>, <em>New check item</em>, <em>Delete check item</em>, <em>New radio item</em>, and <em>Delete radio item</em>, respectively. They first check if <em>New Menu</em> exists (the number of menus attached to the menu bar is equal to 2). If so, they check if the options to create normal, check, or radio items are enabled, respectively. If the corresponding option is enabled, then the corresponding item doesn't exist on <em>New Menu</em>, and the subroutine creates it. If the option to create an item is disabled, then that item exists on <em>New Menu</em> and hence it must be deleted. If <em>New Menu</em> doesn't exist, the subroutines do nothing. Figure 3 shows how there are no options available if <em>New Menu</em> does not exist, and Figure 4 shows <em>New Menu</em> with two options added.</p>
+
+<p><img src="/pub/2005/10/06/graphics/example1.jpg" width="289" height="268" alt="no available options without New Menu" /><br />
+<em>Figure 3. No available options without New Menu</em>
+</p>
+
+<p><img src="/pub/2005/10/06/graphics/example2.jpg" width="289" height="268" alt="New Menu has menu options" /><br />
+<em>Figure 4. New Menu has menu options</em>
+</p>
+
+<h3>Conclusion</h3>
+
+<p>As this article has shown, menu programming with wxPerl is an extremely simple task. Wx::MenuBar and Wx::Menu's methods are very easy to use and remember. If you understood this article, you can do anything possible with menus in your wxPerl programs.</p>
+
+<p>I have covered almost all of the available methods in Wx::Menu and Wx::MenuBar. I left out some methods related to pop-up menus, but I hope to cover these topics in future articles. WxPerl is a really great module, but its lack of adoption is due to its severe lack of documentation. This situation must be reversed, and this article is a small contribution to that cause.</p>
+
+<h3>See Also</h3>
+
+<ul>
+<li><a href="http://www.wxwidgets.org/manuals/2.4.2/wx262.htm">WxMenu tutorial</a> and <a href="http://www.wxwidgets.org/manuals/2.4.2/wx263.htm">WxMenuBar tutorial</a> by Julian Smart, Robert Roebling, Vadim Zeitlin, Robin Dunn, et al.</li>
+
+<li>"<a href="http://www.bzzt.net/~wxwidgets/icpp_wx2.html#menubar">Adding a Menu Bar</a>," by David Beech.</li>
+
+<li>"<a href="/pub/a/2001/09/12/wxtutorial1.html">wxPerl: Another GUI for Perl</a>," by Jouke Visser.</li>
+</ul>
+
+
+        </div>
+
+
+
+    </div>
+    <div class="asset-footer"></div>
+</div>
+
+
+
+
+                            <div class="content-nav">
+                                <a href="/pub/games/">&laquo; Games</a> |
+                                <a href="/pub/">Main Index</a> |
+                                <a href="/pub/archives.html">Archives</a>
+                                | <a href="/pub/http/">HTTP &raquo;</a>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

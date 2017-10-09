@@ -1,0 +1,746 @@
+<TITLE>
+	    The Perl Data Structures Cookbook 
+</TITLE>
+
+<CENTER>
+<H1>
+	    The Perl Data Structures Cookbook 
+</H1>
+
+<b><font size=+1>
+<I>
+		    by Tom Christiansen 
+</I>
+		    <BR>
+&lt <A HREF=mailto:tchrist@perl.com>tchrist@perl.com</A> &gt
+</font>
+		    <P>
+		    release 0.1 (untested, may have typos)
+		    <BR>
+		    Sunday, 1 October 1995
+</b></CENTER>
+
+<HR>
+
+<P>
+
+This is a cookbook of recipes for building up complex data structures
+in perl5.  It has been extracted from a much larger and more
+expository document to be published in pod format and included with
+the standard perl distribution.  The goal is to provide cookbook-like,
+cut-and-paste examples of the most often used data structures in
+perl.  Think of the recipes as a quick reference
+
+<P>
+
+It currently has 6 parts:
+
+<UL>
+    <LI><A HREF="pdsc-0.html">PDSC General Tips</a>
+    <LI><A HREF="pdsc-1.html">PDSC recipes: Lists  of Lists</a>
+    <LI><A HREF="pdsc-2.html">PDSC recipes: Hashes of Lists</a>
+    <LI><A HREF="pdsc-3.html">PDSC recipes: Lists  of Hashes</a>
+    <LI><A HREF="pdsc-4.html">PDSC recipes: Hashes of Hashes</a>
+    <LI><A HREF="pdsc-5.html">PDSC recipes: More Elaborate Structures</a>
+
+</UL>
+
+See also:
+
+<UL>
+    <LI>Tom Christiansen's homepage at <A HREF="http://www.perl.com/">http://perl.com/</a>.
+    <LI>The <A HREF="http://www.perl.com/perl/faq/">Perl FAQ</a>.
+
+</UL>
+<HR>
+
+<CENTER>
+<H2>
+	    PDSC #0: General tips
+</H2>
+</CENTER>
+
+<HR>
+
+<P>
+
+
+The first thing you need to do is figure out how you want to access
+(such as via an assignment) just <I>one individual element</I> of your
+data structure just using lists and hashes.  Use a list if you're
+thinking of an array, use a hash if you're thinking of a record
+or a lookup table.
+
+<DL>
+
+<P>
+
+<DT><P><LI><B>$coordinates[$row][$col] = "empty"</B>
+<DD>
+   This is a simple two-dimensionsal array indexed
+   by integers.  
+   Each first level numeric index itself produces a list (reference).
+   See the <A HREF="pdsc-1.html">List of Lists document</a>.
+
+<P>
+
+<DT><P><LI><B>$flight_time{"denver"}[3] = "12:34"</B>
+<DD>This is an (associative) array of lists.
+   Each first level string index itself produces a list (reference).
+    See the <A HREF="pdsc-3.html">Hash of Lists document</a>.
+<P>
+
+<P>
+<DT><P><LI><B>$student[$i]{"age"} = 15</B>
+<DD>This is an array of records that include named fields.
+   Each first level numeric index itself produces a hash (reference).
+   See the <A HREF="pdsc-2.html">List of Hashes document</a>.
+
+<DT><P><LI><B>$tv_shows{"the simpsons"}{"start time"} = "Monday 20:00"</B>
+<DD>This is an lookup table of records where you lookup the
+    show by the name, and then you look up the record field by 
+    the field name.  
+   Each first level string index itself produces a hash (reference).
+    See the <A HREF="pdsc-4.html">Hash of Hashes document</a>.
+<P>
+
+
+<DT><P><LI><B>$tv{"the simpsons"}{members}[0]{name} = "homer"</B>
+
+<DD>This is an elaborate data structure involving a mix of 
+    records that contain fields that are sometimes themselves 
+    other arrays and records.  
+    See the <A HREF="pdsc-5.html">More Elaborate Structures document</a>.
+
+<DT><P><LI><B>print {$rec-&gt;{FH}}
+    <DL><DD> &{ $rec-&gt;{FUNC} } ( $rec-&gt;{LIST}[0] )</DL></B>
+<DD>
+This is a strange record that itself includes references to filehandles,
+functions, and other strings, lists, and hashes.  We print to the filehandle
+referenced in <B>$rec</B>'s FH 
+the result of calling the function in its FUNC field
+with an argument of the first element in the array which is its LIST field.
+    See also the <A HREF="pdsc-5.html">More Elaborate Structures document</a>.
+
+</DL>
+
+<HR>
+<h2>General Tips</h2>
+
+<P>
+
+Here are some further tips of general interest:
+
+<OL>
+
+<P><LI>Always <B>use strict</B> and <b>-w</b>.  The strict can be a pain,
+    but it will save you from saying <B>$a[$i]</B> when you 
+    mean <B>$a-&gt;[$i]</B> and vice versa.
+
+<P><LI>Things like <B>push()</B> require an <B>@</B> sign, as in
+<DL><DD><CODE>
+	push @{ $a[3] }, @new_list</CODE></DL>
+   You can't write
+<DL><DD><CODE>push $a[3], @new_list</CODE></DL>
+
+
+<P><LI>Things like <B>keys()</B> require a <B>%</B> sign, as in
+
+<DL><CODE><DD>foreach $k (keys %{ $h{"key"} }) { ... }</DL></CODE>
+   You can't write
+	<DL><CODE><DD>foreach $k (keys $h{"key"}) { ... }</DL></CODE>
+
+<P><LI>Don't store pointers to existing data in a structure.
+   Always create a new structure, eg. to build a 2D array
+   indexed by line and by word number:
+
+<PRE>
+       while ( <> ) {
+	   @fields = split;
+	   push @a, [ @fields ];
+       }
+</PRE>
+
+
+    This generally means never using the backslash to take
+    a reference, but rather using the <B>[]</B> or <B>{}</B> constructors.
+    This, for examples, is <b>wrong</b>!
+
+<PRE>
+       while ( <> ) {
+	   @fields = split;
+	   push @a, \@fields;
+       }
+</PRE>
+
+    <P>
+    An exception to this rule would be when you're writing a
+    recursive data structure or are creating multiple key indices for the
+    same set of records.
+  
+
+<P><LI>Never write <B>$$a[$i]</B> when you mean <B>${$a[$i]}</B> or
+               <B>@$a[$i]</B> when you mean <B>@{$a[$i]}</B>.
+    Those won't work at all.
+
+<P><LI>Never write <B>$$a[$i]</B> even if you mean <B>$a-&gt;[$i]</B>.  While it'll work
+    to do that, it will needlessly confuse C programmers, who will think
+    that subscripting binds tighter than the prefix dereference operator.
+    This is right in C but wrong in perl where it's the other way around!
+
+<P><LI>Remember that <B>$a[$i]</B> is the <B>i</B>'th elt of <B>@a</B>, but <B>$a-&gt;[$i]</B>
+   is the <B>i</B>'th elt of the anon array pointed to by <B>$a</B>.  use
+   strict will help here.
+
+<P><LI>Never write 
+	<DL><CODE><DD>@ { $a[$i] } = @list</DL></CODE>
+   instead of 
+<DL><CODE><DD>$a[$i] = [ @list ]</DL></CODE>
+   It'll work, but will confuse people.  
+
+<P><LI>Try to use pointer arrows and indirection bracketing whenever you 
+   feel the reader might be confused.  
+   Sometimes it'll clear
+   things up in your mind as well.
+   Here are the five kinds of prefix dereferencers with disambiguating 
+   braces:
+   <UL>
+   <P>
+    <DL><DT><LI><B>print ${ $a[$i] }</B>
+	<DD>Dereference a SCALAR reference.</DL>
+    <DL><DT><LI><B>pop @{ $a[$i] }</B>
+	<DD>Dereference an ARRAY reference.</DL>
+    <DL><DT><LI><B>@k = keys %{ $a[$i] }</B>
+	<DD>Dereference a HASH reference.</DL>
+    <DL><DT><LI><B>$retval = &{ $a[$i] }( )</B>
+	<DD>Dereference a CODE reference.</DL>
+    <DL><DT><LI><B>*{ $a[$i] } = \&func</B>
+	<DD>Dereference a GLOB reference; this is deep magic best
+	left to the wizards.</DL>
+   </OL>
+
+<P><LI>The new <A HREF="ftp://perl.com/pub/perl/ext/perl5db-kit-0.9.tar.gz">perl5db</A> (ftp to perl.com in <A HREF="ftp://perl.com/pub/perl/ext/">/pub/perl/ext/</a>) will help print out complex data
+    structures using the <B>x</B> and <B>X</B> commands.
+
+</OL>
+
+<HEAD>
+
+<HR>
+
+<CENTER>
+<H2>
+	    PDSC #1: Lists of Lists
+</H2>
+</CENTER>
+
+
+<HR>
+
+<H2>Declaration of a LIST OF LISTS:</H2>
+<PRE>
+@LoL = ( 
+       [ "fred", "barney" ],
+       [ "george", "jane", "elroy" ],
+       [ "homer", "marge", "bart" ],
+     );
+</PRE>
+<H2>Generation of a LIST OF LISTS:</H2>
+<PRE>
+# reading from file
+while ( <> ) {
+    push @LoL, [ split ];
+}
+
+# calling a function 
+for $i ( 1 .. 10 ) {
+    $LoL[$i] = [ somefunc($i) ];
+}
+
+# using temp vars
+for $i ( 1 .. 10 ) {
+    @tmp = somefunc($i);
+    $LoL[$i] = [ @tmp ];
+}
+
+# add to an existing row
+push @{ $LoL[0] }, "wilma", "betty";
+</PRE>
+<H2>Access and Printing of a LIST OF LISTS:</H2>
+<PRE>
+# one element
+$LoL[0][0] = "Fred";
+
+# another element
+$LoL[1][1] =~ s/(\w)/\u$1/;
+
+# print the whole thing with refs
+for $aref ( @LoL ) {
+    print "\t [ @$aref ],\n";
+}
+
+# print the whole thing with indices
+for $i ( 0 .. $#LoL ) {
+    print "\t [ @{$LoL[$i]} ],\n";
+}
+
+# print the whole thing one at a time
+for $i ( 0 .. $#LoL ) {
+    for $j ( 0 .. $#{$LoL[$i]} ) {
+	print "elt $i $j is $LoL[$i][$j]\n";
+    }
+}
+</PRE>
+
+
+<HR>
+<CENTER>
+<H2>
+	    PDSC #2: Hashes of Lists
+</H2>
+</CENTER>
+<HR>
+
+<H2>Declaration of a HASH OF LISTS:</H2>
+<PRE>
+%HoL = ( 
+       "flintstones"        => [ "fred", "barney" ],
+       "jetsons"            => [ "george", "jane", "elroy" ],
+       "simpsons"           => [ "homer", "marge", "bart" ],
+     );
+</PRE>
+<H2>Generation of a HASH OF LISTS:</H2>
+<PRE>
+# reading from file
+# flintstones: fred barney wilma dino
+while ( <> ) {
+    next unless s/^(.*?):\s*//;
+    $HoL{$1} = [ split ];
+}
+
+# reading from file; more temps
+# flintstones: fred barney wilma dino
+while ( $line = <> ) {
+    ($who, $rest) = split /:\s*/, $line, 2;
+    @fields = split ' ', $rest;
+    $HoL{$who} = [ @fields ];
+}
+
+# calling a function that returns a list
+for $group ( "simpsons", "jetsons", "flintstones" ) {
+    $HoL{$group} = [ get_family($group) ];
+}
+
+# likewise, but using temps
+for $group ( "simpsons", "jetsons", "flintstones" ) {
+    @members = get_family($group);
+    $HoL{$group} = [ @members ];
+}
+
+# append new members to an existing family
+push @{ $HoL{"flintstones"} }, "wilma", "betty";
+</PRE>
+<H2>Access and Printing of a HASH OF LISTS:</H2>
+<PRE>
+# one element
+$HoL{flintstones}[0] = "Fred";
+
+# another element
+$HoL{simpsons}[1] =~ s/(\w)/\u$1/;
+
+# print the whole thing 
+foreach $family ( keys %HoL ) {
+    print "$family: @{ $HoL{$family} }\n"
+}
+
+# print the whole thing with indices
+foreach $family ( keys %HoL ) {
+    print "family: ";
+    foreach $i ( 0 .. $#{ $HoL{$family} ) {
+	print " $i = $HoL{$family}[$i]";
+    }
+    print "\n";
+}
+
+# print the whole thing sorted by number of members
+foreach $family ( sort { @{$HoL{$b}} <=> @{$HoL{$b}} } keys %HoL ) {
+    print "$family: @{ $HoL{$family} }\n"
+}
+# print the whole thing sorted by number of members and name
+foreach $family ( sort { @{$HoL{$b}} <=> @{$HoL{$a}} } keys %HoL ) {
+    print "$family: ", join(", ", sort @{ $HoL{$family}), "\n";
+}
+
+</PRE>
+
+<HR>
+<CENTER>
+<H2>
+	    PDSC #3: Lists of Hashes
+</H2>
+</CENTER>
+<HR>
+
+<H2>Declaration of a LIST OF HASHES:</H2>
+<PRE>
+@LoH = ( 
+       { 
+	  Lead      => "fred", 
+	  Friend    => "barney", 
+       },
+       {
+	   Lead     => "george",
+	   Wife     => "jane",
+	   Son      => "elroy",
+       },
+       {
+	   Lead     => "homer",
+	   Wife     => "marge",
+	   Son      => "bart",
+       }
+ );
+</PRE>
+<H2>Generation of a LIST OF HASHES:</H2>
+<PRE>
+# reading from file
+# format: LEAD=fred FRIEND=barney
+while ( <> ) {
+    $rec = {};
+    for $field ( split ) {
+	($key, $value) = split /=/, $field;
+	$rec->{$key} = $value;
+    }
+    push @LoH, $rec;
+}
+
+# reading from file
+# format: LEAD=fred FRIEND=barney
+# no temp
+while ( <> ) {
+    push @LoH, { split /[\s+=]/ };
+}
+
+# calling a function  that returns a key,value list, like
+# "lead","fred","daughter","pebbles"
+while ( %fields = getnextpairset() ) 
+    push @LoH, { %fields };
+}
+
+# likewise, but using no temp vars
+while (<>) {
+    push @LoH, { parsepairs($_) };
+}
+
+# add key/value to an element
+$LoH[0]{"pet"} = "dino";
+$LoH[2]{"pet"} = "santa's little helper";
+</PRE>
+<H2>Access and Printing of a LIST OF HASHES:</H2>
+<PRE>
+# one element
+$LoH[0]{"lead"} = "fred";
+
+# another element
+$LoH[1]{"lead"} =~ s/(\w)/\u$1/;
+
+# print the whole thing with refs
+for $href ( @LoH ) {
+    print "{ ";
+    for $role ( keys %$href ) {
+	print "$role=$href->{$role} ";
+    }
+    print "}\n";
+}
+
+# print the whole thing with indices
+for $i ( 0 .. $#LoH ) {
+    print "$i is { ";
+    for $role ( keys %{ $LoH[$i] } ) {
+	print "$role=$LoH[$i]{$role} ";
+    }
+    print "}\n";
+}
+
+# print the whole thing one at a time
+for $i ( 0 .. $#LoH ) {
+    for $role ( keys %{ $LoH[$i] } ) {
+	print "elt $i $role is $LoH[$i]{$role}\n";
+    }
+}
+
+</PRE>
+
+<hr>
+<CENTER>
+<H2>
+	    PDSC #4: Hashes of Hashes
+</H2>
+</CENTER>
+<HR>
+
+<H2>Declaration of a HASH OF HASHES:</H2>
+<PRE>
+%HoH = ( 
+       "flintstones" => {
+	   "lead"    => "fred",
+	   "pal"     => "barney",
+       },
+       "jetsons"     => {
+	    "lead"   => "george", 
+	    "wife"   => "jane",
+	    "his boy"=> "elroy",
+	}
+       "simpsons"    => { 
+	    "lead"   => "homer", 
+	    "wife"   => "marge", 
+	    "kid"    => "bart",
+     );
+</PRE>
+<H2>Generation of a HASH OF HASHES:</H2>
+<PRE>
+# reading from file
+# flintstones: lead=fred pal=barney wife=wilma pet=dino
+while ( <> ) {
+    next unless s/^(.*?):\s*//;
+    $who = $1;
+    for $field ( split ) {
+	($key, $value) = split /=/, $field;
+	$HoH{$who}{$key} = $value;
+    }
+}
+
+# reading from file; more temps
+while ( <> ) {
+    next unless s/^(.*?):\s*//;
+    $who = $1;
+    $rec = {};
+    $HoH{$who} = $rec;
+    for $field ( split ) {
+	($key, $value) = split /=/, $field;
+	$rec->{$key} = $value;
+    }
+}
+
+# calling a function  that returns a key,value hash
+for $group ( "simpsons", "jetsons", "flintstones" ) {
+    $HoH{$group} = { get_family($group) };
+}
+
+# likewise, but using temps
+for $group ( "simpsons", "jetsons", "flintstones" ) {
+    %members = get_family($group);
+    $HoH{$group} = { %members };
+}
+
+# append new members to an existing family
+%new_folks = (
+    "wife" => "wilma",
+    "pet"  => "dino";
+);
+for $what (keys %new_folks) {
+    $HoH{flintstones}{$what} = $new_folks{$what};
+}
+</PRE>
+<H2>Access and Printing of a HASH OF HASHES:</H2>
+<PRE>
+# one element
+$HoH{"flintstones"}{"wife"} = "wilma";
+
+# another element
+$HoH{simpsons}{lead} =~ s/(\w)/\u$1/;
+
+# print the whole thing 
+foreach $family ( keys %HoH ) {
+    print "$family: ";
+    for $role ( keys %{ $HoH{$family} } {
+	print "$role=$HoH{$family}{$role} ";
+    }
+    print "}\n";
+}
+
+# print the whole thing  somewhat sorted
+foreach $family ( sort keys %HoH ) {
+    print "$family: ";
+    for $role ( sort keys %{ $HoH{$family} } {
+	print "$role=$HoH{$family}{$role} ";
+    }
+    print "}\n";
+}
+
+# print the whole thing sorted by number of members
+foreach $family ( sort { keys %{$HoH{$b}} <=> keys %{$HoH{$b}} } keys %HoH ) {
+    print "$family: ";
+    for $role ( sort keys %{ $HoH{$family} } {
+	print "$role=$HoH{$family}{$role} ";
+    }
+    print "}\n";
+}
+
+# establish a sort order (rank) for each role
+$i = 0;
+for ( qw(lead wife son daughter pal pet) ) { $rank{$_} = ++$i }
+
+# now print the whole thing sorted by number of members
+foreach $family ( sort { keys %{$HoH{$b}} <=> keys %{$HoH{$b}} } keys %HoH ) {
+    print "$family: ";
+    # and print these according to rank order
+    for $role ( sort { $rank{$a} <=> $rank{$b} keys %{ $HoH{$family} } {
+	print "$role=$HoH{$family}{$role} ";
+    }
+    print "}\n";
+}
+
+</PRE>
+
+<hr>
+<CENTER>
+<H2>
+            PDSC #5: More Elaborate Structures
+</H2>
+</CENTER>
+<hr>
+
+<H2>Declaration of MORE ELABORATE RECORDS:</H2>
+
+Here's a 
+sample showing how to create and use a record
+whose fields are of many different sorts:
+<PRE>
+
+    $rec = {
+        STRING  => $string,
+        LIST    => [ @old_values ],
+        LOOKUP  => { %some_table },
+        FUNC    => \&some_function,
+        FANON   => sub { $_[0] ** $_[1] }, 
+        FH      => \*STDOUT,
+    };
+
+    print $rec->{STRING};
+
+    print $rec->{LIST}[0];
+    $last = pop @ { $rec->{LIST} };
+
+    print $rec->{LOOKUP}{"key"};
+    ($first_k, $first_v) = each %{ $rec->{LOOKUP} };
+
+    $answer = &{ $rec->{FUNC} }($arg);
+    $answer = &{ $rec->{FANON} }($arg1, $arg2);
+
+    # careful of extra block braces on fh ref
+    print { $rec->{FH} } "a string\n";
+
+    use FileHandle;
+    $rec->{FH}->autoflush(1);
+
+</PRE>
+
+<H2>Declaration of a HASH OF COMPLEX RECORDS:</h2>
+   
+<PRE>
+
+    %TV = ( 
+       "flintstones" => {
+	   series   => "flintstones",
+	   nights   => [ qw(monday thursday friday) ];
+	   members  => [
+	       { name => "fred",    role => "lead", age  => 36, },
+	       { name => "wilma",   role => "wife", age  => 31, },
+	       { name => "pebbles", role => "kid", age  =>  4, },
+	   ],
+       },
+
+       "jetsons"     => {
+	   series   => "jetsons",
+	   nights   => [ qw(wednesday saturday) ];
+	   members  => [
+	       { name => "george",  role => "lead", age  => 41, },
+	       { name => "jane",    role => "wife", age  => 39, },
+	       { name => "elroy",   role => "kid",  age  =>  9, },
+	   ],
+	},
+
+       "simpsons"    => { 
+	   series   => "simpsons",
+	   nights   => [ qw(monday) ];
+	   members  => [
+	       { name => "homer", role => "lead", age  => 34, },
+	       { name => "marge", role => "wife", age => 37, },
+	       { name => "bart",  role => "kid",  age  =>  11, },
+	   ],
+	},
+     );
+
+</PRE>
+<H2>Generation of a HASH OF COMPLEX RECORDS:</H2>
+<PRE>
+
+    # reading from file
+    # this is most easily done by having the file itself be 
+    # in the raw data format as shown above.  perl is happy
+    # to parse complex datastructures if declared as data, so
+    # sometimes it's easiest to do that
+
+    # here's a piece by piece build up
+    $rec = {};
+    $rec-&gt;{series} = "flintstones";
+    $rec-&gt;{nights} = [ find_days() ];
+
+    @members = ();
+    # assume this file in field=value syntax
+    while (<FLINTSTONES>) {
+	%fields = split /[\s=]+/;
+	push @members, { %fields };
+    }
+    $rec-&gt;{members} = [ @members ];
+
+    # now remember the whole thing
+    $TV{ $rec-&gt;{series} } = $rec;
+
+    ###########################################################
+    # now, you might want to make interesting extra fields that
+    # include pointers back into the same data structure so if
+    # change one piece, it changes everywhere, like for examples
+    # if you wanted a {kids} field that was an array reference
+    # to a list of the kids' records without having duplicate
+    # records and thus update problems.  
+    ###########################################################
+    foreach $family (keys %TV) { 
+	$rec = $TV{$family}; # temp pointer 
+	@kids = ();
+	for $person ( @{$rec-&gt;{members}} ) {
+	    if ($person-&gt;{role} =~ /kid|son|daughter/) {
+		push @kids, $person;
+	    }
+	}
+	# REMEMBER: $rec and $TV{$family} point to same data!!
+	$rec-&gt;{kids} = [ @kids ];  
+    }
+
+    # you copied the list, but the list itself contains pointers
+    # to uncopied objects. this means that if you make bart get 
+    # older via
+
+    $TV{simpsons}{kids}[0]{age}++;
+
+    # then this would also change in 
+    print $TV{simpsons}{members}[2]{age};
+
+    # because $TV{simpsons}{kids}[0] and $TV{simpsons}{members}[2]
+    # both point to the same underlying anonymous hash table
+
+    # print the whole thing 
+    foreach $family ( keys %TV ) {
+	print "the $family";
+	print " is on during @{ $TV{$family}{nights} }\n";
+	print "its members are:\n";
+	for $who ( @{ $TV{$family}{members} } ) {
+	    print " $who-&gt;{name} ($who-&gt;{role}), age $who-&gt;{age}\n";
+	}
+	print "it turns out that $TV{$family}{'lead'} has ";
+	print scalar ( @{ $TV{$family}{kids} } ), " kids named ";
+	print join (", ", map { $_-&gt;{name} } @{ $TV{$family}{kids} } );
+	print "\n";
+    }
+
+</PRE>

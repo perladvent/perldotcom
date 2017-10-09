@@ -1,0 +1,2003 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2001/10/apocalypse3.html" title="Apocalypse 3" />
+    <link rel="next bookmark" href="/pub/2001/10/perlmx.html" title="Filtering Mail with PerlMx" />
+    
+    
+    <title>Exegesis 3 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1610" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Exegesis 3</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Damian Conway</span> on <abbr class="published" title="2001-10-03T00:00:00-08:00">October  3, 2001 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+
+<p><em>Editor's note: this document is out of date and remains here for historic interest.  See <a href="http://dev.perl.org/perl6/doc/design/syn/S03.html">Synopsis 3</a> for the current design information.</p>
+
+<blockquote>
+<i>Diamond lives (context-aware);</i>
+<br><i>Underscore space means concatenate; fat comma means pair;</i>
+<br><i>A pre-star will flatten; colon-equals will bind;</i>
+<br><i>And binary slash-slash yields left-most defined.</i>
+<blockquote> -- Sade, "Smooth operator" (Perl 6 remix)</blockquote>
+</blockquote>
+
+</p><p>In <a href="/pub/a/2001/10/02/apocalypse3.html">Apocalypse 3</a>, Larry describes the changes that Perl 6 will make
+to operators and their operations. As with all the Apocalypses, only the
+new and different are presented -- just remember that the vast majority
+of operator-related syntax and semantics will stay precisely as they are
+in Perl 5.</p>
+
+<h3>
+<a name="for example..."></a>For example...</h3>
+
+
+<p>
+To better understand those new and different aspects of Perl 6 operators,
+let's consider the following program. Suppose we wanted to locate a particular
+data file in one or more directories, read the first four lines of each
+such file, report and update their information, and write them back to
+disk.
+</p><p>We could do that with this:
+<pre>    sub load_data ($filename ; $version, *@dirpath) {
+        $version //= 1;
+        @dirpath //= @last_dirpath // @std_dirpath // '.';
+        @dirpath ^=~ s{([^/])$}{$1/};</pre>
+
+<pre>        my %data;
+        foreach my $prefix (@dirpath) {
+            my $filepath = $prefix _ $filename;
+            if (-w -r -e $filepath  and  100 &lt; -s $filepath &lt;= 1e6) {
+                my $fh = open $filepath : mode=>'rw' 
+                    or die "Something screwy with $filepath: $!";
+                my ($name, $vers, $status, $costs) = &lt;$fh>;
+                next if $vers &lt; $version;
+                $costs = [split /\s+/, $costs];
+                %data{$filepath}{qw(fh name vers stat costs)} =
+                                ($fh, $name, $vers, $status, $costs);
+            }
+        }
+        return %data;
+    }</pre>
+
+<pre>    my @StartOfFile is const = (0,0);</pre>
+
+<pre>    sub save_data ( %data) {
+        foreach my $data (values %data) {
+            my $rest = &lt;$data.{fh}.irs(undef)>
+            seek $data.{fh}: *@StartOfFile;
+            truncate $data.{fh}: 0;
+            $data.{fh}.ofs("\n");
+            print $data.{fh}: $data.{qw(name vers stat)}, _@{$data.{costs}}, $rest;
+         }
+    }</pre>
+
+<pre>    my %data = load_data(filename=>'weblog', version=>1);</pre>
+
+<pre>    my $is_active_bit is const = 0x0080;</pre>
+
+<pre>    foreach my $file (keys %data) {
+        print "$file contains data on %data{$file}{name}\n";</pre>
+
+<pre>        %data{$file}{stat} = %data{$file}{stat} ~ $is_active_bit;</pre>
+
+<pre>        my @costs := @%data{$file}{costs};</pre>
+
+<pre>        my $inflation;
+        print "Inflation rate: " and $inflation = +&lt;>
+            until $inflation != NaN;</pre>
+
+<pre>        @costs = map  { $_.value }
+                 sort { $a.key &lt;=> $b.key }
+                 map  { amortize($_) => $_ }
+                        @costs ^* $inflation;</pre>
+
+<pre>        my sub operator:&sum; is prec(\&amp;operator:+($)) (*@list : $filter //= undef) {
+               reduce {$^a+$^b}  ($filter ?? grep &amp;$filter, @list :: @list);
+        }</pre>
+
+<pre>        print "Total expenditure: $( &sum; @costs )\n";
+        print "Major expenditure: $( &sum; @costs : {$^_ >= 1000} )\n";
+        print "Minor expenditure: $( &sum; @costs : {$^_ &lt; 1000} )\n";</pre>
+
+<pre>        print "Odd expenditures: @costs[1..Inf:2]\n"; 
+    }</pre>
+
+<pre>    save_data(%data, log => {name=>'metalog', vers=>1, costs=>[], stat=>0});</pre>
+
+<h3>
+<a name="i was bound under a flattening star"></a>I was bound under a flattening
+star</h3>
+<p>
+The first subroutine takes a filename and (optionally) a version number
+and a list of directories to search:
+<pre>    sub load_data ($filename ; $version, *@dirpath) {</pre>
+Note that the directory path parameter is declared as <tt>*@dirpath</tt>,
+not
+<tt>@dirpath</tt>. In Perl 6, declaring a parameter as an array (i.e
+<tt>@dirpath</tt>)
+causes Perl to expect the corresponding argument will be an actual array
+(or an array reference), not just any old list of values. In other words,
+a <tt>@</tt> parameter in Perl 6 is like a <tt>\@</tt> context specifier
+in Perl 5.
+</p><p>To allow <tt>@dirpath</tt> to accept a list of arguments, we have to
+use the
+<i>list context specifier</i> -- unary <tt>*</tt> -- to tell Perl
+to "slurp up" any remaining arguments into the <tt>@dirpath</tt> parameter.
+</p><p>This slurping-up process consists of flattening any arguments that are
+arrays or hashes, and then assigning the resulting list of values, together
+with any other scalar arguments, to the array (i.e. to
+<tt>@dirpath</tt>
+in this example). In other words, a <tt>*@</tt> parameter in Perl 6 is
+like a <tt>@</tt> context specifier in Perl 5.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p><em>Editor's note: this document is out of date and remains here for historic interest.  See <a href="http://dev.perl.org/perl6/doc/design/syn/S03.html">Synopsis 3</a> for the current design information.</p>
+
+<h3>
+<a name="it's a setup"></a>It's a setup</h3>
+</p><p>
+In Perl 5, it's not uncommon to see people using the <tt>||=</tt> operator
+to set up default values for subroutine parameters or input data:
+<pre>    $offset ||= 1;
+    $suffix ||= $last_suffix || $default_suffix || '.txt';
+    # etc.</pre>
+
+</p>
+
+<table width="150" border="0" cellspacing="0" cellpadding="4" align="right">
+<tr> 
+<td width="150" valign="top" height="4" bgcolor="#6699cc"></td></tr> 
+<tr>
+<td bgcolor="#efefef">
+<p class="headline" align="center">Related Articles
+</p>
+<p class="smalltext">
+&#149; <a href="/pub/a/2001/04/02/wall.html">Apocalypse 1</a><br /><br />
+
+&#149; <a href="/pub/a/2001/05/03/wall.html">Apocalypse 2</a><br /><br />
+
+&#149; <a href="/pub/a/2001/05/08/exegesis2.html">Exegesis 2</a><br /><br />
+
+&#149; <a href="/pub/a/2001/10/02/apocalypse3.html">Apocalypse 3</a><br /><br />
+
+</td></tr> <tr><td width="150" valign="top" height="4" bgcolor="#6699cc"> </td></tr></table>
+
+<p>Of course, unless you're sure of your range of values, this can go horribly
+wrong -- specifically, if the variable being initialized already has a
+valid value that Perl happens to consider false (i.e if
+<tt>$suffix</tt>
+or <tt>$last_suffix</tt> or <tt>$default_suffix</tt> contained an empty
+string, or the offset really <i>was</i> meant to be zero).</p>
+
+</p><p>So people have been forced to write default initializers like this:</p>
+<pre>    $offset = 1 unless defined $offset;</pre>
+
+</p><p>which is OK for a single alternative, but quickly becomes unwieldy when
+there are several alternatives:</p>
+<pre>    $suffix = $last_suffix    unless defined $suffix;
+    $suffix = $default_suffix unless defined $suffix;
+    $suffix = '.txt'          unless defined $suffix;</pre>
+<p>
+Perl 6 introduces a binary 'default' operator -- <tt>//</tt> -- that solves
+this problem. The default operator evaluates to its left operand if that
+operand is defined, otherwise it evaluates to its right operand. When chained
+together, a sequence of <tt>//</tt> operators evaluates to the first operand
+in the sequence that is defined. And, of course, the assignment variant
+-- <tt>//=</tt> -- only assigns to its lvalue if that lvalue is currently
+undefined.</p>
+</p><p>The symbol for the operator was chosen to be reminiscent of a <tt>||</tt>, but
+one that's taking a slightly different angle on things.
+</p><p>So <tt>&amp;load_data</tt> ensures that its parameters have sensible
+defaults like this:
+<pre>    $version //= 1;
+    @dirpath //= @last_dirpath // @std_dirpath // '.';</pre>
+Note that it will also be possible to provide default values directly in
+the specification of optional parameters, probably like this:
+<pre>    sub load_data ($filename ; $version //= 1, *@dirpath //= @std_dirpath) {...}</pre>
+</p><p>
+
+<h3>
+<a name="...and context for all"></a>...and context for all</h3>
+As if it weren't broken enough already, there's another nasty problem with
+using <tt>||</tt> to build default initializers in Perl 5. Namely, that
+it doesn't work quite as one might expect for arrays or hashes either.
+</p><p>If you write:
+<pre>    @last_mailing_list = ('me', 'my@shadow');</pre>
+
+<pre>    # and later...</pre>
+
+<pre>    @mailing_list = @last_mailing_list || @std_mailing_list;</pre>
+then you get a nasty surprise: In Perl 5, <tt>||</tt> (and <tt>&amp;&amp;</tt>,
+for that matter) always evaluates its left argument in <i>scalar</i> context.
+And in a scalar context an array evaluates to the number of elements it
+contains, so
+<tt>@last_mailing_list</tt> evaluates to <tt>2</tt>. And that's
+what's assigned to
+<tt>@mailing_list</tt> instead of the actual two elements.
+</p><p>Perl 6 fixes that problem, too. In Perl 6, both sides of an <tt>||</tt>
+(or a
+<tt>&amp;&amp;</tt> or a <tt>//</tt>) are evaluated in the same context
+as the complete expression. That means, in the example above, <tt>@last_mailing_list</tt>
+is evaluated in list context, so its two elements are assigned to
+<tt>@mailing_list</tt>,
+as expected.
+</p><p>
+
+<h3>
+<a name="substitute our vector, victor!"></a>Substitute our vector, Victor!</h3>
+The next step in <tt>&amp;load_data</tt> is to ensure that each path in
+<tt>@dirpath</tt>
+ends in a directory separator. In Perl 5, we might do that with:
+<pre>    s{([^/])$}{$1/} foreach @dirpath;</pre>
+but Perl 6 gives us another alternative: hyper-operators.
+</p><p>Normally, when an array is an operand of a unary or binary operator,
+it is evaluated in the scalar context imposed by the operator and
+yields a single result. For example, if we execute:
+<pre>    $account_balance   = @credits + @debits;
+    $biblical_metaphor = @sheep - @goats;</pre>
+then <tt>$account_balance</tt> gets the total number of credits plus the
+number of debits, and <tt>$biblical_metaphor</tt> gets the numerical difference
+between the number of <tt>@sheep</tt> and <tt>@goats</tt>.
+</p><p>That's fine, but this scalar coercion also happens when the operation
+is in a list context:
+<pre>    @account_balances   = @credits + @debits;
+    @biblical_metaphors = @sheep - @goats;</pre>
+Many people find it counter-intuitive that these statements each produce
+the same scalar result as before and then assign it as the single element
+of the respective lvalue arrays.
+</p><p>It would be more reasonable to expect these to act like:
+<pre>    # Perl 5 code...
+    @account_balances   =
+            map { $credits[$_] + $debits[$_] } 0..max($#credits,$#debits);
+    @biblical_metaphors = 
+            map { $sheep[$_] - $goats[$_] } 0..max($#sheep,$#goats);</pre>
+That is, to apply the operation element-by-element, pairwise along the
+two arrays.
+</p>
+<p>Perl 6 makes that possible, though <i>not</i> by changing the list context
+behavior of the existing operators. Instead, Perl 6 provides a "vector"
+version of each binary operator. Each uses the same symbol as the corresponding
+scalar operator, but with a caret (<tt>^</tt>) dangled in front of it.
+Hence to get the one-to-one addition of corresponding credits and debits,
+and the list of differences between pairs of sheep and goats, we can write:
+<pre>    @account_balances   = @credits ^+ @debits;
+    @biblical_metaphors = @sheep ^- @goats;</pre>
+	
+	
+	<p>
+This works for <i>all</i> unary and binary operators, including those that
+are user-defined. If the two arguments are of different lengths, the operator
+Does What You Mean (which, depending on the operator, might involve padding
+with ones, zeroes or <tt>undef</tt>'s,
+or throwing an exception).
+</p>
+
+<p>If one of the arguments is a scalar, that operand is replicated as many
+times as is necessary. For example:
+<pre>    @interest = @account_balances ^* $interest_rate;</pre>
+Which brings us back to the problem of appending those directory separators.
+The "pattern association" operator (<tt>=~</tt>) can also be vectorized
+by prepending a caret, so we can apply the necessary substitution to each
+element in the <tt>@dirpath</tt> array like this:
+<pre>    @dirpath ^=~ s{([^/])$}{$1/};</pre>
+
+
+<h3>
+<a name="(pre)fixing those filenames"></a>(Pre)fixing those filenames</h3>
+Having ensured everything is set up correctly, <tt>&amp;load_data</tt>
+then processes each candidate file in turn, accumulating data as it goes:
+<pre>    my %data;
+    foreach my $prefix (@dirpath) {</pre>
+The first step is to create the full file path, by prefixing the current
+directory path to the basic filename:
+<pre>        my $filepath = $prefix _ $filename;</pre>
+And here we see the new Perl 6 string concatenation operator: underscore.
+And yes, we realize it's going to take time to get used to. It may help
+to think of it as the old dot operator under extreme acceleration.
+</p><p>Underscore is still a valid identifier character, so you need to be
+careful about spacing it from a preceding or following identifier (just
+as you've always have with the <tt>x</tt> or <tt>eq</tt> operators):
+<pre>    # Perl 6 code                   # Meaning</pre>
+
+<pre>    $name = getTitle _ getName;     # getTitle() . getName()
+    $name = getTitle_ getName;      # getTitle_(getName())
+    $name = getTitle _getName;      # getTitle(_getName())
+    $name = getTitle_getName;       # getTitle_getName()</pre>
+In Perl 6, there's also a unary form of <tt>_</tt>. We'll get to that <a href="/pub/a/2001/10/03/exegesis3.html?page=4#string 'em up together">a
+little later</a>.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p><em>Editor's note: this document is out of date and remains here for historic interest.  See <a href="http://dev.perl.org/perl6/doc/design/syn/S03.html">Synopsis 3</a> for the current design information.</p>
+
+<h3>
+<a name="don't break the chain"></a>Don't break the chain</h3>
+Of course, we only want to load the file's data if the file exists, is
+readable and writable, and isn't too big or too small (say, no less than
+100 bytes and no more than a million). In Perl 5 that would be:
+<pre>    if (-e $filepath  &amp;&amp;  -r $filepath  &amp;&amp;  -w $filepath  and
+        100 &lt; -s $filepath  &amp;&amp;  -s $filepath &lt;= 1e6) {...</pre>
+which has far too many <tt>&amp;&amp;</tt>'s and <tt>$filepath</tt>'s for
+its own good.
+</p><p>In Perl 6, the same set of tests can be considerably abbreviated by
+taking advantage of two new types of operator chaining:
+<pre>    if (-w -r -e $filepath  and  100 &lt; -s $filepath &lt;= 1e6) {...</pre>
+First, the <tt>-X</tt> file test operators now all return a special object
+that evaluates true or false in a boolean context but is really an encapsulated
+<tt>stat</tt>
+buffer, to which subsequent file tests can be applied. So now you can put
+as many file tests as you like in front of a single filename or filehandle
+and they must all be true for the whole expression to be true. Note that
+because these are really nested calls to the various file tests (i.e. <tt>-w(-r(-e($filepath)))</tt>),
+the series of tests are effectively evaluated in right-to-left order.
+</p><p>The test of the file size uses another new form of chaining that Perl
+6 supports: multiway comparisons. An expression like <tt>100 &lt; -s $filepath
+&lt;= 1e6</tt> isn't even legal Perl 5, but it
+Does The Right Thing in Perl 6. More importantly, it short-circuits
+if the first comparison fails and will evaluate each
+operand only once.
+</p><p>
+
+<h3>
+<a name="open for business"></a>Open for business</h3>
+Having verified the file's suitability, we open it for reading and writing:
+<pre>    my $fh = open $filepath : mode=>'rw' 
+        or die "Something screwy with $filepath: $!";</pre>
+The <tt>: mode=>'rw'</tt> is an <i>adverbial modifier</i> on the <tt>open</tt>.
+We'll see more adverbs <a href="/pub/a/2001/10/03/exegesis3.html?page=7#would you like an adverb with that">shortly</a>.
+</p><p>The <tt>$!</tt> variable is exactly what you think it
+is: a container for the last system error message. It's also considerably
+<i>more</i>
+than you think it is, since it's also taken over the roles of
+<tt>$?</tt>
+and <tt>$@</tt>, to become the One True Error Variable.
+</p><p>
+
+<h3>
+<a name="applied laziness 101"></a>Applied laziness 101</h3>
+Contrary to earlier rumors, the "diamond" input operator is alive and
+well and living in Perl 6 (yes, the Perl Ministry of Truth is even now
+rewriting <a href="/pub/a/2001/05/03/wall.html">Apocalypse
+2</a> to correct the ... err ... "printing error" ... that announced <tt>&lt;></tt>
+would be purged from the language).
+</p><p>So we can happily proceed to read in four lines of data:
+<pre>    my ($name, $vers, $status, $costs) = &lt;$fh>;</pre>
+Now, writing something like this is a common Perl 5 mistake -- the list
+context imposed by the list of lvalues induces <tt>&lt;$fh></tt> to read
+the entire file, create a list of (possibly hundreds of thousands of) lines,
+assign the first four to the specified variables, and throw the rest away.
+That's rarely the desired effect.
+</p><p>In Perl 6, this statement works as it should. That is, it works out
+how many values the lvalue list is actually expecting and then reads only
+that many lines from the file.
+</p><p>Of course, if we'd written:
+<pre>    my ($name, $vers, $status, $costs, @and_the_rest) = &lt;$fh>;</pre>
+then the entire file <i>would</i> have been read.
+</p><p>
+
+<h3>
+<a name="and now for something completely the same (well, almost)"></a>And
+now for something completely the same (well, almost)</h3>
+Apart from the new sigil syntax (i.e. hashes now keep their <tt>%</tt>
+signs no matter what they're doing), the remainder of <tt>&amp;load_data</tt>
+is exactly as it would have been if we'd written it in Perl 5.
+</p><p>We skip to the next file if the current file's version is wrong. Otherwise, we split the costs
+line into an array of whitespace-delimited values, and then save everything
+(including the still-open filehandle) in a nested hash within <tt>%data</tt>:
+<pre>            next if $vers &lt; $version;
+            $costs = [split /\s+/, $costs];
+            %data{$filepath}{qw(fh name vers stat costs)} =
+                          ($fh, $name, $vers, $status, $costs);
+            }
+        }</pre>
+Then, once we've iterated over all the directories in <tt>@dirpath</tt>,
+we return the accumulated data:
+<pre>        return %data;
+    }</pre>
+
+
+<h3>
+<a name="the virtue of constancy"></a>The virtue of constancy</h3>
+Perl 6 variables can be used as constants:
+<pre>    my @StartOfFile is const = (0,0);</pre>
+which is a great way to give logical names to
+literal values, but ensure that those named values
+aren't accidentally changed in some other part of the code.</p><p>
+
+<h3>
+<a name="writing it back"></a>Writing it back</h3>
+When the data is eventually saved, we'll be passing it to the
+<tt>&amp;save_data</tt>
+subroutine in a hash. If we expected the hash to be a real hash variable
+(or a reference to one), we'd write:
+<pre>    sub save_data (%data) {...</pre>
+But since we want to allow for the possibility that the hash is created
+on the fly (e.g. from a hash-like list of values), we need to use the slurp-it-all-up
+list context asterisk again:
+<pre>    sub save_data (*%data) {...</pre>
+
+
+<h3>
+<a name="from each according to its ability ... "></a>From each according
+to its ability ...</h3>
+We then grab each datum for each file with the usual <tt>foreach ... values ... </tt>
+construct:
+<pre>        foreach my $data (values %data) {</pre>
+and go about saving the data to file.
+</p>
+
+<h3>
+<a name="your allinone input supplier"></a>Your all-in-one input supplier</h3>
+Because the Perl 6 "diamond" operator can take an arbitrary expression
+as its argument, it's possible to set a filehandle to read an entire file
+<i>and</i> do the actual reading, all in a single statement:
+<pre>    my $rest = &lt;$data.{fh}.irs(undef)></pre>
+The variable <tt>$data</tt> stores a reference to a hash, so to dereference
+it and access the <tt>'fh'</tt> entry, we use the Perl 6 dereferencing
+operator (dot) and write: <tt>$data.{fh}</tt>. In practice, we could leave
+out the operator and just write <tt>$data{fh}</tt>, since Perl can infer
+from the <tt>$</tt> sigil that we're accessing the hash through a reference
+held in a scalar. In fact, in Perl 6 the only place you <i>must</i> use
+an explicit <tt>.</tt> dereferencer is in a method call. But it never hurts
+to say exactly what you mean, and there's certainly no difference in performance
+if you do choose to use the dot.
+</p><p>The <tt>.irs(undef)</tt> method call then sets the input record separator of the
+filehandle (i.e. the Perl 6 equivalent of <tt>$/</tt>) to <tt>undef</tt>,
+causing the next read operation to return the remaining contents of the
+file. And because the filehandle's <tt>irs</tt> method returns its own
+invocant -- i.e. the filehandle reference -- the entire expression can
+be used within the angle brackets of the read.
+</p><p>A variation on this technique allows a Perl program to do a shell-like
+read-from-filename just as easily:
+<pre>    my $next_line = &lt;open $filename or die>;</pre>
+or, indeed, to read the whole file:
+<pre>    my $all_lines = &lt; open $filename : irs=>undef >;</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p><em>Editor's note: this document is out of date and remains here for historic interest.  See <a href="http://dev.perl.org/perl6/doc/design/syn/S03.html">Synopsis 3</a> for the current design information.</p>
+
+<h3>
+<a name="seek and ye shall flatten"></a>Seek and ye shall flatten</h3>
+Having grabbed the entire file, we now rewind and truncate it, in preparation
+for writing it back:
+<pre>    seek $data.{fh}: *@StartOfFile;
+    truncate $data.{fh}: 0;</pre>
+You're probably wondering what's with the asterisk ... unless you've ever
+tried to write:
+<pre>    seek $filehandle, @where_and_whence;</pre>
+in Perl 5 and gotten back the annoying <tt>"Not enough arguments for seek"</tt>
+exception. The problem is that <tt>seek</tt> expects three distinct scalars
+as arguments (as if it had a Perl 5 prototype of <tt>seek($$$)</tt>), and
+it's too fastidious to flatten the proffered array in order to get them.
+</p><p>It's handy to wrap the magical <tt>0,0</tt> arguments of the <tt>seek</tt>
+in a single array (so we no longer have to remember this particular incantation),
+but to use such an array in Perl 5 we would then have to write:
+<pre>    seek $data->{fh}, $StartOfFile[0], $StartOfFile[1];    # Perl 5</pre>
+In Perl 6 that's not a problem, because we have <tt>*</tt> -- the list
+context specifier. When used in an argument list, it takes whatever you
+give it (typically an array or hash) and flattens it. So:
+<pre>    seek $data.{fh}: *@StartOfFile;                        # Perl 6</pre>
+massages the single array into a list of two scalars, as <tt>seek</tt>
+requires.
+</p><p>Oh, and yes, that <i>is</i> the adverbial colon again. In Perl 6, <tt>seek</tt>
+and <tt>truncate</tt> are both methods of filehandle objects. So we can either
+call them as:
+<pre>
+    $data.{fh}.seek(*@StartOfFile);
+    $data.{fh}.truncate(0);
+</pre>
+Or use the "indirect object" syntax:
+<pre>
+    seek $data.{fh}: *@StartOfFile;
+    truncate $data.{fh}: 0;
+</pre>
+And that's where the colon comes in. Another of its many uses in Perl
+6 is to separate "indirect object" arguments (e.g. filehandles) from
+the rest of the argument list. The main place you'll see colons guarding indirect objects
+is in <tt>print</tt> statements (as described in the next section).</p><p>
+
+<h3>
+<a name="it is written..."></a>It is written...</h3>
+
+
+
+<p>
+Finally, <tt>&amp;save_data</tt> has everything ready and can write the
+four fields and the rest of the file back to disk. First, it sets the output
+field separator for the filehandle (i.e. the equivalent of Perl 5's
+<tt>$,</tt>
+variable) to inject newlines between elements:
+<pre>    $data.{fh}.ofs("\n");</pre>
+Then it prints the fields to the filehandle:
+<pre>    print $data.{fh}: $data.{qw(name vers stat)}, _@{$data.{costs}}, $rest;</pre>
+</p><p>Note the use of the adverbial colon after <code>$data.{fh}</code> to separate the
+filehandle argument from the items to be printed. The colon is required
+because it's how Perl 6 eliminates the nasty ambiguity inherent in the
+"indirect object" syntax. In Perl 5, something like:</p>
+<pre>
+    print foo bar;</pre>
+</p><p>could conceivably mean:</p>
+<pre>
+    print {foo} (bar);    # Perl 5: print result of bar() to filehandle foo</pre>
+</p><p>or</p>
+<pre>
+    print ( foo(bar) );   # Perl 5: print foo() of bar() to default filehandle</pre>
+</p><p>or even:</p>
+<pre>
+    print ( bar-&gt;foo );   # Perl 5: call method foo() on object returned by
+                          #         bar() and print result to default filehandle</pre>
+</p><p>In Perl 6, there is no confusion, because each indirect object must
+followed by a colon. So in Perl 6:</p>
+<pre>
+    print foo bar;</pre>
+</p><p>can only mean:</p>
+<pre>
+    print ( foo(bar) );   # Perl 6: print foo() of bar() to default filehandle</pre>
+</p><p>and to get the other two meanings we'd have to write:</p>
+<pre>
+    print foo: bar;       # Perl 6: print result of bar() to filehandle foo()
+                          #         (foo() not foo, since there are no
+                          #          bareword filehandles in Perl 6)</pre>
+</p><p>and:</p>
+<pre>
+    print foo bar: ;      # Perl 6: call method foo() on object returned by
+                          #         bar() and print result to default filehandle</pre>
+</p><p>In fact, the colon has an even wider range of use, as a general-purpose
+"adverb marker"; a notion we will explore more fully
+<a href="#would you like an adverb with that">below</a>.</p>
+</p>
+
+<h3>
+<a name="string 'em up together"></a>String 'em up together</h3>
+
+
+
+<p>
+The printed arguments are: a hash slice:
+<pre>    $data.{qw(name vers stat)},</pre>
+a stringified dereferenced nested array:
+<pre>     _@{$data.{costs}},</pre>
+and a scalar:
+<pre>    $rest;</pre>
+The new hash slice syntax was explained in the previous Apocalypse/Exegesis,
+and the scalar is just a scalar, but what was the middle thing again?
+</p><p>Well, <tt>$data.{costs}</tt> is just a regular Perl 6 access to the
+<tt>'costs'</tt>
+entry of the hash referred to by <tt>$data</tt>. That entry contains the
+array reference that was the result of splitting <tt>$cost</tt>
+<a href="/pub/a/2001/10/03/exegesis3.html?page=3#and now for something completely the same (well, almost)">in
+<tt>&amp;load_data</tt></a>.
+</p><p>So to get the actual array itself, we can prefix the array reference
+with a <tt>@</tt> sigil (though, technically, we don't <i>have</i> to:
+in Perl 6 arrays and array references are interchangeable in scalar
+context).
+</p><p>That gives us <tt>@{$data.{costs}}</tt>. The only remaining difficulty 
+is that when we print the list of items produced by <tt>@{$data.{costs}}</tt>,
+they are subject to the output field separator. Which we just set to newline.
+</p><p>But what we want is for them to appear on the <i>same</i> line, with
+a space between each.
+</p><p>Well ... evaluating a list in a string context does precisely that, so
+we could just write:
+<pre>    "@{$data.{costs}}"    # evaluate array in string context</pre>
+But Perl 6 has another alternative to offer us -- the unary underscore
+operator. Binary underscore is <a href="/pub/a/2001/10/03/exegesis3.html?page=2#(pre)fixing those filenames">string
+concatenation</a>, so it shouldn't be too surprising that unary underscore
+is the stringification operator (think: concatenation with a null string).
+Prefixing any expression with an underscore forces it to be evaluated in
+string context:
+<pre>    _@{$data{costs}}     # evaluate array in string context</pre>
+Which, in this case, conveniently inserts the required spaces between the
+elements of the costs array.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p><em>Editor's note: this document is out of date and remains here for historic interest.  See <a href="http://dev.perl.org/perl6/doc/design/syn/S03.html">Synopsis 3</a> for the current design information.</p>
+
+<h3>
+<a name="a parameter by any other name"></a>A parameter by any other name</h3>
+Now that the I/O is organized, we can get down to the actual processing.
+First, we load the data:
+<pre>    my %data = load_data(filename=>'weblog', version=>1);</pre>
+Note that we're using named arguments here. This attempt would blow up
+badly in Perl 5, because we didn't set <tt>&amp;load_data</tt> up to expect
+a hash-like list of arguments. But it works fine in Perl 6 for two reasons:
+<ol>
+<li>
+Because we <i>did</i> set up <tt>&amp;load_data</tt> with named parameters;
+and</li>
+
+<li>
+Because the <tt>=></tt> operator isn't in Kansas anymore.</li>
+</ol>
+In Perl 5, <tt>=></tt> is just an up-market comma with a single minor
+talent: It stringifies its left operand if that operand is a bareword.
+</p><p>In Perl 6, <tt>=></tt> is a fully-fledged anonymous object constructor
+-- like <tt>[...]</tt> and <tt>{...}</tt>. The objects it constructs are
+called "pairs" and they consist of a key (the left operand of the <tt>=></tt>),
+and a value (the right operand). The key is still stringified if it's a
+valid identifier, but both the key and the value can be <i>any</i> kind of Perl
+data structure. They are accessed via the pair object's <tt>key</tt> and <tt>value</tt>
+methods:
+<pre>    my $pair_ref = [1..9] => "digit";</pre>
+
+<pre>    print $pair_ref.value;      # prints "digit"
+    print $pair_ref.key.[3];    # prints 4</pre>
+So, rather than getting four arguments:
+<pre>    load_data('filename', 'weblog', 'version', 1);    # Perl 5 semantics</pre>
+<tt>&amp;load_data</tt> gets just two arguments, each of which is a reference
+to a pair:
+<pre>    load_data( $pair_ref1, $pair_ref2);               # Perl 6 semantics</pre>
+When the subroutine dispatch mechanism detects one or more pairs as arguments
+to a subroutine with named parameters, it examines the keys of the pairs
+and binds their values to the correspondingly named parameters -- no matter
+what order the paired arguments originally appeared in. Any remaining non-pair
+arguments are then bound to the remaining parameters in left-to-right order.
+</p><p>So we could call <tt>&amp;load_data</tt> in any of the following ways:
+<pre>    load_data(filename=>'weblog', version=>1);  # named</pre>
+
+<pre>    load_data(version=>1, filename=>'weblog');  # named (order doesn't matter)</pre>
+
+<pre>    load_data('weblog', 1);                     # positional (order matters)</pre>
+There are numerous other uses for pairs, one of which we'll see <a href="/pub/a/2001/10/03/exegesis3.html?page=6#schwartzian pairs">shortly</a>.
+</p><p>
+
+<h3>
+<a name="please queue for processing"></a>Please queue for processing</h3>
+Having loaded the data, we go into a loop and iterate over each file's
+information. First, we announce the file and its internal name:
+<pre>    foreach my $file (keys %data) {
+        print "$file contains data on %data{$file}{name}\n";</pre>
+
+
+<h3>
+<a name="the xortwist"></a>The Xor-twist</h3>
+Then we toggle the "is active" status bit (the eighth bit) for each file.
+To flip that single bit without changing any of the other status bits,
+we bitwise-xor the status bitset against the bitstring
+<tt>0000000010000000</tt>.
+Each bit xor'd against a zero stays as it is (0&nbsp;xor&nbsp;0&nbsp;-->&nbsp;0; 1&nbsp;xor&nbsp;0&nbsp;-->&nbsp;1),
+while xor'ing the eighth bit against 1 complements it (0&nbsp;xor&nbsp;1&nbsp;-->&nbsp;1; 1&nbsp;xor&nbsp;1&nbsp;-->&nbsp;0).
+</p><p>But because the caret has been appropriated as the Perl 6
+<a href="/pub/a/2001/10/03/exegesis3.html?page=2#substitute our vector, victor!">hyper-operator
+prefix</a>, it will no longer be used as bitwise xor. Instead, binary tilde
+will be used:
+<pre>    %data{$file}{stat} = %data{$file}{stat} ~ $is_active_bit;</pre>
+This is actually an improvement in syntactic consistency since bitwise xor (now binary <tt>~</tt>)
+and bitwise complement (still unary <tt>~</tt>) are mathematically related:
+<tt>~x</tt>
+is <tt>(-1~x)</tt>.
+</p><p>Note that we <i>could</i> have used the assignment variant of binary
+<tt>~</tt>:
+<pre>    %data{$file}{stat} ~= $is_active_bit;     # flip only bit 8 of status bitset</pre>
+but that's probably best avoided due to its confusability with the much
+commoner "pattern association" operator:
+<pre>    %data{$file}{stat} =~ $is_active_bit;     # match if status bitset is "128"</pre>
+By the way, there is also a high precedence logical xor operator in
+Perl 6. You guessed it: <tt>~~</tt>. This finally fills the strange
+gap in Perl's logical operator set:
+<pre>
+        Binary (low) | Binary (high) |    Bitwise
+       ______________|_______________|_____________
+                     |               |
+            or       |      ||       |      |
+                     |               |
+            and      |      &&       |      &
+                     |               |
+            xor      |      ~~       |      ~
+                     |               |
+</pre>
+</p><p>And it will also help to reduce programmer
+stress by allowing us to write:
+<pre>    $make = $money ~~ $fast;</pre>
+instead of (the clearly over-excited):
+<pre>    $make = !$money != !$fast;</pre>
+
+
+<h3>
+<a name="bound for glory"></a>Bound for glory</h3>
+In both Perl 5 and 6, it's possible to create an <i>alias</i> for a
+variable. For example, the subroutine:
+<pre>    sub increment { $_[0]++ }           # Perl 5
+    sub increment { @_[0]++ }           # Perl 6</pre>
+works because the elements of <tt>@_</tt> become aliases for whatever variable
+is passed as their corresponding argument. Similarly, one can use a
+<tt>for</tt>
+to implement a Pascal-ish <tt>with</tt>:
+<pre>    for my $age ( $person[$n]{data}{personal}{time_dependent}{age} ) {
+        if    ($age &lt; 12) { print "Child" }
+        elsif ($age &lt; 18) { print "Adolescent" }
+        elsif ($age &lt; 25) { print "Junior citizen" }
+        elsif ($age &lt; 65) { print "Citizen" }
+        else              { print "Senior citizen" }
+    }</pre>
+Perl 6 provides a more direct mechanism for aliasing one variable
+to another in this way: the <tt>:=</tt> (or "binding") operator. For
+example, we could rewrite the previous example like so in Perl 6:
+<pre>    my $age := $person[$n]{data}{personal}{time_dependent}{age};</pre>
+
+<pre>    if    ($age &lt; 12) { print "Child" }
+    elsif ($age &lt; 18) { print "Adolescent" }
+    elsif ($age &lt; 25) { print "Junior citizen" }
+    elsif ($age &lt; 65) { print "Citizen" }
+    else              { print "Senior citizen" }</pre>
+Bound aliases are particularly useful for temporarily giving a conveniently short 
+identifier to a variable with a long or complex name. Scalars,
+arrays, hashes and even subroutines may all be given less sequipedalian
+names in this way:
+<pre>        my   @list := @They::never::would::be::missed::No_never_would_be_missed;
+        our  %plan := %{$planning.[$planner].{planned}.[$planet]};
+        temp &amp;rule := &amp;FulfilMyGrandMegalomanicalDestinyBwahHaHaHaaaa;</pre>
+In our example program, we use aliasing to avoid having to write <tt>@%data{$file}{costs}</tt>
+everywhere:
+<pre>    my @costs := @%data{$file}{costs};</pre>
+An important feature of the binding operator is that the lvalue (or lvalues)
+on the left side form a context specification for the rvalue (or rvalues)
+on the right side. It's as if the lvalues were the parameters of an invisible
+subroutine, and the rvalues were the corresponding arguments being passed
+to it. So, for example, we could also have written:
+<pre>    my @costs := %data{$file}{costs};</pre>
+(i.e. without the <tt>@</tt> dereferencer) because the lvalue <i>expects</i>
+an array as the corresponding rvalue, so Perl 6 automatically dereferences
+the array reference in <tt>%data{$file}{costs}</tt> to provide that.
+</p><p>More interestingly, if we have both lvalue and rvalue lists, then each
+of the rvalues is evaluated in the context specified by its corresponding
+lvalue. For example:
+<pre>    (@x, @y) := (@a, @b);</pre>
+aliases <tt>@x</tt> to <tt>@a</tt>, and <tt>@y</tt> to <tt>@b</tt>, because
+<tt>@</tt>'s
+on the left act like <tt>@</tt> parameters, which require -- and bind to
+-- an unflattened array as their corresponding argument. Likewise:
+<pre>    ($x, %y, @z) := (1, {b=>2}, %c{list});</pre>
+binds <tt>$x</tt> to the value <tt>1</tt> (i.e. <tt>$x</tt> becomes a constant),
+<tt>%y</tt>
+to the anonymous hash constructed by <tt>{b=>2}</tt>, and <tt>@z</tt> to
+the array referred to by <tt>%c{list}</tt>. In other words,
+it's the same set of bindings we'd see if we wrote:
+<pre>    sub foo($x, %y, @z) {...}</pre>
+
+<pre>    foo(1, {b=>2}, %c{list});</pre>
+except that the <tt>:=</tt> binding takes effect in the current scope.
+</p><p>And because <tt>:=</tt> works that way, we can also use the flattening
+operator (unary <tt>*</tt>) on either side of such bindings. For example:
+<pre>    (@x, *@y) := (@a, $b, @c, %d);</pre>
+aliases <tt>@x</tt> to <tt>@a</tt>, and causes <tt>@y</tt> to bind to the
+remainder of the lvalues -- by flattening out <tt>$b</tt>, <tt>@c</tt>,
+and <tt>%d</tt> into a list and then slurping up all their components together.
+</p><p>Note that <tt>@y</tt> is still an <i>alias</i> for those various slurped components.
+So
+<tt>@y[0]</tt> is an alias for <tt>$b</tt>, <tt>@y[1..@c.length]</tt> are aliases
+for the elements of <tt>@c</tt>, and the remaining elements of <tt>@y</tt>
+are aliases for the interlaced keys and values of <tt>%d</tt>.
+</p><p>When the star is on the other side of the binding, as in:
+<pre>    ($x, $y) := (*@a);</pre>
+then <tt>@a</tt> is flattened before it is bound, so <tt>$x</tt> becomes
+an alias for <tt>@a[0]</tt> and <tt>$y</tt> becomes an alias for <tt>@a[1]</tt>.
+</p><p>The binding operator will have many uses in Perl 6 (most of which we
+probably haven't even thought of yet), but one of the commonest will almost
+certainly be as an easy way to swap two arrays efficiently:
+<pre>    (@x, @y) := (@y, @x);</pre>
+Yet another way to think about the binding operator is to consider it as a
+sanitized version of those dreaded Perl 5 typeglob assignments. That is:
+<pre>    $age := $person[$n]{data}{personal}{time_dependent}{age};</pre>
+is the same as Perl 5's:
+<pre>    *age = \$person->[$n]{data}{personal}{time_dependent}{age};</pre>
+except that it also works if <tt>$age</tt> is declared as a lexical.
+</p><p>Oh, and binding is much safer than typeglobbing was, because it explicitly
+requires that <tt>$person[$n]{data}{personal}{time_dependent}{age}</tt>
+evaluate to a scalar, whereas the Perl 5 typeglob version would happily
+(and silently!) replace <tt>@age</tt>, <tt>%age</tt>, or even <tt>&amp;age</tt>
+if the rvalue happened to produce a reference to an array, hash, or subroutine
+instead of a scalar.
+</p><p>
+
+
+
+
+
+
+
+
+
+
+
+
+<p><em>Editor's note: this document is out of date and remains here for historic interest.  See <a href="http://dev.perl.org/perl6/doc/design/syn/S03.html">Synopsis 3</a> for the current design information.</p>
+
+<h3>
+<a name="better living through sigils"></a>Better living through sigils</h3>
+We should also note that the binding of the <tt>@costs</tt> array:
+<pre>    my @costs := @%data{$file}{costs};</pre>
+shows yet another case where Perl 6's sigil semantics are much DWIM-mier
+than those of Perl 5.
+</p><p>In Perl 5 we would probably have written that as:
+<pre>        local *costs = \ @$data{$file}{costs};</pre>
+and then spent some considerable time puzzling out why it wasn't working,
+before realising that we'd actually meant:
+<pre>        local *costs = \ @{$data{$file}{costs}};</pre>
+instead.
+</p><p>That's because, in Perl 5, the precedence of a hash key is relatively
+low, so:
+<pre>    @$data{$file}{costs}    # means: @{$data}{$file}{costs}
+                            # i.e. (invalid attempt to) access the 'costs'
+                            # key of a one-element slice of the hash
+                            # referred to by $data
+                            # problem is: slices don't have hash keys</pre>
+whereas:
+<pre>    @{$data{$file}{costs}}  # means: @{ $data{$file}{costs} }
+                            # i.e. dereference of array referred to by
+                            # $data{$file}{costs}</pre>
+The problem simply doesn't arise in Perl 6, where the two would be written
+quite distinctly, as:
+<pre>    %data{@($file)}{costs}  # means: (%data{@($file)}).{costs}
+                            # (still an error in Perl 6)</pre>
+and:
+<pre>    @%data{$file}{costs}    # means: @{ %data{$file}{costs} }
+                            # i.e. dereference of array referred to by
+                            # %data{$file}{costs}</pre>
+respectively.
+</p><p>
+
+<h3>
+<a name="that's not a number...now that's a number!"></a>That's not a number...now
+<i>that's</i>
+a number!</h3>
+
+
+
+<p>
+One of the perennial problems with Perl 5 is how to read in a number. Or
+rather, how to read in a string...and then be sure that it contains a valid
+number. Currently, most people read in the string and then either just
+assume it's a number (optimism) or use the regexes found in
+<a href="http://search.cpan.org/doc/JHI/perl-5.7.2/pod/perlfaq4.pod#How_do_I_determine_whether_a_scalar_is_a_number_whole_integer_float_">perlfaq4</a>
+or <a href="http://search.cpan.org/doc/DCONWAY/Regexp-Common-0.01/lib/Regexp/Common.pm">Regexp::Common</a>
+to make sure (cynicism).
+</p><p>Perl 6 offers a simpler, built-in mechanism.
+</p><p>Just as the unary version of binary underscore (<tt>_</tt>) is Perl
+6's explicit stringification specifier, so to the unary version of binary
+plus is Perl 6's explicit numerifier. That is, prefixing an expression
+with unary <tt>+</tt> evaluates that expression in a numeric context. Furthermore,
+if the expression has to be coerced from a string and the string does not
+begin with a valid number, the stringification operator returns <tt>NaN</tt>,
+the not-a-number value.
+</p><p>That makes it particularly easy to read in numeric data reliably:
+<pre>    my $inflation;
+    print "Inflation rate: " and $inflation = +&lt;>
+        until $inflation != NaN;</pre>
+The unary <tt>+</tt> takes the string returned by <tt>&lt;></tt> and converts
+it to a number. Or, if the string can't be interpreted as a number, <tt>+</tt>
+returns
+<tt>NaN</tt>. Then we just go back and try again until we do get
+a valid number.
+</p><p>Note that these new semantics for unary <tt>+</tt> are a little different
+from its role in Perl 5, where it is just the identity operator. In Perl
+5 it's occasionally used to disambiguate constructs like:
+<pre>    print  ($x + $y) * $z;        # in Perl 5 means: ( print($x+$y) ) * $z;
+    print +($x + $y) * $z;        # in Perl 5 means: print( ($x+$y) * $z );</pre>
+To get the same effect in Perl 6, we'd use the <a href="/pub/a/2001/10/03/exegesis3.html?page=4#it is written...">adverbial colon</a> instead:
+<pre>    print   ($x + $y) * $z;        # in Perl 6 means: ( print($x+$y) ) * $z;
+    print : ($x + $y) * $z;        # in Perl 6 means: print( ($x+$y) * $z );</pre>
+
+
+<h3>
+<a name="schwartzian pairs"></a>Schwartzian pairs</h3>
+Another handy use for <a href="/pub/a/2001/10/03/exegesis3.html?page=5#a parameter by any other name">pairs</a>
+is as a natural data structure for implementing
+the Schwartzian Transform. This caching technique is used when sorting
+a large list of values according to some expensive function on those values.
+Rather than writing:
+<pre>    my @sorted = sort { expensive($a) &lt;=> expensive($b) } @unsorted;</pre>
+and recomputing the same expensive function every time each value is compared
+during the sort, we can precompute the function on each value once. We
+then pass both the original value and its computed value to <tt>sort</tt>,
+use the computed value as the key on which to sort the list, but then return
+the original value as the result. Like this:
+<pre>    my @sorted =                        # step 4: store sorted originals
+        map  { $_.[0] }                 # step 3: extract original
+        sort { $a.[1] &lt;=> $b.[1] }      # step 2: sort on computed
+        map  { [$_, expensive($_) ] }   # step 1: cache original and computed
+            @unsorted;                  # step 0: take originals</pre>
+The use of arrays can make such transforms hard to read (and to maintain), so people sometimes
+use hashes instead:
+<pre>    my @sorted =                        
+        map  { $_.{original} }             
+        sort { $a.{computed} &lt;=> $b.{computed} } 
+        map  { {original=>$_, computed=>expensive($_)} }   
+            @unsorted;</pre>
+That improves the readability, but at the expense of performance. Pairs
+are an ideal way to get the readability of hashes but with (probably) even
+better performance than arrays:
+<pre>    my @sorted =                        
+        map  { $_.value }             
+        sort { $a.key &lt;=> $b.key }  
+        map  { expensive($_) => $_ }     
+            @unsorted;</pre>
+Or in the case of our example program:
+<pre>    @costs = map  { $_.value }
+             sort { $a.key &lt;=> $b.key }
+             map  { amortize($_) => $_ }
+                 @costs ^* $inflation;</pre>
+Note that we also used a hyper-multiplication (<tt>^*</tt>) to multiply
+each cost individually by the rate of inflation before sorting them. That's
+equivalent to writing:
+<pre>    @costs = map  { $_.value }
+             sort { $a.key &lt;=> $b.key }
+             map  { amortize($_) => $_ }
+             map  { $_ * $inflation }
+                 @costs;</pre>
+but spares us from the burden of yet another <tt>map</tt>.
+</p><p>More importantly, because <tt>@costs</tt> is an <a href="/pub/a/2001/10/03/exegesis3.html?page=5#bound for glory">alias</a>
+for <tt>@%data{$file}{costs}</tt>, when we assign the sorted list back
+to
+<tt>@costs</tt>, we're actually assigning it back into the appropriate
+sub-entry of <tt>%data</tt>.
+</p><p>
+
+<h3>
+<a name="the sum of all our fears"></a>The &sum; of all our fears</h3>
+Perl 6 will probably have a built-in <tt>sum</tt> operator, but we might
+still prefer to build our own for a couple of reasons. Firstly <tt>sum</tt>
+is obviously far too long a name for so fundamental an operation; it really
+should be <tt>&sum;</tt>. Secondly, we may want to extend the basic summation
+functionality somehow. For instance, by allowing the user to specify a
+filter and only summing those arguments that the filter lets through.
+</p><p>Perl 6 allows us to create our own operators. Their names can be any
+combination of characters from the Unicode set. So it's relatively easy
+to build ourselves a <tt>&sum;</tt> operator:
+<pre>    my sub operator:&sum; is prec(\&amp;operator:+($)) (*@list) {
+        reduce {$^a+$^b} @list;
+    }</pre>
+We declare the <tt>&sum;</tt> operator as a lexically scoped subroutine.
+The lexical scoping eases the syntactic burden on the parser, the semantic
+burden on other unrelated parts of the code, and the cognitive burden on
+the programmer.
+</p><p>The operator subroutine's name is always
+<tt>operator:whatever_symbols_we_want</tt>.
+In this case, that's
+<tt>operator:&sum;</tt>, but it can be any sequence
+of Unicode characters, including alphanumerics:
+<pre>        my sub operator:*#@&amp; is prec(\&amp;operator:\)  (STR $x) {
+                return "darn $x";
+        }</pre>
+
+<pre>        my sub operator:&dagger; is prec(\&amp;CORE::kill)  (*@tIHoH) {
+                kill(9, @tIHoH) == @tIHoH or die "batlhHa'";
+                return "Qapla!";
+        }</pre>
+
+<pre>        my sub operator:EQ is prec(\&amp;operator:eq)  ($a, $b) {
+                return $a eq $b                 # stringishly equal strings
+                    || $a == $b != NaN;         # numerically equal numbers
+        }</pre>
+<pre>
+        # and then:</pre>
+<pre>
+        warn *#@&amp; &quot;QeH!&quot; unless E&lt;dagger&gt; $puq EQ &quot;Qapla!&quot;;</pre>
+</p><p>Did you notice that cunning <code>$a == $b != NaN</code> test in <code>operator:EQ</code>?
+This lovely Perl 6 idiom solves the problem of numerical comparisons
+between non-numeric strings.</p>
+</p><p>In Perl 5, a comparison like:</p>
+<pre>
+        $a = &quot;a string&quot;;
+        $b = &quot;another string&quot;;
+        print &quot;huh?&quot; if $a == $b;</pre>
+</p><p>will unexpectedly succeed (and silently too, if you run without
+warnings), because the non-numeric values of both the scalars are converted to zero in
+the numeric context of the <code>==</code>.</p>
+</p><p>But in Perl 6, non-numeric strings numerify to <code>NaN</code>. So, using Perl
+6's multiway comparison feature, we can add an
+extra <code>!= NaN</code> to the equality test to ensure that we compared genuine
+numbers.</p>
+</p><p>Meanwhile, we also have to specify a precedence for each new operator we
+define. We do that with the <tt>is prec</tt> trait of the subroutine. The precedence is specified
+in terms of the precedence of some existing operator; in this case, in
+terms of Perl's built-in unary <tt>+</tt>:
+<pre>    my sub operator:&sum; is prec( \&amp;operator:+($) )</pre>
+To do this, we give the <tt>is prec</tt> trait a reference to teh existing operator.
+Note that, because there are two overloaded forms of <tt>operator:+</tt>
+(unary and binary) of different precedences, to get the reference to the
+correct one we need to specify its complete <i>signature</i> (its name
+and parameter types) as part of the enreferencing operation. The ability
+to take references to signatures is a standard feature in Perl 6,
+since ordinary subroutines can also be overloaded, and may need the same
+kind of disambiguation when enreferenced.
+</p><p>If the operator had been binary, we might also have had to specify its
+associativity (<tt>left</tt>, <tt>right</tt>, or <tt>non</tt>), using the
+<tt>is
+assoc</tt> trait.
+</p><p>Note too that we specified the parameter of <tt>operator:&sum;</tt> with
+a flattening asterisk, since we want <tt>@list</tt> to slurp up any series
+of values passed to it, rather than being restricted to accepting only
+actual array variables as arguments.
+</p><p>The implementation of <tt>operator:&sum;</tt> is very simple: we just
+apply the built-in <tt>reduce</tt> function to the list, reducing each
+successive pair of elements by adding them.
+</p><p>Note that we used a higher-order function to specify the addition operation.
+Larry has decided that the syntax for higher-order functions requires that
+implicit parameters be specified with a <tt>$^</tt> sigil (or <tt>@^</tt>
+or <tt>%^</tt>, as appropriate) and that the whole expression be enclosed
+in braces.
+</p><p>So now we have a <tt>&sum;</tt> operator:
+<pre>    $result = &sum; $wins, $losses, $ties;</pre>
+but it doesn't yet provide a way to filter its values. Normally, that would
+present a difficulty with an operator like <tt>&sum;</tt>, whose
+<tt>*@list</tt>
+argument will gobble up every argument we give it, leaving no way -- except
+convention -- to distinguish the filter from the data.
+</p><p>But Perl 6 allows any subroutine -- not just built-ins like <tt><a href="/pub/a/2001/10/03/exegesis3.html?page=4#it is written...">print</a></tt>
+-- to take one or more "adverbs" in addition to its normal arguments.
+This provides a second channel by which to transmit information to a subroutine.
+Typically that information will be used to modify the behaviour of the
+subroutine (hence the name "adverb"). And that's exactly what we need
+in order to pass a filter to <tt>&sum;</tt>.
+</p><p>A subroutine's adverbs are specified as part of its normal parameter
+list, but separated from its regular parameters by a colon:
+<pre>    my sub operator:&sum; is prec(\&amp;operator:+($)) ( *@list : $filter //= undef) {...</pre>
+This specifies that <tt>operator:&sum;</tt> can take a single scalar adverb,
+which is bound to the parameter <tt>$filter</tt>. When there is no adverb
+specified in the call, <tt>$filter</tt> is default-assigned the value <tt>undef</tt>.
+</p><p>We then modify the body of the subroutine to pre-filter the list through
+a <tt>grep</tt>, but only if a filter is provided:
+<pre>        reduce {$^a+$^b}  ($filter ?? grep &amp;$filter, @list :: @list);
+    }</pre>
+The <tt>??</tt> and <tt>::</tt> are the new way we write the old <tt>?:</tt>
+ternary operator in Perl 6. Larry had to change the spelling because he
+needed the single colon for marking adverbs. But it's a change for the
+better anyway --it was rather odd that all the other short-circuiting logical
+operators (<tt>&amp;&amp;</tt> and <tt>||</tt> and <tt>//</tt>) used doubled
+symbols, but the conditional operator didn't. Well, now it does. The doubling
+also helps it stand out better in code, in part because it forces you to
+put space around the <tt>::</tt> so that it's not confused with a package
+name separator.
+</p><p>You might also be wondering about the ambiguity of <tt>??</tt>, which
+in Perl 5 already represents an empty regular expression with question-mark
+delimiters. Fortunately, Perl 6 won't be riddled with the nasty <tt>?...?</tt>
+regex construct, so there's no ambiguity at all.
+</p><p>Adverbial semantics can be defined for <i>any</i> Perl 6 subroutine.
+For example:
+<pre>    sub mean (*@values : $type //= 'arithmetic') {
+        given ($type) {
+            when 'arithmetic': { return sum(@values) / @values; }
+            when 'geometric':  { return product(@values) ** (1/@values) }
+            when 'harmonic':   { return @values / sum( @values ^** -1 ) }
+            when 'quadratic':  { return (sum(@values ^** 2) / @values) ** 0.5 }
+        }
+        croak "Unknown type of mean: '$type'";
+    }</pre>
+Adverbs will probably become widely used for passing this type of "out-of-band"
+behavioural modifier to subroutines that take an unspecified number of
+data arguments.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p><em>Editor's note: this document is out of date and remains here for historic interest.  See <a href="http://dev.perl.org/perl6/doc/design/syn/S03.html">Synopsis 3</a> for the current design information.</p>
+
+<h3>
+<a name="would you like an adverb with that"></a>Would you like an adverb
+with that?</h3>
+OK, so now our <tt>&sum;</tt> operator can take a modifying filter. How
+exactly do we pass that filter to it?
+</p><p>As described <a href="/pub/a/2001/10/03/exegesis3.html?page=4#it is written...">earlier</a>, the colon is used
+to introduce adverbial arguments into the argument list of a subroutine
+or operator. So to do a normal summation we write:
+<pre>    $sum = &sum; @costs;</pre>
+whilst to do a filtered summation we place the filter after a colon at
+the end of the regular argument list:
+<pre>    $sum = &sum; @costs : sub {$_ >= 1000};</pre>
+or, more elegantly, using a higher-order function:
+<pre>    $sum = &sum; @costs : {$^_ >= 1000};</pre>
+Any arguments after the colon are bound to the parameters specified
+by the subroutine's adverbial parameter list.
+</p><p>Note that the example also demonstrates that we can interpolate the
+results of the various summations directly into output strings. We do this
+using Perl 6's scalar interpolation mechanism (<tt>$(...)</tt>), like so:
+<pre>    print "Total expenditure: $( &sum; @costs )\n";
+    print "Major expenditure: $( &sum; @costs : {$^_ >= 1000} )\n";
+    print "Minor expenditure: $( &sum; @costs : {$^_ &lt; 1000} )\n";</pre>
+
+
+<h3>
+<a name="the odd lazy step"></a>The odd lazy step</h3>
+
+
+<p>
+Finally (and only because we <i>can</i>), we print out a list of every
+second element of <tt>@costs</tt>. There are numerous ways to do that in
+Perl 6, but the cutest is to use a lazy, infinite, stepped list of indices
+in a regular slicing operation.
+</p><p>In Perl 6, any list of values created with the <tt>..</tt> operator
+is created lazily. That is, the <tt>..</tt> operator doesn't actually build
+a list of all the values in the specified range, it creates an array object
+that knows the boundaries of the range and can interpolate (and then cache)
+any given value when it's actually needed. That's useful, because
+it greatly speeds up the creation of a list like <tt>(1..Inf)</tt>.
+</p><p><tt>Inf</tt> is Perl 6's standard numerical infinity value, so a list
+that runs to <tt>Inf</tt> takes ... well ... forever to actually build. But
+writing
+<tt>1..Inf</tt> is OK in Perl 6, since the elements of the resulting
+list are only ever computed on demand. Of course, if you were to
+<tt>print(1..Inf)</tt>,
+you'd have plenty of time to go and get a cup of coffee. And even then
+(given the comparatively imminent heat death of the universe) that coffee
+would be <i>really</i> cold before the output was complete.
+So there will probably be a warning when you try to do that.
+</p><p>But to get an infinite list of odd indices, we don't want every number
+between 1 and infinity; we want every <i>second</i> number. Fortunately,
+Perl 6's <tt>..</tt> operator can take an adverb that specifies a "step-size"
+between the elements in the resulting list. So if we write <tt>(1..Inf
+: 2)</tt>, we get <tt>(1,3,5,7,...)</tt>. Using that list, we can extract
+the oddly indexed elements of an array of any size (e.g. <tt>@costs</tt>)
+with an ordinary array slice:
+<pre>    print @costs[1..Inf:2]</pre>
+You might have expected another one of those "maximal-entropy coffee" delays whilst
+<tt>print</tt>
+patiently outputs the infinite number of <tt>undef</tt>'s that theoretically
+exist after <tt>@costs</tt>' last element, but slices involving infinite
+lists avoid that problem by returning only those elements that actually
+exist in the list being sliced. That is, instead of iterating the requested
+indices in a manner analogous to:
+<pre>    sub slice is lvalue (@array, *@wanted_indices) {
+        my @slice;
+        foreach $wanted_index ( @wanted_indices ) {
+            @slice[+@slice] := @array[$wanted_index];
+        }
+        return @slice;
+    }</pre>
+infinite slices iterate the available indices:
+<pre>    sub slice is lvalue (@array, *@wanted_indices) {
+        my @slice;
+        foreach $actual_index ( 0..@array.last ) {
+            @slice[+@slice] := @array[$actual_index]
+                if any(@wanted_indices) == $actual_index;
+        }
+        return @slice;
+    }</pre>
+(Obviously, it's actually far more complicated -- and lazy -- than that.
+It has to preserve the original ordering of the wanted indexes, as well
+as cope with complex cases like infinite slices of infinite lists. But
+from the programmer's point of view, it all just DWYMs).
+</p><p>By the way, binding selected array elements to the elements of another
+array (as in: <tt>@slice[+@slice] := @array[$actual_index]</tt>), and then
+returning the bound array as an lvalue, is a neat Perl 6 idiom for
+recreating any kind of slice-like semantics with user-defined subroutines.
+</p><p>
+
+<h3>
+<a name="take that! and that!"></a>Take that! And that!</h3>
+And so, lastly, we save the data back to disk:
+<pre>    save_data(%data, log => {name=>'metalog', vers=>1, costs=>[], stat=>0});</pre>
+Note that we're passing in both a hash and a pair, but that these still
+get correctly folded into <tt>&amp;save_data</tt>'s single hash parameter,
+courtesy of the flattening asterisk on the parameter definition:
+<pre>    sub save_data (*%data) {...</pre>
+
+
+<h3>
+<a name="in a nutshell..."></a>In a nutshell...</h3>
+It's okay if your head is spinning at this point.
+</p><p>We just crammed a huge number of syntactic and semantic changes into
+a comparatively small piece of example code. The changes may seem overwhelming,
+but that's because we've been concentrating on <i>only</i> the changes.
+Most of the syntax and semantics of Perl's operators don't change at
+all in Perl 6.
+</p><p>So, to conclude, here's a summary of what's new, what's
+different, and (most of all) what stays the same.
+<h4>
+<a name="unchanged operators"></a>Unchanged operators</h4>
+
+<ul>
+<li>
+prefix and postfix <tt>++</tt> and <tt>--</tt></li>
+
+<li>
+unary <tt>!</tt>, <tt>~</tt>, <tt>\</tt>, and <tt>-</tt></li>
+
+<li>
+binary <tt>**</tt></li>
+
+<li>
+binary <tt>=~</tt> and <tt>!~</tt></li>
+
+<li>
+binary <tt>*</tt>, <tt>/</tt>, and <tt>%</tt></li>
+
+<li>
+binary <tt>+</tt> and <tt>-</tt></li>
+
+<li>
+binary <tt>&lt;&lt;</tt> and <tt>>></tt></li>
+
+<li>
+binary <tt>&amp;</tt> and <tt>|</tt></li>
+
+<li>
+binary <tt>=</tt>, <tt>+=</tt>, <tt>-=</tt>, <tt>*=</tt>, etc.</li>
+
+<li>
+binary <tt>,</tt></li>
+
+<li>
+unary <tt>not</tt></li>
+
+<li>
+binary <tt>and</tt>, <tt>or</tt>, and <tt>xor</tt></li>
+</ul>
+
+<h4>
+<a name="changes to existing operators"></a>Changes to existing operators</h4>
+
+<ul>
+<li>
+binary <tt>-></tt> (dereference) becomes <tt>.</tt></li>
+
+<li>
+binary <tt>.</tt> (concatenate) becomes <tt>_</tt></li>
+
+<li>
+unary <tt>+</tt> (identity) now enforces numeric context on
+its argument</li>
+
+<li>
+binary <tt>^</tt> (bitwise xor) becomes <tt>~</tt></li>
+
+<li>
+binary <tt>=></tt> becomes the "pair" constructor</li>
+
+<li>
+ternary <tt>? :</tt> bbeeccoommeess <tt>?? ::</tt></li>
+</ul>
+
+<h4>
+<a name="enhancements to existing operators"></a>Enhancements to existing
+operators</h4>
+
+<ul>
+<li>
+binary <tt>..</tt> becomes even lazier</li>
+
+<li>
+binary <tt>&lt;</tt>, <tt>></tt>, <tt>lt</tt>, <tt>gt</tt>, <tt>==</tt>,
+<tt>!=</tt>,
+etc. become chainable</li>
+
+<li>
+Unary <tt>-r</tt>, <tt>-w</tt>, <tt>-x</tt>, etc. are nestable</li>
+
+<li>
+The <tt>&lt;></tt> input operator are more context-aware</li>
+
+<li>
+The logical <tt>&amp;&amp;</tt> and <tt>||</tt> operators propagate
+their context to <i>both</i> their operands</li>
+
+<li>
+The <tt>x</tt> repetition operator no longer requires listifying parentheses
+on its left argument in a list context.</li>
+</ul>
+
+<h4>
+<a name="new operators:"></a>New operators:</h4>
+
+<ul>
+<li>
+unary <tt>_</tt> is the explicit string context enforcer</li>
+
+<li>
+binary <tt>~~</tt> is high-precedence logical xor</li>
+
+<li>
+unary <tt>*</tt> is a list context specifier for parameters and a
+array flattening operator for arguments</li>
+
+<li>
+unary <tt>^</tt> is a meta-operator for specifying vector operations</li>
+
+<li>
+unary <tt>:=</tt> is used to create aliased variables (a.k.a. binding)</li>
+
+<li>
+unary <tt>//</tt> is the logical 'default' operator</li>
+</ul>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/perl-6/" rel="tag">Perl 6</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

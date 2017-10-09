@@ -1,0 +1,90 @@
+
+<title> Using open() for IPC</title>
+<CENTER>
+<H1> Using <EM>open()</EM> for IPC</H1>
+</CENTER>
+<P>
+
+Perl's basic <EM>open()</EM> statement can also be used for unidirectional interprocess
+communication by either appending or prepending a pipe symbol to the second
+argument to <EM>open()</EM>.  Here's how to start something up a child process you
+intend to write to:
+<p>
+<XMP>
+    open(SPOOLER, "| cat -v | lpr -h 2>/dev/null") 
+                    || die "can't fork: $!";
+    local $SIG{PIPE} = sub { die "spooler pipe broke" };
+    print SPOOLER "stuff\n";
+    close SPOOLER || die "bad spool: $! $?";
+
+</XMP>
+<p>And here's how to start up a child process you intend to read from:
+<p>
+<XMP>
+    open(STATUS, "netstat -an 2>&1 |")
+                    || die "can't fork: $!";
+    while (<STATUS>) {
+        next if /^(tcp|udp)/;
+        print;
+    } 
+    close SPOOLER || die "bad netstat: $! $?";
+
+</XMP>
+<p>If one can be sure that a particular program is a Perl script that is
+expecting filenames in <STRONG>@ARGV</STRONG>, the clever programmer can write something
+like this:
+<p>
+<XMP>
+    $ program f1 "cmd1|" - f2 "cmd2|" f3 < tmpfile
+
+</XMP>
+<p>and irrespective of which shell it's called from, the Perl program will
+read from the file <EM>f1</EM>, the process <EM>cmd1</EM>, standard input (<EM>tmpfile</EM>
+in this case), the <EM>f2</EM> file, the <EM>cmd2</EM> command, and finally the <EM>f3</EM>
+file.  Pretty nifty, eh?
+<p>You might notice that you could use backticks for much the
+same effect as opening a pipe for reading:
+<p>
+<XMP>
+    print grep { !/^(tcp|udp)/ } `netstat -an 2>&1`;
+    die "bad netstat" if $?;
+
+</XMP>
+<p>While this is true on the surface, it's much more efficient to process the
+file one line or record at a time because then you don't have to read the
+whole thing into memory at once. It also gives you finer control of the
+whole process, letting you to kill off the child process early if you'd
+like.
+<p>Be careful to check both the <EM>open()</EM> and the <EM>close()</EM> return values.  If
+you're <EM>writing</EM> to a pipe, you should also trap SIGPIPE.  Otherwise,
+think of what happens when you start up a pipe to a command that doesn't
+exist: the <EM>open()</EM> will in all likelihood succeed (it only reflects the
+<EM>fork()</EM>'s success), but then your output will fail--spectacularly.  Perl
+can't know whether the command worked because your command is actually
+running in a separate process whose <EM>exec()</EM> might have failed.  Therefore,
+while readers of bogus commands just return a quick end of file, writers
+to bogus command will trigger a signal they'd better be prepared to
+handle.  Consider:
+<p>
+<XMP>
+    open(FH, "|bogus");
+    print FH "bang\n";
+    close FH;
+
+</XMP>
+
+<HR>
+<P>
+<CENTER>
+<A HREF="perlipc.html"> overview </a> /
+<A HREF="signals.html"> signals </a> /
+<A HREF="fifo.html"> fifos </a> /
+<A HREF="safepopen.html">safe-pipes</a> /
+<A HREF="openplex.html">open2</a> /
+<A HREF="sockets.html">sockets</a> /
+<A HREF="inet.html">AF_INET</a> /
+<A HREF="unix.html">AF_UNIX</a> /
+<A HREF="udp.html">udp</a> /
+<A HREF="sysv.html">sys5</a>
+</CENTER>
+<P>

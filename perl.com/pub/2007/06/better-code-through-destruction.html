@@ -1,0 +1,1020 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2007/05/everyday-perl-6.html" title="Everyday Perl 6" />
+    <link rel="next bookmark" href="/pub/2007/07/options-and-configuration.html" title="Option and Configuration Processing Made Easy" />
+    
+    
+    <title>Better Code Through Destruction - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-660" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Better Code Through Destruction</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Igor Gariev</span> on <abbr class="published" title="2007-06-07T00:00:00-08:00">June  7, 2007 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+
+<p>Larry Wall said that Perl makes easy things easy and hard things possible. Perl is good both for writing a two-line script that saves the world at the last minute (well, at least it saves you and your project) and for robust projects. However, good Perl programming techniques can be quite different between small and complex applications. Consider, for example, Perl's garbage collector. It frees a programmer from memory management issues most of the time...until the programmer creates circular references.</p>
+
+<p>Perl's garbage collector counts references. When the count reaches zero (which means that no one has a reference), Perl reclaims the entity. The approach is simple and effective. However, circular references (when object A has a reference to object B, and object B has a reference to object A) present a problem. Even if nothing else in the program has a reference to either A or B, the reference count can never reach zero. Objects A and B do not get destroyed. If the code creates them again and again (perhaps in a loop), you get a memory leak. The amount of memory allocated by the program increases without a sensible reason and can never decrease. This effect may be acceptable for simple run-and-exit scripts, but it's not acceptable for programs running 24x365, such as in a mod_perl or FastCGI environment or as standalone servers.</p>
+
+<p>Circular references are sometimes too useful to avoid. A common example is a tree-like data structure. To navigate both directions--from root to leaves and vice versa--a parent node has a list of children and a child node has a reference to its parent. Here are the circular references. Many CPAN modules implement their data models this way, including <a href="http://search.cpan.org/perldoc?HTML::Tree">HTML::Tree</a>, <a href="http://search.cpan.org/perldoc?XML::DOM">XML::DOM</a>, and <a href="http://search.cpan.org/perldoc?Text::PDF::File">Text::PDF::File</a>. All these modules provide a method to release the memory. The client application must call the method when it no longer needs an object. However, the requirement of an explicit call is not very appealing and can result in unsafe code:</p>
+
+<pre><code>    ##
+    ## Code with a memory leak
+    #
+    use HTML::TreeBuilder;
+
+    foreach my $filename (@ARGV) {
+        my $tree = HTML::TreeBuilder-&gt;new;
+        $tree-&gt;parse_file($filename);
+
+        next unless $tree-&gt;look_down('_tag', 'img');
+        ##
+        ## Do the actual work (say, extract images) here
+        ## ...
+        ## and release the memory
+        ##
+        $tree-&gt;delete;
+    }</code></pre>
+
+<p>The problem in the code is the <code>next</code> statement; HTML documents with no <code>&lt;img ...</code> tags will not be released. Actually, any call of <code>next</code>, <code>last</code>, <code>return</code> (inside a subroutine), or <code>die</code> (inside an <code>eval {}</code> block) is unsafe and will lead to a memory leak. Of course, it is possible to move the release code into a <code>continue</code> block for <code>last</code> or <code>next</code>, or to write code to delete the tree before every <code>return</code> or <code>die</code>, but the code easily becomes messy.</p>
+
+<p>There is a better solution--the paradigm of "resource acquisition is initialization (and destruction is resource relinquishment)." (Ironically, the second half of its name is often omitted, even though it's probably the most important part). The idea is simple. Create a special guard object (of another class) whose sole responsibility is to release the resource. When the guard object gets destroyed, its destructor deletes the tree. The code may look like:</p>
+
+<pre><code>    ##
+    ## A special sentry object is employed
+    ##
+    use HTML::TreeBuilder;
+
+    foreach my $filename (@ARGV) {
+        my $tree = HTML::TreeBuilder-&gt;new;
+        $tree-&gt;parse_file($filename);
+
+        <strong>my $sentry = Sentry-&gt;new($tree);</strong>
+
+        next unless $tree-&gt;look_down('_tag', 'img');
+        ##
+        ## next, last or return are safe here.
+        ## Tree will be deleted automatically.
+        ##
+    }
+
+    package Sentry;
+
+    sub new {
+        my $class = shift;
+        my $tree  = shift;
+        return bless {tree =&gt; $tree}, $class;
+    }
+
+    sub DESTROY {
+        my $self = shift;
+        $self-&gt;{tree}-&gt;delete;
+    }</code></pre>
+
+<p>Note that now there is no need to call <code>$tree-&gt;delete</code> explicitly at the end of the loop. The magic is simple. When program flow leaves the scope, <code>$sentry</code> is reclaimable because it participates in no circular references. The code of <code>DESTROY</code> method of the <code>Sentry</code> package calls, in turn, the method <code>delete</code> of the <code>$tree</code> object. This is one solution for all means; memory will be released however you leave the block.</p>
+
+<p>Finally, there is no need to code your own <code>Sentry</code> class. Use <a href="http://search.cpan.org/perldoc?Object::Destroyer">Object::Destroyer</a>, originally written by Adam Kennedy. As you may guess by its name, it is the object to destroy other objects:</p>
+
+<pre><code>    ##
+    ## An of-the-CPAN solution with Object::Destroyer
+    ##
+    use HTML::TreeBuilder;
+    use Object::Destroyer 2.0;
+
+    foreach my $filename (@ARGV) {
+        my $tree   = HTML::TreeBuilder-&gt;new;
+        <strong>my $sentry = Object::Destroyer-&gt;new($tree, 'delete');</strong>
+        $tree-&gt;parse_file($filename);
+
+        next unless $tree-&gt;look_down('_tag', 'img');
+        ##
+        ## You can safely return, die, next or last here.
+        ##
+    }</code></pre>
+
+<p>Because the name of the release method may vary between modules, it is the constructor's second argument.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>Finally, you can destroy any data structure, not just objects, if you provide code to do so. Pass in a subroutine reference or an anonymous subroutine:</p>
+
+<pre><code>    ##
+    ## An unblessed data structure with circular references
+    ## that cannot untangle itself.
+    ##
+    use Object::Destroyer 2.0;
+    while (1) {
+        my (%a, %b);
+        $a{b}      = \%b;
+        $b{a}      = \%a;
+        my $sentry = Object::Destroyer-&gt;new( sub { undef $a{b} } );
+    }</code></pre>
+
+<p>Just for fun, comment out the line with the <code>$sentry</code> object and watch the memory consumption of the running script.</p>
+
+<h3>Using Object::Destroyer As a Wrapper</h3>
+
+<p><code>Object::Destroyer</code> can make life easier for module authors, too.</p>
+
+<p>If you have written a library with circular references, you may ask your clients to explicitly call a disposal method or use a new feature of Perl (stable since 5.8; see <a href="http://search.cpan.org/perldoc?Scalar::Util">Scalar::Util</a>)--weak references. Weak references do not increment reference counts of the objects to which they refer, so the Perl garbage collector can collect the referents. In the tree example, all references from leaves to parents (but not vice versa, or the tree will be lost!) may be weak. When the final reference to the root node goes away, Perl will dispose of it, which will remove its references to all of its children recursively. They will all reach zero, and Perl will reclaim them all down the branches of the tree to every leaf.</p>
+
+<p>Indeed, some CPAN modules use this approach (<a href="http://search.cpan.org/perldoc?XML::Twig">XML::Twig</a>). However, this solution works only if weak refs are available; this is certainly not the case for older Perl. Secondly, this may require quite a bit of rewriting (there are nine calls to <code>weaken</code> throughout the code of <code>XML::Twig</code> 3.26).</p>
+
+<p>Alternatively, you may use <code>Object::Destroyer</code> internally in your library code. It can work as an almost transparent wrapper around your object:</p>
+
+<pre><code>    ##
+    ## Object::Destroyer as a wrapper
+    ##
+    package My::Tree;
+    use Object::Destroyer 2.0;
+
+    sub new {
+        my $class = shift;
+        my $self  = bless {}, $class;
+        $self-&gt;populate;
+
+        <strong>return Object::Destroyer-&gt;new( $self, 'release' );</strong>
+    }
+
+    sub release{
+        ## actual memory release code
+    }
+
+    sub say_hello{
+        my $self = shift;
+        print "Hello, I'm object of class ", ref($self), "\n";
+    }
+
+    package main;
+    {
+        my $tree = My::Tree-&gt;new;
+        $tree-&gt;say_hello;
+        ##
+        ## $tree-&gt;release will be called by Object::Destroyer;
+        ##
+    }</code></pre>
+
+<p>The object <code>$tree</code> in the client code is actually an <code>Object::Destroyer</code> object that dispatches all invoked methods to the underlying object of class <code>My::Tree</code>. The method <code>say_hello</code> sees no difference at all--it receives an original <code>$self</code> object. Changes to code are minimal and well localized.</p>
+
+<p>The approach has a limitation, too: clients must not access attributes of the object directly (such as <code>$tree-&gt;{age}</code>). This is a bad practice in client code anyway. Additionally, there is a small time penalty for method calls by client-side code. Calls made from the library code itself are not affected.</p>
+
+<h3>Exceptions and Resource Deallocation</h3>
+
+<p><a href="http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization">Resource acquisition is initialization</a> is a powerful technique to apply to the management of various critical resources, not only memory. It is most useful when using exceptions to handle errors. This combination makes code quite reliable: exceptions separate normal execution logic and error handling, and RAII sentries guarantee the correct release of every sensitive resource.</p>
+
+<p>Consider alarms as an example. Assume that you have to call some potentially long-running (or even never-ending) code. You don't want your script to hang up, and prefer to break its execution. Alarms are just right for the task. However, the first attempt at good code might be awkward:</p>
+
+<pre><code>    ##
+    ## Alarm example 1. Naive.
+    ##
+    eval{
+        local $SIG{ALRM} = sub { die "Timed out\n" };
+        alarm(5);
+        long_running_code();
+        ## Cancel the alarm if code returned within 5 sec.
+        alarm(0);
+    };
+    if ($@ &amp;&amp; $@ eq "Timed out\n") {
+        ## Process the error here
+    }</code></pre>
+
+<p>This code will work fine until <code>long_running_code()</code> dies. In this case, the <code>eval</code> block will catch the <code>die</code>, but not the alarm. If this occurred in a program that must run 24 hours a day, the program would end in 5 seconds.</p>
+
+<p>This next example is much better; actually it is real-world code. It is enough for many applications. However, it's not completely bulletproof either:</p>
+
+<pre><code>    ##
+    ## Alarm example 2. A standard solution.
+    ##
+    eval{
+        local $SIG{ALRM} = sub { die "Timed out\n" };
+        alarm(5);
+        long_running_code();
+        ## Cancel the alarm if long_running_code() returns within 5 sec.
+        alarm(0);
+    };
+    ## Cancel the alarm if the long_running_code() died.
+    alarm(0);</code></pre>
+
+<p>How many times will the alarm be cancelled in the following example?</p>
+
+<pre><code>    ##
+    ## Alarm example 3. Malicious code.
+    ##
+    LOOP:
+    foreach my $arg (1..3) {
+        eval{
+            local $SIG{ALRM} = sub { die "Timed out\n" };
+            alarm(5);
+            long_running_code($arg);
+            alarm(0);
+        };
+        alarm(0);
+    }
+    sub long_running_code{ last LOOP; }</code></pre>
+
+<p>Oops, none.</p>
+
+<p>The RAII solution is more reliable:</p>
+
+<pre><code>    ##
+    ## Alarm example 4.
+    ## Resource is under control of Object::Destroyer
+    ##
+    eval{
+        local $SIG{ALRM} = sub { die "Timed out\n" };
+        alarm(5);
+        my $sentry = Object::Destroyer-&gt;new( sub {alarm(0)} );
+        long_running_code();
+    };</code></pre>
+
+<p>No matter how the code exits the <code>eval</code> block, Perl will destroy the <code>$sentry</code> object. That destruction will call <code>alarm(0)</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>You can manage many sensitive resources this way, including file locks, semaphores, and even locks of database tables.</p>
+
+<pre><code>    ##
+    ## File lock.
+    ##
+    use Fcntl ':flock';
+
+    open my($fh), "&gt;$filename.lock";
+    eval{
+        flock($fh, LOCK_EX);
+        my $sentry = Object::Destroyer-&gt;new( sub {flock($fh, LOCK_UN)} );
+        ##
+        ## Actual lock-sensitive code is here.
+        ## It is safe to die.
+        ##
+    };
+
+    ##
+    ## Semaphore
+    ##
+    use Thread::Semaphore;
+    use Object::Destroyer;
+
+    my $s = Thread::Semaphore-&gt;new();
+    eval{
+        $s-&gt;down;
+        my $sentry = Object::Destroyer-&gt;new( sub { $s-&gt;up } );
+        ##
+        ## Critical code is here, die is safe
+        ##
+    };
+
+    ##
+    ## MySQL database table lock.
+    ##
+    use DBI;
+
+    my $dbh = DBI-&gt;connect("dbi:mysql:...", "", "");
+    eval{
+        $dbh-&gt;do("LOCK TABLE table1 READ");
+        my $sentry = Object::Destroyer-&gt;new(
+            sub { $dbh-&gt;do("UNLOCK TABLES"); }
+        );
+        ##
+        ## Again, actual code must be here
+        ##
+    };</code></pre>
+
+<p>The code is clean, simple, and quite self-explanatory.</p>
+
+<h3>Simple Transactions</h3>
+
+<p>Everyone who works with relational databases knows how useful transactions are. One of the features of transactions is atomicity: either all modifications of data are committed at once, or all of them are ignored. Your data is always consistent; it's not possible to leave it in an inconsistent state. The same effect is possible in Perl code:</p>
+
+<pre><code>    use Object::Destroyer 2.0;
+
+    my ($account1, $account2) = (15, 15);
+
+    printf("Account1=%d, Account2=%d, Total=%d\n",
+        $account1, $account2, $account1+$account2);
+
+    eval {
+        my $coderef = create_savepoint(\$account1, \$account2);
+        my $sentry  = Object::Destroyer-&gt;new($coderef);
+
+        die "before changes" if rand &gt; 0.7;
+        $account1 += 3;
+        die "after account 1 was modified" if rand &gt; 0.7;
+        $account2 -= 3;
+        die "after account 2 was modified" if rand &gt; 0.7;
+
+        ##
+        ## The transaction is considered to be committed here
+        ## and $sentry can be dismissed.
+        ## $coderef-&gt;() will not be called.
+        ##
+        $sentry-&gt;dismiss;
+
+        die "after transaction is committed" if rand &gt; 0.7;
+    };
+    print "Died $@" if $@;
+    printf("Account1=%d, Account2=%d, Total=%d\n",
+        $account1, $account2, $account1+$account2);
+
+    sub create_savepoint {
+        ## Save references to variables and their current values
+        my @vars;
+        foreach my $ref (@_) {
+            die "Can remember only scalar values" unless ref($ref) eq 'SCALAR';
+            push @vars, { ref =&gt; $ref, value =&gt; $$ref };
+        }
+
+        ## A closure to restore their values
+        return sub {
+            foreach my $var (@vars) {
+                ${ $var-&gt;{ref} } = $var-&gt;{value};
+            }
+        };
+    }</code></pre>
+
+<p>Run the script several times. Due to <code>rand</code>, it will break on varying lines, but it is not possible to get a Total value other than 30.</p>
+
+<h3>See Also</h3>
+
+<p>RAII is by no means a new technique. It is very popular in the world of C++ programming. If you are not afraid of C++, you may find interesting the standard container <a href="http://en.wikipedia.org/wiki/Auto_ptr">auto_ptr</a> and <a href="http://www.gotw.ca/publications/using_auto_ptr_effectively.htm">effective auto_ptr usage</a>. The non-standard <a href="http://www.ddj.com/dept/cpp/184403758">ScopeGuard</a> class provides lexically scoped resource management in C++.</p>
+
+<p>The <a href="http://search.cpan.org/perldoc?Devel::Monitor">Devel::Monitor</a> module has guidelines on how to design data structures with weak and circular references. Its primary goal, by the way, is to trace the memory consumption of a running script.</p>
+
+<p>There are several modules for lexically scoped resource management on CPAN, but the <a href="http://search.cpan.org/perldoc?Object::Destroyer">Object::Destroyer</a> is my favorite. You may also look at <a href="http://search.cpan.org/perldoc?Hook::Scope">Hook::Scope</a>, <a href="http://search.cpan.org/perldoc?Scope::Guard">Scope::Guard</a> and <a href="http://search.cpan.org/perldoc?Sub::ScopeFinalizer">Sub::ScopeFinalizer</a>.</p>
+
+<p>Finally, <a href="/pub/a/2002/11/14/exception.html">Object Oriented Exception Handling in Perl</a> discusses why exceptions are invaluable for big projects.</p>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/cpan/" rel="tag">CPAN</a><span class="delimiter">,</span></li> <li class="entry-category"><a href="/pub/modules/" rel="tag">Modules</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=Object%3A%3ADestructor&amp;limit=20';return false;" rel="tag">Object::Destructor</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=Perl%20memory%20leaks&amp;limit=20';return false;" rel="tag">Perl memory leaks</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=Perl%20memory%20management&amp;limit=20';return false;" rel="tag">Perl memory management</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=RAII&amp;limit=20';return false;" rel="tag">RAII</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=reference%20counting&amp;limit=20';return false;" rel="tag">reference counting</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

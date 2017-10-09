@@ -1,0 +1,1147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    <title>Perl.com: C and Perl Archives</title>
+
+
+</head>
+<body id="perl-com" class="mt-archive-listing mt-category-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+                            
+                            <h1 id="page-title" class="archive-title">Recently in <em>C and Perl</em> Category</h1>
+
+
+
+
+
+
+                            
+                            <div id="entry-656" class="entry-asset asset hentry">
+    <div class="asset-header">
+        <h2 class="asset-name entry-title"><a href="/pub/2007/04/lightning-four.html" rel="bookmark">Lightning Strikes Four Times</a></h2>
+        <div class="asset-meta">
+            <span class="byline">
+    
+                By <span class="vcard author">Shlomi Fish</span> on <abbr class="published" title="2007-04-12T00:00:00-08:00">April 12, 2007 12:00 AM</abbr>
+    
+            </span>
+
+            
+            
+
+        </div>
+    </div>
+    <div class="asset-content entry-content">
+
+        <div class="asset-body">
+            
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+
+<p>by Mike Friedman</p>
+
+<p>Good software design principles tell us that we should work to separate unrelated concerns. For example, the popular Model-View-Controller (MVC) pattern is common in web application designs. In MVC, separate modular components form a <em>model</em>, which provides access to a data source, a <em>view</em>, which presents the data to the end user, and a <em>controller</em>, which implements the required features.</p>
+
+<p>Ideally, it's possible to replace any one of these components without breaking the whole system. A templating engine that translates the application's data into HTML (the <em>view</em>) could be replaced with one that generates YAML or a PDF file. The <em>model</em> and <em>controller</em> shouldn't be affected by changing the way that the <em>view</em> presents data to the user.</p>
+
+<p>Other concerns are difficult to separate. In the world of aspect-oriented programming, a <em>crosscutting concern</em> is a facet of a program which is difficult to modularize because it must interact with many disparate pieces of your system.</p>
+
+<p>Consider an application that logs copious trace data when in debugging mode. In order to ensure that it is operating correctly, you may want to log when it enters and exits each subroutine. A typical way to accomplish this is by conditionally executing a logging function based on the value of a constant, which turns debugging on and off.</p>
+
+<pre><code>    use strict;
+    use warnings;
+
+    use constant DEBUG =&gt; 1;
+
+    sub do_something { 
+        log_message("I'm doing something") if DEBUG;
+
+        # do something here
+
+        log_message("I'm done doing something") if DEBUG;
+    }</code></pre>
+
+<p>This solution is simple, but it presents a few problems. Perhaps most strikingly, it's simply a lot of code to write. For each subroutine that you want to log, you must write two nearly identical lines of code. In a large system with hundreds or thousands of subroutines, this gets tedious fast, and can lead to inconsistently formatted messages as every copy-paste-edit cycle tweaks them a little bit.</p>
+
+<p>Further, it offends the simple design goal of an MVC framework, because every component must talk to the logging system directly.</p>
+
+<p>One way to improve this technique is to automatically wrap every interesting subroutine in a special logging function. There are a few ways to go about this. One of the simplest is to use subroutine attributes to install a dynamically generated wrapper.</p>
+
+<h3>Attributes</h3>
+
+<p>Perl 5.6 introduced <em>attributes</em> that allow you to add arbitrary metadata to a variable. Attributes can be attached both to package variables, including subroutines, and lexical variables. Since Perl 5.8, attributes on lexical variables apply at runtime. Attributes on package variables activate at compile-time.</p>
+
+<p>The interface to Perl attributes is via the <a href="http://search.cpan.org/perldoc?attributes">attributes</a> pragma. (The older attrs is deprecated.) The CPAN module <a href="http://search.cpan.org/perldoc?Attribute::Handlers">Attribute::Handlers</a> makes working with attributes a bit easier. Here's an example of how you might rewrite the logging system using an attribute handler.</p>
+
+<pre><code>    use strict;
+    use warnings;
+
+    use constant DEBUG =&gt; 1;
+
+    use Attribute::Handlers;
+
+    sub _log : ATTR(CODE) {
+        my ($pkg, $sym, $code) = @_;
+
+        if( DEBUG ) {
+            my $name = *{ $sym }{NAME};
+
+            no warnings 'redefine';
+
+            *{ $sym } = sub {
+                log_message("Entering sub $pkg\:\:$name");
+                my @ret = $code-&gt;( @_ );
+                log_message("Leaving sub $pkg\:\:$name");
+                return @ret;
+            };
+        }
+    }
+
+    sub do_something : _log {
+        print "I'm doing something.\n";
+    }</code></pre>
+
+<p>Attributes are declared by placing a colon (:) and the attribute name after a variable or subroutine declaration. Optionally, the attribute can receive some data as a parameter; <code>Attribute::Handlers</code> goes to great lengths to massage the passed data for you if necessary.</p>
+
+<p>To set up an attribute handler, the code declares a subroutine, <code>_log</code>, with the <code>ATTR</code> attribute, passing the string <code>CODE</code> as a parameter. <code>Attribute::Handlers</code> provides <code>ATTR</code>, and the <code>CODE</code> parameter tells it that the new handler only applies to subroutines.</p>
+
+<p>During compile time, any subroutine declared with the <code>_log</code> attribute causes Perl to call the attribute handler with several parameters. The first three are the package in which the subroutine was compiled, a reference to the typeglob where its symbol lives, and a reference to the subroutine itself. These are sufficient for now.</p>
+
+<p>If the <code>DEBUG</code> constant is true, the handler sets to work wrapping the newly compiled subroutine. First, it grabs its name from the typeglob, then it adds a new subroutine to its spot in the symbol table. Because the code redefines a package symbol, it's important to turn off warnings for symbol redefinitions in within this block.</p>
+
+<p>Because the new function is a lexical closure over <code>$pkg</code>, <code>$name</code>, and most importantly <code>$code</code>, it can use those values to construct the logging messages and call the original function.</p>
+
+<p>All of this may seem like a lot of work, but once it's done, all you need to do to enable entry and exit logging for any function is to simply apply the <code>_log</code> attribute. The logging messages themselves get manufactured via closures when the program compiles, so we know they'll always be consistent. If you want to change them, you only have to do it in one place.</p>
+
+<p>Best of all, because attribute handlers get inherited, if you define your handler in a base class, any subclass can use it.</p>
+
+<h3>Caveats</h3>
+
+<p>Although this is a powerful technique, it isn't perfect. The code will not properly wrap anonymous subroutines, and it won't necessarily propagate calling context to the wrapped functions. Further, using this technique will significantly increase the number of subroutine dispatches that your program must execute during runtime. Depending on your program's complexity, this may significantly increase the size of your call stack. If blinding speed is a major design goal, this strategy may not be for you.</p>
+
+<h3>Going Further</h3>
+
+<p>Other common cross-cutting concerns are authentication and authorization systems. Subroutine attributes can wrap functions in a security checker that will refuse to call the functions to callers without the proper credentials.</p>
+<!-- prod: page break -->
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Perl Outperforms C with OpenGL</h3>
+
+<p>by Bob Free</p>
+
+<p>Desktop developers often assume that compiled languages always perform better than interpreted languages such as Perl.</p>
+
+<p>Conversely, most LAMP online service developers are familiar with mechanisms for preloading Perl interpreters modules (such as Apache mod_perl and ActivePerl/ISAPI), and know that Perl performance often approaches that of C/C++.</p>
+
+<p>However, few 3D developers think of Perl when it comes to performance. They should.</p>
+
+<p>GPUs are increasingly taking the load off of CPUs for number-crunching. Modern GPGPU processing leverages C-like programs and loads large data arrays onto the GPU, where processing executes independent of the CPU. As a result, the overall contribution of CPU-bound programs diminish, while Perl and C differences become statistically insignificant in terms of GPU performance.</p>
+
+<p>The author has recently published a open source update to CPAN's <a href="http://search.cpan.org/perldoc?OpenGL">OpenGL</a> module, adding support for GPGPU features. With this release, he has also posted OpenGL Perl versus C benchmarks--demonstrating cases where Perl outperforms C for OpenGL operations.</p>
+
+<h3>What Is OpenGL?</h3>
+
+<p>OpenGL is an industry-standard, cross-platform language for rendering 3D images. Originally developed by Silicon Graphics Inc. (SGI), it is now in wide use for 3D CAD/GIS systems, game development, and computer graphics (CG) effects in film.</p>
+
+<p>With the advent of Graphic Processing Units (GPU), realistic, real-time 3D rendering has become common--even in game consoles. GPUs are designed to process large arrays of data, such as 3D vertices, textures, surface normals, and color spaces.</p>
+
+<p>It quickly became clear that the GPU's ability to process large amounts of data could expand well beyond just 3D rendering, and could applied to General Purpose GPU (GPGPU) processing. GPGPUs can process complex physics problems, deal with particle simluations, provide database analytics, etc.</p>
+
+<p>Over the years, OpenGL has expanded to support GPGPU processing, making it simple to load C-like programs into GPU memory for fast execution, to load large arrays of data in the form of <em>textures</em>, and to quickly move data between the GPU and CPU via Frame Buffer Objects (FBO).</p>
+
+<p>While OpenGL is in itself a portable language, it provides no interfaces to operating system (OS) display systems. As a result, Unix systems generally rely on an X11-based library called GLX; Windows relies on a WGL interface. Several libraries, such as <a href="http://www.opengl.org/resources/libraries/glut/">GLUT</a>, help to abstract these differences. However, as OpenGL added new extensions, OS vendors (Microsoft in particular) provided different methods for accessing the new APIs, making it difficult to write cross-platform GPGPU code.</p>
+
+<h3>Perl OpenGL (POGL)</h3>
+
+<p>Bob Free of Graphcomp has just released a new, portable, open source Perl OpenGL module (POGL 0.55).</p>
+
+<p>This module adds support for 52 new OpenGL extensions, including many GPGPU features such as Vertex Arrays, Frame Buffer Objects, Vertext Programs, and Fragment Programs.</p>
+
+<p>In terms of 3D processing, these extensions allow developers to perform real-time dynamic vertex and texturemap generation and manipulation within the GPU. This module also simplifies GPGPU processing by moving data to and from the CPU through textures, and loading low-level, assembly-like instructions to the GPU.</p>
+
+<p>POGL 0.55 is a binary Perl module (written in C via XS), that has been tested on Windows (NT/XP/Vista) and Linux (Fedora 6. Ubuntu/Dapper). Source and binaries are available via SVN, PPM, tarball, and ZIP at the <a href="http://graphcomp.com/opengl">POGL homepage</a>.</p>
+
+<p>POGL OS Performance</p>
+
+<p>The POGL homepage includes initial benchmarks comparing POGL on Vista, Fedora, and Ubuntu. These tests show that static texture rendering on an animated object on Fedora was 10x faster than Vista; Ubuntu was 15x faster (using the same nVidia cards, drivers, and machine).</p>
+
+<p>A subsequent, tighter benchmark eliminated UI and FPS counters, and focused more on dynamic texturemap generation. These results, posted on <a href="http://graphcomp.com/opengl/bench.html">OpenGL C versus Perl benchmarks</a>, show comparable numbers for Fedora and Ubuntu, with both outperforming Vista by about 60 percent.</p>
+
+<p>Note: a further performance on these benchmarks could be available through the use of GPU vertex arrays.</p>
+
+<h3>Perl versus C Performance</h3>
+
+<p>These benchmarks also compare Perl against C code. It found no statistical difference between overall Perl and C performance on Linux. Inexplicably, Perl frequently outperformed C on Vista.</p>
+
+<p>In general, C performed better than Perl on Vertex/Fragment Shader operations, while Perl outperformed C on FBO operations. In this benchmark, overall performance was essentially equal between Perl and C.</p>
+
+<p>The similarity in performance is explained by several factors:</p>
+
+<ul>
+<li>GPU is performing the bulk of the number-crunching operations</li>
+
+<li>POGL is a compiled C module</li>
+
+<li>Non-GPU operations are minimal</li>
+</ul>
+
+<p>In cases where code dynamically generates or otherwise modifies the GPU's vetex/fragment shader code, it is conceivable that Perl would provide even better than C, due to Perl's optimized and interpreted string handling.</p>
+
+<h3>Perl Advantages</h3>
+
+<p>Given that GPGPU performance will be a wash in most cases, the primary reason for using a compiled language is to obfuscate source for intellectual property (IP) reasons.</p>
+
+<p>For server-side development, there's really no reason to use a compiled language for GPGPU operations, and several reasons to go with Perl:</p>
+
+<ul>
+<li>Perl OpenGL code is more portable than C; therefore there are fewer lines of code</li>
+
+<li>Numerous imaging modules for loading GPGPU data arrays (textures)</li>
+
+<li>Portable, open source modules for system and auxiliary functions</li>
+
+<li>Perl (under mod-perl/ISAPI) is generally faster than Java</li>
+
+<li>It is easier to port Perl to/from C than Python or Ruby</li>
+
+<li>As of this writing, there is no FBO support in Java, Python, or Ruby</li>
+</ul>
+
+<p>There is a side-by-side code comparison between C and Perl posted on the above benchmark page.</p>
+
+<p>Desktop OpenGL/GPU developers may find it faster to prototype code in Perl (e.g., simpler string handling and garbage collection), and then port their code to C later (if necessary). Developers can code in one window and execute in another--with no IDE, no compiling--allowing innovators/researchers to do real-time experiments with new shader algorithms.</p>
+
+<p>Physicists can quickly develop new models; researchers and media developers can create new experimental effects and reduce their time to market.</p>
+
+<h3>Summary</h3>
+
+<p>Performance is not a reason a reason to use C over Perl for OpenGL and GPGPU operations, and there are many cases where Perl is preferable to C (or Java/Python/Ruby).</p>
+
+<p>By writing your OpenGL/GPU code in Perl, you will likely:</p>
+
+<ul>
+<li>Reduce your R&amp;D costs and time to market</li>
+
+<li>Expand your platform/deployment options</li>
+
+<li>Accelerate your company's GPGPU ramp up</li>
+</ul>
+<!-- prod: page break -->
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Using Test::Count</h3>
+
+<p>by Shlomi Fish</p>
+
+<p>A typical <a href="http://search.cpan.org/perldoc?Test::More">Test::More</a> test script contains several checks. It is preferable to keep track of the number of checks that the script is running (using <code>use Test::More tests =&gt; $NUM_CHECKS</code> or the <code>plan tests =&gt; $NUM_CHECKS</code>), so that if some checks are not run (for whatever reason), the test script will still fail when being run by the harness.</p>
+
+<p>If you add more checks to a test file, then you have to remember to update the plan. However, how do you keep track of how many tests <em>should</em> run? I've already encountered a case where <a href="http://dbi.perl.org/">a DBI related module</a> had a different number of tests with an older version of DBI than with a more recent one.</p>
+
+<p>Enter <a href="http://search.cpan.org/dist/Test-Count/">Test::Count</a>. Test::Count originated from a <a href="http://www.vim.org/">Vim</a> script I wrote to keep track of the number of tests by using meta-comments such as <code># TEST</code> (for one test) or <code># TEST*3*5</code> (for 15 tests). However, there was a limit to what I could do with Vim's scripting language, as I wanted a richer syntax for specifying the tests as well as variables.</p>
+
+<p>Thus, I wrote the Test::Count module and placed it on CPAN. <a href="http://search.cpan.org/dist/Test-Count/lib/Test/Count/Filter.pm">Test::Count::Filter</a> acts as a filter, counts the tests, and updates them. Here's an example, taken from a code I wrote for a Perl Quiz of the Week:</p>
+
+<pre><code>#!/usr/bin/perl -w
+
+# This file implements various functions to remove
+# all periods ("."'s) except the last from a string.
+
+use strict;
+
+use Test::More tests =&gt; 5;
+use String::ShellQuote;
+
+sub via_split
+{
+    my $s = shift;
+    my @components = split(/\./, $s, -1);
+    if (@components == 1)
+    {
+        return $s;
+    }
+    my $last = pop(@components);
+    return join("", @components) . "." . $last;
+}
+
+# Other Functions snipped.
+
+# TEST:$num_tests=9
+# TEST:$num_funcs=8
+# TEST*$num_tests*$num_funcs
+foreach my $f (@funcs)
+{
+    my $ref = eval ("\\&amp;$f");
+    is($ref-&gt;("hello.world.txt"), "helloworld.txt", "$f - simple"); # 1
+    is($ref-&gt;("hello-there"), "hello-there", "$f - zero periods"); # 2
+    is($ref-&gt;("hello..too.pl"), "hellotoo.pl", "$f - double"); # 3
+    is($ref-&gt;("magna..carta"), "magna.carta", "$f - double at end"); # 4
+    is($ref-&gt;("the-more-the-merrier.jpg"),
+       "the-more-the-merrier.jpg", "$f - one period"); # 5
+    is($ref-&gt;("hello."), "hello.", "$f - one period at end"); # 6
+    is($ref-&gt;("perl.txt."), "perltxt.", "$f - period at end"); # 7
+    is($ref-&gt;(".yes"), ".yes", "$f - one period at start"); # 8
+    is($ref-&gt;(".yes.txt"), "yes.txt", "$f - period at start"); # 9
+}</code></pre>
+
+<p>Filtering this script through <code>Test::Count::Filter</code> provides the correct number of tests. I then add this to my <em>.vimrc</em>:</p>
+
+<pre><code>function! Perl_Tests_Count()
+    %!perl -MTest::Count::Filter -e 'Test::Count::Filter-&gt;new({})-&gt;process()'
+endfunction
+
+autocmd BufNewFile,BufRead *.t map &lt;F3&gt; :call Perl_Tests_Count()&lt;CR&gt;</code></pre>
+
+<p>Now I can press F3 to update the number of checks.</p>
+
+<p><code>Test::Count</code> supports +,-,*, /, as well as parentheses, so it is expressive enough for most needs.</p>
+
+<h3>Acknowledgements</h3>
+
+<p>Thanks to mrMister from <a href="http://www.freenode.net/">Freenode</a> for going over earlier drafts of this article and correcting some problems.</p>
+
+
+
+
+
+
+
+
+
+
+
+<h3>What's In that Scalar?</h3>
+
+<p>by brian d foy</p>
+
+<p>Scalars are simple, right? They hold single values, and you don't even have to care what those values are because Perl figures out if they are numbers or strings. Well, scalars show up just about anywhere and it's much more complicated than single values. I could have <code>undef</code>, a number or string, or a reference. That reference can be a normal reference, a blessed reference, or even a hidden reference as a tied variable.</p>
+
+<p>Perhaps I have a scalar variable which should be an object (a blessed reference, which is a single value), but before I call a method on it I want to ensure it is to avoid the "unblessed reference" error that kills my program. I might try the <code>ref</code> built-in to get the class name:</p>
+
+<pre><code>   if( ref $maybe_object ) { ... }</code></pre>
+
+<p>There's a bug there. <code>ref</code> returns an empty string if the scalar isn't an object. It might return <code>0</code>, a false value, and yes, some Perl people have figured out how to create a package named <code>0</code> just to mess with this. I might think that checking for defined-ness would work:</p>
+
+<pre><code>   if( defined ref $maybe_object ) { ... }</code></pre>
+
+<p>... but the empty string is also defined. I want all the cases where it is not the one value that means it's not a reference.</p>
+
+<pre><code>   unless( '' eq ref $maybe_object ) { ... }</code></pre>
+
+<p>This still doesn't tell me if I have an object. I know it's a reference, but maybe it's a regular data reference. The <code>blessed</code> function from <a href="http://search.cpan.org/perldoc?Scalar::Util">Scalar::Util</a> can help:</p>
+
+<pre><code>   if( blessed $maybe_object ) { ... }</code></pre>
+
+<p>This almost has the same problem as <code>ref</code>. <code>blessed</code> returns the package name if it's an object, and <code>undef</code> otherwise. I really need to check for defined-ness.</p>
+
+<pre><code>   if( defined blessed $maybe_object ) { ... }</code></pre>
+
+<p>Even if <code>blessed</code> returns <code>undef</code>, I still might have a hidden object. If the scalar is a tied variable, there's really an object underneath it, although the scalar acts as if it's a normal variable. Although I normally don't need to interact with the secret object, the <code>tied</code> built-in returns the secret object if there is one, and <code>undef</code> otherwise.</p>
+
+<pre><code>        my $secret_object = tied $maybe_tied_scalar;
+
+        if( defined $secret_object ) { ... }</code></pre>
+
+<p>Once I have the secret object in <code>$secret_object</code>, I treat it like any other object.</p>
+
+<p>Now I'm sure I have an object, but that doesn't mean I know which methods I can call. The <code>isa</code> function in the <code>UNIVERSAL</code> package supposedly can figure this out for me. It tells me if a class is somewhere in an object's inheritance tree. I want to know if my object can do what a <code>Horse</code> can do, even if I have a <code>RaceHorse</code>:</p>
+
+<pre><code>   if( UNIVERSAL::isa( $object, 'RaceHorse' ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>...what if the <code>RaceHorse</code> class is just a factory for objects in some other class that I'm not supposed to know about? I'll make a new object as a prototype just to get its reference:</p>
+
+<pre><code>   if( UNIVERSAL::isa( $object, ref RaceHorse-&gt;new() ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>A real object-oriented programmer doesn't care what sort of object it is as long as it can respond to the right method. I should use <code>can</code> instead:</p>
+
+<pre><code>   if( UNIVERSAL::can( $object, $method ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>This doesn't always work either. <code>can</code> only knows about defined subroutine names, and only looks in the inheritance tree for them. It can't detect methods from <code>AUTOLOAD</code> or traits. I could override the <code>can</code> method to handle those, but I have to call it as a method (this works for <code>isa</code> too):</p>
+
+<pre><code>   if( $object-&gt;can( $method ) ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>What if <code>$object</code> wasn't really an object? I just called a method on a non-object! I'm back to my original problem, but I don't want to use all of those tests I just went through. I'll fix this with an <code>eval</code>, which catches the error for non-objects:</p>
+
+<pre><code>   if( eval{ $object-&gt;can( $method ) } ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>...but what if someone installed a <code>__DIE__</code> handler that simply <code>exit</code>-ed instead of <code>die</code>-ing? Programmers do that sort of thing forgetting that it affects the entire program.</p>
+
+<pre><code>   $SIG{__DIE__} = sub { exit };</code></pre>
+
+<p>Now my <code>eval</code> tries to <code>die</code> because it caught the error, but the <code>__DIE__</code> handler says <code>exit</code>, so the program stops without an error. I have to localize the <code>__DIE__</code> handler:</p>
+
+<pre><code>   if( eval{ local $SIG{__DIE__}; $object-&gt;can( $method ) } ) {
+           $object-&gt;method;
+           }</code></pre>
+
+<p>If I'm the guy responsible for the <code>__DIE__</code> handler, I could use <code>$^S</code> to see if I'm in an <code>eval</code>:</p>
+
+<pre><code>   $SIG{__DIE__} = sub { $^S ? die : exit };</code></pre>
+
+<p>That's solved it, right? Not quite. Why do all of that checking? I can just call the method and hope for the best. If I get an error, so be it:</p>
+
+<pre><code>   my $result = eval { $object-&gt;method };</code></pre>
+
+<p>Now I have to wrap all of my method calls in an eval. None of this would really be a problem if Perl were an object language. Or is it? The <a href="http://search.cpan.org/perldoc?autobox">autobox</a> module makes Perl data types look like objects:</p>
+
+<pre><code>   use autobox;
+
+   sub SCALAR::println { print $_[0], "\n" }
+
+   'Hello World'-&gt;println;</code></pre>
+
+<p>That works because it uses a special package <code>SCALAR</code>, although I need to define methods in it myself. I'll catch unknown methods with <code>AUTOLOAD</code>:</p>
+
+<pre><code>   sub SCALAR::AUTOLOAD {}</code></pre>
+
+<p>Or, I can just wait for Perl 6 when these things get much less murky because everything is an object.</p>
+
+
+
+
+
+
+        </div>
+
+
+
+    </div>
+    <div class="asset-footer"></div>
+</div>
+
+
+                            
+                            <div id="entry-1532" class="entry-asset asset hentry">
+    <div class="asset-header">
+        <h2 class="asset-name entry-title"><a href="/pub/2001/06/ctoperl.html" rel="bookmark">Why Not Translate Perl to C?</a></h2>
+        <div class="asset-meta">
+            <span class="byline">
+    
+                By <span class="vcard author">Mark-Jason Dominus</span> on <abbr class="published" title="2001-06-27T00:00:00-08:00">June 27, 2001 12:00 AM</abbr>
+    
+            </span>
+
+            
+            
+
+        </div>
+    </div>
+    <div class="asset-content entry-content">
+
+        <div class="asset-body">
+            <p>People often have the idea that automatically translating Perl to C
+and then compiling the C will make their Perl programs run faster,
+because "C is much faster than Perl."  This article explains why this
+strategy is unlikely to work.</p>
+
+<h3>Short Summary</h3>
+
+<p>Your Perl program is being run by the Perl interpreter.  You want a C
+program that does the same thing that your Perl program does.  A C
+program to do what your Perl program does would have to do most of the
+same things that the Perl interpreter does when it runs your Perl
+program.  There is no reason to think that the C program could do
+those things faster than the Perl interpreter does them, because the
+Perl interpreter itself is written in very fast C.</p>
+
+<p>Some detailed case studies follow.</p>
+
+<h3>Built-In Functions</h3>
+
+<p>Suppose your program needs to split a line into fields, and uses the
+Perl <code>split</code> function to do so.  You want to compile this to C so it will be
+faster.</p>
+
+<p>This is obviously not going to work, because the <code>split</code>
+function is already implemented in C.  If you have the Perl source
+code, you can see the implementation of <code>split</code> in the file
+<code>pp.c</code>; it is in the function named <code>pp_split</code>.  When
+your Perl program uses <code>split</code>, Perl calls this
+<code>pp_split</code> function to do the splitting.  <code>pp_split</code> is
+written in C, and it has already been compiled to native machine
+code.</p>
+
+<p>Now, suppose you want to translate your Perl program to C.  How
+will you translate your <code>split</code> call?  The only thing you can
+do is translate it to a call to the C <code>pp_split</code> function, or
+some other equivalent function that splits.  There is no reason to
+believe that any C implementation of <code>split</code> will be faster
+than the <code>pp_split</code> that Perl already has.  Years of work have
+gone into making <code>pp_split</code> as fast as possible.</p>
+
+<p>You can make the same argument for all of Perl's other built-in
+functions, such as <code>join</code>, <code>printf</code>, <code>rand</code> and <code>readdir</code>.</p>
+
+<p>So much for built-in functions.</p>
+
+<h3>Data Structures</h3>
+
+<p>Why is Perl slow to begin with?  One major reason is that its data
+structures are extremely flexible, and this flexibility imposes a
+speed penalty.</p>
+
+<p>Let's look in detail at an important example:  strings.  Consider
+this Perl code:</p>
+
+<pre>
+        $x = 'foo';     
+        $y = 'bar';
+        $x .= $y;
+</pre>
+
+<p>That is, we want to append <code>$y</code> to the end of <code>$x</code>.
+In C, this is extremely tricky.  In C, you would start by doing
+something like this:</p>
+
+<pre>
+        char *x = "foo";
+        char *y = "bar";
+</pre>
+        
+<p>Now you have a problem.  You would like to insert <code>bar</code> at
+the end of the buffer pointed to by <code>x</code>.  But you can't,
+because there is not enough room; <code>x</code> only points to enough
+space for four characters, and you need space for seven.  (C strings
+always have an extra <code>nul</code> character on the end.)  To append
+<code>y</code> to <code>x</code>, you must allocate a new buffer, and then
+arrange for <code>x</code> to point to the new buffer:</p>
+
+<pre>
+        char *tmp = malloc(strlen(x) + strlen(y) + 1);
+        strcpy(tmp, x);
+        strcat(tmp, y);
+        x = tmp;
+</pre>
+
+<p>This works fine if <code>x</code> is the only pointer to that particular buffer.
+But if some other part of the program also had a pointer to the
+buffer, this code does not work.  Why not?  Here's the picture of what
+we did:</p>
+
+<p><b>BEFORE:</b></p>
+
+
+<p align=center><img src="/pub/2001/06/27/graphics/cbef.gif"></p>
+
+<p>Here <code>x</code> and <code>z</code> are two variables that both contain pointers to the same
+buffer.  We want to append <code>bar</code> to the end of the string.  But the C
+code we used above doesn't quite work, because we allocated a new
+region of memory to hold the result, and then pointed <code>x</code> to it:</p>
+
+<p><b>AFTER <code>x = tmp</code>:</b></p>
+
+<p align=center><img src="/pub/2001/06/27/graphics/caft.gif"></p>
+
+<p>It's tempting to think that we should just point <code>z</code> to the
+new buffer also, but in practice this is impossible.  The function
+that is doing the appending cannot know whether there is such a
+<code>z</code>, or where it may be.  There might be 100 variables
+like <code>z</code> all pointing to the old buffer, and there is no good
+way to keep track of them so that they can all be changed when the
+array moves.</p>
+
+<p>Perl does support a transparent string append operation.  Let's see
+how this works.  In Perl, a variable like <code>$x</code> does not point directly
+at the buffer.  Instead, it points at a structure called an SV.
+('Scalar Value') The SV has the pointer to the buffer, and also some
+other things that I do not show:</p>
+
+<b>BEFORE <code>$x .= $y</code></b>
+
+<p align=center><img src="/pub/2001/06/27/graphics/pbef.gif"></p>
+
+<p>When you ask Perl to append <code>bar</code> to <code>$x</code>, it follows
+the pointers and finds that there is not enough space in the buffer.
+So, just as in C, it allocates a new buffer and stores the result in
+the new buffer.  Then it fixes the pointer in the SV to point to the
+new buffer, and it throws away the old buffer:</p>
+
+
+<p align=center><img src="/pub/2001/06/27/graphics/paft.gif"></p>
+
+<p>Now <code>$x</code> and <code>$z</code> have both changed.  If there were
+any other variables sharing the SV, their values would have changed
+also.  This technique is called "double indirection,'" and it is how
+Perl can support operations like <code>.=</code>.  A similar principle
+applies for arrays; this is how Perl can support the <code>push</code>
+function.</p>
+
+<p>The flexibility comes at a price: Whenever you want to use the
+value of <code>$x</code>, Perl must follow two pointers to get the value:
+The first to find the SV structure, and the second to get to the
+buffer with the character data.  This means that using a string in
+Perl takes at least twice as long as in C.  In C, you follow just one
+pointer.</p>
+
+<p>If you want to compile Perl to C, you have a big problem.  You
+would like to support operations like <code>.=</code> and <code>push</code>, but C does not support these very well.  There are only three
+solutions:</p>
+
+<ol>
+        <li> Don't support <code>.=</code>
+
+<p> This is a bad solution, because after you disallow all the Perl
+        operations like <code>.=</code> and <code>push</code> what you have
+        left is not very much like Perl; it is much more like C, and
+        then you might as well just write the program in C in the
+        first place.</p>
+
+        <li> Do something extremely clever
+
+        <p>Cleverness is in short supply this month.  <code>:)</code></p>
+
+        <li> Use a double-indirection technique in the compiled C code
+
+<p>        This works, but the resulting C code will be slow, because you
+        will have to traverse twice as many pointers each time you
+        want to look up the value of a variable.  But that is why
+        Perl is slow!  Perl is already doing the
+        double-indirection lookup in C, and the code to do this has
+        already been compiled to native machine code.</p>
+</ol>
+
+<p>So again, it's not clear that you are going to get any benefit from
+translating Perl to C.  The slowness of Perl comes from the
+flexibility of the data structures.  The code to manipulate these
+structures is already written in C.  If you translate a Perl program
+to C, you have the choice of throwing away the flexibility of the data
+structure, in which case you are now writing C programs with C
+structures, or keeping the flexibility with the same speed
+penalty.  You probably cannot speed up the data structures, because if
+anyone knew how to make the structures faster and still keep them
+flexible, they would already have made those changes in the C code for
+Perl itself.</p>
+
+<h3>Possible Future Work</h3>
+
+<table width="190" border="0" cellspacing="0" cellpadding="4" align="right">
+<tr> 
+<td width="190" valign="top" height="4" bgcolor="#6699cc"></td></tr> 
+<tr>
+<td bgcolor="#efefef">
+<p class="headline">Related Articles</p>
+<p class="secondary"><a href="/pub/2001/05/03/wall.html">Larry Wall
+Apocalypse 2</a></p>
+
+
+<p class="secondary"><a href="/pub/2001/05/08/exegesis2.html">Damian Conway Exegesis 2</a></p>
+
+
+<p class="secondary"><a
+href="http://archive.develooper.com/perl6-internals@perl.org/"><code>perl6-internals</code>
+mailing list archive</a></p>
+</td></tr> <tr><td width="190" valign="top" height="4" bgcolor="#6699cc"> </td></tr></table>
+
+
+
+<p>It should now be clear that although it might not be hard to translate
+Perl to C, programs probably will not be faster as a result.</p>
+
+<p>However, it's possible that a sufficiently clever person could make
+a Perl-to-C translator that produced faster C code.  The programmer
+would need to give hints to the translator to say how the variables
+were being used.  For example, suppose you have an array <code>@a</code>.
+With such an array, Perl is ready for anything.  You might do
+<code>$a[1000000] = 'hello';</code> or <code>$a[500] .=
+'foo';</code> or <code>$a[500] /= 17;</code>. This flexibility is expensive.
+But suppose you know that this array will only hold integers and there
+will never be more than 1,000 integers.  You might tell the translator
+that, and then instead of producing C code to manage a slow Perl
+array, the translator can produce</p>
+
+<pre>
+        int a[1000];
+</pre>
+
+<p>and use a fast C array of machine integers.</p>
+
+<p>To do this, you have to be very clever and you have to think of a
+way of explaining to the translator that <code>@a</code> will never be
+bigger than 1,000 elements and will only contain integers, or a way for
+the translator to guess that just from looking at the Perl
+program.</p>
+
+<p>People are planning these features for Perl 6 right now.  For
+example, Larry Wall, the author of Perl, plans that you will be able
+to declare a Perl array as</p>
+
+<pre>
+        my int @a is dim(1000);
+</pre>
+
+<p>Then a Perl-to-C translator (or Perl itself) might be able to use
+a fast C array of machine integers rather than a slow Perl array of
+SVs.  If you are interested, you may want to join the perl6-internals
+mailing list.</p>
+
+
+
+        </div>
+
+
+
+    </div>
+    <div class="asset-footer"></div>
+</div>
+
+
+                            
+                            <div id="entry-1448" class="entry-asset asset hentry">
+    <div class="asset-header">
+        <h2 class="asset-name entry-title"><a href="/pub/2001/02/inline.html" rel="bookmark">Pathologically Polluting Perl</a></h2>
+        <div class="asset-meta">
+            <span class="byline">
+    
+                By <span class="vcard author">Brian Ingerson</span> on <abbr class="published" title="2001-02-06T00:00:00-08:00">February  6, 2001 12:00 AM</abbr>
+    
+            </span>
+
+            
+            
+
+        </div>
+    </div>
+    <div class="asset-content entry-content">
+
+        <div class="asset-body">
+            <h3>Pathologically Polluting Perl</h3>
+
+<br />
+
+<p><table width="180" cellspacing="0" cellpadding="4" align="right" border="1">
+<tr>
+<td align="center" valign="top" bgcolor="#6699cc">
+<font color="#ffffff">Table of Contents</td>
+</tr>
+
+<tr>
+<td>
+<p class="fine">
+&#149;<a href="#inline in action  simple examples in c">Inline in Action - Simple examples in C</a><br />
+&#149;<a href="#hello, world">Hello, world</a><br />
+&#149;<a href="#just another ____ hacker">Just Another ____ Hacker</a><br />
+&#149;<a href="#what about xs and swig">What about XS and SWIG?</a><br />
+&#149;<a href="#oneliners">One-Liners</a><br />
+&#149;<a href="#supported platforms for c">Supported Platforms for C</a><br />
+&#149;<a href="#the inline syntax">The Inline Syntax</a><br />
+&#149;<a href="#fine dining  a glimpse at the c cookbook">Fine Dining - A Glimpse at the C Cookbook</a><br />
+&#149;<a href="#external libraries">External Libraries</a><br />
+&#149;<a href="#it takes all types">It Takes All Types</a><br />
+&#149;<a href="#some ware beyond the c">Some Ware Beyond the C</a><br />
+&#149;<a href="#see perl run. run perl, run!">See Perl Run. Run, Perl, Run!</a><br />
+&#149;<a href="#the future of inline">The Future of Inline</a><br />
+&#149;<a href="#conclusion">Conclusion</a><br />
+</td>
+</tr>
+</p>
+</table>
+
+<p>No programming language is Perfect. Perl comes very close. <strong>P</strong>! <strong>e</strong>! <strong>r</strong>! <em>l</em>? :-( Not quite ``Perfect''. Sometimes it just makes sense to use another language for part of your work. You might have a stable, pre-existing code base to take advantage of. Perhaps maximum performance is the issue. Maybe you just ``know how to do it'' that way. Or very likely, it's a project requirement forced upon you by management. Whatever the reason, wouldn't it be great to use Perl most of the time, but be able to invoke something else when you had to?</p>
+
+<p><code>Inline.pm</code> is a new module that glues other programming languages to Perl. It allows you to write C, C++, and Python code directly inside your Perl scripts and modules. This is conceptually similar to the way you can write inline assembly language in C programs. Thus the name: <code>Inline.pm</code>.</p>
+
+<p>The basic philosophy behind Inline is this: ``make it as easy as possible to use Perl with other programming languages, while ensuring that the user's experience retains the DWIMity of Perl''. To accomplish this, Inline must do away with nuisances such as interface definition languages, makefiles, build directories and compiling. You simply write your code and run it. Just like Perl.</p>
+
+<p>Inline will silently take care of all the messy implementation details and ``do the right thing''. It analyzes your code, compiles it if necessary, creates the correct Perl bindings, loads everything up, and runs the whole schmear. The net effect of this is you can now write functions, subroutines, classes, and methods in another language and call them as if they were Perl.</p>
+
+<h3><a name="inline in action  simple examples in c">Inline in Action - Simple examples in C</a></h3>
+<p>Inline addresses an old problem in a completely revolutionary way. Just describing Inline doesn't really do it justice. It should be <em>seen</em> to be fully appreciated. Here are a couple examples to give you a feel for the module.</p>
+<p>
+<h3><a name="hello, world">Hello, world</a></h3>
+<p>It seems that the first thing any programmer wants to do when he learns a new programming technique is to use it to greet the Earth. In keeping with that tradition, here is the ``Hello, world'' program using Inline.</p>
+<pre>
+    use Inline C =&gt; &lt;&lt;'END_C';
+    void greet() {
+        printf(&quot;Hello, world\n&quot;);
+    }
+    END_C</pre>
+<pre>
+    greet;</pre>
+<p>Simply run this script from the command line and it will print (you guessed it):</p>
+<pre>
+    Hello, world</pre>
+<p>In this example, <code>Inline.pm</code> is instantiated with the name of a programming language, ``C'', and a string containing a piece of that language's source code. This C code defines a function called <code>greet()</code> which gets bound to the Perl subroutine <code>&amp;main::greet</code>. Therefore, when we call the <code>greet()</code> subroutine, the program prints our message on the screen.</p>
+<p>You may be wondering why there are no <code>#include</code> statements for things like <code>stdio.h</code>? That's because Inline::C automatically prepends the following lines to the top of your code:</p>
+<pre>
+    #include &quot;EXTERN.h&quot;
+    #include &quot;perl.h&quot;
+    #include &quot;XSUB.h&quot;
+    #include &quot;INLINE.h&quot;</pre>
+<p>These header files include all of the standard system header files, so you almost never need to use <code>#include</code> unless you are dealing with a non-standard library. This is in keeping with Inline's philosophy of making easy things easy. (Where have I heard that before?)</p>
+<p>
+<h3><a name="just another ____ hacker">Just Another ____ Hacker</a></h3>
+<p>The next logical question is, ``How do I pass data back and forth between Perl and C?'' In this example we'll pass a string to a C function and have it pass back a brand new Perl scalar.</p>
+<pre>
+    use Inline C;
+    print JAxH('Perl');
+</pre>
+<pre>
+
+    __END__
+    __C__
+    SV* JAxH(char* x) {
+        return newSVpvf(&quot;Just Another %s Hacker\n&quot;, x);
+    }</pre>
+<p>When you run this program, it prints:</p>
+<pre>
+    Just Another Perl Hacker</pre>
+<p>You've probably noticed that this example is coded differently then the last one. The <code>use Inline</code> statement specifies the language being used, but not the source code. This is an indicator for Inline to look for the source at the end of the program, after the special marker '<code>__C__</code>'.</p>
+<p>The concept being demonstrated is that we can pass Perl data in and out of a C function. Using the default Perl type conversions, Inline can easily convert all of the basic Perl data types to C and vice-versa.</p>
+<p>This example uses a couple of the more advanced concepts of Inlining. Its return value is of the type <code>SV*</code> (or Scalar Value). The Scalar Value is the most common Perl internal type. Also, the Perl internal function <code>newSVpfv()</code> is called to create a new Scalar Value from a string, using the familiar <code>sprintf()</code> syntax. You can learn more about simple Perl internals by reading the <code>perlguts</code> and <code>perlapi</code> documentation distributed with Perl.</p>
+
+<h3><a name="what about xs and swig">What about XS and SWIG?</a></h3>
+<p>Let's detour momentarily to ponder ``Why Inline?''</p>
+<p>There are already two major facilities for extending Perl with C. They are XS and SWIG. Both are similar in their capabilities, at least as far as Perl is concerned. And both of them are quite difficult to learn compared to Inline. Since SWIG isn't used in practice to nearly the degree that XS is, I'll only address XS.</p>
+<p>There is a big fat learning curve involved with setting up and using the XS environment. You need to get quite intimate with the following docs:</p>
+<pre>
+ * perlxs
+ * perlxstut
+ * perlapi
+ * perlguts
+ * perlcall
+ * perlmod
+ * h2xs
+ * xsubpp
+ * ExtUtils::MakeMaker</pre>
+<p>With Inline you can be up and running in minutes. There is a C Cookbook with lots of short but complete programs that you can extend to your real-life problems. No need to learn about the complicated build process going on in the background. You don't even need to compile the code yourself. Perl programmers cannot be bothered with silly things like compiling. ``Tweak, Run, Tweak, Run'' is our way of life. Inline takes care of every last detail except writing the C code.</p>
+<p>Another advantage of Inline is that you can use it directly in a script. As we'll soon see, you can even use it in a Perl one-liner. With XS and SWIG, you always set up an entirely separate module, even if you only have one or two functions. Inline makes easy things easy, and hard things possible. Just like Perl.</p>
+<p>Finally, Inline supports several programming languages (not just C and C++). As of this writing, Inline has support for C, C++, Python, and CPR. There are plans to add many more.</p>
+
+<h3><a name="oneliners">One-Liners</a></h3>
+<p>Perl is famous for its one-liners. A Perl one-liner is short piece of Perl code that can accomplish a task that would take much longer in another language. It is one of the popular techniques that Perl hackers use to flex their programming muscles.</p>
+<p>So you may wonder: ``Is Inline powerful enough to produce a one-liner that is also bonifide C extension?'' Of course it is! Here you go:</p>
+<pre>
+    perl -e 'use Inline C=&gt;
+	q{void J(){printf(&quot;Just Another Perl Hacker\n&quot;);}};J'</pre>
+<p>Try doing that with XS! We can even write the more complex Inline <code>JAxH()</code> discussed earlier as a one-liner:</p>
+<pre>
+    perl -le 'use Inline C=&gt;
+	q{SV*JAxH(char*x){return newSVpvf(&quot;Just Another %s Hacker&quot;,x);}};print JAxH+Perl'</pre>
+<p>I have been using this one-liner as my email signature for the past couple months. I thought it was pretty cool until Bernhard Muenzer posted this gem to <code>comp.lang.perl.modules</code>:</p>
+<pre>
+    #!/usr/bin/perl -- -* Nie wieder Nachtschicht! *- -- lrep\nib\rsu\!#
+    use Inline C=&gt;'void C(){int m,u,e=0;float l,_,I;for(;1840-e;putchar((++e&gt;907
+     &amp;&amp;942&gt;e?61-m:u)[&quot;\n)moc.isc@rezneumb(rezneuM drahnreB&quot;]))for(u=_=l=0;79-(m
+      =e%80)&amp;&amp;I*l+_*_&lt;6&amp;&amp;26-++u;_=2*l*_+e/80*.09-1,l=I)I=l*l-_*_-2+m/27.;}';&amp;C</pre>
+
+<h3><a name="supported platforms for c">Supported Platforms for C</a></h3>
+<p>Inline C works on all of the Perl platforms that I have tested it with so far. This includes all common Unixes and recent versions of Microsoft Windows. The only catch is that you must have the same compiler and <code>make</code> utility that was used to build your <code>perl</code> binary.</p>
+<p>Inline has been successfully used on Linux, Solaris, AIX, HPUX, and all the recent BSD's.</p>
+<p>There are two common ways to use Inline on MS Windows. The first one is with ActiveState's ActivePerl for MSWin32. In order to use Inline in that environment, you'll need a copy of MS Visual C++ 6.0. This comes with the <code>cl.exe</code> compiler and the <code>nmake</code> make utility. Actually these are the only parts you need. The visual components aren't necessary for Inline.</p>
+<p>The other alternative is to use the Cygwin utilities. This is an actual Unix porting layer for Windows. It includes all of the most common Unix utilities, such as <code>bash</code>, <code>less</code>, <code>make</code>, <code>gcc</code> and of course <code>perl</code>.</p>
+
+<h3><a name="the inline syntax">The Inline Syntax</a></h3>
+<p>Inline is a little bit different than most of the Perl modules that you are used to. It doesn't import any functions into your namespace and it doesn't have any object oriented methods. Its entire interface is specified through <code>'use Inline ...'</code> commands. The general Inline usage is:</p>
+<pre>
+    use Inline C =&gt; source-code,
+               config_option =&gt; value,
+               config_option =&gt; value;</pre>
+<p>Where <code>C</code> is the programming language, and <code>source-code</code> is a string, filename, or the keyword '<code>DATA</code>'. You can follow that with any number of optional '<code>keyword =&gt; value</code>' configuration pairs. If you are using the 'DATA' option, with no configuration parameters, you can just say:</p>
+<pre>
+    use Inline C;</pre>
+
+<h3><a name="fine dining  a glimpse at the c cookbook">Fine Dining - A Glimpse at the C Cookbook</a></h3>
+<p>In the spirit of the O'Reilly book ``Perl Cookbook'', Inline provides a manpage called C-Cookbook. In it you will find the recipes you need to help satisfy your Inline cravings. Here are a couple of tasty morsels that you can whip up in no time. Bon Appetit!</p>
+<p>
+<h3><a name="external libraries">External Libraries</a></h3>
+<p>The most common real world need for Inline is probably using it to access existing compiled C code from Perl. This is easy to do. The secret is to write a wrapper function for each function you want to expose in Perl space. The wrapper calls the real function. It also handles how the arguments get passed in and out. Here is a short Windows example that displays a text box with a message, a caption and an ``OK'' button:</p>
+<pre>
+    use Inline C =&gt; DATA =&gt;
+               LIBS =&gt; '-luser32',
+               PREFIX =&gt; 'my_';</pre>
+<pre>
+    MessageBoxA('Inline Message Box', 'Just Another Perl Hacker');
+</pre>
+<pre>
+
+    __END__
+    __C__
+    #include &lt;windows.h&gt;
+    int my_MessageBoxA(char* Caption, char* Text) {
+      return MessageBoxA(0, Text, Caption, 0);
+    }</pre>
+<p>This program calls a function from the MSWin32 <code>user32.dll</code> library. The wrapper determines the type and order of arguments to be passed from Perl. Even though the real <code>MessageBoxA()</code> needs four arguments, we can expose it to Perl with only two, and we can change the order. In order to avoid namespace conflicts in C, the wrapper must have a different name. But by using the <code>PREFIX</code> option (same as the XS <code>PREFIX</code> option) we can bind it to the original name in Perl.</p>
+
+<h3><a name="it takes all types">It Takes All Types</a></h3>
+<p>Older versions of Inline only supported five C data types. These were: <code>int</code>, <code>long</code>, <code>double</code>, <code>char*</code> and <code>SV*</code>. This was all you needed. All the basic Perl scalar types are represented by these. Fancier things like references could be handled by using the generic <code>SV*</code> (scalar value) type, and then doing the mapping code yourself, inside the C function.</p>
+<p>The process of converting between Perl's <code>SV*</code> and C types is called <strong>typemapping</strong>. In XS, you normally do this by using <code>typemap</code> files. A default <code>typemap</code> file exists in every Perl installation in a file called <code>/usr/lib/perl5/5.6.0/ExtUtils/typemap</code> or something similar. This file contains conversion code for over 20 different C types, including all of the Inline defaults.</p>
+<p>As of version 0.30, Inline no longer has <em>any</em> built in types. It gets all of its types exclusively from <code>typemap</code> files. Since it uses Perl's default <code>typemap</code> file for its own defaults, it actually has many more types available automatically.</p>
+<p>This setup provides a lot of flexibility. You can specify your own <code>typemap</code> files through the use of the <code>TYPEMAPS</code> configuration option. This not only allows you to override the defaults with your own conversion code, but it also means that you can add new types to Inline as well. The major advantage to extending the Inline syntax this way is that there are already many typemaps available for various APIs. And if you've done your own XS coding in the past, you can use your existing <code>typemap</code> files as is. No changes are required.</p>
+<p>Let's look at a small example of writing your own typemaps. For some reason, the C type <code>float</code> is not represented in the default Perl <code>typemap</code> file. I suppose it's because Perl's floating point numbers are always stored as type <code>double</code>, which is higher precision than <code>float</code>. But if we wanted it anyway, writing a <code>typemap</code> file to support <code>float</code> is trivial.</p>
+<p>Here is what the file would look like:</p>
+<pre>
+    float                   T_FLOAT
+</pre>
+<pre>
+
+    INPUT
+    T_FLOAT
+            $var = (float)SvNV($arg)</pre>
+<pre>
+
+    OUTPUT
+    T_FLOAT
+            sv_setnv($arg, (double)$var);</pre>
+<p>Without going into details, this file provides two snippets of code. One for converting a <code>SV*</code> to a float, and one for the opposite. Now we can write the following script:</p>
+<pre>
+    use Inline C =&gt; DATA =&gt;
+               TYPEMAPS =&gt; './typemap';
+</pre>
+<pre>
+
+    print '1.2 + 3.4 = ', fadd(1.2, 3.4), &quot;\n&quot;;</pre>
+<pre>
+
+    __END__
+    __C__
+    float fadd(float x, float y) {
+        return x + y;
+    }</pre>
+
+<h3><a name="some ware beyond the c">Some Ware Beyond the C</a></h3>
+<p>The primary goal of Inline is to make it easy to use other programming languages with Perl. This is not limited to C. The initial implementations of Inline only supported C, and the language support was built directly into <code>Inline.pm</code>. Since then things have changed considerably. Inline now supports multiple languages of both compiled and interpreted nature. And it keeps the implementations in an object oriented type structure, whereby each language has its own separate module, but they can inherit behavior from the base Inline module.</p>
+<p>On my second day working at ActiveState, a young man approached me. ``Hi, my name is Neil Watkiss. I just hacked your Inline module to work with C++.''</p>
+<p>Neil, I soon found out, was a computer science student at a local university. He was working part-time for ActiveState then, and had somehow stumbled across Inline. I was thrilled! I had wanted to pursue new languages, but didn't know how I'd find the time. Now I was sitting 15 feet away from my answer!</p>
+<p>Over the next couple months, Neil and I spent our spare time turning Inline into a generic environment for gluing new languages to Perl. I ripped all the C specific code out of Inline and put it into Inline::C. Neil started putting together Inline::CPP and Inline::Python. Together we came up with a new syntax that allowed multiple languages and easier configuration.</p>
+<p>Here is a sample program that makes uses of Inline Python:</p>
+<pre>
+    use Inline Python;
+    my $language = shift;
+    print $language, 
+          (match($language, 'Perl') ? ' rules' : ' sucks'),
+          &quot;!\n&quot;;
+    __END__
+    __Python__
+    import sys
+    import re
+    def match(str, regex):
+        f = re.compile(regex);
+        if f.match(str): return 1
+        return 0</pre>
+<p>This program uses a Python regex to show that ``Perl rules!''.</p>
+<p>Since Python supports its own versions of Perl scalars, arrays, and hashes, Inline::Python can flip-flop between them easily and logically. If you pass a hash reference to python, it will turn it into a dictionary, and vice-versa. Neil even has mechanisms for calling back to Perl from Python code. See the Inline::Python docs for more info.</p>
+
+<h3><a name="see perl run. run perl, run!">See Perl Run. Run Perl, Run!</a></h3>
+<p>Inline is a great way to write C extensions for Perl. But is there an equally simple way to embed a Perl interpreter in a C program? I pondered this question myself one day. Writing Inline functionality for C would not be my cup of tea.</p>
+<p>The normal way to embed Perl into C involves jumping through a lot of hoops to bootstrap a perl interpreter. Too messy for one-liners. And you need to compile the C. Not very Inlinish. But what if you could pass your C program to a perl program that could pass it to Inline? Then you could write this program:</p>
+<pre>
+    #!/usr/bin/cpr
+    int main(void) {
+        printf(&quot;Hello, world\n&quot;);
+    }</pre>
+<p>and just run it from the command line. Interpreted C!</p>
+<p>And thus, a new programming language was born. <strong>CPR</strong>. ``C Perl Run''. The Perl module that gives it life is called <code>Inline::CPR</code>.</p>
+<p>Of course, CPR is not really its own language, in the strict sense. But you can think of it that way. CPR is just like C except that you can call out to the Perl5 API at any time, without any extra code. In fact, CPR redefines this API with its own CPR wrapper API.</p>
+<p>There are several ways to think of CPR: ``a new language'', ``an easy way to embed Perl in C'', or just ``a cute hack''. I lean towards the latter. CPR is probably a far stretch from meeting most peoples embedding needs. But at the same time its a very easy way to play around with, and perhaps redefine, the Perl5 internal API. The best compliment I've gotten for CPR is when my ActiveState coworker Adam Turoff said, ``I feel like my head has just been wrapped around a brick''. I hope this next example makes you feel that way too:</p>
+<pre>
+    #!/usr/bin/cpr
+    int main(void) {
+        CPR_eval(&quot;use Inline (C =&gt; q{
+            char* greet() {
+                return \&quot;Hello world\&quot;;
+            }
+        })&quot;);</pre>
+<pre>
+        printf(&quot;%s, I'm running under Perl version %s\n&quot;,
+               CPR_eval(&quot;&amp;greet&quot;),
+               CPR_eval(&quot;use Config; $Config{version}&quot;));
+        return 0;
+    }</pre>
+<p>Running this program prints:</p>
+<pre>
+    Hello world, I'm running under Perl version 5.6.0</pre>
+<p>Using the <code>eval()</code> call this CPR program calls Perl and tells it to use Inline C to add a new function, which the CPR program subsequently calls. I think I have a headache myself.</p>
+
+<h3><a name="the future of inline">The Future of Inline</a></h3>
+<p>Inline version 0.30 was written specifically so that it would be easy for other people in the Perl community to contribute new language bindings for Perl. On the day of that release, I announced the birth of the Inline mailing list, <a href="mailto:inline@perl.org.">inline@perl.org.</a> This is intended to be the primary forum for discussion on all Inline issues, including the proposal of new features, and the authoring of new ILSMs.</p>
+<p>In the year 2001, I would like to see bindings for Java, Ruby, Fortran and Bash. I don't plan on authoring all of these myself. But I may kickstart some of them, and see if anyone's interested in taking over. If <em>you</em> have a desire to get involved with Inline development, please join the mailing list (<a href="mailto:inline-subscribe@perl.org">inline-subscribe@perl.org</a>) and speak up.</p>
+<p>My primary focus at the present time, is to make the base Inline module as simple, flexible, and stable as possible. Also I want to see Inline::C become an acceptable replacement for XS; at least for most situations.</p>
+
+<h3><a name="conclusion">Conclusion</a></h3>
+<p>Using XS is just too hard. At least when you compare it to the rest of the Perl we know and love. Inline takes advantage of the existing frameworks for combining Perl and C, and packages it all up into one easy to swallow pill. As an added bonus, it provides a great framework for binding other programming languages to Perl. You might say, ``It's a 'Perl-fect' solution!''</p>
+
+
+
+        </div>
+
+
+
+    </div>
+    <div class="asset-footer"></div>
+</div>
+
+
+
+
+                            <div class="content-nav">
+                                <a href="/pub/business/">&laquo; Business</a> |
+                                <a href="/pub/">Main Index</a> |
+                                <a href="/pub/archives.html">Archives</a>
+                                | <a href="/pub/cgi/">CGI &raquo;</a>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

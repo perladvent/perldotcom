@@ -1,0 +1,1041 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2001/06/ctoperl.html" title="Why Not Translate Perl to C?" />
+    <link rel="next bookmark" href="/pub/2001/07/nat.html" title="People Behind Perl: Nathan Torkington" />
+    
+    
+    <title>This Week on p5p 2001/07/02 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1558" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">This Week on p5p 2001/07/02</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Simon Cozens</span> on <abbr class="published" title="2001-07-02T00:00:00-08:00">July  2, 2001 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        <h3><a name="Notes">Notes</a></h3>
+
+<table width="150" border="0" cellspacing="0" cellpadding="4" align="right">
+<tr> 
+<td width="150" valign="top" height="4" bgcolor="#6699cc"></td></tr> 
+<tr>
+<td bgcolor="#efefef">
+<p class="headline" align="center">
+This week on P5P</p>
+</p>
+<p class="smalltext">
+&#149; <a href="#Notes">Notes</a><br />
+&#149; <a href="#Module_Versioning_and_Testing">Module Versioning and Testing</a><br />
+&#149; <a href="#Carpentry">Carpentry</a><br />
+&#149; <a href="#Regex_Capture_to_variable">Regex Capture-to-variable</a><br />
+&#149; <a href="#Perl_on_S390">Perl on S390</a><br />
+&#149; <a href="#UTS_Amdahl">UTS Amdahl</a><br />
+&#149; <a href="#Various">Various</a>
+
+</td></tr> <tr><td width="150" valign="top" height="4" bgcolor="#6699cc"> </td></tr></table>
+
+
+<p>
+  
+Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org 
+where YYYYMM is the current year and month. Changes and additions to the 
+perl5-porters biographies are particularly welcome.
+</p>
+
+<p>
+This was a reasonably normal week, seeing the usual 500 or so messages.
+</p>
+
+<p>
+Many thanks again to Leon for last week's summary.
+<h3><a name="Module_Versioning_and_Testing">Module Versioning and Testing</a></h3>
+
+</p>
+
+<p>
+
+There's a move on to make the modules under 
+<code>ext/</code> free-standing: that is, to be able to say
+</p>
+
+<p>
+   cd ext/File/Glob
+</p>
+
+<p>
+   make dist
+</p>
+
+<p>
+and get a bundle that can be uploaded to CPAN or otherwise distributed.
+The only problem with this is tests. Currently the tests are kept under 
+<code>t/</code> of the main root of the Perl source tree, and are run when a 
+<code>make test</code> is done there. To make the modules freestanding, you'd have to move
+the tests to 
+<code>ext/Foo/Bar/t/</code> and have the main 
+<code>make test</code> also traverse the extension subdirectories and run the tests there. But
+then, of course, there's another problem. Can you spot it?
+</p>
+
+<p>
+<code>make test</code>
+ is run from an uninstalled Perl, which needs explicit hints about where
+to find the Perl library. Hence, the tests in 
+<code>t/</code> directly wibble 
+<code>@INC</code>. This wouldn't work if we're making the modules freestanding, or if we
+move the tests to 
+<code>ext/Foo/Bar/t/</code>. So the trick, which nobody's done yet, is to move the tests to the
+right place, change the main 
+<code>make test</code>  to recurse extension subdirectories, but also to propagate an
+environment variable telling the module where to find the library. (
+<code>PERL5LIB</code> is what you want for this.) That would be a nice little task for
+someone...
+</p>
+
+<p>
+Speaking of testing, 
+<a href="http://simon-cozens.org/writings/whos-who.html#SCHWERN">Schwern</a> got 
+<code>Test::Simple</code> and 
+<code>Test::More</code> added to the core, bringing the first All Your Base reference into the
+Perl source tree.
+Oh, and <b>how</b> many different testing mechanisms?
+</p>
+
+<p><a href="http://simon-cozens.org/writings/whos-who.html#HOUSTON">Robin Houston</a>
+ incremented 
+<code>B::Deparse</code>'s version number and added some change notes.  Here's what's
+improved since 5.6.1:
+</p>
+
+</p><pre>
+    Changes between 0.60 and 0.61 (mostly by Robin Houston) 
+    - many bug-fixes 
+    - support for pragmas and 'use' 
+    - support for the little-used $[ variable 
+    - support for __DATA__ sections 
+    - UTF8 support 
+    - BEGIN, CHECK, INIT and END blocks 
+    - scoping of subroutine declarations fixed 
+    - compile-time output from the input program can be suppressed, so that the 
+      output is just the deparsed code. (a change to O.pm in fact) 
+    - our() declarations 
+    - *all* the known bugs are now listed in the BUGS section 
+    - comprehensive test mechanism (TEST -deparse)
+</pre>
+
+<p>
+The new test mechanism is great: it runs the standard Perl test suite
+through 
+<code>B::Deparse</code> and then back through Perl again to ensure the deparsed code still
+passes the tests. And, as a testament to the work that's been done on
+<code>B::Deparse</code>, they mostly do pass.
+</p>
+
+<p>
+Schwern also bumped up 
+<code>ExtUtils::Manifest</code>, which caused Jarkko to appeal for a script which checks two Perl
+source trees to find updated versions of modules without a version
+change. Larry Shatzer provided one, and Jarkko used it to update
+the versions in the current tree. Schwern also put 
+<code>Cwd</code> on CPAN, and found a weird dynamic loading bug with the XS version
+ of 
+<code>Cwd</code>. Oh, and noted that after his benchmarking, there's no significant
+performance loss between 5.6.1 without PerlIO and bleadperl with it.
+<h3><a name="Carpentry">Carpentry</a></h3>
+
+</p>
+
+<p>
+
+<a href="http://simon-cozens.org/writings/whos-who.html#GUY">Mike Guy</a> partially fixed a problem whereby when a magic variable like 
+<code>$1</code> is passed as a subroutine parameter, 
+<code>carp</code> and the debugger don't see it properly. Tony Bowden took the
+opportunity to ask for either more or less documentation for 
+<code>longmess</code> and 
+<code>shortmess</code> depending on whether or not they were meant to be internal to
+<code>Carp</code>. Tony wrote a documentation patch himself.
+</p>
+
+<p>
+Schwern asked for a better name for those functions, perhaps more in
+line with the carp/croak/cluck theme. Jarkko suggested 
+<code>yodel</code> and 
+<code>yelp</code> which Schwern implemented. 
+</p>
+<p>
+<a href="http://simon-cozens.org/writings/whos-who.html#KOENIG">Andreas</a>
+ had a quick bitch about Schwern's, uh, idiosyncratic naming style:
+<blockquote></p>
+
+<p>
+Your style of naming things is just plain sick:
+</p>
+
+<p>
+AnyLoader does anything but interface to any loader.
+Ima::DBI has something to do with DBI, but nothing with Ima.
+D::oh is the only really funny one. But it's from 1999 and getting
+old.
+Sex: I still don't know if it is fun or what.
+Bone::Easy? Same here.
+Semi::Semicolon? Same here.
+</p>
+
+<p>
+And now yodle!
+</blockquote></p>
+
+<p>
+Unfair, though, since 
+<code>yodel</code> and 
+<code>yelp</code> weren't his...
+</p>
+
+<p>
+However, Hugo objected to 
+<code>yodel</code>/
+<code>yelp</code> because the other verbs write to standard error, hence &quot;speaking&quot;
+ whereas 
+<code>longmess</code> and 
+<code>shortmess</code> don't actually &quot;say&quot; anything. Jarkko agreed, and there the matter
+rested. (Modulo Rich Lafferty's suggestion of &quot;flame&quot; for objections in
+a written medium...)
+<h3><a name="Regex_Capture_to_variable">Regex Capture-to-variable</a></h3>
+
+</p>
+
+<p>
+
+Jeffrey Friedl (he of the Regexp book) came up with an interesting
+patch which adds the new special variable 
+<code>$^N</code> for the most-recently assigned bracket match. This is different from
+<code>$+</code> which is the highest numbered match; that's to say, given
+</p>
+
+</p><pre>
+    /(foo(bar))/
+</pre>
+
+<p>
+then 
+<code>$+</code> is equivalent to 
+<code>$2</code>, whereas 
+<code>$^N</code> is equivalent to the bracket match for the last closing bracket; that
+ is, 
+<code>$1</code>. This essentially allows you to do capture-to-variable, like this:
+</p>
+
+</p><pre>
+    (?:(\d+)(?{ $phone_number = $^N }))
+</pre>
+
+<p>
+without having to worry about which number bracket the match was.
+(Especially useful if you have to change your regexp around.) Whether
+this makes regular expressions cleaner or dirtier, I'll leave up to
+you... However, Jeffrey also noted that you can use regexp overloading
+(my, that's an obscure feature - look at 
+<code>re.pm</code>) to make such syntax as
+</p>
+
+</p><pre>
+    (?<$phone_number>\d+)
+</pre>
+
+<p>
+work. Now that's cool.
+</p>
+
+<p>
+Phillip Newton added a nmenomic: 
+<code>$^N</code> is the most recently closed Nested parenthesis.
+<h3><a name="Perl_on_S390">Perl on S390</a></h3>
+
+</p>
+
+<p>
+
+Hal Morris got Perl going on Linux/390, with only one test failing. Good
+news for the new generation of mainframe hackers.
+</p>
+
+<p>
+There's mixed news for the old-timers, though; Peter Prymmer has got it
+down to 10 test failures, but one of the tests completely hangs Perl.
+Apparently 
+<code>study</code> under OS/390 is best avoided. He also started some investigation of a
+<code>Bigint</code> bug, under the direction of Tels and John Peacock, but left for his
+holidays and the discussion moved to the 
+<code>perl-mvs</code> mailing list.
+<h3><a name="UTS_Amdahl">UTS Amdahl</a></h3>
+
+</p>
+
+<p>
+
+Oh, and talking of weird platforms, UTS. Hal (who's actually from UTS
+Global, so much kudos there) has been testing out recent Perl builds on
+UTS, and turning up some ... take a deep breath ... icky numeric
+conversion issues. 
+</p>
+
+<p>
+<a href="http://simon-cozens.org/writings/whos-who.html#CLARK">Nicholas Clark</a>
+ was convinced they (well, some of them at least) were due to UTS C
+going through a 
+<code>foo--</code> statement twice, but Hal pointed out he didn't expect UTS C to be
+quite that braindead. On the other hand, Nick's analysis looked
+convincing...
+</p>
+
+<p>
+Hal also fixed up 
+<code>hints/uts.sh</code> so that UTS now configures and builds nicely at least.
+<h3><a name="Various">Various</a></h3>
+
+</p>
+
+<p>
+
+David Wheeler found a known but really, really weird bug with lexical
+arrays; if you do:
+</p>
+
+</p><pre>
+    my @a = foo(); my @b = foo();
+    sub foo { $x = 0; my @ary; push @ary, "hi" if $x; push @ary, "ho"; return @ary }
+</pre>
+
+<p>
+<code>@a</code>
+ gets &quot;ho&quot; as you'd expect, but 
+<code>@b</code> gets &quot;ho&quot;,&quot;ho&quot;. Ronald Kimball told him Not To Do That, Then.
+</p>
+
+<p>
+Peter Prymmer noted that Perl on VMS was bailing out during the test
+suite, leading to lots of bogus failures. This only happens if none of
+the DBM libraries (GDBM, DB_File, NDBM or SDBM) were built. As the first
+three require external libraries that VMS doesn't have and the last one
+is currently broken, it's no wonder Perl is bailing out. The fix is to
+work out why SDBM has stopped building on VMS. Peter also produced a lot
+of other VMS and HPUX reports.
+</p>
+<p>
+<a href="http://simon-cozens.org/writings/whos-who.html#DOUGHERTY">Andy </a>
+ was pleasantly surprised to note that the promised &quot;binary
+compatibility with 5.005&quot; actually works even in bleadperl. Perhaps we
+need to break more things.
+</p>
+
+<p>
+John Peacock asked a portability question for XS bit-twiddling; he's
+trying to adapt a math library which depends on casting two numbers to a
+long and adding them together to avoid overflow. Jarkko's
+fantastic architecture experience was brought to bear as he revealed
+that Cray Unicos has 
+<code>long == short == int == double</code>. Oh, and type casting has issues too, so you have to use a union.
+Nicholas Clark suggested the old trick of comparing the operands of an
+addition with the result; if the result is smaller than either of the
+operands, you've overflowed, so you add a carry and off you go. 
+</p>
+
+<p>
+The news that GCC 3.0 was out brought a rush of people testing Perl out
+with it; I got it through on Linux with all tests successful, as did
+H. Merijn Brand on HPUX, but with rather a lot more warnings. This was
+because HPUX messed up the test for 
+<code>__attribute__</code> due to using a HP linker instead of a GNU one. Merijn and Jarkko got
+this fixed up.
+</p>
+
+<p>
+Artur continued his iThreads quest; he renamed the &quot;shared&quot; attribute to
+&quot;static&quot;, (and then again to &quot;unique&quot; after objections) presumably to
+free it up for an attribute which actually does share variables between
+interpreters, and also added a function which cloned the Perl host. 
+He said that 
+<code>threads-0.01</code>, the new threading module, will be released to CPAN when 5.7.2 hits
+the road. (Which Jarkko keeps hinting will be very, very, very soon
+now.) He also complained bitterly when Marcel Grunauer tried to document
+<code>attributes.pm</code> as useful, despite the fact that Marcel has some really very cool
+modules on CPAN based on it...
+</p>
+
+<p>
+Marcel also found, and Radu Greab fixed, an insiduous bug in 
+<code>split</code>, whereby if the default whitespace pattern was used for one iteration
+of a loop, it would be used for all succeeding ones; the 
+<code>PMf_WHITE</code> flag for the regular expression was being set but never
+unset. Urgh.
+
+</p>
+<p>
+<a href="http://simon-cozens.org/writings/whos-who.html#ZAKHAREVICH">Ilya</a>
+ produced some rough changes documentation for OS/2, as well as some
+ other little patches. Norton Allen provided some QNX updates.
+</p>
+<p>
+<a href="http://simon-cozens.org/writings/whos-who.html#NEWTON">Phillip Newton</a>
+ documented the neat 
+</p>
+
+</p><pre>
+    $count = () = function()
+</pre>
+
+<p>
+idiom for counting the number of return values from an operation. That
+was something I hadn't seen before; you learn something new every day...
+Until next week I remain, your humble and obedient servant,
+</p>
+<hr size="1" noshade />
+
+<p><i>
+<csfield name="id_author" after=" " hrefaction="pub"></p>
+
+
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/community/" rel="tag">Community</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

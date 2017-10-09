@@ -1,0 +1,254 @@
+To: Glenn Vanderburg <glv@utdallas.edu>
+Subject: Re: Tcl vs Perl 
+In-reply-to: Your message <199508152030.PAA04739@utdallas.edu> of Tue, 15 Aug 95 15:30:33 CDT.
+References: <199508152030.PAA04739@utdallas.edu> 
+Date: Tue, 15 Aug 95 14:33:26 MDT
+Message-ID: <17588.808518806@mox>
+From: Tom Christiansen <tchrist@mox>
+
+> > If you'd really really like to see my dirty laundry list on 
+> > the language, I'll send it to you.
+
+> Actually, I would.  I suspect I know most of the things you'll mention, 
+> but I would be interested to see what you think.  (I certainly learned a
+> lot from your csh paper, although it didn't convince me ... I had already
+> been convinced about csh long ago.)
+
+here's my rough draft, never really fleshed out.  errors and omissions
+welcome.  someday i'll post this.
+
+--tom
+
+tee cee ell is merely a string substitution language in a lot of ways.
+here are some of my rags on tcl.  i know their answers and i don't 
+like it.
+
+* there is no 1stclass citizen besides a string, and all else is a hack.
+
+* how do you pass things?  you have to use PASS BY NAME and even then maybe
+play horrid scoping games.  this an evil that all users of algol68 have
+long since repented of.
+
+* why are associative arrays broken?
+
+    set array("some string value") "another string value"
+
+because the idiot lexer passes the wrong thing to set.
+
+* why is EVERYTHING wrapped in catch/throw?  
+
+* why is eval so dangerously prevalent?
+
+* why can't you distinguish between strings and numbers? 
+
+* why are numbers broken?  why when i read in east
+coast zip codes do the leading 0s screw me up? 
+
+* why can't you say:
+
+    func_taking_list [ func_returning_list ] 
+
+because things don't really return lists. they return strings.
+you have to say
+
+    eval func_taking_list [ func_returning_list ] 
+
+* why isn't it 8 bit clean?
+
+* why don't you have proper namespace protection?  why don't
+you have closures and lexical variables and dynamic variables?
+
+* why don't you have proper function pointers?
+
+* what's so horribly wrong with 
+
+    set $$something "value"
+
+* why can't i comment out code intuitively:
+
+    while { $old_test }  {
+    #while { $new_test } {
+	func
+    }
+
+* why can't i put braces where i want to?
+
+    if { [ condition 
+		"that's very long"
+		"with any args
+	 ]
+    } {
+
+    } 
+
+
+* why can't you access arrays intuitively?  why must you use
+lappend?
+
+* why is there order(n) access time on lists?  why must all
+O(n) algorithm thus turn into O(n**2) and O(n**2) thus
+become O(n**3)?  
+
+* why are you forced to pass string instead of real functions?
+
+* why do runtime errors popup so late rather than 
+compile times errors much earlier?
+
+=======================================================================
+
+In comp.lang.perl, mcdonald@cs.sfu.ca (Ken Mcdonald) writes:
+:Well, I know there's no hard and fast answer to this, but I was wondering
+:if there are any reasonable estimates as to how much slower (execution time)
+:a typical Perl program might be, as compared to a C program to do the same
+:thing.  (If you could, as a bonus, throw in a comparison to tcl, that'd
+:be great too!)
+
+Perl code varies in speed considerably.  In my experience, C code will range
+>from  a bit more than 2 to as much as around 50 times faster than perl code
+(that's O(e**1) to O(e**4), usually in the 5-10x range on average.  You'll
+tend towards the low end of that range if you can spend most of your time
+in the perl functions that have been compiled into C, like pattern
+matching.  On the other hand, you'll tend towards the high end of the
+range if you're spending all your time doing bit or byte compares, or
+doing highly recursive function calls like Fibonacci (the latter due to
+perl's stack overhead in processing function parameters, something which 
+is not unfixable).
+
+:P.S. Was tcl derived from Perl, or vice versa?  I've been using Perl for
+:quite some time, and only just started looking at tcl, and while there
+:are obvious differences, there are some very obvious similarities. (Both
+:are about 100 times better than shell programming, so who am I to complain
+:about either? :-) )
+
+No, perl and tcl are unrelated.  However, some of the superficial
+similarities between tcl and perl are that both support interpolation of
+variables into doubly-quoted strings and that in the absence of a return
+statement, their functions both return the result of the last thing
+evaluated.  While they both appear to be interpreted languages, perl
+is actually less of an interpreter than tcl is (vide infra).
+
+In my experience, perl code will on average be about O(10**1) (call that
+10x for now) faster than tcl code.  That's because tcl is a pure
+interpreter, whereas perl is a demicompiler; that is, it turns its target
+program into an intermediary form and than executes that using its
+interpreter, the same strategy that UCSD Pascal took.  This approach
+allows not only for increased performance over a pure interpreter, it also
+provides for static, compile-time analysis (via -w and use strict, amongst
+others) as well as a compile-time optimization pass that tcl does not --
+and quite probably cannot -- do.
+
+Like most shells, tcl is strictly a string-substitution language, which
+has a number of serious side effects.  One immediately obvious
+ramification is the performance I previously mentioned: tcl does not store
+its data or code in internal form, which means it has to re-parse it again
+and again and again.  "You want the 347th element of a list?  Well, hold
+on for a while as a I search for 346 nulls in this string first.  You want
+your data to be binary?  Sorry, can't do that." It also means that each
+time you use an if(), or each iteration of a while(), you just call them
+as functions and they have to eval their second argument (which is never
+cached in compiled form) -- AT EACH ITERATION!  This is not very fast.
+
+Apart from performance, there are some design drawbacks inherent in a
+string substitution approach.  For example, you can't convince the thing
+that $a["10"] and $a["0x0A"] are different things.  Along those lines, tcl
+will spend a tremendous amount of time in string/number conversions,
+because it never manages to cache the numeric value.  Another drawback
+that's even more serious is that everything is pass by name rather than
+pass by value or pass by reference.  If you read any CS text on compilers,
+you know the dangers associated with pass by name.  Another drawback is
+that there are no real pointers/references, and thus you can't do type
+checking on them, nor may you build up complex datastructures without
+incurring severe run-time penalties, nor may these datastructures ever
+contain binary data.
+
+In one benchmark of an NxN matrix multiply of integers, perl performed a
+good bit more than O(10**1) faster than tcl: in fact, tcl's performance
+degraded non-linearly with respect to the size of the data set until it
+was lagging behind perl by a factor of O(10**5).  I kid you not.  While
+this is perhaps a pessimal case, it nonetheless demonstrates where tcl's
+performance weaknesses lie.
+
+Tcl also suffers even more than perl does in not always being clear to the
+casual reader when something is being evaluated.  Moreover, you are forced
+to employ delayed evaluation and embedded substitute-evaluate mechanisms
+to get things done.  While we can and sometimes do resort to such measures
+in perl, the practice would appear more pervasive in tcl.  The immediate
+shortcoming of this style is that it makes it harder to debug and maintain
+such code.  A more serious and subtle problem is one with which Steve
+Johnson is rather annoyed (and not wholly without just cause) these days:
+the inability to detect serious program flaws until actual execution
+time.  That means your disk backup system, petroleum processing plant,
+medical monitoring station, space shuttle, or financial transaction
+manager could in the middle of its operation blow up due to some
+programming error totally undetectable until that particular branch of
+code was hit under the right conditions.  This is a scary thought.
+
+On the other hand, that's not to say tcl isn't useful.  It is.  It simply
+doesn't address the same problem domain as perl does.  Because it doesn't,
+you're comparing apples and petunias, and while we can play that game (in
+fact, we are :-), it's inherently prejudiced depending on what answer
+you're looking for.  
+
+Tcl imposes less syntactic grammar on you than does perl.  Because of
+this, it's better at being a metalanguage than perl is.  By metalanguage,
+I mean one from which you can craft your own private little language.  And
+making little languages is both fun and worthwhile, because it allows you
+to produce a focused solution that allows for a simpler end-user specification.
+
+Two examples of this are expect and tk.  Notice how easy it is to specify
+what you want to happen using them.  Now, one could argue that it just
+takes the right libraries, and that wit them you can do this in any
+language.  But that's just glossing over how easy it is in tcl.
+
+Before release 5 it was somewhat difficult to do this in perl.  Now it's
+much less so, although still moreso than in tcl.  Larry wrote a nice reply
+once to Peter da Silva in which he showed that it was quite easy to craft
+a make-like program in perl without subjecting the end user to an undue
+quantity of confusing punctuation.
+
+In my estimation, tcl is good for two things: the creation of new
+metalanguage package (like expect) and interfacing with these.  It is not,
+however, a general-purpose programming language, and people who try to use
+it as such will be laboring under severe burdens that probably cannot ever
+be fixed due to the languages design criteria.  That is, its strengths in
+one area (metalanguage design) guarantee its weaknesses in others
+(performance, compile-time analysis, etc).
+
+If you read the older writings of John Ousterhout on tcl and contrast with
+the newer ones -- or just listen to some of his talks -- you'll see that
+he's changed his tune a bit about what tcl's legitimate and reasonable
+problem domain is.  I believe in retrospect that it was the language's
+devout followers who pushed John into this stand rather than him trying to
+push them towards it.  Caveat emptor: Tcl shares the shells' (especially
+ksh's) seductive snare in that it seems ok for a while, but by the time
+you realize you're in too deep for what the language can provide, you've
+already wasted a lot of time and effort.
+
+While it's probably going too far out on a limb to say that perl is
+actually a "real" general purpose programming language, it certainly
+provides more inherent support for creating more "serious" (large and
+complex) programs than tcl does.  Of course, C wasn't designed to be a
+general-purpose programming language either: it was designed to be a
+systems programming language, which isn't quite the same thing.  Likewise,
+C++ is not an object-oriented programming language, it's a systems
+programming language that offers a few (highly obfuscated, lamentably
+enough) object-oriented features. 
+
+I would say that perl is a language designed for high-level, portable,
+systems programming on tasks of small to medium scope, but with support
+for enough underlying general-purpose programming constructs to make it
+suitable for many users who would not characterize themselves as systems
+programmers.  This includes not just systems administrators but also
+people doing software installations, rapid prototyping, generic data
+munging, simple client/server programming, customer support, and test
+suite design and analysis.  Another application area for which perl
+provides an elegant and convenient solution is one which is growing so
+fast that I suspect even its second-derivative is still positive: World
+Wide Web script support (a.k.a.  CGI programming).  I suspect than in a
+few years, perl may well be better known as a CGI language than it is as a
+sysadmin language.
+
+--tom
+
+
+

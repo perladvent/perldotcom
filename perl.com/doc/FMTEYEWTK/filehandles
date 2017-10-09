@@ -1,0 +1,196 @@
+From:         Tom Christiansen <tchrist@mox.perl.com>
+Subject:      Re: Array of File Handles?
+Cc:           grandall@tnc.airtouch.com (Graham Randall)
+Reply-to:     tchrist@mox.perl.com (Tom Christiansen)
+Organization: Perl Consulting and Training
+Newsgroups:   comp.lang.perl.misc
+Summary: 
+Keywords: 
+
+Forwarded:    Sat, 07 Oct 95 17:24:18 MDT
+	      Todd Miller <millert@cs.colorado.edu>
+
+ [courtesy cc of this posting sent to cited author via email]
+
+In comp.lang.perl.misc, 
+    grandall@tnc.airtouch.com (Graham Randall) writes:
+:
+:
+:[ Disclaimer: 
+:	I imagine this would be a FAQ, but I didn't see it anywhere in there.]
+
+Yes, it's a FAQ, but it's not there.  I'm going to reuse some of my 
+recent material, so some of you out there may have already read this.
+
+:I have a bunch of statistics I need to output into twelve different 
+:files based on certain criteria.  I would like to put the output routines
+:in a big loop and then index the array to get the appropriate file 
+:handle.  Unfortunately, two problems stand in my way.
+:
+:1)  When I try to print to a file handle in the array, the perl 
+:    compiler fails because it says it found a string where it
+:    expected an operator.  Example,
+:
+:    print ${files[$i]} "This is a sample.\n";
+:
+:    However, if I rewrite this as:
+:
+:    $f = $files[$i];
+:    print $f "This is a sample.\n";
+:
+:    No error is generated.
+:
+
+The proper definition of printf is
+
+    printf fh_obj LIST
+
+just as print's is
+
+    print fh_obj LIST
+
+where "fh_obj" is optional, but if present, *MUST* be 
+
+    1) a bareword
+    2) a scalar containing a bareword or glob reference or 
+	FileHandle object reference
+    3) a code block returning the same as #2
+
+Thus you may do
+
+    print "I have: ", ccount(), "bunnies.\n";
+
+    print STDOUT "I have: ", ccount(), "bunnies.\n";
+
+    $var = 'module::FH';
+    print $var "I have: ", ccount(), "bunnies.\n";
+
+    $var = \*FH;
+    print $var "I have: ", ccount(), "bunnies.\n";
+
+    print { $ok ? 'STDOUT' : 'STDERR' }  "I have: ", ccount(), "bunnies.\n";
+
+    $fh[$i] = \*FH;
+    print { $fh[$i] } "I have: ", ccount(), "bunnies.\n";
+
+
+But you may *NOT* do:
+
+    print $fh[$i] "I have: ", ccount(), "bunnies.\n";   # WRONG
+nor
+    print $fh[$i], "I have: ", ccount(), "bunnies.\n";  # WRONG
+
+
+I don't advise that people use parens at all.  If you do, you get code
+that looks like this
+
+    print(STDERR "I have: ", ccount(), "bunnies.\n");	# CONFUSING
+
+I very much dislike parens in front of an object, because then you're
+tempted to write:
+
+    print(STDERR, "I have: ", ccount(), "bunnies.\n");	# WRONG
+
+You might of course do this if you'd "use FileHandle" in your code:
+
+    STDERR->print("I have: ", ccount(), "bunnies.\n");	
+
+or even 
+
+    $fh[$i]->print("I have: ", ccount(), "bunnies.\n");	
+
+To avoid those confusions -- or introduce new ones. :-)
+
+:2)  When I try to print to a file handle in the array, the perl
+:    interpreter tells me that I cannot print to a closed file
+:    handle.  This is because I initialize my array in the following
+:    manner.
+:
+:    for ($i=0; $i<$MAX_FILES; $i++) {
+:        open(INPUT, ">foo");
+:        $files[$i] = INPUT;
+:    }
+:
+:    Perl closes the file handle INPUT on each call to open, and 
+:    apparently, $files[$i] = INPUT doesn't copy the file handle.
+:    Statically, initializing the array is inflexible and lacks
+:    elegance.  
+:
+:Can anyone help me?  This should be something you can do in Perl 5.001m.
+
+Ok, now you need something else.  Here's a simple solution
+
+    for ($i=0; $i<$MAX_FILES; $i++) {
+	my $fh = FileHandle->new();
+	open($fh, ">foo");
+	$files[$i] = $fh;
+    }
+
+Now, what you need a decent definition for FileHandle->new, and we 
+don't have one.  Here's one that will work.  I still would like to do
+a lot more to it, but I'm not really ready to override open() yet
+to do so.
+
+    {
+	use strict;
+	require FileHandle;  # make sure real one is loaded
+	package FileHandle;
+
+	########################################
+	### FileHandle class CONSTRUCTOR
+	########################################
+	#
+	#  This space intentionally left blank.
+	#
+	########################################
+
+
+	########################################
+	### FileHandle class DESTRUCTOR
+	########################################
+	# 
+	# sub END {} # nothing to do, so let's not have one
+	#
+	#######################################
+
+
+	########################################
+	## FileHandle instance CONSTRUCTOR
+	########################################
+	sub new { 
+	    my $self = shift;
+	    my $class = ref($self) || $self;  # for inheritance
+	    return bless(&_genfh, $class);
+	} 
+
+	########################################
+	## FileHandle instance DESTRUCTOR
+	########################################
+	sub DESTROY {
+	    my $self = shift;
+	    if (defined fileno $self) {
+		close $self;
+	    } 
+	} 
+
+	########################################
+	# internal only - black black magic
+	########################################
+	sub _genfh { 		# YANETUT :-(
+	    no strict 'refs';
+	    local *{'FileHandle::DEMI_ANON_GLOB'};      
+	    return \delete $FileHandle::{DEMI_ANON_GLOB}; 
+	}
+
+	1;
+    }
+
+This needs to be put crafted into a Far More Than Everything You Ever
+Wanted to Know about FileHandles document.  (Actually, I'm hoping to get
+it into FileHandle.pm for 5.002, and the pods.)  I need to finish the PDSC
+first, but then maybe I'll get a round tuit (I've noticed Larry needs some
+himself a lot lately.)
+
+--tom
+
+

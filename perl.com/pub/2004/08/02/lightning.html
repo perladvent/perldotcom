@@ -1,0 +1,192 @@
+<h2>Lightning articles</h2>
+
+<h3>Simon Cozens</h3>
+
+<p>Serendipity - it means those occasions when things come together to give you moments of inspiration.
+While preparing perl.com one week,
+I was editing an article on how to give lightning talks,
+by Aaron Trevena,
+and at the same time I was dealing with another author who said they were having difficulty stretching out an article - a very good article,
+on a topic I wanted to see covered - to a full 2500-words-or-so length.</p>
+
+<p>I realised there were probably a load of people out there with interesting things to say about what they&#39;re doing with Perl,
+but who couldn&#39;t or didn&#39;t want to write a full sized article.
+This is,
+after all,
+the principle that makes lightning talks so popular.
+Maybe we could create a forum where people could have short,
+informal articles published on an interesting Perl topic of their choice - lightning articles.</p>
+
+<p>In the same vein as lightning talks,
+they can be both about an interesting use of the technology,
+or social commentary on Perl and its community,
+or just a bit of fun.
+If you&#39;ve got something you want off your chest,
+or you&#39;ve got an interesting new idea you want to talk about,
+but don&#39;t think you could fill 2500 words,
+try writing a lightning article.
+You have an absolute maximum of 500 words,
+as measured by <code lang='und' xml:lang='und'>wc -w</code> (or <code lang='und' xml:lang='und'>perl -0lne &#39;print scalar split/\s+/&#39;</code>) on your POD or plain text file,
+to say what you need to say.</p>
+
+<p>Send them to <code lang='und' xml:lang='und'>chromatic@oreilly.com</code>,
+and when we&#39;ve got a good batch of five or six together,
+we&#39;ll publish them here.</p>
+
+<h2> Detecting Problems Automatically</h2>
+
+<h3>Mark Fowler</h3>
+
+<p>How many times have you shipped something,
+and then as soon as it&#39;s gone live you&#39;ve spotted a glaring mistake that - despite staring you in the face the entire time you were developing the code - you&#39;ve somehow overlooked?</p>
+
+<p>One thing we have problems with at work is double encoded HTML entities in our webpages.
+We often use HTML entities to encode letters that aren&#39;t ASCII as this way we then don&#39;t have to worry about the text encoding we&#39;re using.</p>
+
+<p>For example,
+we want to render the string <code lang='und' xml:lang='und'>Hello L&#233;on</code>&#62; into our HTML document.
+So,
+instead of including the &#233; into our document directly we transform it into it&#39;s entity form,
+replacing it with <code lang='und' xml:lang='und'>&#38;eacute;</code>:</p>
+
+<pre lang='und' xml:lang='und'>  &#60;p&#62;Hello L&#38;eacute;on&#60;/p&#62;</pre>
+
+<p>This can be done automatically by Perl in numerous ways, e.g. with <b>HTML::Entities</b>:</p>
+
+<pre lang='und' xml:lang='und'>  use HTML::Entities;
+  
+  my $string = &#34;Hello $name&#34;;
+  encode_entity($string);</pre>
+
+<p>Or if you&#39;re using the Template Toolkit though the <code lang='und' xml:lang='und'>html_entity</code> filter:</p>
+
+<pre lang='und' xml:lang='und'>  &#60;p&#62;Hello [% name | html_entity %]&#60;/p&#62;</pre>
+
+<p>The root of the troubles we were experiencing was that entity encoding could occur in our code in multiple different places depending on where the string we were about to render came from. And if we accidentally did it more than once then we would end up with HTML that looked like this:</p>
+
+<pre lang='und' xml:lang='und'>   &#60;p&#62;Hello L&#38;amp;eactue;on&#60;/p&#62;</pre>
+
+<p>This means the web browser sees the <code lang='und' xml:lang='und'>&#38;amp;</code> and converts it to a ampersand and then renders the rest of the <code lang='und' xml:lang='und'>eacute;</code> as normal text:</p>
+
+<pre lang='und' xml:lang='und'>  Hello L&#38;eacute;on</pre>
+
+<p>Not exactly what we wanted. Of course, these things are fairly trivial to fix once you spot them. The real problem we were having is that these errors kept repeatedly popping up, and having our testing department coming back to us every release with another one of these errors was getting embarrassing. We&#39;d gone blind to the errors - working so closely with the website we&#39;d glance at the page and not notice what should have been staring us in the face.</p>
+
+<p>So we decided to automatically test for the problem.</p>
+
+<p>In the end I decided to write <b>Test::DoubleEncodedEntities</b>, a <b>Test::Builder</b> module that would test for these errors and run under <b>Test::Harness</b> like all our other tests. The <code lang='und' xml:lang='und'>ok_dee</code> function relies on the fact that in none of our websites would ever use strings like <code lang='und' xml:lang='und'>&#38;amp;eacute;</code> (this is true of most websites - the only websites that do are ones like this that feature articles on how to encode HTML.)</p>
+
+<pre lang='und' xml:lang='und'>  use LWP::Simple qw(get);
+  use Test::More tests =&#62; 2;
+  use Test::DoubleEncodedEntities;
+  
+  my $page = get &#34;http://testserver/index.html&#34;;
+  ok($page, &#34;got page okay&#34;);
+  ok_dee($page, &#34;check for double encoded entities&#34;)</pre>
+
+<p>If the test fails then we get some useful diagnostic output:</p>
+
+<pre lang='und' xml:lang='und'>  1..2
+  ok 1 - got page okay
+  not ok 2 - check for double encoded entities
+  #     Failed test (t/website.t at line 7)
+  # Found 1 &#34;&#38;amp;eacute;&#34;
+  # Looks like you failed 1 test of 2.</pre>
+
+<p>And now we don&#39;t even have to look for these things. Our test suite catches double encoded entities for us and brings them to our attention. Problem solved.</p>
+
+<h2>CPAN, miniaturized</h2>
+
+<h3>Ricardo Signes</h3>
+
+<p>Everyone has seen a problem too boring to solve. Rather than keep a stiff upper lip and trudge forward, you head to the CPAN and find the pre-packaged solution that probably already exists. It&#39;s just another display of your complete impatience and laziness, and that&#39;s great: with the CPAN at your side, you can solve boring problems effortlessly.</p>
+
+<p>The problem, of course, is that CPAN isn&#39;t always at your side. Sure, a simple <code lang='und' xml:lang='und'>install Class::DBI</code> might be enough to implement half of your project, but when you&#39;re offline and stuck on the plane, good luck getting to your usual mirror. I&#39;ve found myself in that position a number of times, and usually when I&#39;ve most wanted to get some work done: on the way home from conventions, I&#39;ve sat in cars and planes, wishing I&#39;d remembered to install <code lang='und' xml:lang='und'>Test::Smoke</code> or <code lang='und' xml:lang='und'>DBD::SQLite</code> before leaving home.</p>
+
+<p>The solution, of course, is to just mirror the whole CPAN. It&#39;s only three gig, and if you&#39;ve got a week to spare on your dial-up, that&#39;s just fine. After all, later rsyncs are just a few hours a week!</p>
+
+<p>Other problems loom, not the least of which is the possibility of losing those three gigs when your drive crashes on the road. You can always back up the mirror to a DVD in case you need to re-mirror it quickly... but by this point the solution to your problem has become tedious, and I know you you feel about solving tedious problems.</p>
+
+<p>A better solution to this problem was published a few years ago by Randal Schwartz: mini-CPAN. Its guiding principle is an old programmer standard: &#34;You aren&#39;t going to need ninety percent of that crap.&#34;</p>
+
+<p>Randal&#39;s script only retrieves the CPAN indices, and then the modules listed in the package index -- basically, only the newest version of every distribution -- the only files ever used by CPAN.pm and CPANPLUS to install modules. On subsequent runs, only those distributions that have changed are updated.</p>
+
+<p>With this miniature CPAN, you&#39;ve cut CPAN down to about 400 MB. Not only does it take a fraction of the time to mirror, but it fits nicely onto a CD. You can stick it in your bag, right behind your rescue disk, and know that no matter what happens, the CPAN will be right by your side.</p>
+
+<p>With the script configured and run, you&#39;ll have your own personal CPAN sitting on your machine, ready to be used. Pointing CPAN.pm at it is easy as can be:</p>
+
+<pre lang='und' xml:lang='und'>        cpan&#62; o conf urllist unshift file:///home/japh/minicpan</pre>
+
+<p>Alternately, just edit your CPAN::Config or CPANPLUS::Config.</p>
+
+<p>The only problem left with mini-CPAN is that it was so hard to find. It&#39;s been such a fantastic addition to my toolbox that I feel slighted, having spent two years oblivious to its existence. To help others avoid this pain, I&#39;ve tweaked the script, shoved its guts into a module, and stuck it onto CPAN. Just by installing <a href="http://search.cpan.org/perldoc?CPAN%3A%3AMini" class="podlinkpod"
+>CPAN::Mini</a>, you can have <code lang='und' xml:lang='und'>minicpan</code> dropped into place and ready to go:</p>
+
+<pre lang='und' xml:lang='und'> minicpan -r http://your.favorite.mirror/of/cpan -l /home/japh/minicpan</pre>
+
+<p>...and your personal CPAN is waiting.</p>
+
+<h2>Bit-twiddling in your database</h2>
+
+<h3>Aaron Trevena</h3>
+
+<p>Why would you use a bitmask in your database ?</p>
+
+<p>They can be useful where you have a many-to-many relationship where one side changes rarely and the other frequently. For example : facilities provided by a Tourist Resort, where the actual amenities change rarely but resorts are added and updated often.</p>
+
+<p>Normalisation would add an intermediate table between them, but that can be painfully slow if you have a significant number of amenities and frequently queried records about many of them.</p>
+
+<p>The same problem can occur to a lesser degree within a single table, perhaps you are doing some statistical analysis on demographics with columns representing gender, marital status, etc. For more than a few thousand records, querying subsets of the table based on these criteria can become expensive very quickly.</p>
+
+<p>How would you use bitmasks?</p>
+
+<p>Instead of holding information in a seperate table or a group of columns, use a bitmask with each bit representing a column in the table or a record in a second table. For example, use 8 bits to represent gender, marital status, employment status, smoker, drinker, driver, car-owner, and house-owner. A query to find drivers under 25 who don&#39;t drink or smoke and own their own car contains 6 conditions :</p>
+
+<pre lang='und' xml:lang='und'>    select id, age from people where age &#60; 25 and employment_status =
+    &#39;employed&#39; and smoker = &#39;N&#39; and drinker = &#39;N&#39; and car_owner = &#39;Y&#39;
+    and driver = &#39;Y&#39;</pre>
+
+<p>while a bitmap would use 2 :</p>
+
+<pre lang='und' xml:lang='und'>    select id, age from people where age &#60; 25 where bitmap_col &#38; 00000110</pre>
+
+<p>To allow employment status to have values for child, student, unemployed, employed and retired, you would add extra bits representing each value. This applies to any column with a low number of potential values.</p>
+
+<p>This is a simple bitmap index, and you can use all kinds of bitwise operations on your queries against it. Complex queries can be simplified to a couple of binary operations. Of course, there is a downside. It&#39;s harder to maintain, and if mapping a many-to-many relationship, you need to ensure consistency between the bitmask order and the contents of the other table. This can be enforced using a trigger or within the application.</p>
+
+<p>If you split the bitmap into individual columns and rotate it you can make a compressed bitmap index that only stores ranges of records that are true for each column or value of a column. Oracle provides this feature.</p>
+
+<p>These compressed bitmap indexes are even faster to query when used together in combination, and take up very little space. However, as multiple records&#39; values can be held in a single entry in the index, updates to indexed columns can be slower and suffer from excessive locking on the index itself.</p>
+
+<p>Well designed bitmap indices can have a huge impact on the performance of queries, as they are much smaller than standard b-tree indices and much faster on queries where a large proportion of that data-set is being queried.</p>
+
+<ul>
+<li><a href="http://www.jlcomp.demon.co.uk/bitmaps.doc" class="podlinkurl"
+>http://www.jlcomp.demon.co.uk/bitmaps.doc</a></li><p class="pad"></p>
+
+<li><a href="http://www.dbazine.com/jlewis3.shtml" class="podlinkurl"
+>http://www.dbazine.com/jlewis3.shtml</a></li><p class="pad"></p>
+
+<li><a href="http://www.oracle.com/technology/oramag/oracle/02-may/o32expert.html" class="podlinkurl"
+>http://www.oracle.com/technology/oramag/oracle/02-may/o32expert.html</a></li><p class="pad"></p>
+</ul>
+
+<h2>Goodbye, Farewell, Amen</h2>
+
+<h3>Simon Cozens</h3>
+
+<p>Let me first apologise for this personal note; I won&#39;t do it again.</p>
+
+<p>Around the time I was busy being born, or maybe just a little after, Larry Wall was planning to be a missionary with the Wycliffe Bible Translators. Working on a degree in &#34;Natural and Artificial Languages&#34;, and then in linguistics graduate school, he learnt about the ideas of tagmemics, semantics and the cultural and anthropological concepts that have found their expression in the Perl language and culture. Unfortunately due to health problems, Larry couldn&#39;t do the missionary thing, so he invented Perl. That&#39;s why we&#39;re all here.</p>
+
+<p>It was the beginning of May 2001 when Mark Dominus asked me if I&#39;d be interesting in taking over the job of managing editor here at perl.com. I was delighted, and excited about the thought of working with the Perl community and hopefully producing and publishing some great resources for Perl programmers. I hope I&#39;ve done a fair bit of that over the last three years, but now my time is up. I&#39;m moving on, and from next week, the man simply known as &#34;chromatic&#34; will become Mr Perl.com. Please treat him as well as you&#39;ve treated me!</p>
+
+<p>I need to thank a bunch of people, who&#39;ve done all the hard work behind the scenes that you don&#39;t hear about: Mark, of course, for getting me involved here; Chris Coleman and Bruce Stewart from the O&#39;Reilly Network who&#39;ve had the curious experience of trying to manage me; Steve McCannell and Chris Valdez have been the producers of perl.com, and worked incessantly to get articles up on the site, often at shockingly short notice; Tara McGoldrick and others have been the proofreaders; and of course, I&#39;ve worked with a wide range of great authors and contributors. Thank you all. And thanks, of course, to the Perl community - that&#39;s <b>you</b> - without whom this wouldn&#39;t be half as much fun.</p>
+
+<p>And about that missionary thing? Well, if Larry&#39;s not going to be able to do it, someone has to. Like many Perl programmers, and indeed Larry himself, I&#39;ve been interested in Japan for a very long time. In fact, I lived in Japan for a year, and was studying Japanese for my university major back when I started at perl.com; last year I decided that the time was right to prepare to move back to Japan, as a full time missionary.</p>
+
+<p>So in two weeks, I&#39;ll be going to All Nations university here in England for a two-year course to get me ready, and then I shall be off! I&#39;m sure you won&#39;t have heard the last of me, though, and I certainly won&#39;t be stopping programming - missionaries have things they need to automate too... But for now, farewell! It&#39;s been fun, and now it&#39;s going to be fun in a different way.</p>
+
+<p>Take care out there, and happy hacking!</p>
+
+<img src="sign.png" />

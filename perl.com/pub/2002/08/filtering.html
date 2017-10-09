@@ -1,0 +1,1027 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2002/08/exegesis5.html" title="Exegesis 5" />
+    <link rel="next bookmark" href="/pub/2002/09/20020901.html" title="This week on Perl 6 (8/26 - 9/1, 2002)" />
+    
+    
+    <title>Mail Filtering - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1346" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Mail Filtering</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Michael Stevens</span> on <abbr class="published" title="2002-08-27T00:00:00-08:00">August 27, 2002 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<p>There are many ways to filter your e-mail with Perl. Two of the
+more popular and interesting ways are to use <code>PerlMx</code> or <code>Mail::Audit</code>.
+I took a long look at both, and this is what I thought of them.</p>
+
+<h3><a name="perlmx"><code>PerlMx</code></a></h3>
+
+<p><code>PerlMx</code> is a server product from ActiveState that uses the milter
+support in recent versions of sendmail to hook in at almost every
+stage of the mail-handling process.</p>
+
+<p><code>PerlMx</code> comes with its own copy of Perl, and all the supporting modules
+it needs - it can't run from a normal Perl, as it needs Perl to be
+built with various options such as ithreads support and multiplicity.
+This means you need to install any modules you want to use with <code>PerlMx</code>
+twice if you already have them installed somewhere else on your system.</p>
+
+<p><code>PerlMx</code> provides a persistent daemon that processes e-mail for an
+entire mail-server - it avoids the overhead of starting a Perl
+process to handle each e-mail by running forever, and by using threads
+to ensure it can service more than one e-mail at a time.</p>
+
+
+
+<p><code>PerlMx</code> ships with two main filters - the Spam and Virus filters. The
+Virus filtering looks interesting, but ultimately I don't receive that
+many viruses in e-mail, so I was unable to test it beyond establishing
+that it didn't mangle my e-mail.</p>
+
+<p> The Spam filtering in PerlMX is much more interesting - it seems to
+be based on <a href="http://www.spamassassin.org/">Mail::SpamAssassin</a>, a popular
+spam filtering module often used with Mail::Audit, procmail, or other
+ways of processing e-mail.</p><p>In two weeks of testing with <code>PerlMx</code>, using it to process a copy of
+all my personal e-mail, I found a lot useful functionality, and a
+few minor problems.</p>
+
+<p>The first hassles were setup - I don't normally use sendmail, but 
+<code>PerlMx</code> requires it for the milter API, so I installed sendmail, set
+it up, and hooked it into <code>PerlMx</code>.</p>
+<p>Once you have sendmail setup, and built with milter support (as
+the default build from Debian Linux I used was), it's easy to add
+a connection to <code>PerlMx</code> with one line in your sendmail.mc file:</p>
+
+<pre><code>
+INPUT_MAIL_FILTER(`C&lt;PerlMx&gt;', `S=inet:3366@localhost, F=T, 
+     T=S:3m;R:3m;E:8m'')</code></pre>
+
+<p><code>PerlMx</code> essentially works out of the box - it asks a number of simple
+questions when you install and set it up, and assuming you get these
+right, no further configuration will be required.</p>
+
+<p>The <code>INPUT_MAIL_FILTER</code> line also sets several key options, including
+the timeouts for communication between sendmail and <code>PerlMx</code> - I had to
+raise these significantly to deal with a problem I found where 
+<code>PerlMx</code> was taking too much time to process spam (it appear to be doing
+DNS lookups), sendmail was timing out the connection to <code>PerlMx</code>, and
+refusing to accept mail.</p>
+
+<p>In <code>PerlMx</code> 2.1, it even ships with its own sendmail install, pre-configured
+for use with <code>PerlMx</code>, but you can choose to ignore this and use an
+existing system sendmail.</p>
+
+<p>Once you've done this, suddenly all the mail that goes through your
+mail-server is spam filtered, and virus checked. Mail that looks
+likely to be spam, or that contains a virus is stopped and held in a
+quarantine queue, the rest are sent to the user, possibly with a spam
+header added to indicate a score representing how likely to be spam
+they are. The quarantine queue is a systemwide collection of messages
+which, for one reason or another, weren't appropriate to deliver
+to the user - this will be normally as they are either suspected to
+contain viruses or spam.</p>
+
+<p>If the filters supplied with <code>PerlMx</code> aren't to your tastes, then it comes
+supplied with an extension API, and extensive documentation and samples
+to allow you to write your own.</p>
+
+<p>While testing <code>PerlMx</code>, I never managed to bounce or accidentally lose
+my e-mail - I made many configuration errors, which meant mail wasn't
+processed and a lot of stuff was somewhat over-enthusiastically marked
+as spam when it was actually valid. But as far as I can tell, nothing
+bounced or disappeared into the system - this is pretty impressive,
+as when configuring most new bits of e-mail I usually manage to delete
+everything I send to it in the first few attempts, or, worse, make
+myself look stupid by sending errors back to random people unfortunate
+enough to be on the same mailing list as me.</p>
+
+<h3><a name="mail::audit"><code>Mail::Audit</code></a></h3>
+
+<p><code>Mail::Audit</code> is very different from <code>PerlMx</code>. For starters, once you've 
+installed it, by default it doesn't do anything.  <code>Mail::Audit</code> is
+just a Perl module - it's a powerful tool for implementing mail
+filters, but mostly you have to write them yourself. <code>PerlMx</code> ships
+with spam filtering and virus checking configured by default, 
+<code>Mail::Audit</code> provides duplicate killing, a mailing list processing
+module (based on Mail::ListDetector), and a few simple spam
+filtering options based on Realtime Blackhole Lists or Vipul's Razor.</p>
+
+<p><code>Mail::Audit</code> is not designed to be used with an entire mail-server
+in the same way as <code>PerlMx</code>. Instead, it allows you to easily write
+little e-mail filter programs that can be triggered from the <em>.forward</em>
+file of a particular user. <code>Mail::Audit</code> can be easily configured and
+used on a per-user basis, whereas <code>PerlMx</code> takes over an entire mail-server
+and is an all-or-nothing choice.</p>
+
+<p>The default <code>Mail::Audit</code> configuration starts one Perl process for each
+mail handled - normally this won't be a problem, but if you're
+processing large volumes of mail, or have a system which is already at
+or near capacity, it may be enough to tip the balance and cause
+performance problems (Translation: Long ago I installed <code>Mail::Audit</code> on
+an old, spare machine I was using as a mail-server, received 200 e-mails
+in less than a minute, and spent quite a while waiting for the system to
+stop gazing at its navel and start responding to the outside world
+again). If your mail comes to you via POP3, or can be made to do so
+(possibly by installing a POP3 daemon if you do not have one already),
+then a simple script supplied with <code>Mail::Audit</code> called <em>popread</em> provides
+a base you can use to feed articles from a POP3 server into
+<code>Mail::Audit</code> in a single Perl process, improving performance. I didn't
+do this myself, as I wanted to use what appeared to be the
+'recommended' approach to <code>Mail::Audit</code> setup - the one that is, if not
+actively promoted in the documentation, most strongly suggested by it,
+of running a <code>Mail::Audit</code> script from a user's .forward file.</p>
+
+<p>A popular <code>Mail::Audit</code> addition is SpamAssassin (the
+same codebase as <code>PerlMx</code>'s mail processing is loosely based on) - this
+comes as a <code>Mail::Audit</code> plugin, among other forms.</p>
+
+<p><code>Mail::Audit</code> makes it easy to write mail filters that work on a
+per-user basis, whereas <code>PerlMx</code> by default applies to all mail
+processed on a given mailserver.</p>
+
+<p>
+If you wanted to install <code>Mail::Audit</code> systemwide, then many mail-servers
+(such as exim) provide a way to configure a custom local delivery agent
+on flexible criteria. For example,
+<a href="http://bogmog.sourceforge.net/document_show.php3?doc_id=28">this
+article</a> provides
+some documentation on how to do this with exim.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="testing... 1... 2... 3...">Testing ... 1 ... 2 ... 3 ...</a></h3>
+
+<p>I decided to do an extended comparison of both <code>PerlMx</code> and
+<code>Mail::Audit</code>. As one of the most common applications of mail filtering
+tools is for spam filtering, I set up recent versions of both the tools
+on my personal e-mail, by various nefarious means, ran them for
+a week, and compared the results on two main criteria:</p>
+
+<ul>
+<li>
+False positives (legitimate email recognized as spam)</li>
+
+<li>
+False negatives (spam not recognized as spam)</li>
+
+</ul>
+<p><code>Mail::Audit</code> doesn't come with much spam filtering technology by
+default, so I decided to add SpamAssassin (http://www.spamassassin.org/)
+to the testing, as it can be used as a <code>Mail::Audit</code> extension.</p>
+<p>I used procmail to copy all my incoming e-mail to two pop3 mailboxes
+setup for the purposes of testing - one would contain mail to be
+processed by <code>Mail::Audit</code>, the other mail to be processed by
+<code>PerlMx</code>'s spam filtering. fetchmail was used to pull the mail down
+into the domain of <code>Mail::Audit</code> and <code>PerlMx</code>.</p>
+<p>Once I had <code>Mail::Audit</code> and SpamAssassin setup, I started feeding mail
+into the test box with fetchmail, and was reminded that as the <code>Mail::Audit</code>
+approach of setting up a perl program to run from a .forward file
+has ... unpleasant effects if you receive more than a few e-mails in
+quick succession. As my test mail-server collapsed under the load,
+I checked the <code>PerlMx</code> machine, started at roughly the same time, and found that
+while it was working through the e-mail more slowly, it hadn't put
+any serious load on the machine.</p>
+<p>Due to a <code>PerlMx</code> configuration error on my part, of the first 171 messages
+processed, 10 were quarantined as spam AND delivered to the inbox of
+my test user. <code>PerlMx</code> runs by default in 'training mode' when processing
+spam - in this mode, mail is spamchecked as normal, but even if it
+is found to be spam and quarantined, it is also delivered to the
+user.</p>
+<p>I decided to keep track of any mail lost or mislaid during initial
+setup problems, so I could see what problems could arise from the
+tools being misconfigured. An important aspect of any software is not
+only how it behaves when configured right, but how much it punishes
+you when you get the configuration wrong.</p>
+<p>Waking up the next morning, I found I'd bounced several hundred e-mails
+back to the account from which I was forwarding all the test e-mails,
+someone of which appeared to have gone back and forth, or found their
+way into the <code>PerlMx</code> test mailbox. Most of the problems appeared to be
+internal errors from within SpamAssassin. My mail-server still
+hadn't recovered.</p>
+<p>I later found this was because of an compatibility issue with
+SpamAssassin / <code>Mail::Audit</code>, and there was a recommended fix in the
+SpamAssassin FAQ involving the <em>nomime</em> option to <code>Mail::Audit</code> (but not,
+sadly, in the documentation for the Mail::SpamAssassin module
+itself).</p>
+<p>The SpamAssassin / <code>Mail::Audit</code> script I ended up using in the end was:</p>
+<pre><code>
+  #!/usr/local/bin/perl -w</code></pre>
+<pre><code>
+  use strict;
+  use C&lt;Mail::Audit&gt;;
+  use Mail::SpamAssassin;</code></pre>
+<pre><code>
+  # create C&lt;Mail::Audit&gt; object, log to /tmp, disable mime processing
+  # for SpamAssassin compatibility, and store mail in ~/emergency_mbox
+  # if processing fails
+  my $mail = C&lt;Mail::Audit&gt;-&gt;new(emergency=&gt;&quot;~/emergency_mbox&quot;,
+                              log =&gt; '/tmp/audit.log',
+                              loglevel =&gt; 4, nomime =&gt; 1);</code></pre>
+<pre><code>
+  my $spamtest = Mail::SpamAssassin-&gt;new;
+  
+  # check mail with SpamAssassin
+  my $status = $spamtest-&gt;check($mail);
+  
+  # if it was spam, rewrite to indicate what the problem was, and 
+  # store in the file ass-spam in our home directory
+  if ($status-&gt;is_spam) {
+          $status-&gt;rewrite_mail;
+          $mail-&gt;accept(&quot;/home/spam1/ass-spam&quot;);
+  # if if wasn't spam, accept it as normal mail
+  } else {
+          $mail-&gt;accept;
+  }
+  
+  exit 0;
+</code></pre>
+
+<p>After clearing down all my mail, and losing two days of testing, I
+started again. It was only the nature of the testing setup that meant
+the bounce mail went to me and not the original sender.  So, at 23:25
+on Tuesday, I had another go. This time I knew enough to limit
+SpamAssassin to receiving messages in batches of five (using fetchmail) -
+something I could do in testing, but wouldn't be an easy option in
+most production setups. This meant my test machine could just about
+cope with delivering mail using SpamAssassin.</p>
+<p>At 10 p.m. Sunday, I declared the testing closed, and examined the
+accuracy or otherwise of each system.</p>
+<p>During the testing between Aug. 6 and 11, <code>Mail::Audit</code>
+marked 16 pieces of e-mail as spam. Seven of these e-mails proved to be
+false positives - mail that I had actually solicited and would have
+liked to have received. Six spam emails were accepted into my Inbox.
+There were 874 e-mails received in all. <code>Mail::Audit</code> appeared to receive
+15 pieces of spam mail in total.</p>
+<p><code>PerlMx</code> marked 14 e-mails as spam. Two of these e-mails proved to be false
+positives - mail that was not spam. Impressively, it received 886
+e-mails in the same period that <code>Mail::Audit</code> received 874 e-mails. I
+was unable to work out the exact cause of this, although the power-cut
+in the middle of the testing period will always be a major suspect.
+Eleven spam messages were incorrectly allowws through into my Inbox.
+<code>PerlMx</code> appeared to receive 23 pieces of spam mail in total.</p>
+<p>The sample was small, as all I had was my own personal e-mail to work
+with, and I get what I'm told is surprisingly little spam, but it
+shows that <code>Mail::Audit</code> / SpamAssassin seems to decide more mail is
+spam than <code>PerlMx</code> does, but is also wrong more of the time. <code>PerlMx</code>
+marked slightly less e-mail as spam, and let more spam through,
+but when it did claim e-mail was spam it was right more of the time.</p>
+<p>These tests would benefit significantly from being re-run during a long
+period of time on a larger mail-server, but I had neither the time
+nor the mail-server available.</p>
+<p>Both tools can be extensively configured in terms of what is
+considered spam, and are likely to need regular updating to ensure
+they keep up to date with new tricks of the spammers. Here I only
+considered the behavior with the default configuration of the latest
+release at the time I ran my tests.</p>
+
+<h3><a name="feature comparison">Feature Comparison</a></h3>
+<p>To help you choose, I've summarized the basic characteristics of both
+systems below. Some of the points are quite subjective and are more
+my impressions of the tools rather than hard facts - these are marked
+separately.</p>
+<table>
+	<tr>
+		<td></td>
+		<th>PerlMX</th>
+		<th>Mail::Audit</th>
+	</tr>
+	<tr>
+		<th>Scalable</th>
+		<td>Yes - persistent server</td>
+		<td>Maybe - depends on config - obvious default configurations scale poorly</td>
+	</tr>
+	<tr>
+		<th>Ships with wide range of existing filtering functionality</th>
+		<td>Yes</td>
+		<td>Limited range, more available from third-parties</td>
+	</tr>
+	<tr>
+		<th>Target use</th>
+		<td>System-wide mail filtering for mailservers</td>
+		<td>Per-use mail filtering as a replacement for programs like procmail</td>
+	</tr>
+	<tr>
+		<th>Extensible?</th>
+		<td>Yes</td>
+		<td>Yes</td>
+	</tr>
+	<tr>
+		<th>Licensing</th>
+		<td>Commercial</td>
+		<td>Open-source</td>
+	</tr>
+	<tr>
+		<th>Mail Server Compatibility</th>
+		<td>Sendmail</td>
+		<td>Almost any mail server</td>
+	</tr>
+	<tr>
+		<th>Spam filtering</th>
+		<td>Yes</td>
+		<td>Third-party extension</td>
+	</tr>
+	<tr>
+		<th>Virus filtering</th>
+		<td>Yes</td>
+		<td>No</td>
+	</tr>
+	<tr>
+		<th>Easy to setup</th>
+		<td>Yes</td>
+		<td>Not so easy, requires custom code</td>
+	</tr>
+	<tr>
+		<th>Efficient and Scalable</th>
+		<td>Very scalable - easily separated from the mailserver, and no noticable performance impact during testing</td>
+		<td>Performance problems during testing in default configuration</td>
+	</tr>
+</table>
+
+<h3><a name="conclusions">Conclusions</a></h3>
+
+<p>During testing, <code>PerlMx</code> was significantly more reliable, both in terms
+of the amount of mail bounced due to configuration problems (none),
+and in terms of the load put in the mailserver (minimal) than
+<code>Mail::Audit</code>. Although <code>Mail::Audit</code> appears able to be setup for good
+performance, the obvious suggested configuration showed extremely poor
+scalability during testing. Also, as <code>Mail::Audit</code> requires writing some
+filtering code, bugs, mostly in this code, resulted in nontrivial
+quantities of mail being bounced during testing due to
+code/configuration errors, a problem that simply didn't occur with
+<code>PerlMx</code>'s more pre-supplied, configuration file based system.</p>
+
+<p>Both <code>PerlMx</code> and <code>Mail::Audit</code> provide good mail filtering solutions
+using Perl, but are targeted at entirely different markets.  <code>PerlMx</code>
+is a systemwide solution providing drop-in functionality on
+mailservers, with Perl extensibility as well, whereas <code>Mail::Audit</code> is a
+more low-level tool, mostly focused on use by individuals, designed to
+let users build their own mail processing tools more easily.</p>
+
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/mail-and-usenet-news/" rel="tag">Mail and USENET News</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=mail%20filtering&amp;limit=20';return false;" rel="tag">mail filtering</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

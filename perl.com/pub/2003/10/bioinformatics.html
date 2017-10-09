@@ -1,0 +1,1193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2003/10/20031012.html" title="This week on Perl 6, week ending 2003-10-12" />
+    <link rel="next bookmark" href="/pub/2003/10/20031019.html" title="This week on Perl 6, week ending 2003-10-19" />
+    
+    
+    <title>A Chromosome at a Time with Perl, Part 2 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1202" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">A Chromosome at a Time with Perl, Part 2</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">James D. Tisdall</span> on <abbr class="published" title="2003-10-15T00:00:00-08:00">October 15, 2003 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+<p><i>James D. Tisdall is the author of the recently released </i><a href="http://www.oreilly.com/catalog/mperlbio/index.html?CMP=IL7015">Mastering 
+    Perl for Bioinformatics</a><i>.</i></p>
+
+<p>
+In my previous article, <a href="/pub/a/2003/09/10/bioinformatics.html">A Chromosome at a Time with Perl, Part I</a>, I showed you
+some programming "tricks" that help you avoid the trap of using up all your main
+memory when coding for very long strings, such as chromosomes and entire genomes.
+</p>
+<p>
+The basic approach involved improving your code's running time by limiting the
+amount of memory space the program uses.  The tricks discussed were calling subroutines
+with references as arguments, and searching for a pattern in a very large file by
+keeping only a small "window" of the file in memory at any one time, in a buffer.
+</p>
+<p>
+This article will continue that discussion.  I'll show you more about how references
+can greatly speed up a subroutine call by avoiding making copies of very large strings.
+I'll show you how you can bypass the overhead of subroutine calls entirely.
+I'll extend the previous example of a buffer window into a large file, making it
+suited to any situation where you know the minimum and maximum length of a pattern
+for which you're searching.  And I'll show you how to quantify the behavior of
+your code by measuring its speed and space usage.
+</p>
+
+<csperl file="grab" domain="on" record="b/889" template="b/article_sidebar.view">
+
+<h3>Why Space Puts a Lower Bound on Time</h3>
+<p>
+In Perl, as in any programming system, the size of the data that the program uses is
+an absolute lower bound on how fast the program can perform.
+</p>
+<p>
+In fact, algorithms are typically classified by how fast they perform on inputs of
+varying sizes, by giving their speed as a function of the size of the input.
+So a program that has to do <b>2<sup>n</sup></b> computations on an input of size <b>n</b> is a hell of a
+lot slower than a program that has to do <b>n<sup>2</sup></b> computations on an input of size <b>n</b>.
+The first is called <i>intractable</i> and <i>exponential</i>, or "bad"; the second is called
+<i>tractable</i> and <i>polynomial</i>, or "good."
+For instance, if <b>n</b>, the size of the input, is 100, then <b>n<sup>2</sup></b> is 10,000, while
+<b>2<sup>n</sup></b> is bigger than the number of atoms in the universe.  But who's counting?
+And is the universe really finite?  Oh well ... back to your regularly scheduled program.</p>
+
+<p>This way of measuring an algorithm is called <i>time complexity</i>.  It's usually
+written in a shorthand called <i>big Oh</i> notation.  (See the Suggested Reading at the end of 
+this article, if you get that far.)
+</p>
+<p>
+In particular, if an algorithm gets an input of size <b>n</b>, and then just to write the
+answer it must write an output of size <b>2<sup>n</sup></b>, then the algorithm is taking <b>2<sup>n</sup></b> time,
+at least.  So the space that an algorithm uses is intimately connected to the
+time it uses.  Of course, a program could use just a small, constant amount of
+space and still use <b>2<sup>n</sup></b> time, for instance if it added and subtracted the number one over
+and over, <b>2<sup>n</sup></b>
+times, for some perverse reason.  Still, the amount of space that an algorithm
+uses establishes a lower bound for how much time the algorithm takes to complete.
+</p>
+<p>
+What's all this got to do with Perl programming in bioinformatics?
+Quite a lot, if you're writing code that manipulates, say, the 3 gigabases
+of human DNA.
+</p>
+<p>
+If you're new to the field, a base is one of the letters A, C, G, or T that
+represents one of the four molecules that are the principal building blocks
+of DNA.  Each base is typically represented in a computer language as one ASCII character
+taking one 8-bit byte, so 3 gigabases equals 3 gigabytes.  Of course, you could
+represent each of the four bases using only 2 bits, so considerable compression is
+possible; but such space efficiency is not commonly employed.
+Hmmm ... makes an interesting idea for another article, however!
+"Perl and a Chromosome, Two Bits."  Watch this space.
+</p>
+<p>
+Just to read in the 3 gigabytes of DNA is going to
+take you some time.  If you're also making copies of the 3 gigabytes in
+your variables, you're going to need more main memory than most computers
+have available.  So the crafty Perl programmer needs to think of programming
+solutions that minimize the amount of space used when computing with such
+large input.  If she does, not only will she have a program that fits into
+her computer's memory (always a wise move); she may also have a program that
+runs pretty fast, if she does say so herself, with all due humility.
+</p>
+
+<h3>Subroutines Without Extra Space</h3>
+<p>
+In Part I, I briefly discussed how passing references to subroutines can save
+you considerable space.  I'll just expand a little on that discussion in this section.
+There are three main ways that references can be used to save space and
+therefore time in the subroutines of your Perl program.
+</p>
+<h4>One: Collect Data in a Subroutine Argument</h4>
+<p>
+First, let's say you call a subroutine to get some data.  Typically this
+takes a form such as this:
+</p>
+<pre><code>
+my $chromosome1 = get_chromosome( 1 );
+</code></pre>
+<p>
+Assuming that the data is about 100 megabases long, the Perl programmer can see that
+the subroutine "get_chromosome" is collecting 100 megabases of DNA and then "returning"
+it, which means that copies of those 100 megabases are being made.  And that's a Bad Thing.
+</p>
+<p>
+Instead, the wily hacker could pass a reference to the <code>$chromosome1</code> string into the
+subroutine, which could be written to "fill" the string with the 100 megabases without
+the need for further copying.  Then after the subroutine call, say like so:
+</p>
+<pre><code>
+get_chromosome(1, \$chromosome1);
+</code></pre>
+<p>
+the variable <code>$chromosome1</code> would contain the same data as in the previous version, but
+it would have gotten there without being copied by means of being "returned" from
+a subroutine.  And that's a Good Thing.  The only gotcha here is that the subroutine
+call is definitely changing what's in the <code>$chromosome1</code> variable.  No problem as long
+as you remember that's what's happening.
+</p>
+
+<h4>Two: Pass the Subroutine a Reference to the Data</h4>
+<p>
+Here's a second way to use references as subroutine arguments to good advantage.
+Let's say you have a chromosome's worth of DNA in a variable<code> $chromosome1</code>, and
+you want to pass it to a subroutine that counts how many As, Cs, Gs, and Ts there
+are in it.  (This might be important if you were looking for genes in the chromosome,
+for instance -- in humans, genes tend to be GC rich.)
+</p>
+<p>
+If you write your code like this:
+</p>
+<pre><code>
+my($a, $c, $g, $t) = countacgt( $chromosome1 );
+</code></pre>
+<p>
+then the "countacgt" subroutine is going to make a copy of the data in the argument
+<code>$chromosome1</code>.  That's a Regrettable Occurence.
+</p>
+<p>
+On the other hand, if you pass the subroutine a <i>reference</i> to the data in
+<code>$chromosome1</code>, the data will not be copied, and that's a Fortunate Happenstance:
+</p>
+<pre><code>
+my($a, $c, $g, $t) = countacgt( \$chromosome1 );
+</code></pre>
+<p>
+However, once again you'll have to be aware that the subroutine has the power to
+change what's in the <code>$chromosome1</code> variable, and either avoid changing it or take note of the change.
+</p>
+
+<p>As another alternative, you could use</p>
+
+<pre><code>
+my($a, $c, $g, $t) = countacgt( $chromosome1 );
+</code></pre>
+
+<p>but then <i>don't</i> assign a new variable to the argument within the <code>countacgt</code> subroutine, like so:
+
+<pre><code>
+my($chrom) = @_;
+</code></pre>
+
+<p>Instead, just use <code>$_[0]</code> to access the chromosome data without copying it. And that's a Perl Idiom. (For readability, you may want to add a comment explaining what kind of data <code>$_[0]</code> is, since you won't have an informative
+variable name.)</p>
+
+<h4>Three: Return a Reference to the Data</h4>
+<p>
+Now a third and final way to use references instead of space:
+if you have a subroutine that collects a large amount of data,
+you can have it return a reference to the data instead of the data itself; this will
+also avoid the large string copies, which Ain't Bad:
+</p>
+<pre><code>
+my $chromosome1ref = get_chromosome( 1 );
+</code></pre>
+<h3>Eliminating Subroutines Altogether</h3>
+<p>
+Organizing the code for a computation into a logical set of subroutines can make
+for clean, easy-to-understand, and elegant programming.
+</p>
+<p>
+Unfortunately, it can also make your program perform much slower.  Take this small
+example.
+(An <i>exon</i> is a stretch of a chromosome's DNA, transcribed into RNA, that contains part of the code for a gene.
+In organisms such as humans, most genes are composed of multiple exons
+separated by non-coding <i>introns</i>; the exons are <i>spliced</i> together to get the
+actual code for the gene):
+</p>
+<pre><code>
+while ((my $begin, my $end) =  each %exon_endpoints) {
+    print get_exon($chromosome, $begin, $end), "\n\n";
+}
+
+sub get_exon {
+    my($chromosome, $begin, $end) = @_;
+
+    # The arguments to substr are: string, beginning, length
+    return substr($chromosome, $begin - 1, $end - $begin + 1);
+}
+</code></pre>
+<p>
+This code takes the information about exon endpoints stored in the hash <code>%exon_endpoints</code>
+(key = begin, value = end) to extract the exons from a chromosome and print them.
+(You may remember from Part I that I translated between the Perl idea of location, where
+the first location of a string is position 0, and the biologist's idea of location, where the
+first location is position 1.) The code is short, to the point, and gets the job done.
+<b>Unfortunately, it also makes as many copies of the entire chromosome as there are
+exons to print out</b>.  <i>Ouch.</i>
+</p>
+<p>
+In such circumstances, you can save a boatload of pain by eliminating the subroutine
+entirely, like so:
+</p>
+<pre><code>
+while ((my $begin, my $end) =  each %exon_endpoints) {
+    print substr($chromosome, $begin - 1, $end - $begin + 1), "\n\n";
+}
+</code></pre>
+<p>
+The bad news: now the details of how to extract the desired exon from the chromosome 
+are right in the loop, instead of being nicely tucked away in the
+subroutine <code>get_exon</code>.  The good news: the program will finish running before the weekend.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Sequence Motifs with Bounded Lengths</h3>
+<p>
+In Part I, I showed you how to search for a small pattern in a very large file
+of DNA data (in <i>FASTA</i> format) by only keeping at most two lines of the
+file in the program's memory at any one time.
+</p>
+<p>
+Here is some code that generalizes that approach.
+It is more general because it allows you to declare the maximum and 
+minimum pattern sizes. It uses no more than a certain maximum amount of main memory for the data at any one time.
+For instance, if you're looking for a pattern and you know that
+any match must be between 300 and 2,000 bases long,
+you can use this subroutine to search any amount of DNA while keeping 
+the amount of main memory used
+for the DNA to within about 4,000 bytes, twice the maximum pattern size. Only matching patterns between 300 and 2,000 bases long will be 
+reported.
+</p>
+<pre><code>
+#!/usr/bin/perl
+#
+# find_size_bounded_pattern : find a pattern known to be between a min and max length
+#   Keep small size of memory but handle arbitrarily large input files
+#
+#  Copyright (c) 2003 James Tisdall
+#
+
+use warnings;
+use strict;
+use Carp;
+
+my $pattern  = "GGTGGAC[GT].{50,1500}[AC][GT][CG]ATAT";
+my $filename = "Fly.dna";
+my $min      = 65;
+my $max      = 1515;
+
+my @locations = find_size_bounded_pattern($pattern, $filename, $min, $max);
+
+print "@locations\n";
+
+exit;
+
+### End of main program
+##################################################
+
+##################################################
+### Subroutines:
+
+sub find_size_bounded_pattern {
+
+    ################# Arguments:
+    # $pattern   - the pattern to search for, as a regular _expression
+    # $filename  - the name of the DNA fasta file (may have multiple records)
+    # $min       - the shortest length of a usable match to the pattern    
+    # $max       - the longest length of a usable match to the pattern    
+    #################
+    my($pattern, $filename, $min, $max) = @_;
+
+    ################# Other variables:
+    # $buffer    - a buffer to store the DNA text, usually (2 * $max) in length
+    # $position  - the position of the beginning of the buffer in the DNA
+    # @locations - the locations where the pattern was found, to be returned
+    #              @locations also includes headers for each fasta record
+    # $header    - the one-line fasta header for each record in a fasta file
+    my $buffer = '';
+    my $position = 0;
+    my @locations = ();
+    my $header = '';
+    #################
+    
+    # Open the DNA file
+    open(DNA,"&lt;$filename") or croak("Cannot open $filename:$!\n");
+
+    # Get the input lines and compute
+    while(my $newline = &lt;DNA> ) {
+
+        # If new fasta header, reinitialize buffer and location counter
+        if($newline =~ /^>/) {
+            # Complete previous search in buffer which contains end of fasta record
+            while($buffer =~ /$pattern/gi) {
+                if($-[0] &lt;= length($buffer) - $min) {
+                    unless(($+[0] - $-[0] &lt; $min) or ($+[0] - $-[0] > $max)) {
+                        push(@locations, $position + $-[0] + 1);
+                    }
+                }
+            }
+            # Reset $header, $buffer, $position for new fasta record
+            $header = $newline;
+            push(@locations, "\n$header");
+            buffer = '';
+	    $position = 0;
+
+            # Get new line from file
+            next;
+        }
+
+        # If new line of DNA data
+
+        # Add the new line to the buffer
+        chomp $newline;
+        $buffer .= $newline;
+
+        if(length($buffer) &lt; (2 * $max) ) {
+            next;
+        }
+    
+        # Search for the DNA pattern
+        # (Report the character at position 0 as at position 1, as usual in biology)
+        while($buffer =~ /$pattern/gi) {
+            if($-[0] &lt; $max) {
+                unless(($+[0] - $-[0] &lt; $min) or ($+[0] - $-[0] > $max)) {
+                    push(@locations, $position + $-[0] + 1);
+                }
+            }else{
+                last;
+            }
+        }
+    
+        # Reset the position counter
+        # (will be accurate after you reset the buffer, next)
+        $position = $position + $max;
+    
+        # Reset the buffer
+        # Discard the first $max worth of data in the buffer
+        $buffer = substr($buffer, $max);
+    }
+
+    # Complete search in final buffer
+    while($buffer =~ /$pattern/gi) {
+        if($-[0] &lt;= length($buffer) - $min) {
+            unless(($+[0] - $-[0] < $min) or ($+[0] - $-[0] > $max)) {
+                push(@locations, $position + $-[0] + 1);
+            }
+        }
+    }
+
+    # Computation complete
+    return @locations;
+}
+</code></pre>
+<h3>How the Code Works</h3>
+<p>
+This code gets its DNA from a FASTA-formatted file (FASTA is the most 
+common format for a file of
+DNA sequence data). It
+would be fairly easy to rewrite this so that you could give multiple 
+FASTA filenames on a command
+line and all the files
+would be processed by this code.   As it is, it can handle a single 
+FASTA file that contains
+multiple FASTA records.</p>
+
+<p>The subroutine <code>find_size_bounded_pattern</code> returns an array of all the 
+locations in the DNA that
+contain the pattern.
+Since the input may have several FASTA records, the one-line header of 
+each record is also returned,
+to
+help identify the start of each new record. For instance, I tested this 
+program on a file, <code>Fly.dna</code>, that contains all the
+chromosomes of the fruit fly, <i>Drosophila melanogaster</i>. In this file, 
+each new chromosome begins with
+a new FASTA
+header, which is added to the returned array.  The locations reported 
+start afresh from 1 for each
+chromosome. </p>
+
+<p>The pattern to be searched for is only reported if it's between a 
+certain minimum and maximum
+length.
+Twice the maximum desired pattern length (plus the length of an input 
+line)
+is the limit of the amount of DNA data that is read into the program's 
+buffer.
+That way you can search a <code>$max</code> worth of DNA for the beginning locations 
+of patterns that may be up
+to <code>$max</code> long.</p>
+
+<p>The overall structure of this code is pretty simple, and the comments 
+in the code should do most of
+the explaining.
+There are two situations dealt with in the loop as it reads input 
+lines.
+First is when there is a new FASTA header. Then you have to
+finish searching in the buffer, and reset the variables to begin a 
+search in a new sequence of DNA
+from a
+new FASTA record. Second is when there is
+a new line of DNA.
+And finally, after all the lines have been read and you exit the loop,
+there may still be some unsearched
+DNA in the buffer, so the subroutine ends by searching the DNA 
+remaining in the last buffer.</p>
+
+<p>In this code, the devil is in the details of how the specific locations 
+and sizes are set. The
+intermediate level Perl
+programmer should be able to puzzle this out given the comments in the 
+code. Note that after a
+successful pattern match
+the builtin variable <code>$-[0]</code> has the offset of the beginning of the 
+match, and <code>$+[0]</code> has the offset of
+the end of the match. This
+avoids the use of the special variable <code>$&</code>, the use of which causes all 
+manner of space to be used to
+hold this and several
+other special variables. But if your regular expression has any 
+parentheses, that's enough to make
+the special variables and
+their considerable space get used too. 
+Of course, regular expressions have their own rules of behavior, such 
+as greedy matching and
+so forth, that are not addressed by this code.  (Could you modify this 
+program to find
+patterns that overlap each other?  What happens if <code>$max</code> is less than 
+the input line size?
+What other assumptions are made by this code?)
+</p>
+
+<h3>Profiling the Speed of your Perl Program</h3>
+<p>
+You can profile the speed of your Perl program fairly easily.  Let's say
+I put the program in a file called <i>sizebound.pl</i>.  Then I can get
+a report on the time the various parts of the program require by running
+the program like this:
+</p>
+<pre><code>
+[tisdall@coltrane]$ perl -d:DProf sizebound.pl 
+</code></pre>
+<p>
+And then getting a summary of the report (from the file tmon.out that DProf
+creates) like so:
+</p>
+<pre><code>
+[tisdall@coltrane]$ dprofpp
+Total Elapsed Time =  95.1899 Seconds
+  User+System Time =  94.9099 Seconds
+Exclusive Times
+%Time ExclSec CumulS #Calls sec/call Csec/c  Name
+ 99.9   94.87 94.870      1   94.870 94.870  main::find_size_bounded_pattern
+ 0.02   0.020  0.020      3   0.0067 0.0067  main::BEGIN
+ 0.00   0.000 -0.000      1   0.0000      -  warnings::BEGIN
+ 0.00   0.000 -0.000      2   0.0000      -  Exporter::import
+ 0.00   0.000 -0.000      1   0.0000      -  warnings::import
+ 0.00   0.000 -0.000      1   0.0000      -  strict::import
+ 0.00   0.000 -0.000      1   0.0000      -  strict::bits
+</code></pre>
+<p>
+When you have lots of subroutines, this can really help you see where the
+most time is being spent.  Here, I'm really just getting the information
+that the program took about a minute and a half to look for the pattern
+in the DNA of the fruit fly.
+</p>
+<p>
+It's also possible to get information about the space usage of a program, but
+you have to use a version of Perl that was compiled with -DDEBUG, which is not usually
+the case.  If you have such a version, then the following will give you some information:
+</p>
+<pre><code>
+[tisdall@coltrane]$ perl -DL sizebound.pl 
+</code></pre>
+<p>
+But that's enough for here and now; take a look
+at the Perl documentation section called perldebguts.  And drive safely.
+</p>
+<h3>Suggested Reading</h3>
+<p>
+Here are some of the many books that you might find useful.
+I cut my teeth on the Bentley books, but the older ones are hard to find.</p>
+
+<ul>
+<li>Introduction to Algorithms, Second Edition, by Cormen et al, MIT Press, 2001. </li>
+<li>Writing Efficient Programs, by Jon Bentley, Prentice Hall 1982.</li>
+<li>Refactoring: Improving the Design of Existing Code, by Fowler et al, Addison-Wesley, 1999.</li>
+<li>Programming Pearls, Second Edition, by Jon Bentley, Prentice Hall 1999.</li>
+<li>More Programming Pearls: Confessions of a Coder, by Jon Bentley, Pearson Education, 1988.</li>
+</ul>
+
+<hr size="1" noshade="noshade" />
+
+<p> O'Reilly &amp; Associates recently released (September 2003) <a href="http://www.oreilly.com/catalog/mperlbio/index.html?CMP=IL7015">Mastering 
+    Perl for Bioinformatics</a>. </p>
+<ul>
+    <li>
+        <p> <a href="http://www.oreilly.com/catalog/mperlbio/chapter/index.html?CMP=IL7015">Sample Chapter 9, Introduction to Bioperl</a>, is 
+            available free online. </p>
+    </li>
+    <li>
+        <p> You can also look at the <a href="http://www.oreilly.com/catalog/mperlbio/toc.html?CMP=IL7015">Table of Contents</a>, the 
+            <a href="http://www.oreilly.com/catalog/mperlbio/inx.html?CMP=IL7015">Index</a>, and the <a href="http://www.oreilly.com/catalog/mperlbio/desc.html?CMP=IL7015">Full Description</a> 
+            of the book. </p>
+    </li>
+    <li>
+        <p> For more information, or to order the book, <a href="http://www.oreilly.com/catalog/mperlbio/index.html?CMP=IL7015">click 
+            here</a>. </p>
+    </li>
+</ul>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=bioinformatics&amp;limit=20';return false;" rel="tag">bioinformatics</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=bioperl&amp;limit=20';return false;" rel="tag">bioperl</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=chromosome&amp;limit=20';return false;" rel="tag">chromosome</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=genome&amp;limit=20';return false;" rel="tag">genome</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=gigabases&amp;limit=20';return false;" rel="tag">gigabases</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=perl&amp;limit=20';return false;" rel="tag">perl</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=perl%20and%20bioinformatics&amp;limit=20';return false;" rel="tag">perl and bioinformatics</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=subroutines&amp;limit=20';return false;" rel="tag">subroutines</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

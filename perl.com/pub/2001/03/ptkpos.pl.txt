@@ -1,0 +1,634 @@
+#! /usr/bin/perl
+# ptkpos: A point-of-sale terminal using perl/Tk
+# (C)1999 Nicholas L. Temple III
+
+use Tk;
+use Tk::DialogBox;
+use Tk::NoteBook;
+use Tk::LabEntry;
+
+use Data::Dumper;
+use strict;     # Always!
+$^W++;          # Turn on warnings
+
+##### Global Configuration Structures
+
+my @cards   = ('Visa', 'MasterCard',
+               'American Express', 'Discover');
+my $trxtypetranslate = {'Sale' 			=> 'S', 
+                        'Credit'		=> 'C', 
+                        'Authorization'		=> 'A', 
+                        'Delayed Capture'	=> 'D', 
+                        'Voice Authorization'	=> 'F', 
+                        'Void'			=> 'V'
+                       };
+
+my @trxtype = keys %$trxtypetranslate;
+
+####
+my $DEBUG = 1;  # turn off (0) if you don't want to see internals
+my $mainwindow;
+my $f;		# dialog window
+
+# Default configuration. This is loaded from
+# "master.pcg" at startup, if it exists.
+my $config = { HOST    =>  'test.signio.com',
+               PORT    =>   443,
+               USER    =>  '',
+               PWD     =>  '',
+               P_ADDR  =>  '',
+               P_PORT  =>  '',
+               P_LOGON =>  '',
+               P_PASSORD  =>  '' };
+
+my $trans= { TENDER     => 'C', # only support credit cars
+             TRXTYPE    => '',
+             ACCT       => '',
+             AMT        => '',
+             COMMENT1   => '',
+             COMMENT2   => '',
+             EXPDATE    => '',
+             ORIGID     => '',
+             STREET     => '',
+             ZIP        => '',   	     
+             _NAME      => '',
+             _CARDTYPE  => '',
+             _PARAM     => ''	# Compete transaction, as send
+           };
+             
+  
+my $results = {	RESP     => '',	# Full response
+                PNREF    => '',
+ 		RESULT   => '',
+		RESPCODE => '',
+                RESPMSG  => '',
+                AUTHCODE => '',
+		ERRCODE  => '',
+                ERRMSG   => '',
+		AVSZIP	 => '',
+		AVSADDR  => ''
+              };
+
+# Begin main program
+MAIN: {
+  debug("+MAIN");
+
+  # Attempt to load the master.pcg configuration file
+  readConfig("master.pcg");
+
+  $mainwindow = MainWindow->new();
+  my $menubar = $mainwindow->Frame()->grid(-row => 0, -col => 0,
+                                           -columnspan => 3,
+                                           -sticky => 'nw');
+ 
+  my $filemenu = $menubar->Menubutton(-text => 'File');
+
+  $filemenu->command( -label   =>  'Open Config',
+                                    -command =>  \&loadConfig );
+  $filemenu->command( -label   =>  'Save Config',
+                                   -command => \&saveConfig  );
+  $filemenu->separator();
+  $filemenu->command(-label   => 'Configuration...',
+                                   -command => \&doConfig );
+  $filemenu->separator();
+  $filemenu->command(-label => 'Exit', -command => sub {exit;} );
+
+  $filemenu->pack(-side => 'left');
+
+  my $left   = $mainwindow->Frame->grid(-row => 1,
+                                        -col => 0,
+                                        -sticky => 'nw');
+  my $right  = $mainwindow->Frame->grid(-row => 1,
+                                        -col => 1,
+                                        -sticky => 'nw');
+  my $bottom = $mainwindow->Frame->grid(-row => 2,
+                                        -col => 0,
+                                        -columnspan => 3,
+                                        -sticky => 'nw');
+
+
+  ### Left panel, input functionality
+
+  $left->Optionmenu(
+               -options => \@trxtype,
+               -variable => \$trans->{TRXTYPE},
+               )->pack(-side => "top", -anchor => "nw");
+
+  $left->Optionmenu(
+               -options => \@cards,
+               -variable => \$trans->{_CARDTYPE},
+               )->pack(-side => "top", -anchor => "nw");
+
+  $left->LabEntry(-label => "Name",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{_NAME})->pack(-side => "top",
+                                              -anchor => "nw");
+
+  $left->LabEntry(-label => "Card Number",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{ACCT})->pack(-side => "top",
+                                             -anchor => "nw");
+
+  $left->LabEntry(-label => "Exp Date (1201)",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{EXPDATE})->pack(-side => "top",
+                                                -anchor => "nw");
+
+  $left->LabEntry(-label => "Invoice Number",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{INVNUM})->pack(-side => "top",
+                                               -anchor => "nw");
+
+  $left->LabEntry(-label => "Amount",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{AMT})->pack(-side => "top",
+                                            -anchor => "nw");
+
+  $left->LabEntry(-label => "Original ID",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{ORIGID})->pack(-side => "top",
+                                               -anchor => "nw");
+
+  $left->LabEntry(-label => "Street (for AVS)",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{STREET})->pack(-side => "top",
+                                               -anchor => "nw");
+
+  $left->LabEntry(-label => "Zip (for AVS)",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{ZIP})->pack(-side => "top",
+                                            -anchor => "nw");
+
+  $left->LabEntry(-label => "Comment 1",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{COMMENT1})->pack(-side => "top",
+                                                 -anchor => "nw");
+
+  $left->LabEntry(-label => "Comment 2",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 20,
+     -textvariable => \$trans->{COMMENT2})->pack(-side => "top",
+                                                 -anchor => "nw");
+
+  # Now we will create the output section
+  $right->Label(-text => 'PNRef')->
+                grid(-row => 0, -column => 0,-sticky => 'nw');
+  $right->Label(-textvariable => \$results->{PNREF})->
+                grid(-row => 0, -column => 1,-sticky => 'nw');
+ 
+  $right->Label(-text => 'Result')->
+               grid(-row => 1, -column => 0,-sticky => 'nw');
+  $right->Label(-textvariable => \$results->{RESULT})->
+               grid(-row => 0, -column => 1,-sticky => 'nw');
+
+  $right->Label(-text => 'Respcode')->
+               grid(qw/-row 2 -column 0 -sticky nw/);
+  $right->Label(-textvariable => \$results->{RESPCODE})->
+               grid(qw/-row 2 -column 1 -sticky nw/);
+
+  $right->Label(-text => 'Resmsg')->
+               grid(qw/-row 3 -column 0 -sticky nw/);
+  $right->Label(-textvariable => \$results->{RESPMSG})->
+               grid(qw/-row 2 -column 1 -sticky nw/);
+
+  $right->Label(-text => 'Authcode')->
+               grid(qw/-row 4 -column 0 -sticky nw/);
+  $right->Label(-textvariable => \$results->{AUTHCODE})->
+               grid(qw/-row 3 -column 1 -sticky nw/);
+
+  $right->Label(-text => 'Errcode')->
+               grid(qw/-row 5 -column 0 -sticky nw/);
+  $right->Label(-textvariable => \$results->{ERRCODE})->
+               grid(qw/-row 4 -column 1 -sticky nw/);
+
+  $right->Label(-text => 'Errmsg')->
+               grid(qw/-row 6 -column 0 -sticky nw/);
+  $right->Label(-textvariable => \$results->{ERRMSG})->
+               grid(qw/-row 5 -column 1 -sticky nw/);
+
+  $right->Label(-text => 'AVSZip')->
+               grid(qw/-row 7 -column 0 -sticky nw/);
+  $right->Label(-textvariable => \$results->{AVSZIP})->
+               grid(qw/-row 6 -column 1 -sticky nw/);
+
+  $right->Label(-text => 'AVSAddress')->
+               grid(qw/-row 8 -column 0 -sticky nw/);
+  $right->Label(-textvariable => \$results->{AVSADDR})->
+               grid(qw/-row 7 -column 1 -sticky nw/);
+
+  ### Bottom panel, both input & output
+
+  $bottom->LabEntry(-label => "(Sent)",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 96,
+     -textvariable => \$trans->{_PARAM})->
+     grid(qw/-row 0 -column 0 -sticky nw/);
+
+  $bottom->LabEntry(-label => "(Recvd)",
+     -labelPack => [-side => "right", -anchor => "w"],
+     -width => 96,
+     -textvariable => \$results->{RESP})->
+     grid(qw/-row 1 -column 0 -sticky nw/);
+
+
+  $bottom->Button(-text => 'Process Transaction',
+                  -command => \&processTransaction )->
+                  grid(qw/-row 2 -column 0 -sticky nesw/);
+
+  # Protect from stray signals
+  # You could just call MainLoop() w/o the fancy eval
+  while (1) {
+    eval MainLoop();   # Start the event processing
+  }
+
+  # Will never get here 
+  debug ("-MAIN");
+}
+
+##############
+# saveConfig #
+##############
+# Save Configuration information to a file.
+#
+# Note: We are saving this information in a plon text
+# file.  This shouldn't be done unless the machine is
+# known secure.
+#  
+
+sub saveConfig {
+  debug("+saveConfig");
+  # Types are listed in the dialog widget
+  my @types = (["Config Files", '.pcg', 'TEXT'],
+               ["All Files", "*"] );
+
+  # Uses standard file dialog for OS
+  my $file = $mainwindow->getSaveFile(-filetypes => \@types,
+				  -initialfile => 'master',
+				  -defaultextension => '.pcg');
+
+  # Write out as a Perl variable list
+  open  OUT, ">$file";
+  print OUT Dumper $config;
+  debug(Dumper $config);
+  close (OUT);
+
+  debug("-saveConfig"); 
+  return;
+}
+
+
+##############
+# loadConfig #
+##############
+# Load configuration information
+# 
+sub loadConfig {
+  debug("+loadConfig");
+  my $file;
+    
+  # Types are listed in the dialog widget
+  my @types = (["Config Files", '.pcg', 'TEXT'],
+               ["All Files", "*"] );
+  
+  $file = $mainwindow->getOpenFile(-filetypes => \@types);
+
+  readConfig($file);
+
+  debug(Dumper $config);
+  debug("-loadConfig");
+}
+
+##############
+# readConfig #
+##############
+sub readConfig {
+  my $file = shift;
+  my $VAR1;	# used by Data::Dumper;
+
+  local ($/);   
+  undef $/;
+
+
+  return unless $file;
+  return unless -e $file;       # skip if it doesn't exist
+
+  open IN, $file;
+  my $textfile  = <IN>;         # slurp
+  close (IN);
+
+  # should do a sanity check for bad data, as
+  $config = eval $textfile;
+}
+
+
+############
+# doConfig #
+############
+# Create a configuration dialogue
+
+sub doConfig {
+  debug("+doConfig");   
+  my ($name, $email, $os);
+
+  my $localconfig;
+
+  # Copy all the configuration items to a local array
+  foreach (keys %$config) {
+    $localconfig->{$_} = $config->{$_};
+    debug ($_);
+  }
+
+  if (not defined $f) {
+
+	$f = $mainwindow->DialogBox(-title => "Configuration",
+			     -buttons => ["OK", "Cancel"]);
+	my $n = $f->add('NoteBook', -ipadx => 6, -ipady => 6);
+
+        my $vendor_p = $n->add("vendor", -label => "Vendor ID",
+                                         -underline => 0);
+        my $host_p   = $n->add("host",  -label => "Host",
+                                        -underline => 0);
+        my $proxy_p  = $n->add("proxy", -label => "Proxy",
+                                        -underline => 0);
+	
+	$vendor_p->LabEntry(-label => "User:             ",
+	     -labelPack => [-side => "left", -anchor => "w"],
+	     -width => 20,
+             -textvariable => \$localconfig->{USER})->
+             pack(-side => "top", -anchor => "nw");
+
+        $vendor_p->LabEntry(-label => "Pwd:             ",
+	     -labelPack => [-side => "left", -anchor => "w"],
+	     -width => 20,
+             -textvariable => \$localconfig->{PWD})->
+             pack(-side => "top", -anchor => "nw");
+
+	$host_p->LabEntry(-label => "Host:             ",
+	     -labelPack => [-side => "left", -anchor => "w"],
+	     -width => 50,
+             -textvariable => \$localconfig->{HOST})->
+             pack(-side => "top", -anchor => "nw");
+
+	$host_p->LabEntry(-label => "Port:              ",
+	     -labelPack => [-side => "left", -anchor => "w"],
+	     -width => 20,
+             -textvariable => \$localconfig->{PORT})->
+             pack(-side => "top", -anchor => "nw");
+
+	$proxy_p->LabEntry(-label => "Proxy Address:    ",
+	     -labelPack => [-side => "left"],
+	     -width => 20,
+             -textvariable => \$localconfig->{P_ADDR})->
+             pack(-side => "top", -anchor => "nw");
+
+	$proxy_p->LabEntry(-label => "Proxy Port:          ",
+	     -labelPack => [-side => "left"],
+	     -width => 20,
+             -textvariable => \$localconfig->{P_PORT})
+             ->pack(-side => "top", -anchor => "nw");
+
+	$proxy_p->LabEntry(-label => "Proxy Logon:       ",
+	     -labelPack => [-side => "left"],
+	     -width => 20,
+             -textvariable => \$localconfig->{P_LOGON})->
+             pack(-side => "top", -anchor => "nw");
+
+	$proxy_p->LabEntry(-label => "Proxy Password:  ",
+	     -labelPack => [-side => "left"],
+	     -width => 20,
+             -textvariable => \$localconfig->{P_PASSWORD})->
+             pack(-side => "top", -anchor => "nw");
+
+	$n->pack(-expand => "yes",
+		 -fill => "both",
+		 -padx => 5, -pady => 5,
+		 -side => "top");
+	
+    }
+
+    my $result = $f->Show;	    # Execute the dialog box
+
+    if ($result =~ /OK/) {
+       # Copy all the configuration items back
+       foreach (keys %$config) {
+         $config->{$_} = $localconfig->{$_};
+       }
+      debug(Dumper $config);
+    }
+    debug("-doConfig"); 
+}
+
+
+######################
+# ProcessTransaction #
+######################
+# Code to  process the transaction
+# A more robust system would log each and every transaction
+# We just display the results
+# 
+sub processTransaction {
+  my ($name, $value, $data, @vars);
+  debug("+processTransaction");
+ 
+  # This code looks for a file called "call_pfpro.pl"
+  # if it is found, it will load it, redefining the call_pfpro
+  # subroutine.  Thus, it is extremely simple to override the
+  # simulator with real code.
+
+  # skip if simulator explictly requested
+  unless ($config->{HOST} =~ /simulate/) {      
+     require "call_pfpro.pl" if -e "call_pfpro.pl";
+  }
+
+  # We will create a local copy of the transaction structure
+  my $ltrans;
+  foreach $name (keys %$trans) {
+    next if $name =~ /_/;	# _VAR doesn't get passed
+    $ltrans->{$name} = $trans->{$name};
+  }
+
+  # Translate the verbose transaction types to codes
+  $ltrans->{TRXTYPE} = $trxtypetranslate->{$ltrans->{TRXTYPE}};
+
+  # support for F (force voice transactions)
+  # Munge ORIGID into AUTHCODE
+  if ($ltrans->{TRXTYPE} eq 'F') {
+    $ltrans->{AUTHCODE} = $ltrans->{ORIGID};
+    undef $ltrans->{ORIGID};
+  }
+  
+  # create the data stream from the input paramaters
+  my $data = "USER=$config->{USER}&PWD=$config->{PWD}&";
+
+  foreach $name (keys %$ltrans) {
+    $data .= "$name=$ltrans->{$name}&";
+  }
+  chop $data;
+
+  debug($data);
+
+  # clear the output display
+  foreach (keys %$results) {
+    $results->{$_} = '';
+  }
+
+  # Show user the completed transaction request
+  $trans->{_PARAM} = $data;   
+
+
+  my $result = call_pfpro($config->{HOST},
+                           $config->{PORT},
+                           $data,
+                           30,          # timeout
+                           $config->{P_ADDR},
+                           $config->{P_PORT},
+                           $config->{P_LOGON},
+                           $config->{P_PASSWORD} );
+
+  # Create the results list (disply them as a side effect)
+  $results->{RESP} = $result;
+  (@vars) = split "&", $result;
+  foreach (@vars) {
+    ($name, $value) = split "=";
+    $results->{$name} = $value;
+  }
+
+  debug("-processTransaction");
+}
+
+################
+# call_pfpro #
+################
+# Simulate a call to the Signio pfpro() client
+# The simulator is very dumb. It checks for a 
+# potentially valid credit card, and returns an auth if it sees one
+# It does NOT: check expiration date, check username/password or
+# do anything else a "real" simulator should.
+
+my $id ="0";
+sub call_pfpro {
+  debug("+call_pfpro (simulated)");
+  my $host         = shift;
+  my $port         = shift;
+  my $data         = shift;
+  my $timeout      = shift;
+  my $proxyaddress = shift;
+  my $proxyport    = shift;
+  my $proxylogin   = shift;
+  my $proxypass    = shift;
+  
+  my $result;
+
+  my $results = {
+                PNREF    => "SM000".$id++,
+ 		RESULT   => '-1',
+		RESPCODE => 'E',
+                RESPMSG  => 'Simulator',
+		AUTHCODE => '',
+		ERRCODE  => 'NA',
+	        AVSZIP   => '',
+                AVSADDR  => ''
+              };
+
+  # communications error in a few cases...
+  return $results if  (int (rand 100) == 0 );
+
+  # Split apart the data
+  my $trans;
+  my (@vars) = split "&", $data;
+  foreach (@vars) {
+    my ($name, $value) = split "=";
+    $trans->{$name} = $value;
+  }
+
+
+  SWITCH: {
+    # We only really look at the sale / auth case
+    if    ($trans->{TRXTYPE} eq 'S' || $trans->{TRXTYPE} eq 'A') {    
+      
+      if (validate($trans->{ACCT}) == 0 ) {
+        # This is *not* a valid card
+        $results->{RESPCODE} = 'D';
+        $results->{RESULT} = '06';
+        last SWITCH;
+      } 
+
+      # Make up an AVS response	
+      $results->{AVSZIP} =
+        int (rand 3) == 0 ? 'N': 'Y' if $trans->{ZIP};
+      $results->{AVSADDR} =
+        int (rand 3) == 0 ? 'N' : 'Y' if $trans->{STREET};
+
+      $results->{RESULT} = '00';
+      $results->{AUTHCODE} = "A000".$id; # make up an authcode
+      $results->{RESPCODE} = 'A';
+
+      last SWITCH;
+    }
+
+    # NOT IMPLEMENTED
+    # Just make everything else an ERROR
+    else {
+      $results->{RESULT} = '98';
+      last SWITCH;
+    }
+  };
+
+
+  # Build the result
+  my @pairs;
+  foreach (keys %$results) {
+    push (@pairs, "$_=$results->{$_}");
+  }
+      
+  debug("-call_pfpro (simulated)");
+  return join "&", @pairs;
+
+}
+
+
+############
+# validate #
+############
+# check to see if card could be good
+# returns 1 on success, 0 on failure
+# from business::CreditCard
+# AUTHOR Jon Orwant, MIT Media Lab, orwant@media.mit.edu 
+
+sub validate {
+    my $number = shift;
+    my ($i, $sum, $weight);
+    
+    return 0 if $number =~ /[^\d\s]/;
+
+    $number =~ s/\D//g;
+
+    return 0 unless length($number) >= 13 && 0+$number;
+
+    for ($i = 0; $i < length($number) - 1; $i++) {
+      $weight = substr($number, -1 * ($i + 2), 1) * (2 - ($i % 2));
+      $sum += (($weight < 10) ? $weight : ($weight - 9));
+    }
+
+    return 1 if substr($number, -1) == (10 - $sum % 10) % 10;
+    return 0;
+}
+
+#########
+# debug #
+#########
+# Print debugging information to stdout
+sub debug {
+  my @msg = shift;
+  print @msg, "\n" if $DEBUG;
+}
+

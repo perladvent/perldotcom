@@ -1,0 +1,1177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2004/04/29/maypole.html">
+<dc:title>Rapid Web Application Deployment with Maypole : Part 2</dc:title>
+<dc:description> When we last left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping...</dc:description>
+<dc:creator>Simon Cozens</dc:creator>
+<dc:date>2004-04-29T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2004/04/p6pdigest/20040418.html" title="This Fortnight on Perl 6, Weeks Ending 2004-04-18" />
+    <link rel="next bookmark" href="/pub/2004/04/p6pdigest/20040425.html" title="This Week on Perl 6, Week Ending 2004-04-25" />
+    
+    
+    <title>Rapid Web Application Deployment with Maypole : Part 2 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-916" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Rapid Web Application Deployment with Maypole : Part 2</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Simon Cozens</span> on <abbr class="published" title="2004-04-29T00:00:00-08:00">April 29, 2004 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+<p>When we <a href="/pub/a/2004/04/15/maypole.html">last</a> left our intrepid web developer,
+he had successfully set up an online sales catalogue in 11 lines of code.
+Now,
+however,
+he has to move on to turning this into a sales site with a shopping cart and all the usual trimmings.
+It's time to see some of that flexibility we talked about last week; unfortunately this means we're going to have to write some more code,
+but we can't have everything.</p>
+
+<h3><a name="Who_Am_I?">Who Am I?</a></h3>
+
+<p>In order to add the shopping cart to the site,
+we need to introduce the concept of a current user.
+This will allow viewers of the site to log in and have their own cart.
+We will be adding two new tables to the database,
+a table to store details about the user, and one to represent the cart.
+Our tables will look like so:</p>
+
+<pre><code>  CREATE TABLE user (
+    id int not null auto_increment primary key,
+    first_name varchar(64),
+    last_name varchar(64),
+    email varchar(255),
+    password varchar(64),
+    address1 varchar(255),
+    address2 varchar(255),
+    state varchar(255),
+    postal_code varchar(64),
+    country varchar(64)
+  );
+  
+  CREATE TABLE cart_item (
+    id int not null auto_increment primary key,
+    user int,
+    item int
+  );</code></pre>
+
+<p>As before, Maypole automatically creates classes for the tables. We use <code>Class::DBI</code> relationships to tell Maypole what's going on with these tables:</p>
+
+<pre><code>  ISellIt::User-&gt;has_many( &quot;cart_items&quot; =&gt; &quot;ISellIt::BasketItem&quot;);
+  ISellIt::BasketItem-&gt;has_a( &quot;user&quot; =&gt; &quot;ISellit::User&quot; );
+  ISellIt::BasketItem-&gt;has_a( &quot;item&quot; =&gt; &quot;ISellit::Product&quot; );</code></pre>
+
+<p>We now need a way to tell our application about the current user.
+There's a long explanation of Maypole's authentication system in
+the
+<a href="http://maypole.simon-cozens.org/doc/authentication.html">Maypole documentation</a>,
+but one of the easiest ways to do add the concept of the current user is
+with the <code>Maypole::Authentication::UserSessionCookie</code>
+module.</p>
+
+<p>As its name implies, this module takes care of associating a user with a session, and issuing a cookie to the user's browser. It also manages validating the user's login credentials, by default by looking up the user name and password in a database table; precisely what we need!</p>
+
+<p>Maypole provides an authentication method for us to override, and it's here that we're going to intercept any request that requires a user -- viewing the shopping cart, adding items to an order, and so on:</p>
+
+<pre><code>  sub authenticate {
+    my ($self, $r) = @_;
+    unless ($r-&gt;{table} eq &quot;cart&quot; or $r-&gt;{action} eq &quot;buy&quot;) {
+      return OK;
+    }
+
+    # Else we need a user
+    $r-&gt;get_user;
+    if (!$r-&gt;{user}) {
+      $r-&gt;template(&quot;login&quot;);
+    }
+    return OK;
+   }</code></pre>
+
+<p>The <code>get_user</code> method, which does all the work of setting the cookie and setting the credentials, is provided by the <code>UserSessionCookie</code> module. The only thing we need to tell it is that we're going to use the user's email address and password as login credentials, rather than some arbitrary user name. We can do this in the configuration for our application, as described in the <code>UserSessionCookie</code> documentation:</p>
+
+<pre><code>  ISellIt-&gt;{config}-&gt;{auth}-&gt;{user_field} = &quot;email&quot;;</code></pre>
+
+<p>Next, we set up a login template, which will present the users with a
+form to enter their credentials; there's one in the Maypole manual,
+in the <a href="http://maypole.simon-cozens.org/doc/Request.html">Request
+chapter</a>, which we can modify to suit our needs:</p>
+
+<pre><code>  [% INCLUDE header %]
+
+    &lt;h2&gt; You need to log in before buying anything &lt;/h2&gt;
+
+  &lt;DIV class=&quot;login&quot;&gt;
+  [% IF login_error %]
+     &lt;FONT COLOR=&quot;#FF0000&quot;&gt; [% login_error %] &lt;/FONT&gt;
+  [% END %]
+    &lt;FORM ACTION=&quot;/[% request.path%]&quot; METHOD=&quot;post&quot;&gt;
+  Email Address:
+    &lt;INPUT TYPE=&quot;text&quot; NAME=&quot;email&quot;&gt; &lt;BR&gt;
+  Password: &lt;INPUT TYPE=&quot;password&quot; NAME=&quot;password&quot;&gt; &lt;BR&gt;
+  &lt;INPUT TYPE=&quot;submit&quot;&gt;
+  &lt;/FORM&gt;
+  &lt;/DIV&gt;</code></pre>
+
+<p>And now logging in is sorted out; if a user presents the correct credentials, <code>get_user</code> will put the user's <code>ISellIt::User</code> object in the Maypole request object as <code>$r-&gt;{user}</code>, and the user's request will continue to where it was going.</p>
+
+<p>Now, of course, since we have a user object we can play with, we can use the user's information in other contexts:</p>
+
+<pre><code>  [% IF request.user %]
+    &lt;DIV class=&quot;messages&quot;&gt;
+    Welcome back, [% request.user.first_name %]!
+    &lt;/DIV&gt;
+  [% END %]</code></pre>
+
+<p>Since we're going to be referring to the user a lot, we pass it to the template as an additional argument, <code>my</code>. Maypole has an open-ended &quot;hook&quot; method, <code>additional_data</code>, which is perfect for doing just this.</p>
+
+<pre><code>  sub additional_data {
+    my $r = shift;
+    $r-&gt;{template_args}{my} = $r-&gt;{user};
+  }</code></pre>
+
+<p>We call it <code>my</code> so that we can say, for instance:</p>
+
+<pre><code>    &lt;DIV class=&quot;messages&quot;&gt;
+    Welcome back, [% my.first_name %]!
+    &lt;/DIV&gt;</code></pre>
+
+<p>So now we have a user. We can add a new action, <code>order</code>, to add an item to the user's shopping cart:</p>
+
+<pre><code>  package ISellIt::Product;
+
+  sub order :Exported {
+    my ($self, $r, $product) = @_;
+    $r-&gt;{user}-&gt;add_to_cart_items({ item =&gt; $product });
+    $r-&gt;{template} = &quot;view&quot;;
+  }</code></pre>
+
+<p>This adds an entry in the <code>cart_item</code> table associating the item with the user, and then sends us back to viewing the item.</p>
+
+<p>We've sent our user back shopping without an indication that we actually did add an item to his shopping cart; we can give such an indication by passing information into the template:</p>
+
+<pre><code>  sub order :Exported {
+    my ($self, $r, $product) = @_;
+    $r-&gt;{user}-&gt;add_to_cart_items({ item =&gt; $product });
+    $r-&gt;{template} = &quot;view&quot;;
+    $r-&gt;{template_args}{bought} = 1;
+  }</code></pre>
+
+<p>And then displaying it:</p>
+
+<pre><code>  [% IF bought %]
+  &lt;DIV class=&quot;messages&quot;&gt;
+    We've just added this item to your shopping cart. To complete
+    your transaction, please &lt;A HREF=&quot;/user/view_cart&quot;&gt;view your
+    cart&lt;/A&gt; and check out.
+  &lt;/DIV&gt;
+  [% END %]</code></pre>
+
+<p>So now we need to allow the user to view a cart.</p>
+
+<h3><a name="Displaying_the_Cart">Displaying the Cart</a></h3>
+
+<p>This also turns out to be relatively easy -- most things in Maypole are -- involving an action on the user class. We need to fill our Maypole request object with the items in the user's cart:</p>
+
+<pre><code>  package ISellIt::User;
+
+  sub view_cart :Exported {
+    my ($self, $r) = @_;
+    $r-&gt;{objects} = [ $r-&gt;{user}-&gt;cart_items ];
+  }</code></pre>
+
+<p>And then we need to produce a <em lang='und' xml:lang='und'>user/view_cart</em> template that displays them:</p>
+
+<pre><code>  [% PROCESS header %]
+
+  &lt;h2&gt; Your Shopping Cart &lt;/h2&gt;
+
+  &lt;TABLE&gt;
+  &lt;TR&gt; &lt;TH&gt; Product &lt;/TH&gt; &lt;TH&gt; Price &lt;/TH&gt; &lt;/TR&gt;
+  [% SET count = 0;
+  FOR item = objects;
+    SET count = count + 1;
+    &quot;&lt;tr&quot;;
+    ' class=&quot;alternate&quot;' IF count % 2;
+    &quot;&gt;&quot;;
+  %]
+    &lt;TD&gt; [% item.product.name %] &lt;/TD&gt;
+    &lt;TD&gt; [% item.product.price %] &lt;/TD&gt;
+    &lt;TD&gt; 
+      &lt;FORM ACTION=&quot;/cart_item/delete/[% item.id %]&quot;&gt;
+      &lt;INPUT TYPE=&quot;submit&quot; VALUE=&quot;Remove from cart&quot;&gt;
+      &lt;/FORM&gt;
+    &lt;/TD&gt;
+  &lt;/tr&gt;
+  [% END %]
+  &lt;/TABLE&gt;
+
+  &lt;A HREF=&quot;/user/checkout&quot;&gt; Check out! &lt;/A&gt;</code></pre>
+
+<p>Once again, the HTML isn't great, but it gives us something we can pass to the design people to style up nicely. Now on to checking out the cart...</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="Check_out">Check Out</a></h3>
+
+<p>The hardest part about building an e-commerce application is interacting with the payment and credit-card fulfillment service. We'll use the <a href="http://search.cpan.org/perldoc?Business::OnlinePayment"><code>Business::OnlinePayment</code></a> module to handle that side of things, and handle the order fulfillment by simply sending an email.</p>
+
+<p>The actual check-out page needs to collect credit card and delivery information, and so it doesn't actually need any objects; the only object we actually need is the <code>ISellIt::User</code>, and that was stashed away in the request object by the authentication routine. However, we do want to display the total cost. So to make things easier we'll add an action and compute this in Perl. We make the total cost a method on the user, so we can use this later:</p>
+
+<pre><code>  package ISellIt::User;
+  use List::Util qw(sum);
+  sub basket_cost {
+    my $self = shift;
+    sum map { $_-&gt;item-&gt;price }
+    $self-&gt;basket_items
+  }</code></pre>
+
+<p>And define <code>checkout</code> to add this total to our template:</p>
+
+<pre><code>  sub checkout :Exported {
+    my ($self, $r) = @_;
+    $r-&gt;{template_args}{total_cost} = $r-&gt;{user}-&gt;basket_cost;
+  }</code></pre>
+
+<p>Now we write our <em lang='und' xml:lang='und'>user/checkout</em> template:</p>
+
+<pre><code>  [% PROCESS header %]
+  &lt;h2&gt; Check out &lt;/h2&gt;
+
+  &lt;p&gt; Please enter your credit card and delivery details. &lt;/p&gt;
+
+  &lt;form method=&quot;post&quot; action=&quot;https://www.isellit.com/user/do_checkout&quot;&gt;
+    &lt;P&gt;
+    First name: &lt;input name=&quot;first_name&quot; value=&quot;[% my.first_name %]&quot;&gt;&lt;BR&gt;
+    Last name: &lt;input name=&quot;last_name&quot; value=&quot;[% my.last_name %]&quot;&gt;&lt;/P&gt;
+    &lt;P&gt;
+    Street address: &lt;input name=&quot;address&quot; value=&quot;[% my.address1 %]&quot;&gt;&lt;BR&gt;
+    City: &lt;input name=&quot;city&quot; value=&quot;[% my.address2 %]&quot;&gt;&lt;BR&gt;
+    State: &lt;input name=&quot;state&quot; value=&quot;[% my.state %]&quot;&gt;
+    Zip: &lt;input name=&quot;zip&quot; value=&quot;[% my.postal_code %]&quot;&gt;
+    &lt;/P&gt;
+
+    &lt;P&gt;
+    Card type: &lt;select name=&quot;type&quot;&gt;
+      &lt;option&gt;Visa&lt;/option&gt;
+      &lt;option&gt;Mastercard&lt;/option&gt;
+      ...
+    &lt;/select&gt;
+
+    Card number: &lt;input name=&quot;card_number&quot;&gt; 
+    Expiration: &lt;input name=&quot;expiration&quot;&gt; &lt;BR&gt;
+    Total: $ [% total_price %]
+    &lt;/P&gt;
+    &lt;P&gt;
+    Please click &lt;B&gt;once&lt;/B&gt; and wait for the payment to be
+    authorised.... &lt;input type=&quot;submit&quot; value=&quot;order&quot;&gt;
+  &lt;/form&gt;</code></pre>
+
+<p>What happens when this data is sent to the <code>do_checkout</code> action? (Over SSL, you'll notice.) First of all, we'll check if the user has entered address details for the first time, and if so, store them in the database. Perhaps unnecessary in this day of browsers that auto-fill forms, but it's still a convenience. Maypole stores the POST'ed in parameters in <code>params</code>:</p>
+
+<pre><code>  sub do_checkout :Exported {
+    my ($self, $r) = @_;
+    my %params = %{$r-&gt;{params}};
+    my $user = $r-&gt;{user};
+
+    $user-&gt;address1($params{address}) unless $user-&gt;address1;
+    $user-&gt;address2($params{city})  unless $user-&gt;address2;
+    $user-&gt;state($params{state})    unless $user-&gt;state;
+    $user-&gt;postal_code($params{zip})  unless $user-&gt;postal_code;</code></pre>
+
+<p>We need to construct a request to go out via <code>Business::OnlinePayment</code>; thankfully, the form parameters we've received are going to be precisely in the format that <code>OnlinePayment</code> wants, thanks to careful form design. All we need to do is to insert our account details and the total:</p>
+
+<pre><code>    my $tx = new Business::OnlinePayment(&quot;TCLink&quot;);
+    $tx-&gt;content(%params,
+      type   =&gt; &quot;cc&quot;,
+      login  =&gt; VENDOR_LOGIN,
+      password =&gt; VENDOR_PASSWORD,
+      action   =&gt; 'Normal Authorization'
+      amount   =&gt; $r-&gt;{user}-&gt;basket_total
+    );</code></pre>
+
+<p>Now we can submit the payment and see what happens. If there's a problem, we add a message to the template and send the user back again:</p>
+
+<pre><code>    $tx-&gt;submit;
+    if (!$tx-&gt;is_success) {
+      $r-&gt;{template_args}{message} = 
+        &quot;There was a problem authorizing your transaction: &quot;.
+        $tx-&gt;error_message;
+      $r-&gt;{template} = &quot;checkout&quot;;
+      return;
+    }</code></pre>
+
+<p>Otherwise, we have our money; we probably want to tell the box-shifters about it, or we lose customers fast:</p>
+
+<pre><code>    fulfill_order(
+      address_details =&gt; $r-&gt;{params},
+      order_details   =&gt; [ map { $_-&gt;item } $r-&gt;{user}-&gt;cart_items ],
+      cc_auth     =&gt; $tx-&gt;authorization
+    );</code></pre>
+
+<p>And now we empty the shopping cart, and send the user on his way:</p>
+
+<pre><code>    $_-&gt;delete for $r-&gt;{user}-&gt;cart_items;
+    $r-&gt;{template} = &quot;frontpage&quot;;
+  }</code></pre>
+
+<p>Done! We've taken a user from logging in, adding goods to the cart, credit card validation, and checkout. But... wait. How did we get our user in the first place?</p>
+
+<h3><a name="Registering_a_User">Registering a User</a></h3>
+
+<p>We have to find a way to sign a user up. This is actually not that
+hard, particularly since we can use the example of <a
+  href="http://search.cpan.org/~simon/Maypole/doc/Flox.pod">Flox</a> in the Maypole manual. First, we'll add a &quot;register&quot; link to our login template:</p>
+
+<pre><code>  &lt;P&gt;New user? &lt;A HREF=&quot;/user/register&quot;&gt;Sign up!&lt;/A&gt;&lt;/P&gt;</code></pre>
+
+<p>This page doesn't require any objects to be loaded up, since it's just going to display a registration form; we can just add our template in <em lang='und' xml:lang='und'>/user/register</em>:</p>
+
+<pre><code>  [% INCLUDE header %]
+  &lt;P&gt;Welcome to buying with iSellIt!&lt;/P&gt;
+
+  &lt;P&gt;To set up your account, we only need a few details from you:
+  &lt;/P&gt;
+
+  &lt;FORM METHOD=&quot;POST&quot; ACTION=&quot;/user/do_register&quot;&gt;
+    &lt;P&gt;Your name:
+    &lt;input name=&quot;first_name&quot;&gt; 
+    &lt;input name=&quot;last_name&quot;&gt; &lt;/P&gt;
+    &lt;P&gt;Your email address: &lt;input name=&quot;email&quot;&gt; &lt;/P&gt;
+    &lt;P&gt;Please choose a password: &lt;input name=&quot;password&quot;&gt; &lt;/P&gt;
+    &lt;input type=&quot;submit&quot; name=&quot;Register&quot; value=&quot;Register&quot;&gt;
+  &lt;/FORM&gt;</code></pre>
+
+<p>As before, we need to explain to <a href="http://search.cpan.org/perldoc?Class::DBI::FromCGI"><code>Class::DBI::FromCGI</code></a> how these fields are to be edited:</p>
+
+<pre><code>  ISellIt::User-&gt;untaint_columns(
+    printable =&gt; [qw/first_name last_name password/],
+    email   =&gt; [qw/email/],
+  );</code></pre>
+
+<p>And now we can write our <code>do_register</code> event, using the <code>FromCGI</code> style:</p>
+
+<pre><code>  sub do_register :Exported {
+    my ($self, $r) = @_;
+    my $h = CGI::Untaint-&gt;new(%{$r-&gt;{params}});
+    my $user = $self-&gt;create_from_cgi($h);</code></pre>
+
+<p>If there were any problems, we send them back to the register form again:</p>
+
+<pre><code>    if (my %errors = $obj-&gt;cgi_update_errors) {
+      $r-&gt;{template_args}{cgi_params} = $r-&gt;{params};
+      $r-&gt;{template_args}{errors} = \%errors;
+      $r-&gt;{template} = &quot;register&quot;;
+      return;
+    }</code></pre>
+
+<p>Otherwise, we now have a user; we need to issue the cookie as if the user had logged in normally. Again, this is something that <code>UserSessionCookie</code> looks after for us:</p>
+
+<pre><code>    $r-&gt;{user} = $user;
+    $r-&gt;login_user($user-&gt;id);</code></pre>
+
+<p>And finally we send the user on his or her way again:</p>
+
+<pre><code>    $r-&gt;{template} = &quot;frontpage&quot;;
+  }</code></pre>
+
+<p>There we go: now we can create new users; provision of a password reminder function is an exercise for the interested reader.</p>
+
+<h3><a name="Maypole_Summary">Maypole Summary</a></h3>
+
+<p>We've done it -- we've created an e-commerce store in a very short space of time and with a minimal amount of code. One of the things that I like about Maypole is the extent to which you only need to code your business logic; all of the display templates can be mocked up and then shipped off to professionals, and the rest of the work is just handled magically behind the scenes by Maypole.</p>
+
+<p>Thanks to the TPF funding of Maypole, we now have an extensive user manual with several case studies (this one included), and a lively user and developer community. I hope you too will be joining it soon!</p>
+
+
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=maypole&amp;limit=20';return false;" rel="tag">maypole</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=mvc&amp;limit=20';return false;" rel="tag">mvc</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

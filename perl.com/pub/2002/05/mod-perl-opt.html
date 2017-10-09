@@ -1,0 +1,1209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2002/05/closure.html" title="Achieving Closure" />
+    <link rel="next bookmark" href="/pub/2002/06/apo5.html" title="Apocalypse 5" />
+    
+    
+    <title>Improving mod_perl Sites' Performance: Part 1 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1308" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Improving mod_perl Sites' Performance: Part 1</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Stas Bekman</span> on <abbr class="published" title="2002-05-29T00:00:00-08:00">May 29, 2002 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+<p>In the next series of articles, we are going to talk about mod_perl
+performance issues. We will try to look at as many aspects of the
+mod_perl driven service as possible: hardware, software, Perl coding
+and finally the mod_perl specific aspects.</p>
+
+<h3><a name="the_big_picture">The Big Picture</a></h3>
+<p>To make the user's Web browsing experience as painless as possible,
+every effort must be made to wring the last drop of performance from
+the server. There are many factors that affect Web site usability,
+but speed is one of the most important. This applies to any Web server,
+not just Apache, so it is important that you understand it.</p>
+<p>How do we measure the speed of a server?  Since the user (and not the
+computer) is the one that interacts with the Web site, one good speed
+measurement is the time elapsed between the moment when one clicks on
+a link or presses a <em>Submit</em> button to the moment when the resulting
+page is fully rendered.</p>
+<p>The requests and replies are broken into packets.  A request may be
+made up of several packets; a reply may be many thousands.  Each
+packet has to make its way from one machine to another, perhaps
+passing through many interconnection nodes.  We must measure the time
+starting from when the first packet of the request leaves our user's
+machine to when the last packet of the reply arrives back there.</p>
+<p>A Web server is only one of the entities the packets see along their
+way.  If we follow them from browser to server and back again, then they
+may travel by different routes through many different entities.
+Before they are processed by your server, the packets might have to go
+through proxy (accelerator) servers and, if the request contains more
+than one packet, packets might arrive to the server by different
+routes with different arrival times. Therefore, it's possible that some
+packets that arrive earlier will have to wait for other packets before
+they could be reassembled into a chunk of the request message that
+will be then read by the server.  Then the whole process is repeated
+in reverse.</p>
+
+<csperl file="grab" domain="on" record="b/832" template="b/article_sidebar.view">
+
+<p>You could work hard to fine-tune your Web server's performance, but a
+slow Network Interface Card (NIC) or a slow network connection from
+your server might defeat it all.  That's why it's important to think
+about the big picture and to be aware of possible bottlenecks between
+the server and the Web.</p>
+<p>Of course, there is little that you can do if the user has a slow
+connection.  You might tune your scripts and Web server to process
+incoming requests quickly, so you will need only a small number
+of working servers, but you might find that the server processes are
+all busy waiting for slow clients to accept their responses.</p>
+<p>But there are techniques to cope with this.  For example, you can
+deliver the response compressed.  If you are delivering a
+pure text respond, then gzip compression will sometimes reduce the size of
+the respond by 10 times.</p>
+<p>You should analyze all the involved components when you try to create
+the best service for your users, and not the Web server or the code
+that the Web server executes.  A Web service is like a car: If one of
+the parts or mechanisms is broken, then the car may not operate smoothly and it
+can even stop dead if pushed too far without fixing it.</p>
+<p>Let me stress it again: If you want to be successful in the 
+Web service business, then you should start worrying about the client's browsing
+experience and <strong>not only</strong> how good your code benchmarks are.</p>
+
+<h3><a name="operating_system_and_hardware_analysis">Operating System and Hardware Analysis</a></h3>
+
+<!-- Stas Bekman mod_perl series -->
+<table width="150" border="0" cellspacing="0" cellpadding="4" align="right">
+<tr> 
+<td width="150" valign="top" height="4" bgcolor="#6699cc"></td></tr> 
+<tr>
+<td bgcolor="#efefef">
+<p class="headline" align="center">Previously in the Series
+</p>
+<p class="secondary">
+<a href="http://perl.com/pub/a/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br /><br />
+<a href="http://perl.com/pub/a/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br /><br />
+<a href="http://perl.com/pub/a/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br /><br />
+
+<a href="/pub/a/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br /><br />
+<a href="/pub/a/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br /><br />
+<a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br /><br />
+<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a>
+
+</td></tr> <tr><td width="150" valign="top" height="4" bgcolor="#6699cc"> </td></tr></table>
+<!-- End Stas Sidebar -->
+
+<p>Before you start to optimize server configuration and learn to write
+more-efficient code, you need to consider the demands that will be
+placed on the hardware and the operating System.  There is no point in
+investing a lot of time and money in configuration tuning and code
+optimizing, only to find that your server's performance is poor because
+you did not choose a suitable platform in the first place.</p>
+<p>Because hardware platforms and operating systems are developing
+rapidly (even while you are reading this article), the following
+advisory discussion must be in general terms, without mentioning
+specific vendors names.</p>
+
+<h3><a name="choosing_the_right_operating_system">Choosing the Right Operating System</a></h3>
+<p>I will try to talk about what characteristics and features you should
+be looking for to support a mod_perl enabled Apache server, then when
+you know what you want from your OS, you can go out and find it.
+Visit the Web sites of the operating systems you are interested in.
+You can gauge user's opinions by searching the relevant discussions in
+newsgroup and mailing list archives.  Deja - <a href="http://deja.com">http://deja.com</a> and
+eGroups - <a href="http://egroups.com">http://egroups.com</a> are good examples.  I will leave this fan
+research to you. But probably the best shot will be to ask mod_perl
+users, as they know the best.</p>
+
+<h4><a name="stability_and_robustness_requirements">Stability and Robustness Requirements</a></h4>
+<p>Probably the most important features in an OS are stability and
+robustness.  You are in the Internet business.  You do not keep normal
+9 a.m. to 5 p.m. working hours like conventional businesses.
+You are open 24 hours a day.  You cannot afford to be off-line, because
+your customers will shop at another service (unless you
+have a monopoly ...).  If the OS of your choice crashes every day, then first
+conduct a little investigation.  There might be a simple reason that you
+can fix.  There are OSs that won't work unless you reboot
+them twice a day.  You don't want to use this type of OS, no
+matter how good the OS' vendor sales department is.  Do not follow flushy
+advertisements; follow developers' advice instead.</p>
+<p>Generally, people who have used the OS for some time can tell you a
+lot about its stability.  Ask them.  Try to find people who are doing
+similar things to what you are planning to do, they may even be using
+the same software.  There are often compatibility issues to resolve.
+You may need to become familiar with patching and compiling your OS.</p>
+
+<h4><a name="good_memory_management_importance">Good Memory-Management Importance</a></h4>
+
+
+<p>You want an OS with a good memory-management implementation. Some OSs
+are well-known as memory hogs.  The same code can use twice as much
+memory on one OS compared to another.  If the size of the mod_perl
+process is 10Mb and you have tens of these running, then it definitely adds
+up!</p>
+<h4><a name="say_no_to_memory_leaks">Say No to Memory Leaks</a></h4>
+<p>Some OSs and/or their libraries (e.g. C runtime libraries) suffer from
+memory leaks.  A leak is when some process requests a chunk of memory
+for temporary storage, but then does not subsequently release it.  The
+chunk of memory is not then available for any purpose until the
+process that requested it dies.  You cannot afford such leaks.  A
+single mod_perl process sometimes serves thousands of requests before
+it terminates.  So if a leak occurs on each request, then the memory
+demands could become huge.  Of course, your code can be the cause of
+the memory leaks as well, but it's easy to detect and solve.
+Certainly, we can reduce the number of requests to be served during the
+process' life, but that can degrade performance.</p>
+
+<h4><a name="memory_sharing_capabilities_is_a_must">Memory-Sharing Capabilities Is a Must</a></h4>
+<p>You want an OS with good memory-sharing capabilities.  If you preload
+the Perl modules and scripts at server startup, then they are shared
+between the spawned children (at least for a part of a process' life -
+memory pages can become ``dirty'' and cease to be shared).  This feature
+can reduce memory consumption a lot!</p>
+<p>And, of course, you don't want an OS that doesn't have memory-sharing
+capabilities.</p>
+
+<h4><a name="the_real_cost_of_support">The Real Cost of Support</a></h4>
+<p>If you are in a big business, then you probably do not mind paying another
+$1,000 for some fancy OS with bundled support.  But if your resources
+are low, then you will look for cheaper and free OSs.  Free does not mean
+bad, it can be quite the opposite.  Free OSs can have the best support
+you can find.  Some do.</p>
+<p>It is easy to understand - most of the people are not rich and
+will try to use a cheaper or free OS first if it does the work for
+them.  Since it really fits their needs, many people keep using it and
+eventually know it well enough to be able to provide support for
+others in trouble.  Why would they do this for free?  One reason is
+for the spirit of the first days of the Internet, when there was no
+commercial Internet and people helped each other, because someone
+helped them in first place.  I was there, I was touched by that spirit
+and I'm keen to keep that spirit alive.</p>
+<p>But, let's get back to the real world.  We are living in material world,
+and our bosses pay us to keep the systems running.  So if you feel
+that you cannot provide the support yourself and you do not trust the
+available free resources, then you must pay for an OS backed by a company,
+and blame them for any problem.  Your boss wants to be able to sue
+someone if the project has a problem caused by the external product
+that is being used in the project.  If you buy a product and the
+company selling it claims support, then you have someone to sue or at least
+to put the blame on.</p>
+<p>If we go with open source and it fails we do not have someone to
+sue ... wrong -- in the past several years, many companies have realized how good
+the open-source products are and started to provide an official
+support for these products.  So your boss cannot just dismiss your
+suggestion of using an open-source operating system.  You can get a
+paid support just like with any other commercial OS vendor.</p>
+<p>Also remember that the less money you spend on OS and software, the
+more you will be able to spend on faster and stronger hardware.  Of
+course, for some companies money is a nonissue, but there are many
+companies for which it is a <strong>big</strong> issue.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4><a name="ouch..._discontinued_products">Ouch ... Discontinued Products</a></h4>
+<p>The OSs in this hazard group tend to be developed by a single company
+or organization.</p>
+<p>You might find yourself in a position where you have invested a lot of
+time and money into developing some proprietary software that is
+bundled with the OS you chose (say writing a mod_perl handler that
+takes advantage of some proprietary features of the OS and that will
+not run on any other OS).  Things are under control, the performance
+is great and you sing with happiness on your way to work.  Then, one
+day, the company that supplies your beloved OS goes bankrupt (not
+unlikely nowadays), or they produce a newer incompatible version and
+they will not support the old one (happens all the time).  You are
+stuck with their early masterpiece, no support and no source code!
+What are you going to do?  Invest more money into porting the software
+to another OS ...</p>
+<p>Free and open-source OSs are probably less susceptible to this kind of
+problem.  Development is usually distributed between many companies
+and developers. So if a person who developed an important part
+of the kernel lost interest in continuing, then someone else will pick the
+falling flag and carry on.  Of course, if tomorrow some better project
+shows up, then developers might migrate there and finally drop the
+development. But in practice, people are often given support on older
+versions and helped to migrate to current versions.  Development tends
+to be more incremental than revolutionary, so upgrades are less
+traumatic, and there is usually plenty of notice of the forthcoming
+changes so that you have time to plan for them.</p>
+<p>Of course, with open-source OSs you can have the source code!  So
+you can always have a go yourself, but do not under-estimate the
+amounts of work involved.  There are many, many man-years of work in
+an OS.</p>
+
+<h4><a name="keeping_up_with_os_releases">Keeping Up with OS Releases</a></h4>
+<p>Actively developed OSs generally try to keep pace with the latest
+technology developments, and continually optimize the kernel and other
+parts of the OS to become better and faster.  Nowadays, Internet and
+networking in general are the hottest topics for system developers.
+Sometimes a simple OS upgrade to the latest stable version can save
+you an expensive hardware upgrade.  Also, remember that when you buy
+new hardware, chances are that the latest software will make the most
+of it.</p>
+<p>If a new product supports an old one by virtue of backward
+compatibility with previous products of the same family, then you might not
+reap all the benefits of the new product's features.  Perhaps you get
+almost the same functionality for much less money if you were to buy
+an older model of the same product.</p>
+
+<h3><a name="choosing_the_right_hardware">Choosing the Right Hardware</a></h3>
+<p>Sometimes the most expensive machine is not the one that provides the
+best performance.  Your demands on the platform hardware are based on
+many aspects and affect many components.  Let's discuss some of them.</p>
+<p>In the discussion I use terms that may be unfamiliar to you:</p>
+<ul>
+<li>
+<strong>Cluster</strong>: a group of machines connected together to perform one big
+or many small computational tasks in a reasonable time.  Clustering
+can also be used to provide 'fail-over,' where if one machine fails, then its
+processes are transferred to another without interruption of service.
+And you may be able to take one of the machines down for maintenance
+(or an upgrade) and keep your service running -- the main server will
+simply not dispatch the requests to the machine that was taken down.</li>
+
+<li>
+<strong>Load balancing</strong>: users are given the name of one of your machines
+but perhaps it cannot stand the heavy load.  You can use a clustering
+approach to distribute the load over a number of machines.  The
+central server, which users access initially when they type the name
+of your service, works as a dispatcher.  It just redirects requests to
+other machines.  Sometimes the central server also collects the
+results and returns them to the users.  You can get the advantages of
+clustering, too.</li>
+
+<li>
+<strong>Network Interface Card</strong> (NIC): a hardware component that allows you
+to connect your machine to the network. It performs packets sending and
+receiving, newer cards can encrypt and decrypt packets and perform
+digital signing and verifying of the such. These are coming in
+different speeds categories varying from 10Mbps to 10Gbps and
+faster. The most used type of the NIC card is the one that implements
+the Ethernet networking protocol.</li>
+
+<li>
+<strong>Random Access Memory</strong> (RAM): It's the memory that you have in your
+computer. (Comes in units of 8Mb, 16Mb, 64Mb, 256Mb, etc.)</li>
+
+<li>
+<strong>Redundant Array of Inexpensive Disks</strong> (RAID): an array of physical
+disks, usually treated by the operating system as one single disk, and
+often forced to appear that way by the hardware.  The reason for using
+RAID is often simply to achieve a high data transfer rate, but it may
+also be to get adequate disk capacity or high reliability.  Redundancy
+means that the system is capable of continued operation even if a disk
+fails.  There are various types of RAID array and several different
+approaches to implementing them.  Some systems provide protection
+against failure of more than one drive and some (`hot-swappable')
+systems allow a drive to be replaced without even stopping the OS.</li>
+<p></p></ul>
+
+<h4><a name="machine_strength_demands_according_to_expected_site_traffic">Machine Strength Demands According to Expected Site Traffic</a></h4>
+<p>If you are building a fan site and you want to amaze your friends with
+a mod_perl guest book, then any old 486 machine could do it.  If you are in
+a serious business, then it is important to build a scalable server.
+If your service is successful and becomes popular, then the traffic could
+double every few days, and you should be ready to add more resources
+to meet demand.  While we can define the Web server
+scalability more precisely, the important thing is to make sure that
+you can add more power to your <code>webserver(s)</code> without investing much
+additional money in software development (you will need a little
+software effort to connect your servers, if you add more of them).
+This means that you should choose hardware and OSs that can talk to
+other machines and become a part of a cluster.</p>
+<p>On the other hand, if you prepare for a lot of traffic and buy a
+monster to do the work for you, then what happens if your service doesn't
+prove to be as successful as you thought?  Then you've
+spent too much money, and meanwhile faster processors and other
+hardware components have been released; so you lose.</p>
+<p>Wisdom and prophecy, that's all it takes :)</p>
+
+<h4><a name="single_strong_machine_vs._many_weaker_machines">Single Strong Machine vs. Many Weaker Machines</a></h4>
+<p>Let's start with a claim that a 4-year-old processor is still 
+powerful and can be put to a good use. Now let's say that for a given
+amount of money you can probably buy either one new very strong
+machine or about 10 older but very cheap machines. I claim that with
+10 old machines connected into a cluster and by deploying load
+balancing you will be able to serve about five times more requests
+than with one single new machine.</p>
+<p>Why is that?  Because generally the performance improvement on a new
+machine is marginal while the price is much higher.  Ten machines will
+do faster disk I/O than one single machine, even if the new disk is
+quite a bit faster.  Yes, you have more administration overhead, but
+there is a chance you will have it anyway, for in a short time the new
+machine you have just bought might not stand the load.  Then you will
+have to purchase more equipment and think about how to implement load
+balancing and Web server file system distribution anyway.</p>
+<p>Why I am so convinced?  Look at the busiest services on the Internet:
+search engines, Web/e-mail servers and the like -- most of them use a
+clustering approach.  You may not always notice it, because they hide
+the real implementation details behind proxy servers.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4><a name="getting_fast_internet_connection">Getting Fast Internet Connection</a></h4>
+<p>You have the best hardware you can get, but the service is still
+crawling.  Make sure you have a fast Internet connection.  Not as fast
+as your ISP claims it to be, but fast as it should be.  The ISP might
+have a good connection to the Internet, but put many clients on
+the same line.  If these are heavy clients, then your traffic will have to
+share the same line and your throughput will suffer.  Think about a
+dedicated connection and make sure it is truly dedicated.  Don't trust
+the ISP, check it!</p>
+<p>The idea of having a connection to <strong>the Internet</strong> is a little
+misleading.  Many Web hosting and co-location companies have large
+amounts of bandwidth, but still have poor connectivity.  The public
+exchanges, such as MAE-East and MAE-West, frequently become
+overloaded, yet many ISPs depend on these exchanges.</p>
+<p>Private peering means that providers can exchange traffic much
+quicker.</p>
+<p>Also, if your Web site is of global interest, check that the ISP has
+good global connectivity.  If the Web site is going to be visited
+mostly by people in a certain country or region, then your server should
+probably be located there.</p>
+<p>Bad connectivity can directly influence your machine's performance.
+Here is a story one of the developers told on the mod_perl mailing
+list:</p>
+<BLOCKQUOTE><p>What relationship has 10 percent packet loss on one upstream provider got to
+do with machine memory ?</p>
+<p>Yes ... a lot. For a nightmare week, the box was located downstream of a
+provider who was struggling with some serious bandwidth problems of
+his own ... people were connecting to the site via this link, and
+packet loss was such that retransmits and TCP stalls were keeping
+httpd heavies around for much longer than normal ... instead of blasting
+out the data at high or even modem speeds, they would be stuck at
+1k/sec or stalled out ...  people would press stop and refresh, httpds
+would take 300 seconds to timeout on writes to no-one ... it was a
+nightmare.  Those problems didn't go away till I moved the box to a
+place closer to some decent backbones.</p>
+<p>Note that with a proxy, this only keeps a lightweight httpd tied up,
+assuming the page is small enough to fit in the buffers.  If you are a
+busy Internet site, then you always have some slow clients.  This is a
+difficult thing to simulate in benchmark testing, though.</p>
+</BLOCKQUOTE>
+<h4><a name="tuning_i/o_performance">Tuning I/O Performance</a></h4>
+<p>If your service is I/O bound (does a lot of read/write operations to
+disk), then you need a very fast disk, especially if the you need a
+relational database, which are the main I/O stream creators.  So you
+should not spend the money on video card and monitor!  A cheap card
+and a 14-inch monochrome monitor are perfectly adequate for a Web server;
+you will probably access it by <code>telnet</code> or <code>ssh</code> most of the time.
+Look for disks with the best price/performance ratio.  Of course, ask
+around and avoid disks that have a reputation for head-crashes and
+other disasters.</p>
+<p>You must think about RAID or similar systems if you have an enormous
+data set to serve (what is an enormous data set nowadays?  Gigabytes,
+terabytes?) or you expect a really big Web traffic.</p>
+<p>OK, you have a fast disk, what's next?  You need a fast disk
+controller.  There may be one embedded on your computer's motherboard.
+If the controller is not fast enough, then you should buy a faster one.
+Don't forget that it may be necessary to disable the original
+controller.</p>
+
+<h4><a name="how_much_memory_is_enough">How Much Memory Is Enough?</a></h4>
+<p>How much RAM do you need?  Nowadays, chances are that you will
+hear: ``Memory is cheap, the more you buy the better.''  But how much is
+enough?  The answer is pretty straightforward: <em>you do not want your
+machine to swap</em>.  When the CPU needs to write something into memory,
+but memory is already full, it takes the least frequently used memory
+pages and swaps them out to disk.  This means you have to bear the
+time penalty of writing the data to disk.  If another process then
+references some of the data that happens to be on one of the pages
+that has just been swapped out, then the CPU swaps it back in again,
+probably swapping out some other data that will be needed very shortly
+by some other process.  Carried to the extreme, the CPU and disk start
+to <em>thrash</em> hopelessly in circles, without getting any real work
+done.  The less RAM there is, the more often this scenario arises.
+Worse, you can exhaust swap space as well, and then your troubles
+really start.</p>
+<p>How do you make a decision?  You know the highest rate at which your
+server expects to serve pages and how long it takes on average to
+serve one.  Now you can calculate how many server processes you need.
+If you know the maximum size your servers can grow to, then you know how
+much memory you need.  If your OS supports memory sharing, then you can
+make best use of this feature by preloading the modules and scripts at
+server startup, and so you will need less memory than you have
+calculated.</p>
+<p>Do not forget that other essential system processes need memory as
+well, so you should plan not only for the Web server, but also take
+into account the other players.  Remember that requests can be queued,
+so you can afford to let your client wait for a few moments until a
+server is available to serve it.  Most of the time your server will
+not have the maximum load, but you should be ready to bear the peaks.
+You need to reserve at least 20 percent of free memory for peak situations.
+Many sites have crashed a few moments after a big scoop about them was
+posted and an unexpected number of requests suddenly came in.  (Like
+Slashdot effect.) If you are about to announce something cool, then be
+aware of the possible consequences.</p>
+
+<h4><a name="getting_a_faulttolerant_cpu">Getting a Fault-Tolerant CPU</a></h4>
+<p>Make sure that the CPU is operating within its specifications.  Many
+boxes are shipped with incorrect settings for CPU clock speed, power
+supply voltage, etc.  Sometimes a cooling fan is not fitted.  It may be
+ineffective because a cable assembly fouls the fan blades.  Like
+faulty RAM, an overheating processor can cause all kinds of strange
+and unpredictable things to happen.  Some CPUs are known to have bugs
+that can be serious in certain circumstances.  Try not to get one of
+them.</p>
+
+<!-- Stas Bekman mod_perl series -->
+<table width="150" border="0" cellspacing="0" cellpadding="4" align="right">
+<tr> 
+<td width="150" valign="top" height="4" bgcolor="#6699cc"></td></tr> 
+<tr>
+<td bgcolor="#efefef">
+<p class="headline" align="center">Previously in the Series
+</p>
+<p class="secondary">
+<a href="http://perl.com/pub/a/2002/05/22/mod_perl-isp.html">Finding a mod_perl ISP... or Becoming One</a><br /><br />
+<a href="http://perl.com/pub/a/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br /><br />
+<a href="http://perl.com/pub/a/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br /><br />
+
+<a href="/pub/a/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br /><br />
+<a href="/pub/a/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br /><br />
+<a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br /><br />
+<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a>
+
+</td></tr> <tr><td width="150" valign="top" height="4" bgcolor="#6699cc"> </td></tr></table>
+<!-- End Stas Sidebar -->
+
+
+<h4><a name="detecting_and_avoiding_bottlenecks">Detecting and Avoiding Bottlenecks</a></h4>
+<p>You might use the most expensive components, but still get bad
+performance.  Why?  Let me introduce an annoying word: bottleneck.</p>
+<p>A machine is an aggregate of many components.  Almost any one of them
+may become a bottleneck.</p>
+<p>If you have a fast processor but a small amount of RAM, then the RAM will
+probably be the bottleneck.  The processor will be under-utilized,
+usually it will be waiting for the kernel to swap the memory pages in
+and out, because memory is too small to hold the busiest pages.</p>
+<p>If you have a lot of memory, a fast processor, a fast disk, but a slow
+disk controller, then the disk controller will be the bottleneck.  The
+performance will still be bad, and you will have wasted money.</p>
+<p>A slow NIC can cause a bottleneck as well and make the whole service
+run slow.  This is a most important component, since Web servers
+are much more often network-bound than they are disk-bound
+(i.e. having more network traffic than disk utilization)</p>
+
+<h4><a name="solving_hardware_requirement_conflicts">Solving Hardware Requirement Conflicts</a></h4>
+<p>It may happen that the combination of software components that you
+find yourself using gives rise to conflicting requirements for the
+optimization of tuning parameters.  If you can separate the components
+onto different machines, then you may find that this approach (a kind of
+clustering) solves the problem, at much less cost than buying faster
+hardware, because you can tune the machines individually to suit the
+tasks they should perform.</p>
+<p>For example, if you need to run a relational database engine and
+mod_perl server, then it can be wise to put the two on different machines,
+since while RDBMS need a very fast disk, mod_perl processes need lots
+of memory. So by placing the two on different machines it's easy to
+optimize each machine at separate and satisfy the each software
+components requirements in the best way.</p>
+
+<hr />
+<h1><a name="references">References</a></h1>
+<ul>
+<li>
+The mod_perl site's URL: <a href="http://perl.apache.org">http://perl.apache.org</a></li>
+
+<li>
+For more information about RAID see the Disk-HOWTO, Module-HOWTO and
+Parallel-Processing-HOWTO available from the Linux Documentation
+Project and its mirrors (http://www.linuxdoc.org/docs.html#howto)</li>
+
+<li>
+For more information about clusters and high availability setups, see:</li>
+
+<p><a href="http://linux-ha.org/">High-Availability Linux Project</a> -- the
+definitive guide to load balancing techniques</p>
+
+<p>Linux Virtual Server Project
+( <a href="http://www.linuxvirtualserver.org/">http://www.linuxvirtualserver.org/</a> )</p>
+<p>mod_backhand -- Load Balancing for Apache
+( <a href="http://www.backhand.org/mod_backhand/">http://www.backhand.org/mod_backhand/</a> )</p>
+<p>mod_redundancy -- Redundancy/Failover solution
+( <a href="http://www.ask-the-guru.com">http://www.ask-the-guru.com</a> )</p>
+<p>lbnamed - a Load Balancing Name Server Written in Perl
+( <a href="http://www.stanford.edu/~riepel/lbnamed/">http://www.stanford.edu/~riepel/lbnamed/</a>
+<a href="http://www.stanford.edu/~riepel/lbnamed/bof.talk/">http://www.stanford.edu/~riepel/lbnamed/bof.talk/</a>
+<a href="http://www.stanford.edu/~schemers/docs/lbnamed/lbnamed.html">http://www.stanford.edu/~schemers/docs/lbnamed/lbnamed.html</a> )</p>
+<p></p></ul>
+
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/mod-perl/" rel="tag">mod_perl</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=mod_perl%20optimizing&amp;limit=20';return false;" rel="tag">mod_perl optimizing</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

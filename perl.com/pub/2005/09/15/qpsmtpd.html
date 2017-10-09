@@ -1,0 +1,416 @@
+<h2><a id="SECTION00020000000000000000">The Dark Ages</a></h2>
+
+<p>When it comes to web programming, Perl developers are spoiled.  They have an
+incredible array of choices for extending web based content delivery, from
+plain old CGI scripts, to FastCGI and SpeedyCGI, to mod_perl and PerlIS. Beyond
+that they have a large selection of frameworks with which to build their
+dynamic content, from Maypole and Catalyst to AxKit and OpenInteract.</p>
+
+<p>The same is <em>not</em> true of email. Those who administer an email server
+will more than likely have put up with the pain of adding dnsbl lookups to
+something like Sendmail or Qmail, or adding in recipient validation for their
+custom user database in Postfix. Extending email servers is painful, and for
+the most part you can't do it easily in Perl.</p>
+
+<p>Wouldn't it be nice if you could do something like mod_perl in a mail
+server?</p>
+
+<h2><a id="SECTION00030000000000000000">Qpsmtpd - the mod_perl of email</a></h2>
+
+<p>In 2001, Ask Bjrn Hansen needed to improve the spam detection on perl.org's
+mail server.  He decided the option of patching the existing Qmail installation
+was too painful. Instead he turned to the code in Jim Winstead's NNTP Server
+<em>Colobus</em> for inspiration to re-create qmail-smtpd in Perl. The first
+version he hacked together was just 300 lines of code.</p>
+
+<p>Others soon started using <em>qpsmtpd</em>, due to its malleability.  In
+version 0.10, they refactored the code, factoring out some of the core
+subsystems were factored out and creating a flexible plugin system.</p>
+
+<p>Ask is very coy about his project, but he proudly states that when
+apache.org switched from qmail to <em>qpsmtpd</em>, the server load actually
+dropped, simply because it was rejecting so much spam. As an example of the
+scalability of <em>qpsmtpd</em>, the apache.org mail servers currently process
+over 2 million mails a day on their primary MX, rejecting over 80% of it as
+junk -- all thanks to the power and flexibility of <em>qpsmtpd</em>.</p>
+
+<p>The goals of the <em>Qpsmtpd</em> project are thus:</p>
+
+<ul>
+
+<li>Simple to setup and integrate into an existing setup</li>
+<li>Easy to create new plugins for filtering or queueing mail</li>
+<li>Maintain great performance while still running completely in Perl</li>
+<li>Maintain email stability and integrity</li>
+</ul>
+
+<p>It is important to note here that <em>qpsmtpd</em> is <em>just</em> the SMTP
+component of an email setup. You still need something to do onward delivery
+either to your end users, or to remote sites when you are relaying mail. Most
+setups use either qmail or postfix to do this, but any mail server will do.</p>
+
+<p>The initial design of <em>qpsmtpd</em> was to talk to qmail for onward
+processing (hence the "Q" in the name), however <em>qpsmtpd</em> speaks
+natively to qmail, postfix or exim, and for other servers you can use SMTP to
+deliver mail. While this sounds like you have to maintain two systems, the
+additional capabilities of <em>qpsmtpd</em> make it worth it.  The next section
+shows how to make <em>qpsmtpd</em> talk to your other email server.</p>
+
+<h3><a id="SECTION00031000000000000000">Setting up Qpsmtpd</a></h3>
+
+<p>You can run <em>qpsmtpd</em> in a several ways depending on how you want it
+to manage the connections:</p>
+
+<ul>
+<li>Via <code>tcpserver</code> or <code>inetd/xinetd</code></li>
+<li>Via <code>qpsmtpd-forkserver</code>, which forks once per connection</li>
+
+<li>Via <a
+href="http://search.cpan.org/perldoc/Apache::Qpsmtpd">Apache::Qpsmtpd</a>. This
+makes use of mod_perl 2.0's ability to create a protocol handler for protocols
+other than HTTP.</li>
+
+<li>For very high concurrency you can use it as a multiplexing server. Two
+large anti-spam companies' high traffic spamtraps have used this effectively
+since Q2 2005, delivering concurrency as high as 10,000 on some occasions.</li>
+
+</ul>
+
+<p>Each possible configuration has their pros and cons and you should evaluate
+your needs depending on your current setup. The example in this article uses
+<code>qpsmtpd-forkserver</code>, because this approach does not require any
+extra software.</p>
+
+<h4><a id="SECTION00031100000000000000">Required Perl Modules</a></h4>
+
+<p>The following Perl modules are required:</p>
+
+<ul>
+
+<li><a href="http://search.cpan.org/perldoc/Net::DNS">Net::DNS</a></li>
+<li><a href="http://search.cpan.org/perldoc/MIME::Base64">MIME::Base64</a></li>
+<li><a href="http://search.cpan.org/perldoc/Mail::Header">Mail::Header</a>
+(part of the MailTools distribution)</li>
+
+</ul>
+
+<p>If you use a version of Perl older than 5.8.0 you will also need:</p>
+
+<ul>
+
+<li><a href="http://search.cpan.org/perldoc/Data::Dumper">Data::Dumper</a></li>
+<li><a href="http://search.cpan.org/perldoc/File::Temp">File::Temp</a></li>
+<li><a href="http://search.cpan.org/perldoc/Time::HiRes">Time::HiRes</a></li>
+
+</ul>
+
+<p>The easiest way to install modules from CPAN is with the CPAN shell. Run it
+with</p>
+
+<pre><code>$ perl -MCPAN -e shell</code></pre>
+
+<h4><a id="SECTION00031200000000000000">Getting it all running</a></h4>
+
+<p>After installing the pre-requisite modules, getting <em>qpsmtpd</em> running
+is very simple. Download the tarball from <a href="http://qpsmtpd.org/">the
+qpsmtpd website</a> and extract it in the location of your choosing. Then
+<code>cd</code> into the directory and type:</p>
+
+<pre><code>$ mv config.sample config
+$ ./qpsmtpd-forkserver -u $USER</code></pre>
+
+<p>Congratulations! You now have <em>qpsmtpd</em> running on port 2525. Telnet
+in to see it running:</p>
+
+<pre><code>$ telnet localhost 2525
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+220 jester.sergeant.org ESMTP qpsmtpd 0.31-dev ready; send us
+your mail, but not your spam.</code></pre>
+
+<p>Just type <code>QUIT</code> to end the session.</p>
+
+<h4><a id="SECTION00031300000000000000">Running as a Daemon</a></h4>
+
+<p>There are multiple ways to setup <em>qpsmtpd</em> as a daemon. The most
+common way is to use Dan Bernstein's daemontools kit (a <code>run</code> file
+is included in the distribution), however it is also quite easy to start by
+using rc scripts. I will leave running it as a daemon as an exercise for the
+user -- people get very protective of their own particular way of doing this.
+See the <em>README</em> file in the distribution for details of how to do this
+for daemontools.</p>
+
+<h2><a id="SECTION00040000000000000000">Replacing your current SMTP
+server</a></h2>
+
+<p>The simplest (and least scary, for those who worry about these kinds of
+things) strategy for installing <em>qpsmtpd</em> is to change your current SMTP
+server to run on a different port, and simply have <em>qpsmtpd</em> forward to
+that SMTP server after it has done spam filtering. This way you get the best of
+all worlds -- you keep your current stable email environment <em>and</em> you
+get all the spam filtering goodness that <em>qpsmtpd</em> brings.</p>
+
+<p>First, create a <em>qpsmtpd</em> configuration file for the plugins that you
+want to load. In your <code>qpsmtpd</code> directory, edit the file
+<em>config/plugins</em> to contain the following lines:</p>
+
+<pre><code>count_unrecognized_commands 4
+check_badmailfrom
+check_badrcptto
+check_spamhelo
+
+# this plugin needs to run after all other "rcpt" plugins
+rcpt_ok
+
+# we'll turn this on later
+#spamassassin
+
+# deliver to localhost:2525
+queue/smtp-forward localhost 2525</code></pre>
+
+<p>If you are <em>not</em> currently running qmail, you will also need to
+create the file <em>config/rcpthosts</em>, which contains a list of domains for
+which you currently receive email for. Qmail users can relax as
+<em>qpsmtpd</em> will read <em>/var/qmail/control/rcpthosts</em> by
+default.</p>
+
+<pre><code># rcpthosts - who I receive email for
+# put your domain name in here
+example.com</code></pre>
+
+<p>Make sure you do a simple test of this new configuration as shown above.</p>
+
+<p>Next, convince your current SMTP server (qmail, postfix, exim or whatever
+you currently use) to run on a port 2525. I'll leave that up to you to work out
+as every SMTP server configures this differently. If you get stuck ask on the
+<a href="mailto:qpsmtpd@perl.org"><em>qpsmtpd</em> mailing list</a> for
+help.</p>
+
+<p>To run <em>qpsmtpd</em> on port 25, pass that option on the command
+line:</p>
+
+<pre><code>$ ./qpsmtpd-forkserver -u $USER -p 25</code></pre>
+
+<p>That's all there is to it, so test it. The best testing tool for SMTP
+servers is <a href="http://jetmore.org/john/code/#swaks">swaks</a> (though it
+needs the <a href="http://www.nntp.perl.org/group/perl.qpsmtpd/3422">swaks TLS
+debugging patch</a> if you intend to test TLS). To use it, try the following
+command:</p>
+
+<pre><code>$ swaks -t matt@sergeant.org -f matt@sergeant.org -h \
+	foo -s localhost</code></pre>
+
+<p>If everything is successful you should see:</p>
+
+<pre><code>&lt;-  250 Queued! 
+ -&gt; QUIT
+&lt;-  221 myserver.example.com closing connection. Have
+a wonderful day.
+=== Connection closed by foreign host.</code></pre>
+
+<p>Now if you have a working installation of SpamAssassin and a running spamd
+daemon, feel free to enable the SpamAssassin plugin in <em>config/plugins</em>
+and restart the server. By default this will just add headers to the email, but
+see <code>perldoc plugins/spamassassin</code> for details on how you can get it
+to reject mail over a certain threshold.</p>
+
+<h2><a id="SECTION00050000000000000000">Useful Plugins</a></h2>
+
+<p><em>Qpsmtpd</em> comes with a wealth of useful plugins. Rather than go into
+great detail on each, here's a synopsis of some of the more useful ones.</p>
+
+<ul>
+
+<li>The <code>check_earlytalker</code> -- plugin can reduce your spam load by
+up to 50% on its own with zero false positives. It does this by watching for
+spam zombies that talk before they should in the SMTP session. I recommend a
+<code>wait</code> option of anywhere between 8 and 25 seconds to be most
+effective, though beware that it will cause this much delay for each and every
+connection, potentially increasing your concurrency.</li>
+
+<li><code>check_spamhelo</code> allows you to setup <em>config/badhelo</em> to
+contain known bad spam <code>HELO</code> strings, such as your own IP address,
+your own domain name, and some frequently forged and never legitimate domains
+such as aol.com, yahoo.com, hotmail.com.</li>
+
+<li><code>dnsbl</code> -- one of <em>qpsmtpd</em>'s strengths is the ease with
+which you can query multiple DNS blocklists. Simply edit
+<em>config/dnsbl_zones</em> to add more blocklists.</li>
+
+<li><code>virus/*</code> -- there are multiple anti-virus plugins. Most free
+software advocates recomment clamav (I use this personally and it is very
+good), but you can choose from a selection of commercial scanners too.
+<em>Qpsmtpd</em> allows you to run multiple anti-virus scanners based on the
+order you place them in <em>config/plugins</em>.</li>
+
+<li><em>ident/p0f</em> -- if you want to write a plugin based on whether the
+connecting machine is Win32 or Unix you can do that by using the information
+provided by the p0f plugin.</li>
+
+</ul>
+
+<h2><a id="SECTION00060000000000000000">Writing Your Own Plugin</a></h2>
+
+<p>Making use of all the good stuff in <em>qpsmtpd</em> is all well and good,
+but sometimes you need to go the extra mile and write your own plugin. Rather
+than show a dummy example, I prefer to show how to create a plugin that watches
+for repeatedly denied IP addresses and locally blacklists them.</p>
+
+<p>For a <em>qpsmtpd</em> plugin you need two things:</p>
+
+<ul>
+<li>A file in the <em>plugins/</em> directory.</li>
+<li>A line in <em>config/plugins</em>.</li>
+</ul>
+
+<p>The line in <em>config/plugins</em> is very simple -- it just needs to
+contain the name (or relative path) of your plugin.  <em>Qpsmtpd</em> will
+split anything after the name of the plugin on whitespace and pass it to the
+plugin's <code>init()</code> method.</p>
+
+<p>The plugin itself is a file containing ordinary Perl. Save the following
+file as <em>plugins/deny_repeat_offenders</em>.</p>
+
+<p>The plugin starts with some setup code. Plugins are Perl classes, but they
+don't need all the usual framework that you have to provide with a Perl class -
+<em>qpsmtpd</em> builds that for you. To initialise the objects of this class,
+you can optionally provide an <code>init()</code> method. I've used that here
+to setup some parameters to the hooks:</p>
+
+<pre><code>use NDBM_File;
+use Fcntl;
+
+sub init {
+    my ($self, $qp, $filename, $threshold) = @_;
+    
+    tie my %h, 'NDBM_File', $filename, O_RDWR|O_CREAT, 0666
+        or die "Unable to tie $filename: $!";
+    $self-&gt;{dbm} = \%h;
+    $self-&gt;{deny_threshold} = $threshold;
+}</code></pre>
+
+<p>Here the filename and threshold are the parameters from the line in
+<em>config/plugins</em> (shown toward the end of this section). I've used
+<code>NDBM_File</code> to store the data, but you can use any dbm system if you
+prefer something different.  This example doesn't do any locking of the DBM
+file, but you should do in a production environment, or use something that
+doesn't suffer from concurrent write problems such as an RDBMS.</p>
+
+<p>The plugin needs to hook into the <code>DENY</code> phase which gets called
+whenever a mail transaction is denied for any reason. In there, it will
+increment a value in a dbm file corresponding to the IP address.</p>
+
+<pre><code>#!perl -w
+
+sub hook_deny {
+    my ($self, $transaction, $plugin, $level) = @_;
+    
+    # We're only interested in DENY or DENY_DISCONNECT
+    unless ($level == DENY or $level == DENY_DISCONNECT) {
+        return DECLINED;
+    }
+    
+    return DECLINED if $plugin eq $self-&gt;plugin_name;
+    
+    # continued...</code></pre>
+
+<p>There are several things going on here: First, the name of the sub is
+<code>hook_deny</code> so that <em>qpsmtpd</em> knows to call it during the
+<code>DENY</code> phase. There's no other setup necessary this sub to get
+called. Second, it collects the arguments, which include the plugin object
+itself, the transaction -- a <code>Qpsmtpd::Transaction</code> object, which
+plugin caused the <code>DENY</code>, and the actual code used.</p>
+
+<p>For the purposes here, the only interesting codes are <code>DENY</code> or
+<code>DENY_DISCONNECT</code>. The other reasons this might be called would be
+for <code>DENYSOFT</code> and <code>DENYSOFT_DISCONNECT</code>.  Returning
+<code>DECLINED</code> gives other deny hooks the chance to be called.</p>
+
+<p>Finally, it returns <code>DECLINED</code> if the <code>DENY</code> came from
+this plugin to avoid ending up in a feedback loop.</p>
+
+<pre><code>    my $ip = $self-&gt;connection-&gt;remote_ip;
+    my $now = time;
+
+    my $record = $self-&gt;{dbm}-&gt;{$ip};
+    # Is this IP in the DB?
+    if (!$record) {
+        $self-&gt;{dbm}-&gt;{$ip} = pack("NN", 1, $now);
+        return DECLINED;
+    }
+    
+    my ($count, $tlast) = unpack("NN", $record);
+
+    # Denied within the last 8 hours?
+    if ($tlast &lt; ($now - 28800)) {
+        # Not denied in last 8 hours so just reset count.
+        $self-&gt;{dbm}-&gt;{$ip} = pack("NN", 1, $now);
+        return DECLINED;
+    }
+    
+    # Now just update the count
+    $self-&gt;{dbm}-&gt;{$ip} = pack("NN", $count+1, $now);
+    
+    return DECLINED;
+}</code></pre>
+
+<p>The rest of this hook is quite simple -- it stores some details in a DBM
+file about when it last saw a <code>DENY</code> from the IP address. If the IP
+hasn't been denied in the last 8 hours, it resets the counter.</p>
+
+<p>With all that information stored, it's time to do something with it:</p>
+
+<pre><code>sub hook_connect {
+    my ($self, $transaction) = @_;
+    
+    my $ip = $self-&gt;connection-&gt;remote_ip;
+    my $record = $self-&gt;{dbm}-&gt;{$ip} || return DECLINED;
+    my ($count, $tlast) = unpack("NN", $record);
+    
+    # Ignore and delete entry if not denied in last 12 hours
+    if ($tlast &lt; (time - 43200)) {
+        delete $self-&gt;{dbm}-&gt;{$ip};
+        return DECLINED;
+    }
+    
+    if ($count &gt;= $self-&gt;{deny_threshold}) {
+        return DENYSOFT, "You are a repeat offender. Go away";
+    }
+    
+    return DECLINED;
+}</code></pre>
+
+<p>First the code extract the details from the DBM regarding that IP address.
+Then it makes sure that the IP address has been denied within the last 12 hours
+(otherwise it's a stale entry in the DB and needs deleting). Finally, if this
+IP has been denied too regularly recently then it issues a
+<code>DENYSOFT</code>. At connect time a <code>DENYSOFT</code> will disconnect
+the client with a 450 error, meaning that even if this is a false accusation
+they will come back later to try and deliver the mail. If this is legitimate
+mail on a legitimate SMTP server, then the mail will eventually get delivered
+-- but spammers probably will not try again.</p>
+
+<p>That's it. To add the plugin, edit your
+<em>config/plugins</em> file and put a line like this somewhere
+near the top. (The order of plugins determines when they run, and
+you want this one to run early):</p>
+
+<pre><code># deny repeat offenders for 12 hours after 5 bad attempts
+deny_repeat_offenders ip_deny_db.dbm 5</code></pre>
+
+<p>Remember to restart <em>qpsmtpd</em> for this change to take effect.</p>
+
+<h2><a id="SECTION00070000000000000000">Conclusions</a></h2>
+
+<p><em>Qpsmtpd</em> is a wonderful, flexible mail server that is fantastic for
+trying out experiments in filtering mail. As classic examples of this
+experimentation philosophy, <em>qpsmtpd</em> was the first smtpd to have SPF
+support, the first to have URIBL support, and the first to have early talker
+checks shipped in core. All of these plugins were very simple to implement,
+taking up only a few lines of Perl, just like the example you see above.</p>
+
+<p>Extending your mail server with <em>qpsmtpd</em> is both easy and fun. To
+learn more, look through the plugins in the distribution, and ask questions on
+the mailing list. With <em>qpsmtpd</em> anything is possible, and your incoming
+mail will become usable once again.</p>

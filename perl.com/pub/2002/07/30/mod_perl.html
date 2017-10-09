@@ -1,0 +1,1465 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2002/07/30/mod_perl.html">
+<dc:title>Improving mod_perl Sites&apos; Performance: Part 4</dc:title>
+<dc:description> Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the...</dc:description>
+<dc:creator>Stas Bekman</dc:creator>
+<dc:date>2002-07-30T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2002/07/p6pdigest/20020723.html" title="This week on Perl 6 (week ending 2002-07-21)" />
+    <link rel="next bookmark" href="/pub/2002/07/p6pdigest/20020805.html" title="This week on Perl 6 (week ending 2002-08-04)" />
+    
+    
+    <title>Improving mod_perl Sites' Performance: Part 4 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1328" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Improving mod_perl Sites' Performance: Part 4</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Stas Bekman</span> on <abbr class="published" title="2002-07-30T00:00:00-08:00">July 30, 2002 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+<h3><a name="introduction">Introduction</a></h3>
+<p>If your OS supports sharing of memory (and most sane systems do), you
+might save a lot of RAM by sharing it between child processes. This
+will allow you to run more processes and hopefully better satisfy the
+client, without investing extra money into buying more memory.</p>
+
+<p>This is only possible when you preload code at server startup.
+However, during a child process' life, its memory pages tend to become
+unshared. There is no way we can make Perl allocate memory so that
+(dynamic) variables land on different memory pages from constants, so
+the <strong>copy-on-write</strong> effect will hit you almost at random.</p>
+
+<p>If you are pre-loading many modules, you might be able to trade off the
+memory that stays shared against the time for an occasional fork by
+tuning <code>MaxRequestsPerChild</code>.  Each time a child reaches this upper
+limit and dies, it should release its unshared pages.  The new child
+which replaces it will share its fresh pages until it scribbles on
+them.</p>
+
+
+<p>The ideal is a point where your processes usually restart before too
+much memory becomes unshared.  You should take some measurements to
+see if it makes a real difference, and to find the range of reasonable
+values.  If you have success with this, tuning the value of
+<code>MaxRequestsPerChild</code> will probably be peculiar to your situation and
+may change with changing circumstances.</p>
+
+<csperl file="grab" domain="on" record="b/832" template="b/article_sidebar2.view">
+
+<p>It is very important to understand that your goal is not to have
+<code>MaxRequestsPerChild</code> to be 10000. Having a child serving 300
+requests on precompiled code is already a huge overall speedup, so if
+it is 100 or 10000 it probably does not really matter if you can save
+RAM by using a lower value.</p>
+
+<p>Do not forget that if you preload most of your code at server startup,
+the newly forked child gets ready very very fast, because it inherits
+most of the preloaded code and the perl interpreter from the parent
+process.</p>
+
+<p>During the life of the child, its memory pages (which aren't really its
+own to start with, it uses the parent's pages) gradually get `dirty' -
+variables which were originally inherited and shared are updated or
+modified -- and the <em>copy-on-write</em> happens.  This reduces the number
+of shared memory pages, thus increasing the memory requirement.
+Killing the child and spawning a new one allows the new child to get
+back to the pristine shared memory of the parent process.</p>
+
+<p>The recommendation is that <code>MaxRequestsPerChild</code> should not be too
+large, otherwise you lose some of the benefit of sharing memory.</p>
+
+
+<h3><a name="how_shared_is_my_memory">How Shared Is My Memory?</a></h3>
+<p>You've probably noticed that the word shared is repeated many times in
+relation to <code>mod_perl</code>.  Indeed, shared memory might save you a lot of
+money, since with sharing in place you can run many more servers than
+without it.</p>
+
+<p>How much shared memory do you have?  You can see it by either using
+the memory utility that comes with your system or you can deploy the
+<code>GTop</code> module:</p>
+
+<pre><code>
+  use GTop ();
+  print &quot;Shared memory of the current process: &quot;,
+    GTop-&gt;new-&gt;proc_mem($$)-&gt;share,&quot;\n&quot;;
+  
+  print &quot;Total shared memory: &quot;,
+    GTop-&gt;new-&gt;mem-&gt;share,&quot;\n&quot;;</code></pre>
+<p>When you watch the output of the <code>top</code> utility, don't confuse the
+<code>RES</code> (or <code>RSS</code>) columns with the <code>SHARE</code> column.  <code>RES</code> is
+RESident memory, which is the size of pages currently swapped in.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="calculating_real_memory_usage">Calculating Real Memory Usage</a></h3>
+<p>I have shown how to measure the size of the process' shared memory,
+but we still want to know what the real memory usage is.  Obviously
+this cannot be calculated simply by adding up the memory size of each
+process because that wouldn't account for the shared memory.</p>
+
+<p>On the other hand we cannot just subtract the shared memory size from
+the total size to get the real memory usage numbers, because in
+reality each process has a different history of processed requests,
+therefore the shared memory is not the same for all processes.</p>
+
+<p>So how do we measure the real memory size used by the server we run?
+It's probably too difficult to give the exact number, but I've found a
+way to get a fair approximation, which was verified in the following
+way. I calculated the real memory used by a technique you will
+see in the moment, and then stopped the Apache server and saw
+that the memory usage report indicated that the total used memory went
+down by almost the same number I've calculated.  Note that some
+OSs do smart memory pages caching so you may not see the memory usage
+decrease as soon as it actually happens when you quit the application.</p>
+
+<p>This is a technique I've used:</p>
+
+<ol>
+<li>
+For each process sum up the difference between shared and system
+memory. To calculate a difference for a single process use:
+<pre><code>
+  use GTop;
+  my $proc_mem = GTop-&gt;new-&gt;proc_mem($$);
+  my $diff     = $proc_mem-&gt;size - $proc_mem-&gt;share;
+  print &quot;Difference is $diff bytes\n&quot;;</code></pre>
+</li>
+
+<li>
+Now if we add the shared memory size of the process with maximum
+shared memory, we will get all the memory that actually is being used
+by all httpd processes, except for the parent process.
+</li>
+
+<li>
+Finally, add the size of the parent process.
+</li>
+</ol>
+
+<p>Please note that this might be incorrect for your system, so you use
+this number on your own risk.</p>
+
+<p>I've used this technique to display real memory usage in the module
+<code>Apache::VMonitor</code> (see the previous article), so instead of trying
+to manually calculate this number you can use this module to do it
+automatically.  In fact in the calculations used in this module there
+is no separation between the parent and child processes, they are all
+counted indifferently using the following code:</p>
+
+<pre><code>
+  use GTop ();
+  my $gtop = GTop-&gt;new;
+  my $total_real = 0;
+  my $max_shared = 0;
+  # @mod_perl_pids is initialized by Apache::Scoreboard,
+  # irrelevant here
+  my @mod_perl_pids = some_code();
+  for my $pid (@mod_perl_pids)
+    my $proc_mem = $gtop-&gt;proc_mem($pid);
+    my $size     = $proc_mem-&gt;size($pid);
+    my $share    = $proc_mem-&gt;share($pid);
+    $total_real += $size - $share;
+    $max_shared  = $share if $max_shared &lt; $share;
+  }
+  $total_real += $max_shared;</code></pre>
+<p>So as you see we that we accumulate the difference between the shared
+and reported memory:</p>
+
+<pre><code>
+    $total_real  += $size-$share;</code></pre>
+<p>and at the end add the biggest shared process size:</p>
+
+<pre><code>
+  $total_real += $max_shared;</code></pre>
+<p>So now <code>$total_real</code> contains approximately the really used memory.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="are_my_variables_shared">Are My Variables Shared?</a></h3>
+<p>How do you find out if the code you write is shared between the
+processes or not?  The code should be shared, except where it is on a
+memory page with variables that change.  Some variables are read-only
+in usage and never change.  For example, if you have some variables
+that use a lot of memory and you want them to be read-only.  As you
+know the variable becomes unshared when the process modifies its
+value.</p>
+
+<p>So imagine that you have this 10Mb in-memory database that resides in
+a single variable, you perform various operations on it and want to
+make sure that the variable is still shared.  For example if you do
+some matching regular expression (regex) processing on this variable
+and want to use the <code>pos()</code> function, will it make the variable unshared
+or not?</p>
+
+<p>The <code>Apache::Peek</code> module comes to rescue.  Let's write a module
+called <em>MyShared.pm</em> which we preload at server startup, so all the
+variables of this module are initially shared by all children.</p>
+
+<pre><code>
+  MyShared.pm
+  ---------
+  package MyShared;
+  use Apache::Peek;
+  
+  my $readonly = &quot;Chris&quot;;
+  
+  sub match    { $readonly =~ /\w/g;               }
+  sub print_pos{ print &quot;pos: &quot;,pos($readonly),&quot;\n&quot;;}
+  sub dump     { Dump($readonly);                  }
+  1;</code></pre>
+  
+<p>This module declares the package <code>MyShared</code>, loads the
+<code>Apache::Peek</code> module and defines the lexically scoped <code>$readonly</code>
+variable which is supposed to be a variable of large size (think about
+a huge hash data structure), but we will use a small one to simplify
+this example.</p>
+
+<csquery path="q/21" where="cs_rid != {cs_rid}">
+
+<p>The module also defines three subroutines: <code>match()</code> that does a simple
+character matching, <code>print_pos()</code> that prints the current position of
+the matching engine inside the string that was last matched and
+finally the <code>dump()</code> subroutine that calls the <code>Apache::Peek</code> module's
+<code>Dump()</code> function to dump a raw Perl data-type of the <code>$readonly</code>
+variable.</p>
+
+<p>Here is the script that prints the process ID (PID) and calls all
+three functions.  The goal is to check whether <code>pos()</code> makes the
+variable <em>dirty</em> and therefore unshared.</p>
+
+<pre><code>
+  share_test.pl
+  -------------
+  use MyShared;
+  print &quot;Content-type: text/plain\r\n\r\n&quot;;
+  print &quot;PID: $$\n&quot;;
+  MyShared::match();
+  MyShared::print_pos();
+  MyShared::dump();</code></pre>
+  
+<p>Before you restart the server, in <em>httpd.conf</em> set:</p>
+
+<pre><code>
+  MaxClients 2</code></pre>
+  
+<p>for easier tracking.  You need at least two servers to compare the
+print outs of the test program.  Having more than two can make the
+comparison process harder.</p>
+
+<p>Now open two browser windows and issue the request for this script
+several times in both windows, so you get different processes PIDs
+reported in the two windows and each process has processed a different
+number of requests to the <em>share_test.pl</em> script.</p>
+
+<p>In the first window you will see something like that:</p>
+
+<pre><code>
+  PID: 27040
+  pos: 1
+  SV = PVMG(0x853db20) at 0x8250e8c
+    REFCNT = 3
+    FLAGS = (PADBUSY,PADMY,SMG,POK,pPOK)
+    IV = 0
+    NV = 0
+    PV = 0x8271af0 &quot;Chris&quot;\0
+    CUR = 5
+    LEN = 6
+    MAGIC = 0x853dd80
+      MG_VIRTUAL = &amp;vtbl_mglob
+      MG_TYPE = 'g'
+      MG_LEN = 1</code></pre>
+      
+<p>And in the second window:</p>
+
+<pre><code>
+  PID: 27041
+  pos: 2
+  SV = PVMG(0x853db20) at 0x8250e8c
+    REFCNT = 3
+    FLAGS = (PADBUSY,PADMY,SMG,POK,pPOK)
+    IV = 0
+    NV = 0
+    PV = 0x8271af0 &quot;Chris&quot;\0
+    CUR = 5
+    LEN = 6
+    MAGIC = 0x853dd80
+      MG_VIRTUAL = &amp;vtbl_mglob
+      MG_TYPE = 'g'
+      MG_LEN = 2</code></pre>
+
+
+<p>We see that all the addresses of the supposedly big structure are the
+same (<code>0x8250e8c</code> and <code>0x8271af0</code>), therefore the variable data
+structure is almost completely shared.  The only difference is in
+<code>SV.MAGIC.MG_LEN</code> record, which is not shared.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>So given that the <code>$readonly</code> variable is a big one, its value is
+still shared between the processes, while part of the variable data
+structure is non-shared.  But it's almost insignificant because it
+takes a very little memory space.</p>
+
+<p>Now if you need to compare more than variable, doing it by hand can be
+quite time consuming and error prune.  Therefore it's better to
+correct the testing script to dump the Perl data-types into files (e.g
+<em>/tmp/dump.$$</em>, where <code>$$</code> is the PID of the process) and then using
+<code>diff(1)</code> utility to see whether there is some difference.</p>
+
+<p>So correcting the <code>dump()</code> function to write the info to the file will
+do the job. Notice that I use <code>Devel::Peek</code> and not
+<code>Apache::Peek</code>. The both are almost the same, but <code>Apache::Peek</code>
+prints it output directly to the opened socket so I cannot intercept
+and redirect the result to the file. Since <code>Devel::Peek</code> dumps
+results to the STDERR stream I can use the old trick of saving away
+the default STDERR handler, and open a new filehandler using the
+STDERR. In our example when <code>Devel::Peek</code> now prints to STDERR it
+actually prints to our file. When I'm done, I make sure to restore the
+original STDERR filehandler.</p>
+
+<p>So this is the resulting code:</p>
+
+<pre><code>
+  MyShared2.pm
+  ---------
+  package MyShared2;
+  use Devel::Peek;
+  
+  my $readonly = &quot;Chris&quot;;
+  
+  sub match    { $readonly =~ /\w/g;               }
+  sub print_pos{ print &quot;pos: &quot;,pos($readonly),&quot;\n&quot;;}
+  sub dump{
+    my $dump_file = &quot;/tmp/dump.$$&quot;;
+    print &quot;Dumping the data into $dump_file\n&quot;;
+    open OLDERR, &quot;&gt;&amp;STDERR&quot;;
+    open STDERR, &quot;&gt;&quot;.$dump_file or die &quot;Can't open $dump_file: $!&quot;;
+    Dump($readonly);
+    close STDERR ;
+    open STDERR, &quot;&gt;&amp;OLDERR&quot;;
+  }
+  1;</code></pre>
+
+
+<p>When if I modify the code to use the modified module:</p>
+
+<pre><code>
+  share_test2.pl
+  -------------
+  use MyShared2;
+  print &quot;Content-type: text/plain\r\n\r\n&quot;;
+  print &quot;PID: $$\n&quot;;
+  MyShared2::match();
+  MyShared2::print_pos();
+  MyShared2::dump();</code></pre>
+
+
+<p>And run it as before (with MaxClients&nbsp;2), two dump files will be
+created in the directory <em>/tmp</em>.  In our test these were created as
+<em>/tmp/dump.1224</em> and <em>/tmp/dump.1225</em>. When I run diff(1):</p>
+
+<pre><code>
+  % diff /tmp/dump.1224 /tmp/dump.1225
+  12c12
+  &lt;       MG_LEN = 1
+  ---
+  &gt;       MG_LEN = 2</code></pre>
+
+
+<p>We see that the two padlists (of the variable <code>readonly</code>) are
+different, as we have observed before when I did a manual comparison.</p>
+
+<p>In fact we if we think about these results again, we get to a
+conclusion that there is no need for two processes to find out whether
+the variable gets modified (and therefore unshared). It's enough to
+check the datastructure before the script was executed and after that.
+You can modify the <code>MyShared2</code> module to dump the padlists into a
+different file after each invocation and than to run the <code>diff(1)</code> on
+the two files.</p>
+
+<p>If you want to watch whether some lexically scoped (with <code>my())</code>
+variables in your <code>Apache::Registry</code> script inside the same process
+get changed between invocations you can use the
+<code>Apache::RegistryLexInfo</code> module instead.  Since it does exactly
+this: it makes a snapshot of the padlist before and after the code
+execution and shows the difference between the two.  This specific
+module was written to work with <code>Apache::Registry</code> scripts so it
+won't work for loaded modules. Use the technique I have described
+above for any type of variables in modules and scripts.</p>
+
+
+<p>Surely another way of ensuring that a scalar is readonly and therefore
+sharable is to either use the <code>constant</code> pragma or <code>readonly</code>
+pragma.  But then you won't be able to make calls that alter the
+variable even a little, like in the example that I've just showen,
+because it will be a true constant variable and you will get compile
+time error if you try this:</p>
+
+<pre><code>
+  MyConstant.pm
+  -------------
+  package MyConstant;
+  use constant readonly =&gt; &quot;Chris&quot;;
+  
+  sub match    { readonly =~ /\w/g;               }
+  sub print_pos{ print &quot;pos: &quot;,pos(readonly),&quot;\n&quot;;}
+  1;
+  
+  % perl -c MyConstant.pm
+  
+  Can't modify constant item in match position at MyConstant.pm line
+  5, near &quot;readonly)&quot;
+  MyConstant.pm had compilation errors.</code></pre>
+
+
+<p>However this code is just right:</p>
+
+<pre><code>
+  MyConstant1.pm
+  -------------
+  package MyConstant1;
+  use constant readonly =&gt; &quot;Chris&quot;;
+  
+  sub match { readonly =~ /\w/g; }
+  1;</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="preloading_perl_modules_at_server_startup">Preloading Perl Modules at Server Startup</a></h3>
+<p>You can use the <code>PerlRequire</code> and <code>PerlModule</code> directives to load
+commonly used modules such as <code>CGI.pm</code>, <code>DBI</code> and etc., when the
+server is started.  On most systems, server children will be able to
+share the code space used by these modules.  Just add the following
+directives into <em>httpd.conf</em>:</p>
+
+<pre><code>
+  PerlModule CGI
+  PerlModule DBI</code></pre>
+
+
+<p>But an even better approach is to create a separate startup file
+(where you code in plain perl) and put there things like:</p>
+
+<pre><code>
+  use DBI ();
+  use Carp ();</code></pre>
+
+
+<p>Don't forget to prevent importing of the symbols exported by default
+by the module you are going to preload, by placing empty parentheses
+<code>()</code> after a module's name.  Unless you need some of these in the
+startup file, which is unlikely.  This will save you a few more memory
+bits.</p>
+
+<p>Then you <code>require()</code> this startup file in <em>httpd.conf</em> with the
+<code>PerlRequire</code> directive, placing it before the rest of the mod_perl
+configuration directives:</p>
+
+<pre><code>
+  PerlRequire /path/to/start-up.pl</code></pre>
+
+
+
+<p><code>CGI.pm</code> is a special case.  Ordinarily <code>CGI.pm</code> autoloads most of
+its functions on an as-needed basis.  This speeds up the loading time
+by deferring the compilation phase.  When you use mod_perl, FastCGI or
+another system that uses a persistent Perl interpreter, you will want
+to precompile the functions at initialization time.  To accomplish
+this, call the package function <code>compile()</code> like this:</p>
+
+<pre><code>
+  use CGI ();
+  CGI-&gt;compile(':all');</code></pre>
+
+
+<p>The arguments to <code>compile()</code> are a list of method names or sets, and
+are identical to those accepted by the <code>use()</code> and <code>import()</code>
+operators.  Note that in most cases you will want to replace <code>':all'</code>
+with the tag names that you actually use in your code, since generally
+you only use a subset of them.</p>
+
+<p>Let's conduct a memory usage test to prove that preloading, reduces
+memory requirements.</p>
+
+<p>In order to have an easy measurement I will use only one child
+process, therefore I will use this setting:</p>
+
+<pre><code>
+  MinSpareServers 1
+  MaxSpareServers 1
+  StartServers 1
+  MaxClients 1
+  MaxRequestsPerChild 100</code></pre>
+
+
+<p>I'm going to use the <code>Apache::Registry</code> script <em>memuse.pl</em> which
+consists of two parts: the first one preloads a bunch of modules (that
+most of them aren't going to be used), the second part reports the
+memory size and the shared memory size used by the single child
+process that I start. and of course it prints the difference between
+the two sizes.</p>
+
+<pre><code>
+  memuse.pl
+  ---------
+  use strict;
+  use CGI ();
+  use DB_File ();
+  use LWP::UserAgent ();
+  use Storable ();
+  use DBI ();
+  use GTop ();</code></pre>
+
+
+<pre><code>
+  my $r = shift;
+  $r-&gt;send_http_header('text/plain');
+  my $proc_mem = GTop-&gt;new-&gt;proc_mem($$);
+  my $size  = $proc_mem-&gt;size;
+  my $share = $proc_mem-&gt;share;
+  my $diff  = $size - $share;
+  printf &quot;%10s %10s %10s\n&quot;, qw(Size Shared Difference);
+  printf &quot;%10d %10d %10d (bytes)\n&quot;,$size,$share,$diff;</code></pre>
+
+
+<p>First I restart the server and execute this CGI script when none of
+the above modules preloaded. Here is the result:</p>
+
+<pre><code>
+     Size   Shared     Diff
+  4706304  2134016  2572288 (bytes)</code></pre>
+
+
+<p>Now I take all the modules:</p>
+
+<pre><code>
+  use strict;
+  use CGI ();
+  use DB_File ();
+  use LWP::UserAgent ();
+  use Storable ();
+  use DBI ();
+  use GTop ();</code></pre>
+
+
+<p>and copy them into the startup script, so they will get preloaded.
+The script remains unchanged.  I restart the server and execute it
+again. I get the following.</p>
+
+<pre><code>
+     Size   Shared    Diff
+  4710400  3997696  712704 (bytes)</code></pre>
+
+
+<p>Let's put the two results into one table:</p>
+
+<pre><code>
+  Preloading    Size   Shared     Diff
+     Yes     4710400  3997696   712704 (bytes)
+      No     4706304  2134016  2572288 (bytes)
+  --------------------------------------------
+  Difference    4096  1863680 -1859584</code></pre>
+
+
+<p>You can clearly see that when the modules weren't preloaded the shared
+memory pages size, were about 1864Kb smaller relative to the case
+where the modules were preloaded.</p>
+
+<p>Assuming that you have had 256M dedicated to the web server, if you
+didn't preload the modules, you could have:</p>
+
+<pre><code>
+  268435456 = X * 2572288 + 2134016</code></pre>
+
+
+<pre><code>
+  X = (268435456 - 2134016) / 2572288 = 103</code></pre>
+
+
+<p>103 servers.</p>
+
+<p>Now let's calculate the same thing with modules preloaded:</p>
+
+<pre><code>
+  268435456 = X * 712704 + 3997696</code></pre>
+
+
+<pre><code>
+  X = (268435456 - 3997696) / 712704 = 371</code></pre>
+
+
+<p>You can have almost 4 times more servers!!!</p>
+
+<csquery path="q/21" where="cs_rid != {cs_rid}">
+
+<p>Remember that I have mentioned before that memory pages gets dirty
+and the size of the shared memory gets smaller with time? So I have
+presented the ideal case where the shared memory stays
+intact. Therefore the real numbers will be a little bit different, but
+not far from the numbers in our example.</p>
+
+<p>Also it's obvious that in your case it's possible that the process
+size will be bigger and the shared memory will be smaller, since you
+will use different modules and a different code, so you won't get this
+fantastic ratio, but this example is certainly helps to feel the
+difference.</p>
+
+
+
+<h3><a name="references">References</a></h3>
+<ul>
+<li>
+The mod_perl site's URL: <a href="http://perl.apache.org/">http://perl.apache.org/</a>
+</li>
+<br />
+<li>
+<code>GTop</code>
+<p><a href="http://search.cpan.org/search?dist=GTop">http://search.cpan.org/search?dist=GTop</a></p>
+
+<p><code>GTop</code> relies in turn on libgtop library not available for all platforms</p>
+
+<p>Visit <a href="http://home-of-linux.org/gnome/libgtop/">http://home-of-linux.org/gnome/libgtop/</a> for more information</p>
+
+</li>
+
+<li>
+<code>Apache::Peek</code>
+<p><a href="http://search.cpan.org/search?dist=Apache-Peek">http://search.cpan.org/search?dist=Apache-Peek</a></p>
+
+</li>
+
+<li>
+<code>Devel::Peek</code>
+<p><a href="http://search.cpan.org/search?dist=Devel-Peek">http://search.cpan.org/search?dist=Devel-Peek</a></p>
+
+</li>
+</ul>
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=mod_perl%20shared%20memory&amp;limit=20';return false;" rel="tag">mod_perl shared memory</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

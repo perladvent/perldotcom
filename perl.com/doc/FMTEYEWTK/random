@@ -1,0 +1,96 @@
+Date:         Sat, 8 Mar 1997 17:09:47 -0800
+From:         Tom Phoenix <rootbeer@teleport.com>
+Subject:      Re: mathematically correct?
+To:           "Thomas A. Loser" <tloser@valdemar.microserve.com>
+In-reply-to:  <tloser-0503971240210001@168.133.124.5>
+Organization: Society for the Elimination of Excess Superfluous Text in Interne
+	      t Header Lines
+Newsgroups:   comp.lang.perl.misc
+Article: 69765 of comp.lang.perl.misc
+
+Replied:      Sun, 09 Mar 1997 10:24:12 -0700
+	      Tom Phoenix <rootbeer@teleport.com>
+
+On Wed, 5 Mar 1997, Thomas A. Loser wrote:
+
+>   The PERL (camel) book gives an example for selecting a random line
+> from a file of unknown length with a single pass through the file:
+
+>   srand;
+>   rand($.) < 1 && ($it = $_) while <>;
+
+As other posters have pointed out, this is mathematically correct in
+general. It can fail, though, for very large files because of the way in
+which rand() is implemented.
+
+rand calls your system's random number generator (or whichever one was
+compiled into your copy of Perl). For this discussion, I'll call that
+generator RAND to distinguish it from rand, Perl's function. RAND produces
+an integer from 0 to 2**randbits - 1, inclusive, where randbits is a small
+integer. To see what it is in your perl, use the command 'perl
+-V:randbits'. Common values are 15, 16, or 31.
+
+When you call rand with an argument arg, perl takes that value as an
+integer and calculates this value. 
+
+                         arg * RAND
+           rand(arg) = ---------------
+                         2**randbits
+
+This value will always fall in the range required.
+
+           0  <=  rand(arg)  < arg
+
+But as arg becomes large in comparison to 2**randbits, things become
+problematic. Let's imagine a machine where randbits = 15, so RAND ranges
+from 0..32767. That is, whenever we call RAND, we get one of 32768
+possible values. Therefore, when we call rand(arg), we get one of 32768
+possible values. 
+
+If we want to pick a random digit, though, there's a small problem: 32768
+isn't evenly divisible by 10, so some digits need to have higher
+probability than others. That is, when we calculate int(rand(10)), there
+are 3276 possible values of RAND which lead us to choose some digits, and
+3277 possible values which lead to others. Since both 3276/32768 and
+3277/32768 are very close to 1/10, this isn't usually a problem. 
+
+But if arg = 1000, now there are either 32 or 33 possible values of RAND
+for each possible value of int(rand(1000)). And 32/32768 and 33/32768
+aren't especially close to 1/1000. Still, this might be suitable for some
+purposes.
+
+But suppose arg = 100_000? Now, there are 100_000 integer values which we
+would like for int(rand(100_000)) to assume, but it can only reach 32768
+different values! That value will be 0 about 1 time in 32768, but it'll
+_never_ be 1. Or 2, even. Dang.
+
+There are other aspects to this problem, too. On a machine with
+randbits=15, rand(65536) will always be an even integer. You don't even
+have to use int on it! And there are lots of machines with such small
+randbits. 
+
+If you have access to a fairly fast machine on which randbits is small
+enough, try this test script to see how much "luck" it takes to hit one
+chance in one billion. On a machine with randbits=15, you'll probably be
+that lucky about 30 or 31 times, and if randbits=16, it'll be about half
+that. Of course, if your randbits=31, you'll have to _really_ be lucky to
+even get one!
+
+     perl -e 'srand; $c = 0; for ($i=0; $i<1e6; $i++)' \
+        -e '{ $c++ if rand(1e9) < 1 } print "$c\n"'
+
+This means that on a machine with small randbits, you shouldn't expect
+two-line script to choose each line of a large file with equal
+probability. Later lines may be chosen with higher frequency than they
+deserve. 
+
+Hope this helps! 
+
+-- Tom Phoenix        http://www.teleport.com/~rootbeer/
+rootbeer@teleport.com   PGP  Skribu al mi per Esperanto!
+Randal Schwartz Case:     http://www.lightlink.com/fors/
+
+
+
+EDITOR NOTE: See all the Math::TrulyRandom module from CPAN. --tchrist
+

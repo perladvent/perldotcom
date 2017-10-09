@@ -1,0 +1,892 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2004/06/variables.html" title="Perl's Special Variables" />
+    <link rel="next bookmark" href="/pub/2004/06/20040621.html" title="This Week on Perl 6, Fortnight Ending 2004-06-21" />
+    
+    
+    <title>Profiling Perl - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-946" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Profiling Perl</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Simon Cozens</span> on <abbr class="published" title="2004-06-24T00:00:00-08:00">June 24, 2004 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        <p>Everyone wants their Perl code to run faster.
+Unfortunately,
+without understanding why the code is taking so long to start with,
+it's impossible to know where to start optimizing it.
+This is where "profiling" comes in; it lets us know what our programs are doing.</p>
+
+<p>We'll look at why and how to profile programs,
+and then what to do with the profiling information once we've got it.</p>
+
+<h3><a name="Why_Profile?">Why Profile?</a></h3>
+
+<p>There's nothing worse than setting off a long-running Perl program and then not knowing what it's doing.
+I've recently been working on a new, mail-archiving program for the <code>perl.org</code> mailing lists,
+and so I've had to import a load of old email into the database.
+Here's the code I used to do this:</p>
+
+<pre><code>    use File::Slurp;
+    use Email::Store &quot;dbi:SQLite:dbname=mailstore.db&quot;;
+    use File::Find::Rule;
+
+    for (File::Find::Rule-&gt;file-&gt;name(qr/\d+/)-&gt;in(&quot;perl6-language&quot;)) {
+        Email::Store::Mail-&gt;store(scalar read_file($_));
+    }</code></pre>
+
+<p>It's an innocent little program -- it looks for all the files in the <em>perl6-language</em> directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with <code>File::Slurp::read_file</code>, and then uses <a href="http://search.cpan.org/perldoc?Email::Store"><code>Email::Store</code></a> to put them into a database. You start it running, and come back a few hours later and it's done.</p>
+
+<p>All through, though, you have this nervous suspicion that it's not doing the right thing; or at least, not doing it very quickly. Sure there's a lot of mail, but should it really be taking this long? What's it actually spending its time doing? We can add some <code>print</code> statements to help us feel more at ease:</p>
+
+<pre><code>    use File::Slurp;
+    use Email::Store &quot;dbi:SQLite:dbname=mailstore.db&quot;;
+    use File::Find::Rule;
+
+    print &quot;Starting run...\n&quot;;
+    $|++;
+    for (File::Find::Rule-&gt;file-&gt;name(qr/\d+/)-&gt;in(&quot;perl6-language&quot;)) {
+        print &quot;Indexing $_...&quot;;
+        Email::Store::Mail-&gt;store(scalar read_file($_));
+        print &quot; done\n&quot;;
+    }</code></pre>
+
+<p>Now we can at least see more progress, but we still don't know if this program is working to full efficiency, and the reason for this is that there's an awful lot going on in the underlying modules that we can't immediately see. Is it the <code>File::Find::Rule</code> that's taking up all the time? Is it the storing process? Which part of the storing process? By profiling the code we'll identify, and hopefully smooth over, some of the bottlenecks.</p>
+
+<h3><a name="Simple_Profiling">Simple Profiling</a></h3>
+
+<csperl file="grab" domain="on" record="b/512" template="b/article_sidebar.view">
+
+<p>The granddaddy of Perl profiling tools is <a href="http://search.cpan.org/perldoc?Devel::DProf"><code>Devel::DProf</code></a>. To profile a code run, add the <code>-d:DProf</code> argument to your Perl command line and let it go:</p>
+
+<pre><code>    % perl -d:DProf store_archive</code></pre>
+
+<p>The run will now take slightly longer than normal as Perl collects and writes out information on your program's subroutine calls and exits, and at the end of your job, you'll find a file called <em>tmon.out</em> in the current directory; this contains all the profiling information.</p>
+
+<p>A couple of notes about this:</p>
+
+<ul>
+<li>It's important to control the length of the run; in this case, I'd probably ensure that the mail archive contained about ten or fifteen mails to store. (I used seven in this example.) If your run goes on too long, you will end up processing a vast amount of profiling data, and not only will it take a lot time to read back in, it'll take far too long for you to wade through all the statistics. On the other hand, if the run's too short, the main body of the processing will be obscured by startup and other &quot;fixed costs.&quot;</li>
+
+<li>The other problem you might face is that <code>Devel::DProf</code>, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the <a href="http://search.cpan.org/perldoc?Devel::Profiler"><code>Devel::Profiler</code></a> module from CPAN, which is a pure-Perl replacement for it.</li>
+</ul>
+
+<p>The next step is to run the preprocessor for the profiler output, <code>dprofpp</code>. This will produce a table of where our time has been spent:</p>
+
+<pre><code>  Total Elapsed Time = 13.89525 Seconds
+    User+System Time = 9.765255 Seconds
+  Exclusive Times
+  %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+   24.1   2.355  4.822     38   0.0620 0.1269  File::Find::_find_dir
+   20.5   2.011  2.467  17852   0.0001 0.0001  File::Find::Rule::__ANON__
+   7.82   0.764  0.764    531   0.0014 0.0014  DBI::st::execute
+   4.73   0.462  0.462  18166   0.0000 0.0000  File::Spec::Unix::splitdir
+   2.92   0.285  0.769    109   0.0026 0.0071  base::import
+   2.26   0.221  0.402    531   0.0004 0.0008  Class::DBI::transform_sql
+   2.09   0.204  0.203   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+   1.72   0.168  0.359  18017   0.0000 0.0000  Class::DBI::Column::name_lc
+   1.57   0.153  0.153  18101   0.0000 0.0000  Class::Accessor::get
+   1.42   0.139  0.139     76   0.0018 0.0018  Cwd::abs_path</code></pre>
+
+<p>The first two lines tell us how long the program ran for: around 14 seconds, but it was actually only running for about 10 of those -- the rest of the time other programs on the system were in the foreground.</p>
+
+<p>Next we have a table of subroutines, in descending order of time spent; perhaps surprisingly, we find that <code>File::Find</code> and <code>File::Find::Rule</code> are the culprits for eating up 20% of running time each. We're also told the number of &quot;exclusive seconds,&quot; which is the amount of time spent in one particular subroutine, and &quot;cumulative seconds.&quot; This might better be called &quot;inclusive seconds,&quot; since it's the amount of time the program spent in a particular subroutine and all the other routines called from it.</p>
+
+<p>From the statistics above, we can guess that <code>File::Find::_find_dir</code> itself took up 2 seconds of time, but during its execution, it called an anonymous subroutine created by <code>File::Find::Rule</code>, and this subroutine also took up 2 seconds, making a cumulative time of 4 seconds. We also notice that we're making an awful lot of calls to <code>File::Find::Rule</code>, <code>splitdir</code>, and some <code>Class::DBI</code> and <code>Class::Accessor</code> routines.</p>
+
+<h3><a name="What_to_do_now">What to Do Now</a></h3>
+
+<p>Now we have some profiling information, and we see a problem with <code>File::Find::Rule</code>. &quot;Aha,&quot; we might think, &quot;Let's replace our use of <code>File::Find::Rule</code> with a simple globbing operation, and we can shave 4 seconds off our runtime!&quot;. So, just for an experiment, we try it:</p>
+
+<pre><code>    use File::Slurp;
+    use Email::Store &quot;dbi:SQLite:dbname=mailstore.db&quot;;
+    $|=1;
+    for (&#60;perl6-language/archive/0/*&gt;) {
+        next unless /\d+/;
+        print &quot;$_ ...&quot;;
+        Email::Store::Mail-&gt;store(scalar read_file($_));
+        print &quot;\n&quot;;
+    }</code></pre>
+
+<p>Now this looks a bit better:</p>
+
+<pre><code> Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Exclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  13.1   0.703  0.703    531   0.0013 0.0013  DBI::st::execute
+  5.54   0.295  0.726    109   0.0027 0.0067  base::import
+  5.52   0.294  0.294  18101   0.0000 0.0000  Class::Accessor::get
+  3.45   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  3.13   0.167  0.970    531   0.0003 0.0018  DBIx::ContextualFetch::st::_untain
+                                              t_execute
+  3.10   0.165  1.324   1364   0.0001 0.0010  Class::DBI::get
+  2.98   0.159  0.376    531   0.0003 0.0007  Class::DBI::transform_sql
+  2.61   0.139  0.139     74   0.0019 0.0019  Cwd::abs_path
+  2.23   0.119  0.119   8742   0.0000 0.0000  Class::Data::Inheritable::__ANON__
+  2.06   0.110  0.744   2841   0.0000 0.0003  Class::DBI::__ANON__
+  1.95   0.104  0.159   2669   0.0000 0.0001  Class::DBI::ColumnGrouper::group_cols</code></pre>
+
+<p>Now to be honest, I would never have guessed that removing <code>File::Find::Rule</code> would shave 4 seconds off my code run. This is the first rule of profiling: You actually need to profile before optimizing, because <b>you never know where the hotspots are going to turn out to be.</b> We've also exercised the second rule of profiling: <b>Review what you're using.</b> By using another technique instead of <code>File::Find::Rule</code>, we've reduced our running time by a significant amount.</p>
+
+<p>This time, it looks as though we're doing reasonably well -- the busiest thing is writing to a database, and that's basically what this application does, so that's fair enough. There's also a lot of busy calls that are to do with <code>Class::DBI</code>, and we know that we use <code>Class::DBI</code> as a deliberate tradeoff between convenience and efficiency. If we were being ruthlessly determined to make this program faster, we'd start looking at using plain <code>DBI</code> instead of <code>Class::DBI</code>, but that's a tradeoff I don't think is worth making at the moment.</p>
+
+<p>This is the third rule of profiling: <b>Hotspots happen.</b> If you got rid of all the hotspots in your code, it wouldn't do anything. There are a certain reasonable number of things that your program should be doing for it to be useful, and you simply can't get rid of them; additionally there are any number of tradeoffs that we deliberately or subconsciously make in order to make our lives easier at some potential speed cost -- for instance, writing in Perl or C instead of machine code.</p>
+
+<h3><a name="From_exclusive_to_inclusive">From Exclusive to Inclusive</a></h3>
+
+<p>The default report produced by <em>dprofpp</em> is sorted by exclusive subroutine time, and is therefore good at telling us about individual subroutines that are called a lot and take up disproportionate amounts of time. This can be useful, but it doesn't actually give us an overall view of what our code is doing. If we want to do that, we need to move from looking at exclusive to looking at inclusive times, and we do this by adding the <code>-I</code> option to <em>dprofpp</em>. This produces something like this:</p>
+
+<pre><code> Total Elapsed Time = 9.559537 Seconds
+   User+System Time = 5.329537 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  83.8   0.009  4.468      7   0.0013 0.6383  Email::Store::Mail::store
+  80.8   0.061  4.308     35   0.0017 0.1231  Module::Pluggable::Ordered::__ANON
+                                              __
+  46.3       -  2.472      3        - 0.8239  main::BEGIN
+  43.4       -  2.314      7        - 0.3306  Mail::Thread::thread
+  43.4       -  2.314      7        - 0.3305  Email::Store::Thread::on_store
+  36.2   0.184  1.930  19443   0.0000 0.0001  Class::Accessor::__ANON__
+  28.9   0.006  1.543    531   0.0000 0.0029  Email::Store::Thread::Container::_
+                                              _ANON__
+  27.3   0.068  1.455    105   0.0006 0.0139  UNIVERSAL::require</code></pre>
+
+<p>This tells us a number of useful facts. First, we find that 84% of the program's runtime is spent in the <code>Email::Store::Mail::store</code> subroutine and its descendants, which is the main, tight loop of the program. This means, quite logically, that 16% is not spent in the main loop, and that's a good sign -- this means that we have a 1-second fixed cost in starting up and loading the appropriate modules, and this will amortize nicely against a longer run than 10 seconds. After all, if processing a massive amount of mail takes 20 minutes, the first 1-second startup becomes insignificant. It means we can pretty much ignore everything outside the main loop.</p>
+
+<p>We also find that threading the emails is costly; threading involves a lot of manipulation of <code>Email::Store::Thread::Container</code> objects, which are database backed. This means that a lot of the database stores and executes that we saw in the previous, exclusive report are probably something to do with threading. After all, we now spend 2 seconds out of our 4 seconds of processing time on threading in <code>Mail::Thread::thread</code>, and even though we only call this seven times, we do 531 things with the container objects. This is bad.</p>
+
+<p>Now, I happen to know (because I wrote the module) that <code>Email::Store::Thread::Container</code> uses a feature of <code>Class::DBI</code> called <code>autoupdate</code>. This means that while we do a lot of fetches and stores that we could conceivably do in memory and commit to the database once we're done, we instead hit the database every single time.</p>
+
+<p>So, just as an experiment, we do two things to optimize <code>Email::Store::Thread::Container</code>. First, we know that we're going to be doing a lot of database fetches, sometimes of the same container multiple times, so we cache the fetch. We turn this:</p>
+
+<pre><code>    sub new { 
+        my ($class, $id) = @_;
+        $class-&gt;find_or_create({ message =&gt; $id });
+    }</code></pre>
+
+<p>Into this:</p>
+
+<pre><code>    my %container_cache = ();
+    sub new {
+        my ($class, $id) = @_;
+        $container_cache{$id} 
+            ||= $class-&gt;find_or_create({ message =&gt; $id });
+    }</code></pre>
+
+<p>This is a standard caching technique, and will produce another tradeoff: we trade memory (in filling up <code>%container_cache</code> with a bunch of objects) for speed (in not having to do as many costly database fetches).</p>
+
+<p>Then we turn <code>autoupdate</code> off, and provide a way of updating the database manually. The reason we wanted to turn off <code>autoupdate</code> is that because all these containers form a tree structure (since they represent mails in a thread which, naturally, form a tree structure), it's a pain to traverse the tree and update all the containers once we're done.</p>
+
+<p>However, with this cache in place, we know that we already have a way to get at all the containers in one go: we just look at the values of <code>%container_hash</code>, and there are all the objects we've used. So we can now add a <code>flush</code> method:</p>
+
+<pre><code>    sub flush {
+        (delete $container_cache{$_})-&gt;update for keys %container_cache;
+    }</code></pre>
+
+<p>This both empties the cache and updates the database. The only remaining problem is working out where to call <code>flush</code>. If we're dealing with absolutely thousands of emails, it might be worth calling <code>flush</code> after every <code>store</code>, or else <code>%container_hash</code> will get huge. However, since we're not, we just call <code>flush</code> in an <code>END</code> block to catch the container objects before they get destroyed by the garbage collector:</p>
+
+<pre><code>    END { Email::Store::Thread::Container-&gt;flush; }</code></pre>
+
+<p>Running <em>dprofpp</em> again:</p>
+
+<pre><code> Total Elapsed Time = 7.741969 Seconds
+   User+System Time = 3.911969 Seconds
+ Inclusive Times
+ %Time ExclSec CumulS #Calls sec/call Csec/c  Name
+  65.4       -  2.559      7        - 0.3656  Email::Store::Mail::store
+  62.9   0.014  2.461     35   0.0004 0.0703  Module::Pluggable::Ordered::__ANON
+                                              __
+  56.2   0.020  2.202      3   0.0065 0.7341  main::BEGIN
+  31.8   0.028  1.247    105   0.0003 0.0119  UNIVERSAL::require
+  29.4   0.004  1.150      7   0.0006 0.1642  Email::Store::Entity::on_store
+  22.7   0.025  0.890    100   0.0003 0.0089  Class::DBI::create
+  21.0   0.031  0.824    100   0.0003 0.0082  Class::DBI::_create
+  18.3   0.235  0.716    109   0.0022 0.0066  base::import
+  15.1       -  0.594    274        - 0.0022  DBIx::ContextualFetch::st::execute
+  15.1       -  0.592      7        - 0.0846  Mail::Thread::thread
+  15.1       -  0.592      7        - 0.0845  Email::Store::Thread::on_store</code></pre>
+
+<p>We find that we've managed to shave another second-and-a-half off, and we've also swapped a per-mail cost (of updating the threading containers every time) to a once-per-run fixed cost (of updating them all at the end of the run). This has taken the business of threading down from two-and-a-half seconds per run to half a second per run, and it means that 35% of our running time is outside the main loop; again, this will amortize nicely on large runs.</p>
+
+<p>We started with a program that runs for 10 seconds, and now it runs for 4. Through judicious use of the profiler, we've identified the hotspots and eliminated the most troublesome ones. We've looked at both exclusive and inclusive views of the profiling data, but there are still a few other things that <em>dprofpp</em> can tell us. For instance, the <code>-S</code> option gives us a call tree, showing what gets called from what. These trees can be incredibly long and tedious, but if the two views we've already looked at haven't identified potential trouble spots, then wading through the tree might be your only option.</p>
+
+<h3><a name="Writing_your_own_profiler">Writing your Own Profiler</a></h3>
+
+<p>At least, that is, if you want to use <em>dprofpp</em>; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released <a href="http://search.cpan.org/perldoc?Devel::DProfPP"><code>Devel::DProfPP</code></a>, which provides an event-driven interface to reading <em>tmon.out</em> files. I intended to use it to write a new version of <em>dprofpp</em> because I find the current profiler intolerably slow; ironically, though, I haven't profiled it yet.</p>
+
+<p>Anyway, <code>Devel::DProfPP</code> allows you to specify callbacks to be run every time the profiling data shows Perl entering or exiting a subroutine, and provides access to the same timing and call stack information used by <em>dprofpp</em>.</p>
+
+<p>So, for instance, I like visualization of complicated data. I'd prefer to see what's calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together <code>Devel::DProfPP</code> and the trusty <a href="http://search.cpan.org/perldoc?Graphviz"><code>Graphviz</code></a> module, and create my own profiler:</p>
+
+<pre><code> use GraphViz;
+ use Devel::DProfPP;
+ 
+ my $graph = GraphViz-&gt;new();
+ my %edges = ();
+ Devel::DProfPP-&gt;new(enter =&gt; sub {
+     my $pp = shift;
+     my @stack = $pp-&gt;stack;
+     my $to = $stack[-1]-&gt;sub_name;
+     my $from = @stack &gt; 1 ? $stack[-2]-&gt;sub_name : &quot;MAIN BODY&quot;;
+     $graph-&gt;add_edge($from =&gt; $to) unless $edges{$from.&quot; -&gt; &quot;.$to}++;
+ })-&gt;parse;
+ 
+ print $graph-&gt;as_png;</code></pre>
+
+<p>Every time we enter a subroutine, we look at the call stack so far. We pick the top frame of the stack, and ask for its subroutine name. If there's another subroutine on the stack, we take that off too; otherwise we're being called from the main body of the code. Then we add an edge on our graph between the two subroutines, unless we've already got one. Finally, we print out the graph as a PNG file for me to print out and stick on the wall.</p>
+
+<p>There are any number of other things you can do with <code>Devel::DProfPP</code> if the ordinary profiler doesn't suit your needs for some reason; but as we've seen, just judicious application of profiling and highlighting hotspots in your code can cut the running time of a long-running Perl program by 50% or so, and can also help you to understand what your code is spending all its time doing.</p>
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/programming/" rel="tag">Programming</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=optimization&amp;limit=20';return false;" rel="tag">optimization</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=profiler&amp;limit=20';return false;" rel="tag">profiler</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=profiling&amp;limit=20';return false;" rel="tag">profiling</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=speed&amp;limit=20';return false;" rel="tag">speed</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

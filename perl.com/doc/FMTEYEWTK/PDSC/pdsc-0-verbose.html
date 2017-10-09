@@ -1,0 +1,571 @@
+<TITLE>
+EPDSC #0: General Tips
+</TITLE>
+
+<BODY BGCOLOR=#ffffff>
+
+<A NAME="Top">
+<CENTER>
+<A HREF="index.html">Recipes</a> /
+<A HREF="#perlmdim_references_0">References</a> /
+<A HREF="#perlmdim_common_0">Mistakes</A> /
+<A HREF="#perlmdim_caveat_0">Precedence</A> /
+<A HREF="#perlmdim_strict"><CODE>use strict</CODE></a> /
+<A HREF="#perlmdim_debugging_0">Debugging</a>
+</CENTER>
+</a>
+
+<CENTER>
+<H1>
+<FONT SIZE="+3">T</FONT><FONT SIZE="+2">HE</FONT>
+<FONT SIZE="+3">P</FONT><FONT SIZE="+2">ERL</FONT>
+<BR>
+<FONT SIZE="+3">D</FONT><FONT SIZE="+2">ATA</FONT>
+<FONT SIZE="+3">S</FONT><FONT SIZE="+2">TRUCTURES</FONT>
+<FONT SIZE="+3">C</FONT><FONT SIZE="+2">OOKBOOK:</FONT> 
+<BR>
+<i>General Tips</I>
+</H1>
+
+<b><font size=+1>
+<I>
+		    by Tom Christiansen 
+</I>
+		    <BR>
+&lt <A HREF=mailto:tchrist@perl.com>tchrist@perl.com</A> &gt
+</font>
+		    <P>
+		    release 0.1
+		    <BR>
+		    Sunday, 8 October 1995
+</b></CENTER>
+
+<HR>
+
+<P>
+
+
+
+
+
+<P>
+
+The single feature most sorely lacking in the Perl programming language
+prior to its 5.0 release was complex data structures.  Even without direct
+language support, some valiant programmers did manage to emulate them, but
+it was hard work and not for the faint of heart.  You could occasionally
+get away with the <CODE>$m{$a,$b}</CODE> notation borrowed from
+<EM>awk</EM> in which the keys are actually more like a single
+concatenated string <CODE>"$a$b"</CODE>, but traversal and
+sorting were difficult.  More desperate programmers even hacked Perl's
+internal symbol table directly, a strategy that proved hard to develop and
+maintain--to put it mildly.
+
+<p>The 5.0 release of Perl let us have complex data structures.  You
+may now write something like this and all of a sudden, you'd have a array
+with three dimensions!
+
+<p>
+<PRE>
+    for $x (1 .. 10) {
+        for $y (1 .. 10) {
+            for $z (1 .. 10) {
+                $LoL[$x][$y][$z] = 
+                    $x ** $y + $z;
+            }
+        }
+    }
+
+</PRE>
+
+<p>Alas, however simple this may appear, underneath it's a much more
+elaborate construct than meets the eye!
+
+<p>How do you print it out?  Why can't you just say <CODE>print @LoL</CODE>?  How do
+you sort it?  How can you pass it to a function or get one of these back
+from a function?  Is is an object?  Can you save it to disk to read
+back later?  How do you access whole rows or columns of that matrix?  Do
+all the values have to be numeric?  
+
+<p>As you see, it's quite easy to become confused.  While some small portion
+of the blame for this can be attributed to the reference-based
+implementation, it's really more due to a lack of existing documentation with
+examples designed for the beginner.
+
+<p>This document is meant to be a detailed but understandable treatment of
+the many different sorts of data structures you might want to develop.  It should
+also serve as a cookbook of examples.  That way, when you need to create one of these
+complex data structures, you can just pinch, pilfer, or purloin
+a drop-in example from here.
+
+<p>Let's look at each of these possible constructs in detail.  There are separate
+documents on 
+
+<p>
+<UL>
+<LI>arrays of arrays
+<LI>hashes of arrays
+<LI>arrays of hashes
+<LI>hashes of hashes
+<LI>more elaborate constructs
+<LI>recursive and self-referential data structures
+<LI>objects
+</UL>
+
+But for now, let's look at some of the general issues common to all of
+these types a data structures.
+
+<p><p><hr>
+
+<CENTER>
+<A HREF="#Top">Top</a> /
+<A HREF="#perlmdim_references_0">References</a> /
+<A HREF="#perlmdim_common_0">Mistakes</A> /
+<A HREF="#perlmdim_caveat_0">Precedence</A> /
+<A HREF="#perlmdim_strict"><CODE>use strict</CODE></a> /
+<A HREF="#perlmdim_debugging_0">Debugging</a>
+</CENTER>
+
+<H2> 
+<A NAME="perlmdim_references_0">
+References</a>
+</H2>
+
+The most important thing to understand about all data structures in Perl
+-- including multidimensional arrays--is that even though they might
+appear otherwise, Perl <CODE>@ARRAY</CODE>s and <CODE>%HASH</CODE>es are all internally
+one-dimensional.  They can only hold scalar values (meaning a string,
+number, or a reference).  They cannot directly contain other arrays or
+hashes, but instead contain <EM>references</EM> to other arrays or hashes.
+
+<p>You can't use a reference to a array or hash in quite the same way that
+you would a real array or hash.  For C or C++ programmers unused to distinguishing
+between arrays and pointers to the same, this can be confusing.  If so,
+just think of it as the difference between a structure and a pointer to a
+structure.  
+
+<p>You can (and should) read more about references in the 
+<A HREF="http://www.metronet.com/perlinfo/perl5/manual/perlref.html">perlref(1)</a>
+manpage.  Briefly, references are rather like pointers that know what they
+point to.  (Objects are also a kind of reference, but we won't be needing
+them right away--if ever.)  That means that when you have something that
+looks to you like an access to two-or-more-dimensional array and/or hash,
+that what's really going on is that in all these cases, the base type is
+merely a one-dimensional entity that contains references to the next
+level.  It's just that you can <EM>use</EM> it as though it were a
+two-dimensional one.  This is actually the way almost all C
+multidimensional arrays work as well.
+
+<p>
+<PRE>
+    $list[7][12]                        # array of arrays
+    $list[7]{string}                    # array of hashes
+    $hash{string}[7]                    # hash of arrays
+    $hash{string}{'another string'}     # hash of hashes
+
+</PRE>
+
+<p>Now, because the top level only contains references, if you try to print
+out your array in with a simple <EM>print()</EM> function, you'll get something
+that doesn't look very nice, like this:
+
+<p>
+<PRE>
+    @LoL = ( [2, 3], [4, 5, 7], [0] );
+    print $LoL[1][2];
+  7
+    print @LoL;
+  ARRAY(0x83c38)ARRAY(0x8b194)ARRAY(0x8b1d0)
+
+</PRE>
+
+<p>That's because Perl doesn't (ever) implicitly dereference your variables.
+If you want to get at the thing a reference is referring to, then you have
+to do this yourself using either prefix typing indicators, like
+<CODE>${$blah}</CODE>, 
+<CODE>@{$blah}</CODE>, 
+<CODE>@{$blah[$i]}</CODE>, or else postfix pointer arrows,
+like 
+<CODE>$a-&gt;[3]</CODE>, 
+<CODE>$h-&gt;{fred}</CODE>, 
+or even 
+<CODE>$ob-&gt;method()-&gt;[3]</CODE>.
+
+<p><p><hr>
+
+<CENTER>
+<A HREF="#Top">Top</a> /
+<A HREF="#perlmdim_references_0">References</a> /
+<A HREF="#perlmdim_common_0">Mistakes</A> /
+<A HREF="#perlmdim_caveat_0">Precedence</A> /
+<A HREF="#perlmdim_strict"><CODE>use strict</CODE></a> /
+<A HREF="#perlmdim_debugging_0">Debugging</a>
+</CENTER>
+
+<H2> 
+<A NAME="perlmdim_common_0">
+Common Mistakes</A>
+</H2>
+
+The two most common mistakes made in constructing something like
+an array of arrays is either accidentally counting the number of
+elements or else taking a reference to the same memory location
+repeatedly.  Here's the case where you just get the count instead
+of a nested array:
+
+<p>
+<PRE>
+    for $i (1..10) {
+        @list = somefunc($i);
+        $LoL[$i] = <b>@list</b>;       <i><b># WRONG!</b></i>
+    } 
+
+</PRE>
+
+<p>That's just the simple case of assigning a list to a scalar and getting
+its element count.  If that's what you really and truly want, then you
+might do well to consider being a tad more explicit about it, like this:
+
+<p>
+<PRE>
+    for $i (1..10) {
+        @list = somefunc($i);
+        $counts[$i] = <b>scalar</b> @list;     
+    } 
+
+</PRE>
+
+<p>Here's the case of taking a reference to the same memory location
+again and again:
+
+<p>
+<PRE>
+    for $i (1..10) {
+        @list = somefunc($i);
+        $LoL[$i] = <b>\@list</b>;      <i><b># WRONG!</b></i>
+    } 
+
+</PRE>
+
+<p>So, just what's the big problem with that?  It looks right, doesn't it?
+After all, I just told you that you need an array of references, so by
+golly, you've made me one!
+
+<p>Unfortunately, while this is true, it's still broken.  All the references
+in <CODE>@LoL</CODE> refer to the <EM>very same place</EM>, and they will therefore all hold
+whatever was last in <CODE>@list</CODE>!  It's similar to the problem demonstrated in
+the following C program:
+
+<p>
+<PRE>
+    #include &lt;pwd.h&gt;
+    main() {
+        struct passwd *getpwnam(), *rp, *dp;
+        rp = getpwnam(&quot;root&quot;);
+        dp = getpwnam(&quot;daemon&quot;);
+        printf(&quot;daemon name is %s\nroot name is %s\n&quot;, 
+                dp-&gt;pw_name, rp-&gt;pw_name);
+    }
+
+</PRE>
+
+<p>Which will print
+
+<p>
+<B>
+<PRE>
+    daemon name is daemon
+    root name is daemon 
+</PRE>
+</B>
+
+<p>The problem is that both <CODE>rp</CODE> and <CODE>dp</CODE> are pointers to the same location
+in memory!  In C, you'd have to remember to <EM>malloc()</EM> yourself some new
+memory.  In Perl, you'll want to use the array constructor <b>[]</b> or the
+hash constructor <b>{}</b> instead.   Here's the right way to do the preceding
+broken code fragments
+
+<p>
+<PRE>
+    for $i (1..10) {
+        @list = somefunc($i);
+        $LoL[$i] = <b>[</b> @list <b>]</b>;
+    } 
+
+</PRE>
+
+<p>The square brackets make a reference to a new array with a <EM>copy</EM>
+of what's in <CODE>@list</CODE> at the time of the assignment.  This is what
+you want.  
+
+<p>Note that this will produce something similar, but it's
+much harder to read:
+
+<p>
+<PRE>
+    for $i (1..10) {
+        @list = 0 .. $i;
+        <b>@{</b> $LoL[$i] <b>}</b> = @list;
+    } 
+
+</PRE>
+
+<p>Is it the same?  Well, maybe so--and maybe not.  The subtle difference
+is that when you assign something in square brackets, you know for sure
+it's always a brand new reference with a new <EM>copy</EM> of the data.
+Something else could be going on in this new case with the <CODE>@{$LoL[$i]}}</CODE>
+dereference on the left-hand-side of the assignment.  It all depends on
+whether <CODE>$LoL[$i]</CODE> had been undefined to start with, or whether it
+already contained a reference.  If you had already populated <CODE>@LoL</CODE> with
+references, as in
+
+<p>
+<PRE>
+    $LoL[3] = \@another_list;
+
+</PRE>
+
+<p>Then the assignment with the indirection on the left-hand-side would
+use the existing reference that was already there:
+
+<p>
+<PRE>
+    @{ $LoL[3] } = @list;
+
+</PRE>
+
+<p>Of course, this <EM>would</EM> have the ``interesting'' effect of clobbering
+<CODE>@another_list</CODE>.  (Have you ever noticed how when a programmer says
+something is ``interesting'', that rather than meaning ``intriguing'',
+they're disturbingly more apt to mean that it's ``annoying'',
+``difficult'', or both?  :-)
+
+<p>So just remember to always use the array or hash constructors with <b>[]</b>
+or <b>{}</b>, and you'll be fine, although it's not always optimally
+efficient.  
+
+<p>Surprisingly, the following dangerous-looking construct will
+actually work out fine:
+
+<p>
+<pre>
+    for $i (1..10) {
+        <b>my</b> @list = somefunc($i);
+        $LoL[$i] = \@list;
+    } 
+
+</pre>
+
+<p>That's because <code>my()</code> is more of a run-time statement than it is a
+compile-time declaration <EM>per se</EM>.  This means that the <code>my()</code> variable is
+remade afresh each time through the loop.  So even though it <EM>looks</EM> as
+though you stored the same variable reference each time, you actually did
+not!  This is a subtle distinction that can produce more efficient code at
+the risk of misleading all but the most experienced of programmers.  So I
+usually advise against teaching it to beginners.  In fact, except for
+passing arguments to functions, I seldom like to see the gimme-a-reference
+operator (backslash) used much at all in code.  Instead, I advise
+beginners that they (and most of the rest of us) should try to use the
+much more easily understood constructors <B>[]</B> and <B>{}</B> instead of
+relying upon lexical (or dynamic) scoping and hidden reference-counting to
+do the right thing behind the scenes.
+
+<p>In summary:
+
+<p>
+<PRE>
+    $LoL[$i] = [ @list ];       # usually best
+    $LoL[$i] = \@list;          # perilous; just how my() was that list?
+    @{ $LoL[$i] } = @list;      # way too tricky for most programmers
+
+</PRE>
+
+<p><p><hr>
+
+<CENTER>
+<A HREF="#Top">Top</a> /
+<A HREF="#perlmdim_references_0">References</a> /
+<A HREF="#perlmdim_common_0">Mistakes</A> /
+<A HREF="#perlmdim_caveat_0">Precedence</A> /
+<A HREF="#perlmdim_strict"><CODE>use strict</CODE></a> /
+<A HREF="#perlmdim_debugging_0">Debugging</a>
+</CENTER>
+
+<HR>
+
+<H2> 
+<A NAME="perlmdim_caveat_0">
+Caveat on Precedence </A>
+</H2>
+
+Speaking of things like <CODE>@{$LoL[$i]}</CODE>, the following are actually the
+same thing:
+
+<p>
+<PRE>
+    $listref->[2][2]	# clear
+    $$listref[2][2]	# confusing
+
+</PRE>
+
+<p>That's because Perl's precedence rules on its five prefix dereferencers
+(which look like someone swearing: <B><CODE>$ @ * % &amp;</CODE></B>) make them bind more
+tightly than the postfix subscripting brackets or braces!  This will no
+doubt come as a great shock to the C or C++ programmer, who is quite
+accustomed to using <CODE>*a[i]</CODE> to mean what's pointed to by the <EM>i'th</EM>
+element of <CODE>a</CODE>.  That is, they first take the subscript, and only then
+dereference the thing at that subscript.  That's fine in C, but this isn't C.
+
+<p>The seemingly equivalent construct in Perl, <CODE>$$listref[$i]</CODE> first does
+the deref of <CODE>$listref</CODE>, making it take <CODE>$listref</CODE> as a reference to an
+array, and then dereference that, and finally tell you the <EM>i'th</EM> value
+of the array pointed to by <CODE>$LoL</CODE>. If you wanted the C notion, you'd have to
+write <CODE>${$LoL[$i]}</CODE> to force the <CODE>$LoL[$i]</CODE> to get evaluated first
+before the leading <CODE>$</CODE> dereferencer.
+
+<p><p><hr>
+
+<CENTER>
+<A HREF="#Top">Top</a> /
+<A HREF="#perlmdim_references_0">References</a> /
+<A HREF="#perlmdim_common_0">Mistakes</A> /
+<A HREF="#perlmdim_caveat_0">Precedence</A> /
+<A HREF="#perlmdim_strict"><CODE>use strict</CODE></a> /
+<A HREF="#perlmdim_debugging_0">Debugging</a>
+</CENTER>
+
+<HR>
+
+<A NAME="perlmdim_strict">
+<H2> Why You Should <u>Always</u> <CODE>use strict</CODE></H2>
+</a>
+
+If this is starting to sound scarier than it's worth, relax.  Perl has
+some features to help you avoid its most common pitfalls.  The best
+way to avoid getting confused is to start every program like this:
+
+<p>
+<PRE>
+    #!/usr/bin/perl -w
+    use strict;
+
+</PRE>
+
+<p>This way, you'll be forced to declare all your variables with <code>my()</code> and
+also disallow accidental ``symbolic dereferencing''.  Therefore if you'd done
+this:
+
+<p>
+<PRE>
+    my $listref = [
+        [ "fred", "barney", "pebbles", "bambam", "dino", ],
+        [ "homer", "bart", "marge", "maggie", ],
+        [ "george", "jane", "alroy", "judy", ],
+    ];
+    print $listref[2][2];
+
+</PRE>
+
+<p>The compiler would immediately flag that as an error <EM>at compile time</EM>,
+because you were accidentally accessing <CODE>@listref</CODE>, an undeclared
+variable, and it would thereby remind you to instead write:
+
+<p>
+<PRE>
+    print $listref->[2][2]
+
+</PRE>
+
+<p><p><hr>
+
+<CENTER>
+<A HREF="#Top">Top</a> /
+<A HREF="#perlmdim_references_0">References</a> /
+<A HREF="#perlmdim_common_0">Mistakes</A> /
+<A HREF="#perlmdim_caveat_0">Precedence</A> /
+<A HREF="#perlmdim_strict"><CODE>use strict</CODE></a> /
+<A HREF="#perlmdim_debugging_0">Debugging</a>
+</CENTER>
+
+<HR>
+
+<H2> 
+<A NAME="perlmdim_debugging_0">
+Debugging</a>
+</H2>
+
+The standard Perl debugger in 5.001 doesn't do a very nice job of 
+printing out complex data structures.  However, the perl5db that
+Ilya Zakharevich &lt;<A HREF="mailto:ilya@math.ohio-state.edu">ilya@math.ohio-state.edu</a>&gt;
+wrote, which is accessible at
+<A HREF="ftp://ftp.perl.com/pub/perl/ext/perl5db-kit-0.9.tar.gz">ftp::/ftp.perl.com/pub/perl/ext/perl5db-kit-0.9.tar.gz</a>.
+
+<p>The version for the debugger has several important new features, including command line editing as well
+as the <CODE>x</CODE> and <CODE>X</CODE> commands to dump out complex data structures.  For example, 
+given the assignment to <CODE>$LoL</CODE> above, here's the debugger output:
+
+<p>
+<PRE>
+    DB<1> X $LoL
+    $LoL = ARRAY(0x13b5a0)
+       0  ARRAY(0x1f0a24)
+          0  'fred'
+          1  'barney'
+          2  'pebbles'
+          3  'bambam'
+          4  'dino'
+       1  ARRAY(0x13b558)
+          0  'homer'
+          1  'bart'
+          2  'marge'
+          3  'maggie'
+       2  ARRAY(0x13b540)
+          0  'george'
+          1  'jane'
+          2  'alroy'
+          3  'judy'
+
+</PRE>
+
+<p>There's also a lower-case <CODE>x</CODE> command which is nearly the same.
+
+<p><p><hr>
+
+<A NAME="perlmdim_see_0">
+<h3>
+SEE ALSO
+</h3>
+</a>
+
+<DL><DD>
+<A HREF="http://www.metronet.com/perlinfo/perl5/manual/perlref.html">perlref(1)</a>,
+<A HREF="http://www.metronet.com/perlinfo/perl5/manual/perldata.html">perldata(1)</a>
+</DL>
+
+
+<H3> 
+<A NAME="perlmdim_author_0">
+M
+AUTHOR</A>
+</H3>
+
+<DL><DD>
+Tom Christiansen &lt;<A HREF="mailto:tchrist@perl.com">tchrist@perl.com</a>&gt;
+
+<DD>
+Last update: 
+Sat Oct  7 22:41:09 MDT 1995
+</DL>
+
+<HR>
+
+<CENTER>
+<A HREF="#Top">Top</a> /
+<A HREF="#perlmdim_references_0">References</a> /
+<A HREF="#perlmdim_common_0">Mistakes</A> /
+<A HREF="#perlmdim_caveat_0">Precedence</A> /
+<A HREF="#perlmdim_strict"><CODE>use strict</CODE></a> /
+<A HREF="#perlmdim_debugging_0">Debugging</a>
+</CENTER>
+
+</HTML>

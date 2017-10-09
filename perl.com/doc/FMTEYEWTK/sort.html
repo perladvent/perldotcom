@@ -1,0 +1,842 @@
+	    <!-- \$RCSfile\$\$Revision\$\$Date\$ -->
+	    <!-- \$Log\$ -->
+	    <HTML>
+	    <TITLE> Far More Than Everything You've Ever Wanted to Know About Sorting </TITLE>
+<p>
+
+<CENTER>
+
+<H1> 
+<A NAME="/tmp/sort_far_0">
+Far More Than Everything You've Ever Wanted to Know About 
+Sorting</A>
+</H1>
+
+</CENTER>
+<hr>
+In 
+<A href="news:comp.lang.perl">comp.lang.perl</a>,
+Randal Schwartz <A href="mailto:merlyn@stonehenge.com">&lt;merlyn@stonehenge.com&gt</a>
+obfuscates:
+<p>
+<PRE>
+ &gt;&gt;&gt;&gt; "Hugo" == Hugo Andrade Cartaxeiro &lt;hac@nexus.inesc.pt&gt; writes:
+ :
+ :Hugo&gt; print $str;
+ :Hugo&gt; eir      11   9   2    6    3    1     1  81%  63%    13
+ :Hugo&gt; oos      10   6   4    3    3    0     4  60%  70%    25
+ :Hugo&gt; hrh      10   6   4    5    1    2     2  60%  70%    15
+ :Hugo&gt; spp      10   6   4    3    3    1     3  60%  60%    14
+ :
+ :Hugo&gt; and I like to sort it with the last field as the order key. I know
+ :
+ :Hugo&gt; perl has some features to do it, but I can't make 'em work properly.
+ :
+ :Well, speaking Perl with a Lisp.... :-)
+
+</PRE>
+<p>We all recall that Perl <i>est un esprit LISP dans un corps C, n'est-ce
+pas? </i> :-)  (``corps C'' sounds like ``corset'' in French.) [Philippe Verdret 
+&lt;phd@eurolang.fr&gt;]
+<A NAME="CODE 0.0"></A>
+<H3>CODE 0.0</H3> 
+<p>
+<XMP>
+ :require 5; # if you don't have perl 5 by now, why NOT? :-)
+ :$str =
+ :      join "\n",
+ :      map { $_->[0] }
+ :      sort { $a->[1] <=> $b->[1] }
+ :      map { [$_, (split)[-1]] }
+ :      split /\n/,
+ :      $str;
+ :      
+ :Hugo> Reply by mail (if any).
+ :
+ :(oops :-)
+
+</XMP>
+<p>Oh for cryin' out loud, Randal!  You expect a <i>new perl programmer</i> to make
+heads or tails of <i>that></i>? :-)  You're postings JAPHs for solutions, which
+isn't going to help a lot.  You'll probably manage to scare these poor
+people away from the language forever? :-)
+<p>BTW, you have a bug.
+<p>Couldn't you at least <i>indent</i> it properly? :-)  This might help
+folks make more sense of it.  I'm going to use the
+<p>
+<XMP>
+   map EXPR,LIST
+
+</XMP>
+<p>rather and then 
+<p>
+<XMP>
+   map BLOCK LIST
+
+</XMP>
+<p>of map here so that it looks more like a conventional subroutine
+call (although I can't do that with sort):
+<A NAME="CODE 0.1"></A>
+<H3>CODE 0.1</H3>
+<XMP>
+    sort( { $a->[1] => $b->[1] }
+	  map( [ $_, (split(' ', $_))[-1] ], 
+	       split(/\n/, $str)
+	     )
+	     )
+       )
+   );
+</XMP>
+<p>Hm... ok, not much better.  Let's do this slowly and work our way through
+it.  First of all, let's look at your string again.
+<p>
+<XMP>
+eir      11   9   2    6    3    1     1  81%  63%    13
+oos      10   6   4    3    3    0     4  60%  70%    25
+hrh      10   6   4    5    1    2     2  60%  70%    15
+spp      10   6   4    3    3    1     3  60%  60%    14
+
+</XMP>
+<p>It looks like it's got a bunch of lines in it, so the first thing we're
+going to do is break it up into a list of lines.
+<p>
+<XMP>
+    @lines = split (/\n/, $str);
+
+</XMP>
+<p>You need to do this because each the perl built-in <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_sort_0"> sort()</a> function expects
+a list and returns a list.  It works like this in its most simple
+incarnation.
+<p>
+<XMP>
+    @newlist = sort @oldlist;
+
+</XMP>
+<p>Well, that's all well and good, but it's going to do the default sort, 
+meaning it'll sort it by ASCII.  Imagine a function like this:
+<A NAME="CODE 1.1"></A>
+<H3>CODE 1.1</H3>
+<p>
+<XMP>
+    sub by_last_num_field {
+	@alist = split(/\s+/, $a);
+	@blist = split(/\s+/, $b);
+	if ( $alist[$#alist] > $blist[$#blist] ) {
+	    return 1;
+	} elsif ( $blist[$#blist] > $alist[$#alist] ) {
+	    return -1
+	} else {
+	    return 0;
+	} 
+    } 
+    </XMP>
+<p>You could then say 
+<p>
+<XMP>
+    @newlist = sort by_last_num_field @oldlist;
+</XMP>
+And it would work out for you.  
+<p>It turns out that the <STRONG> $a </STRONG> and <STRONG> $b </STRONG> are each of the two values to be compared
+in the original list.  They're not going to passed in the way normal
+arguments are, which is <STRONG> $_[0]</STRONG>, <STRONG> $_[1]</STRONG>, etc.
+<p>That's work out ok, but it's pretty complicated looking.  It turns
+out that for just a matter, perl has a couple of operators to help
+you: <code>&lt;=&gt;</code> for numbers and <code>cmp</code> for strings.
+<p>While normally we give split a regular expression as its first argument,
+there's one case where you might want to give it a string: if the first
+argument is just a single space, then it will automatically discard
+leading null fields, which would otherwise be preserved.  (Trailing null
+fields are discarded in any case (unless you give <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_split_0"> <code>split()</code></a> a third
+argument).)
+<p>So you could just do this:
+<A NAME="CODE 1.2"></A>
+<H3>CODE 1.2</H3>
+<p>
+    <XMP>
+    sub by_last_num_field {
+	@alist = split(' ',$a);
+	@blist = split(' ',$b);
+	return $alist[$#alist] <=> $blist[$#blist];
+    } 
+    </XMP>
+<p>Now you could also have written that function ``in-lined'', like so.
+I'm going to leave out the word <code>return</code> this time:
+<A NAME="CODE 1.3"></A>
+<H3>CODE 1.3</H3>
+<p>
+<XMP>
+    @newlist = sort {
+	@alist = split(' ', $a);
+	@blist = split(' ', $b);
+	$alist[$#alist] <=> $blist[$#blist];
+    } @oldlist;
+    </XMP>
+<p>Ok so far?  We can make use of perl5's ability to do negative
+subscripting to get the last element:
+<A NAME="CODE 1.4"></A>
+<H3>CODE 1.4</H3>
+<p>
+<XMP>
+    @newlines = sort {
+	@alist = split(' ', $a);
+	@blist = split(' ', $b);
+	$alist[-1] <=> $blist[-1];
+    } @oldlines;
+    </XMP>
+<p>And in fact, we can do this without the temporary lists:
+<A NAME="CODE 1.5"></A>
+<H3>CODE 1.5</H3>
+<p>
+    <XMP>
+    @newlines = sort {
+	(split(' ', $a))[-1] <=> (split(' ', $b))[-1];
+    } @oldlines;
+    </XMP>
+<p>But no matter how you write it, that's a wee tad expensive for large data
+sets.  Since Perl's sort is a hook into C's qsort (lookup <i>qsort(3)</i> in the
+on-line Unix manual, if you're daring), that makes it N-logN sort.  You're
+going to be doing 2 splits for each of those.  With your data set of four,
+this isn't two bad:  you'll average only 11 splits.  With ten lines
+though, you're already up to 46.  With a mere one hundred lines, 921
+splits, and with a thousand lines, we're talking 13,816 splits on the
+average!  That's way too many.
+<p>So let's arrange to do just N splits.  We'll have to pre-process them:
+<A NAME="CODE 2.1"></A>
+<H3>CODE 2.1</H3>
+<p>
+<XMP>
+    @last_field = ():
+    foreach $line (@oldlines) {
+	$last_elt = (split(' ', $line))[-1];
+	push (@last_field, $last_elt);
+    } 
+    </XMP>
+<p>Now for a given line <STRONG> $n </STRONG> in <STRONG> @oldlines </STRONG>, its last field can be 
+found in the corresponding element of the <STRONG> @last_field </STRONG> array,
+that is, <STRONG> $last_field[$n]</STRONG> .
+<p>You could also just use the return value from split directly, without
+using a temporary, like this:
+<A NAME="CODE 2.2"></A>
+<H3>CODE 2.2</H3>
+<p>
+<XMP>
+    @last_field = ():
+    foreach $line (@oldlines) {
+	push (@last_field, (split(' ', $line))[-1]);
+    } 
+    </XMP>
+<p>You'll find that many perl programs are used to letting the <STRONG> $_ </STRONG>
+variable be the default to quite a few different operations.  This is
+unsettling to the newcomer, but it's really not that bad.  Amongst other
+things, <STRONG> $_ </STRONG> is the default iterator variable on a foreach loop, the default
+string to split on in a <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_split_0"> <code>split() </code></a>function, as well as the default variable
+to search or replace in a match or substitution.  (You'll find that it's
+also the implicit iterator variables in the <A
+HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_map_0">
+<code>map()</code></a> and <A
+HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_grep_0">
+<code>grep()</code></a> built-ins, which are themselves something like short-cut ways
+of writing <A
+HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlsyn.html#perlsyn_compound_0">
+<CODE>foreach</CODE></a>  loops.)
+
+<A NAME="CODE 2.3"></A>
+<H3>CODE 2.3</H3>
+<p>
+<XMP>
+    @last_field = ():
+    foreach (@oldlines) {
+	push(@last_field, (split(' '))[-1]);
+    } 
+    </XMP>
+<p>In perl5, we can write that without so many parentheses if we'd like.
+This time I'm also going to spell "foreach" as "for".  It actually
+doesn't matter to perl, but it might to the reader.
+<A NAME="CODE 2.4"></A>
+<H3>CODE 2.4</H3>
+<p>
+<XMP>
+    @last_field = ():
+    for (@oldlines) {
+	push @last_field, (split ' ')[-1];
+    } 
+    </XMP>
+<p>This entire process of reducing things to smaller and smaller amounts of
+code to do the equivalent thing is an interesting exercise, but perilous.
+While between <A HREF="#CODE 1.1">1.1</A> and <A HREF="#CODE 1.5">1.5</A> and between <A HREF="#CODE 2.1">2.1</A> and <A HREF="#CODE 2.4">2.4</A>, we actually did improve
+the efficiency of the operation ever so slightly, we've also managed to
+make it harder to debug and harder to maintain.  It's nice to have
+intermediary values sometimes in order to print them out part way through
+the calculation, whether in the debugger or with normal print statements.
+It's also harder for someone to come by later and figure out what you're
+doing.  If your aim is job security, then this might work out in your
+favor, but in most other cases, it probably won't.
+<p>Ok, how do we couple the stuff we did in code set 2 with what we did in
+code set 1?  Remembering that any given element in <STRONG> @last_field </STRONG> corresponds
+to the last field (the thing we want to sort on) in the <STRONG> @oldlines </STRONG> list.
+So we're going to do something a bit strange and sort not real data but
+rather just the indices.  That is, we'll rearrange indices (like
+0,1,2,3,4) to correspond to the properly sorted order (like 3,2,1,4,0).
+This is probably the hardest concept to grasp in this whole tutorial.
+<A NAME="CODE 3.1"></A>
+<H3>CODE 3.1</H3>
+<p>
+<XMP>
+    @orig_indices   = 0 .. $#oldlines;
+    @sorted_indices = sort { 
+			$last_field[$a] <=> $last_field[$b] 
+		    } @orig_indices;
+    @newlist = ();
+    foreach $idx (@sorted_indices) {
+	push(@newlines, $oldlines[$idx]);
+    } 
+    </XMP>
+<p>Now when we're done, we've got everything into its proper order.
+Occasionally, advanced perl programmers make use of what we 
+call array slices.  If you say 
+<p>CODE: 3.2.1:
+<p>
+<XMP>
+    @old_idx = (1,2,3);
+    @new_idx = (3,1,2);
+    @x[@new_idx] = @y[@old_idx];
+    </XMP>
+<p>It's the same as though you'd said:
+<H3>CODE 3.2.2</H3>
+<p>
+<XMP>
+    @x[3,1,2] = @y[1,2,3];
+    </XMP>
+<p>Which is really nothing more than simply:
+<H3>CODE 3.2.3</H3>
+<p>
+<XMP>
+    $x[3] = $y[1];
+    $x[1] = $y[2];
+    $x[2] = $y[3];
+    </XMP>
+
+<p>Except that it's shorter to write.  Notice how when you're doing slice
+operations you have to subscript your list with an <STRONG>@</STRONG> not a
+<STRONG>$</STRONG>?  That's because the <STRONG>$</STRONG> or
+<STRONG>@</STRONG> sign actually indicates what it is that you're getting
+back, not what you're looking at.  In this case, you're assigning a
+(sub-)list to a (sub-)list, so you need the <STRONG>@</STRONG> signs.
+
+<p>This means we can re-write <A HREF="#CODE 3.1">3.1</A> as 
+<A NAME="CODE 3.3"></A>
+<H3>CODE 3.3</H3>
+<p>
+<XMP>
+    @orig_indices   = 0 .. $#oldlines;
+    @sorted_indices = sort { 
+			$last_field[$a] <=> $last_field[$b] 
+		    } @orig_indices;
+    @newlines = @oldlines[@sorted_indices];
+    </XMP>
+<p>Now, since sort will return the indices, we can avoid some
+temporaries and write that as:
+<A NAME="CODE 3.4"></A>
+<H3>CODE 3.4</H3>
+<p>
+<XMP>
+    @newlines = @oldlines[ sort { 
+				$last_field[$a] <=> $last_field[$b] 
+			    } 0 .. $#oldlines 
+			 ];
+    </XMP>
+<p>If we'd used shorter variable names, we could have then 
+written it all on one line:
+<A NAME="CODE 3.5"></A>
+<H3>CODE 3.5</H3>
+<p>
+<XMP>
+    @new = @old[ sort { $f[$a] <=> $f[$b] } 0 .. $#old ];
+    </XMP>
+<p>Now what?  Well, we have to get back the user's orginal data.
+<A NAME="CODE 4.1"></A> 
+<H3>CODE 4.1</H3>
+<p>
+<XMP>
+    $str = join ("\n", @newlines);
+
+    </XMP>
+<p>But you'll find that you're shy a final newline (that's Randal's bug).
+<p>You could solve this by passing another null argument to <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_join_0"> join()</a> ,
+<A NAME="CODE 4.2"></A>
+<h3>CODE 4.2</h3>
+<p>
+<XMP>
+    $str = join ("\n", @newlines, '');
+    </XMP>
+<p>or by concatenating a newline to the result:
+<A NAME="CODE 4.3"></A>
+<h3>CASE 4.3</h3>
+<p>
+<XMP>
+    $str = join ("\n", @newlines) . "\n";
+    </XMP>
+<p>Combining all these, we have final solution that looks like this:
+<A NAME="CODE 5.1"></A>
+<H3>CODE 5.1</H3>
+<p>
+<XMP>
+    @old = split (/\n/, $str);
+    @f = ():
+    for (@old) {
+	push @f, (split ' ')[-1];
+    } 
+    @new = @old[ sort { $f[$a] <=> $f[$b] } 0 .. $#old ];
+    $str = join ("\n", @new) . "\n";
+    </XMP>
+<p>We can merge a few of these and have something shorter.  
+<A NAME="CODE 5.2"></A>
+<H3>CODE 5.2</H3>
+<p>
+<XMP>
+    @old = @f = ():
+    for (split (/\n/, $str)) { 
+	push @old, $_;
+	push @f, (split ' ')[-1];
+    } 
+    $str = join ("\n", @old[sort{ $f[$a] <=> $f[$b] } 0..$#old ]) . "\n";
+    </XMP>
+<p>It's true tha this is verging on the inscrutable, but we're trying to get
+closer to Randal's obfuscated perl entry he presented way at the beginning
+of this.  
+<p>Nonetheless, it's still quite a bit different from Randal's.  One thing
+he's done is make use of the <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_map_0"> map()</a> function.  This is a perl5 feature
+that uses its first expression argument as code to execute repeatedly
+against each of its following list arguments, setting <STRONG> $_ </STRONG> to each element,
+and returning the result of the expression to create a new output list.  
+<H3>CODE 5.2.1</H3>
+<p>
+<XMP>
+    @single = 1..10;
+    @treble = map $_ * 3, @single;
+    </XMP>
+<p>You may also write this expression as a block, and omit the comma, 
+which is what Randal did:
+<H3>CODE 5.2.2</H3>
+<p>
+<XMP>
+    @single = 1..10;
+    @treble = map { $_ * 3 }  @single;
+    </XMP>
+<p>Or even omit the temporary:
+<H3>CODE 5.2.3</H3>
+<p>
+<XMP>
+    @treble = map { $_ * 3 } 1..10;
+    </XMP>
+<p>You can use the <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_map_0"> <code>map()</code></a> function to shorten up <A HREF="#CODE 5.2">5.2</A> a bit by pulling
+out the for loop:
+<A NAME="CODE 5.3"></A>
+<H3>CODE 5.3</H3>
+<p>
+<XMP>
+    @old = split (/\n/, $str);
+    @f = map { (split ' ')[-1] } @old;
+    $str = join ("\n", @old[sort{ $f[$a] <=> $f[$b] } 0..$#old ]) . "\n";
+    </XMP>
+<p>You could even make use of the result of the assignment statement
+as the argument to map and shrink it sill more:
+<A NAME="CODE 5.4"></A>
+<H3>CODE 5.4</H3>
+<p>
+<XMP>
+    @f = map { (split ' ')[-1] } @old = split (/\n/, $str);
+    $str = join ("\n", @old[sort{ $f[$a] <=> $f[$b] } 0..$#old ]) . "\n";
+    </XMP>
+<p>Now, Randal didn't want to use any temporary variables at all.
+Let's look at his jumbled code again:
+<H3>CODE 0.0</H3>
+<p>
+<XMP>
+    $str =
+	    join "\n",
+	    map { $_->[0] }
+	    sort { $a->[1] <=> $b->[1] }
+	    map { [$_, (split)[-1]] }
+	    split /\n/,
+	    $str;
+    </XMP>
+<p>He's been kinda nasty in that there are no parens or indentation.
+I offered this version which adds them:
+<H3>CODE 0.1</H3>
+<p>
+<XMP>
+    $str = join("\n", 
+		map($_->[0],
+		    sort( {$a->[1] <=> $b->[1] }
+			  map( [$_, (split(' ', $_))[-1] ], 
+			       split(/\n/, $str)
+			     )
+			 )
+		   )
+	       );
+    </XMP>
+<p>But you could retain Randal's block form as well:
+<H3>CODE 0.2:</H3>
+<p>
+<XMP>
+    $str = join("\n", 
+		map( { $_->[0] }
+		     sort( {$a->[1] <=> $b->[1] }
+			  map( { [$_, (split(' ', $_))[-1] ] }
+			       split(/\n/, $str)
+			     )
+			 )
+		   )
+	       );
+    </XMP>
+<p>While in some ways code <A HREF="#CODE 0.2">0.2</A> resembles code <A HREF="#CODE 5.4">5.4</A>, in many others it
+doesn't.  What are all those crazy arrows and square brackets doing
+there?  Well, that's a really interesting question.
+<p>Let's take this thing inside out.  Here's the innermost portion
+of it:
+<H3>CODE 6.1</H3>
+<A NAME="CODE 6.1"></A>
+<p>
+<XMP>
+  map { [$_, (split(' ', $_))[-1] ] } split(/\n/, $str) 
+</XMP>
+<p>What's going on is that he's using the return from split to be the
+arguments to <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_map_0"> map()</a> over.  Ok, but what's that <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_map_0"> map() </a>code block doing???
+<H3>CODE 6.2</H3>
+<A NAME="CODE 6.2"></A>
+<p>
+<XMP>
+   [ $_, (split(' ', $_))[-1] ] 
+</XMP>
+<p>What <A HREF="#CODE 6.2">6.2</A> does happens to do is to create a reference to a list of two
+elements.  It's as though you said this
+<H3>CODE 6.2.1</H3>
+<p>
+<XMP>
+    my @x = ( $_, (split(' ', $_))[-1] );
+    return \@x;
+    </XMP>
+<p>However, the list reference he's creating by using the [ .... ] notation
+isn't a named list at all.  If you wrote the inner loop as a real
+honest-to-goodness loop, it might look like this:  (remember that <A HREF="#CODE 6.3">6.3</A> is
+just the long form of <A HREF="#CODE 6.1">6.1</A>)
+<H3>CODE 6.3</H3>
+<A NAME="CODE 6.3"></A>
+<p>
+<XMP>
+    @listrefs = ();
+    for (split(/\n/, $str)) {
+	$newref = [ $_, (split(' ', $_))[-1] ];
+	push (@listrefs, $newref);
+    }
+    </XMP>
+<p>And then you'd have all your references in <STRONG>@listrefs</STRONG>.  This means that for
+a given line within <STRONG> $str </STRONG> (call it line number <STRONG>
+$n </STRONG>), <STRONG> $listrefs </STRONG>[<STRONG>$n]-&gt;[0]</STRONG>
+is going to be the whole line itself (without its newline), while <STRONG>
+$listrefs[$n]-&gt;[1]</STRONG> is going to be its last
+field.  We could actually write those without the pointer arrows, because
+adjacent brackets may omit them, as in 
+<STRONG> $listrefs[$n][0] </STRONG>, but we're going to need them for what
+later, so you should get used to seeing them.
+
+<p>Well, what's the next level do?  It's a sort.  Consider this:
+<H3>CODE 7.1</H3>
+<A NAME="CODE 7.1"></A>
+<p>
+<XMP>
+    @newrefs = sort { $a->[1] <=> $b->[1] } @listrefs;
+    </XMP>
+<p>Since <STRONG>$a</STRONG> and <STRONG>$b</STRONG> will be each element of <STRONG>@listrefs</STRONG>, they will each be
+references to lists (kinda like pointers to lists).  Remember that each of
+these refers to a list of two elements, whose zeroth element 
+<STRONG>$a-&gt;[0]</STRONG> is
+the entire data, but whose first element 
+<STRONG>$a-&gt;[1]</STRONG> is the sort key.
+So we'll compare the sort keys.
+<p>Put we don't want the sort keys.  We want the original data.
+You could write a loop to do it:
+<H3>CODE 7.2</H3>
+<A NAME="CODE 7.2"></A>
+<p>
+<XMP>
+    @data = ():
+    foreach $ref (@newrefs) {
+	push(@data, $ref->[0]);
+    } 
+    </XMP>
+<p>Or you could be like Randal and avoid temporaries by using
+a <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_map_0"> map()</a> instead of a loop:
+<A NAME="CODE 7.3"></A>
+<H3>CODE 7.3</H3>
+<p>
+<XMP>
+    @data = map { $_->[0] } @newrefs;
+    </XMP>
+<p>Combining up various stages, we get this:
+<p>
+<A NAME="CODE 7.4"></A>
+<H3>CODE 7.4</H3>
+<p>
+<XMP>
+    @lines    = split( /\n/, $str);
+    @listrefs = map { [$_, (split(' ', $_))[-1] ] } @lines;
+    @newrefs  = sort { $a->[1] <=> $b->[1] } @listrefs;
+    @data     = map { $_->[0] } @newrefs;
+    $str      = join("\n", @data) . "\n";
+    </XMP>
+<p>It may not look like it, but this is very, very close to what Randal wrote
+back in <A HREF="#CODE 0.0">0.0</A>; he just didn't keep around his temporary results in names
+variables.  It's quite likely that he even developed the <A HREF="#CODE 0.0">0.0</A> code starting
+from something that looked more like <A HREF="#CODE 7.4">7.4</A>.  If you don't, you'll have an
+exceedingly difficult time debugging it.
+<p>But you know something?  You don't have to be all so super-clever to
+do this.  There's a much more straightforward solution:
+<H3>CODE 8.1</H3>
+<A NAME="CODE 8.1"></A>
+<p>
+<XMP>
+    $tmpfile = "/tmp/sortage.$$";
+    open (TMP, ">$tmpfile");
+    print TMP $str;
+    close(TMP);
+    $str = `sort +10n $tmpfile`;
+    unlink $tmpfile;
+    </XMP>
+<p>See?  We just write it to a file, then let the system sort program do the
+work for you.  Isn't that much easier to understand?  If you can easily
+express your sort in something that the system sort program will
+understand, it usually makes more sense to use it.  It'll run faster
+and be easier to write as well.
+<p>Of course, we've made committed some minor errors here by omitting
+error checking.  This would be better:
+<H3>CODE 8.2</H3>
+<A NAME="CODE 8.2"></A>
+<p>
+<XMP>
+    $tmpfile = "/tmp/sortage.$$";
+    open (TMP, ">$tmpfile")     || die "can't open $tmpfile for writing: $!";
+    (print TMP $str)            || die "can't write to $tmpfile: $!";
+    close(TMP)                  || die "can't write to $tmpfile: $!";
+    $str = `sort +10n $tmpfile`;
+    if ($?)                     {  die "sort exited with a $?" }
+    unlink($tmpfile)            || die "can't unlink $tmpfile: $!";
+    </XMP>
+<p>That line to <A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_print_0"> print()</a> looks funny, eh?  And what about the parens on 
+the unlink?  You probably thought that you could have written both
+of those as
+<H3>CODE 8.2.1</H3>
+<p>
+<XMP>
+    print TMP $str              || die "can't write to $tmpfile: $!";
+    unlink $tmpfile             || die "can't unlink $tmpfile: $!";
+    </XMP>
+<p>But in fact, you couldn't.  The || binds more tightly than you want.
+It would have been as though you'd written:
+<H3>CODE 8.2.2</H3>
+<p>
+<XMP>
+    print TMP ($str             || die "can't write to $tmpfile: $!");
+    unlink ($tmpfile            || die "can't unlink $tmpfile: $!");
+    </XMP>
+<p>Which certainly isn't good.  That's why in perl5 we have <code>or</code>, which is 
+a very low-precedence operator.  We probably would write it like this:
+<H3>CODE 8.3</H3>
+<A NAME="CODE 8.3"></A>
+<p>
+<XMP>
+    $tmpfile = "/tmp/sortage.$$";
+    open TMP, ">$tmpfile"       or die "can't open $tmpfile for writing: $!";
+    print TMP $str              or die "can't write to $tmpfile: $!";
+    close TMP                   or die "can't close $tmpfile: $!";
+    $str = `sort +10n $tmpfile`;
+    if ($?)                     {  die "sort exited with a $?" }
+    unlink $tmpfile             or die "can't unlink $tmpfile: $!";
+    </XMP>
+<p>Another trick sometimes used is to use to the filename itself as
+an indirect file handle.
+<H3>CODE 8.4</H3>
+<A NAME="CODE 8.4"></A>
+<p>
+<XMP>
+    $tmpfile = "/tmp/sortage.$$";
+    open $tmpfile, ">$tmpfile"  or die "can't open $tmpfile for writing: $!";
+    print $tmpfile $str         or die "can't write to $tmpfile: $!";
+    close $tmpfile              or die "can't close $tmpfile: $!";
+    $str = `sort +10n $tmpfile`;
+    if ($?)                     {  die "sort exited with a $?" }
+    unlink $tmpfile             or die "can't unlink $tmpfile: $!";
+    </XMP>
+<p>Another trick sometimes used is to use to the filename itself as an
+indirect file handle.  This has a greater advantage when you are reading
+from the file, and issuing diagnostics using <A
+HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_warn_0"><code>warn()</code>
+</a>or <A
+HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/perlfunc.html#perlfunc_die_0">
+<code>die()</code></a>, which include the line (or chunk) position and filehandle anme
+of the last file read from.  This way you'd also get the
+
+<H3>CODE 8.5</H3>
+<A NAME="CODE 8.5"></A>
+<p>
+<XMP>
+    $tmpfile = "/tmp/sortage.$$";
+    open $tmpfile, ">$tmpfile"  or die "can't open $tmpfile for writing: $!";
+    print $tmpfile $str         or die "can't write to $tmpfile: $!";
+    close $tmpfile              or die "can't close $tmpfile: $!";
+    # do something else to the file here, then...
+    open $tmpfile, "<$tmpfile"  or die "can't open $tmpfile for reading: $!";
+    while (<$tmpfile>) {
+	if ( $something_or_other ) {
+	    warn "oops message";
+	} 
+    } 
+    </XMP>
+<p>Now the warn will include the actual filename rather than just 
+the filehandle, like TMP.
+<p>Now, you probably shouldn't bother go to too much trouble in figuring
+out a good filename.  There is a POSIX function which will do this 
+for you.
+<H3>CODE 8.6</H3>
+<A NAME="CODE 8.6"></A>
+<p>
+<XMP>
+    use POSIX;
+    $tmpfile = POSIX::tmpnam();
+    open TMP, ">$tmpfile"       or die "can't open $tmpfile for writing: $!";
+    print TMP $str              or die "can't write to $tmpfile: $!";
+    close TMP                   or die "can't close $tmpfile: $!";
+    $str = `sort +10n $tmpfile`;
+    if ($?)                     {  die "sort exited with a $?" }
+    unlink $tmpfile             or die "can't unlink $tmpfile: $!";
+    </XMP>
+<p>Just one final thing.  This seems like just the application for a
+bi-directional open.  You might be tempted to write this using the 
+<A HREF="http://fohnix.metronet.com:80/1h/perlinfo/perl5/manual/modpods/Open2.html"><code>open2()</code></a>
+function.  
+<H3>CODE 9.1</H3>
+<A NAME="CODE 9.1"></A>
+<p>
+<XMP>
+    use IPC::Open2;
+    $kidpid = open2('INPUT', 'OUTPUT', 'sort +10n');
+    print OUTPUT $str           or die "can't write to $tmpfile: $!";
+    close OUTPUT                or die "can't close output pipe: $!";
+    while (<INPUT>) {
+	print "got line $.: $_";
+    } 
+    close INPUT                 or die "can't close input pipe: $!";
+    </XMP>
+<p>or maybe to read the whole thing back again, undef the RS:
+<H3>CODE 9.2</H3>
+<A NAME="CODE 9.2"></A>
+<p>
+<XMP>
+    use FileHandle;
+    use IPC::Open2;
+    $kidpid = open2('INPUT', 'OUTPUT', 'sort +10n');
+    print OUTPUT $str           or die "can't write to $tmpfile: $!";
+    close OUTPUT                or die "can't close output pipe: $!";
+    INPUT->input_record_separator(undef);
+    $str = <INPUT>;
+    close INPUT                 or die "can't close input pipe: $!";
+    </XMP>
+<p>Now, it turns out that in this case it actually works, 
+at least on my system.  I wrote all my input do the pipe
+first, which gladly read it all in up until end of file, and
+then spit it out.  That's how sort work.  But cat isn't so 
+friendly, and works far more like most programs.
+<H3>CODE 9.3</H3>
+<A NAME="CODE 9.3"></A>
+<p>
+<XMP>
+    use FileHandle;
+    use IPC::Open2;
+    $kidpid = open2('INPUT', 'OUTPUT', 'cat');
+    print OUTPUT $str           or die "can't write to $tmpfile: $!";
+    close OUTPUT                or die "can't close output pipe: $!";
+    INPUT->input_record_separator(undef);
+    $str = <INPUT>;
+    close INPUT                 or die "can't close input pipe: $!";
+    </XMP>
+<p>If you do this and <STRONG> $str </STRONG> is big enough, you'll block forever.
+And even doing a piece at a time:
+<H3>CODE 9.4</H3>
+<A NAME="CODE 9.4"></A>
+<p>
+<PRE>
+    use IPC::Open2;
+    $kidpid = open2('INPUT', 'OUTPUT', 'cat');
+    while (1) {
+	print OUTPUT $str;           
+	$newstr =&lt;INPUT&gt;;
+	print "just read &lt;&lt&lt; $newstr &gt;&gt;&gt;\n";
+    }
+</PRE>
+<p>This approach won't work because in general, you can't control your child
+processes notions of buffering, which are entirely useless for simulating
+interactive work as you're attempting here.  The only programs this works
+on are ones that are designed for it, like dc.  There aren't many system
+programs like it.
+<p>I strongly advise against using open2 for almost anything, even though I'm
+its author.  UNIX buffering will just drive you up the wall.  You'll end
+up quite disappointed.  It's better to use temp files as we did back in
+the code examples in section 9 if you really want to deal with an external
+process in which you wish to control both its input and its output.
+<p>There's one final lesson I'd like to impart.  It's not a bad idea to order
+your coding priorities like so:
+<p>
+<OL>
+<LI> correctness
+<LI> maintainability
+<LI> efficiency
+</OL>
+
+<p>Notice at no point did ``4. cleverness'' enter the picture.  Of course, if
+you're writing Obfuscated C contest entries, or tricksy little JAPHs, then
+it makes perfect sense to invert these priorities, like so: 
+<p>
+<OL>
+<LI> cleverness
+<LI> efficiency
+<LI> maintainability
+<LI> correctness
+</OL>
+<p>But that's only good for tricks, not solid code, which is why code like
+that in <A HREF="#CODE 5.1">5.1</A>, <A HREF="#CODE 8.3">8.3</A>, or even <A HREF="#CODE 7.4">7.4</A> will in the long run make easier both your
+life and the lives of those around you.  
+<p>While a LISP or Scheme programmer may be entirely conformatable with
+arrange their code as Randal did in <A HREF="#CODE 0.0">0.0</A>, I haven't personal found that
+most of your average off-the-street UNIX, DOS, VMS, or IBM programmers
+take very quickly to that style of functional programming -- or even the
+above average ones, for that matter.  It's nice in its own pristine way
+not to use any temporary variables and all, but it's still not to most
+people's liking.
+<p>And no, I'm not ragging on Randal, merely teasing a bit.  He's just trying
+to be clever, and that's what he does.  I'm just submitting a sample
+chapter for his perusal for inclusion the mythical <b><i>Alpaca Book</b></i> :-)
+<p>--tom
+<p>
+<H2> 
+<A NAME="/tmp/sort_author_0">
+<HR>
+AUTHOR</A>
+</H2>
+
+Tom Christiansen <A href="mailto:tchrist@mox.perl.com"> &lt;tchrist@mox.perl.com&gt;</a>
+<BR>
+Original Date: 10 Apr 1995 12:30:06 GMT
+<BR>
+Last Revision: 05 Oct 1995 06:56:06 MDT 
+<p>
+</HTML>
+<HR>
+Return to:
+<UL>
+<LI>The <A HREF="index.html">FMTYEWTK index page</a>.
+<LI>The <A HREF="/perl/index.html">Perl home page</a>.
+</UL>
+<HR>
+Copyright 1996 <A HREF="mailto:tchrist@perl.com">Tom Christiansen</a>.
+<BR>All rights reserved.

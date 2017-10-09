@@ -1,0 +1,890 @@
+	    What Makes Perl's Regular Expressions Dynamite
+
+Why is Perl so useful for sysadmin and WWW and text hacking?  It has
+a lot of nice little features that make it easy to do nearly anything
+you want to text.  A lot of perl programs look like a weird synergy of
+C and shell and sed and awk.  For example:
+
+    #!/usr/bin/perl
+    # manpath -- tchrist@perl.com
+    foreach $bindir (split(/:/, $ENV{PATH})) {
+	($mandir = $bindir) =~ s/[^\/]+$/man/;
+	next if $mandir =~ /^\./ || $mandir eq '';
+	if (-d $mandir && ! $seen{$mandir}++ ) {
+	    ($dev,$ino) = stat($mandir);
+	    if (! $seen{$dev,$ino}++) {
+		push(@manpath,$mandir);
+	    }
+	}
+    }
+    print join(":", @manpath), "\n";
+
+Can anyone see what that does?  I'd like to think it's not too hard, even
+devoid of commentary.  It does have some naughty bits, like using side
+effect operators of assignment operators as expressions and double-plus
+postfix autoincrement.  C programmers don't have a problem with it, but a
+lot of others do.  That's why Guido banned such things in Python (a rather
+nice language in many ways), and why I don't advocate using them to non-C
+programmers, whom it generally confuses whether it be done in C or in Perl
+or C++ or any such language.
+
+By far the most bizarre thing is that dread punctuation lying within funny
+slashes.  Often folks call Perl unreadable because they don't grok
+regexps, which all true perl wizards -- and acolytes -- adore.  The
+slashes and their patterns govern matching and splitting and substituting,
+and here is where a lot of the Perl magic resides: its unmatched :-)
+regular expressions.  Certainly the above code could be rewritten in tcl
+or python or nearly anything else.  It could even be rewritten in more
+legible perl.  :-)   
+
+So what's so special about perl's regexps?  Quite a bit, actually,
+although the real magic isn't demonstrated very well in the manpath
+program.  Once you've read the perlre(1) and the perlop(1) man pages,
+there's still a lot to talk about.  So permit me, if you would, to now
+explain Far More Than Everything You Ever Wanted to Know about Perl
+Regular Expressions... :-)
+
+Perl starts with POSIX regexps of the "modern" variety, that is, egrep
+style not grep style.  Here's the simple case of matching a number
+
+    /Th?om(as)? (Ch|K)rist(ia|e)ns{1,2}s[eo]n/
+
+This avoids a lot of backslashes.  I believe many languages also
+support such regular rexpressions.
+
+Now, Perl's regexps "aren't" -- that is, they aren't "regular" because
+backreferences per sed and grep are also supported, which renders the
+language no longer strictly regular and so forbids "pure" DFA
+implementations.
+
+But this is exceedingly useful.  Backreferences let you refer
+back to match part of what you just had.  Consider lines like
+these:
+
+    1. This is a fine kettle of fish.
+    2. The best card is Island Fish Jasconius.
+    3. Is isolation unpleasant?
+    4. That's his isn't it?
+    5. Is is outlawed?
+
+If you'd like to pick up duplicate "is" strings there, you 
+could use the pattern
+
+    /(is) \1/           # matches 1,4
+
+As written, that will match sentences 1 and 4.  The others
+fail due to mixed case.  You can't fix it just by saying
+
+    /([Ii]s) \1/        # still matches 1,4
+
+because the \1 refers back to the real match, not the potential
+match.  So what do we do?  Well, POSIX specifies a REG_ICASE
+flag you can pass into your matcher to help support "grep -i"
+etc.  To get perl to do this, affix an i flag after the match:
+
+    /(is) \1/i          # matches 1,2,3,4,5
+
+And now all 5 of those sentences match.  If you only wanted
+them to match legit words, you might use the \b notation for
+word boundaries, making it
+
+    /\b(is) \1/i        # matches 2,3,5
+    /(is) \1\b/i        # matches 1,5
+    /\b(is) \1\b/i      # matches 5
+
+This means you will see Perl code like
+
+    if ( $variable =~ /\b(is) \1\b/i ) {
+        print "gotta match";
+    } 
+
+One might argue that is "should" be written more like
+
+    if ( rematch(variable, '\b(is) \1\b', 'i') ) {
+        print "gotta match";
+    } 
+
+but that's not how Perl works.  I suspect that other languages
+could make it work that way.
+
+If you'd like to know where you matched, you might want to use
+these:
+
+        $MATCH                  full match
+        $PREMATCH               before the match
+        $POSTMATCH              after the match
+        $LAST_PAREN_MATCH       useful for alternatives
+
+Although the most normal case is just to use $1, $2, etc, which
+match the first, second, etc parenthesized subexpressions.
+
+Another nice thing that Perl supports are the notions from
+C's ctype.h include file:
+
+        C function      Perl regexp
+
+        isalnum         \w
+        isspace         \s
+        isdigit         \d
+
+That means that you don't have to hard-code [A-Z] and have it break when
+someone has some interesting locale settings.  For example, under
+charset=ISO-8859-1, something like "façade" properly matches /^\w+$/,
+because the c-cedille is considered an alphanum.  In theory, LC_NUMERIC
+settings should also take, but I've never tried.
+
+This quickly leads to a pattern that detects duplicate words in 
+sentences:
+
+    /\b(\w+)(\s+\1)+\b/i
+
+In fact, that one matches multiple duplicates as well.  If 
+if if you read in your input data a paragraph at a time, it will 
+catch dups crossing line boundaries as as well.  For example, using
+some convenient command line flags, here's a 
+
+    perl -00 -ne 'if ( /\b(\w+)(\s+\1)+\b/i ) { print "dup $1 at $.\n" }'
+
+which when used on this article says:
+        
+    dup Is at 10
+    dup If at 33
+
+the $. variable ($NR in English mode) is the record number.  I set
+it to read paragraph records, so paragraphs 10 and 33 of this posting
+contain duplicate words.
+
+Actually, we can do something a bit nicer: we can find multiple duplicates
+in the same paragraph.   The /g flag causes a match to store a bit
+of state and start up where it last left off.  This gives us:
+
+    #!/usr/bin/perl -00 -n
+    while ( /\b(\w+)(\s+\1)+\b/gi ) { 
+        print "dup $1 at paragraph $.\n";
+    }
+
+This now yields:
+
+    dup Is at paragraph 10
+    dup if at paragraph 33
+    dup as at paragraph 33
+
+Of course, we're getting a bit hard to read here.  So let's use
+the /x flag to permit embedded white space and comments in our
+pattern -- you'll want 5.002 for this (the white space worked
+in 5.000, but the comments were added later :-).  For legibility,
+instead of slashes for the match, I'll embrace the real m() function,
+Since /foo/ and m(foo) and m{foo} are all equivalent.
+
+    #!/usr/bin/perl -n
+    require 5.002;
+    use English;
+    $RS = '';
+
+    while ( 
+       m{                       # m{foo} is like /foo/, but helps vi's % key
+
+                 \b             # first find a word boundary
+
+                 (\w+)          # followed by the biggest word we can find
+                                # which we'll save in the \1 buffer
+                 (              
+                   \s+          # now have some white space following it
+                   \1           # and the word itself
+                 )+             # repeat the space+word combo ad libitum
+
+                 \b             # make sure there's a boundary at the end too
+
+        }xgi                    # /x for space/comment-expanded patterns
+                                # /g for global matching
+                                # /i for case-insensitive matching
+    )
+    { 
+        print "dup $1 at paragraph $NR\n";
+    }
+
+While it's true that someone who doesn't know regular expressions
+won't be able to read this at first glance, this is not a problem.
+So even though we can build up rather complex patterns, we can 
+format and comment them nicely, preserving understandability.
+I wonder why no one else has done this in their regexp libraries?
+
+I actually wrote a sublegible version of this many years ago.  It runs
+even on ancient versions of Perl.  I'd probably to that a bit differently
+these days -- my coding style has certainly matured.  It violates several
+of my own current style guidelines.
+
+    #!/usr/bin/perl
+    undef $/; $* = 1;
+    while ( $ARGV = shift ) { 
+        if (!open ARGV) { warn "$ARGV: $!\n"; next; } 
+        $_ = <ARGV>;
+        s/\b(\s?)(([A-Za-z]\w*)(\s+\3)+\b)/$1\200$2\200/gi || next;
+        split(/\n/);
+        $NR = 0;
+        @hits = ();
+        for (@_) { 
+            $NR++;
+            push(@hits, sprintf("%5d %s", $NR, $_)) if /\200/;
+        } 
+        $_ = join("\n",@hits);
+        s/\200([^\200]+)\200/[* $1 *]/g;
+        print "$ARGV:\n$_\n";
+    }
+
+here's that will output when run on this
+article up to this current point:
+
+   51     5. [* Is is *] outlawed?
+  124 In fact, that one matches multiple duplicates as well.  [* If 
+  125 if if *] you read in your input data a paragraph at a time, it will 
+  126 catch dups crossing line boundaries [* as as *] well.  For example, using
+
+Which is pretty neat.  
+
+Speaking of ctype.h macros, Perl borrows the vi notation of case translation
+via \u, \l, \U, and \L.  So you could say
+
+    $variable = "façade niño coöperate molière renée naïve hæmo tschüß";
+and then do a 
+
+    $variable =~ s/(\w+)/\U$1/g;
+
+and it would come out
+
+    FAÇADE NIÑO COÖPERATE MOLIÈRE RENÉE NAÏVE HÆMO TSCHÜß
+
+Oh well.  My clib doesn't know to turn ß -> SS.   That's a harder issue.
+
+This is much better than writing things like
+
+    $variable =~ tr[a-z][A-Z];
+
+because that would give you:
+
+    FAçADE NIñO COöPERATE MOLIèRE RENéE NAïVE HæMO TSCHüß
+
+which isn't right at all.
+
+Actually, perl can beat vi and do this:
+
+    $variable =~ s/(\w+)/\u\L$1/g;
+
+Yielding:
+
+    Façade Niño Coöperate Molière Renée Naïve Hæmo Tschüß
+
+which is somewhat interesting.
+
+Speaking of substitutes, we can use a /e flag on the substitute
+to get the RHS to evaluate to code instead of just a string.  
+Consider:
+
+    s/(\d+)/8 * $1/ge;              # multiple all numbers by 8
+    s/(\d+)/sprintf("%x", $1)/ge;   # convert them to hex
+
+This is nice when renumbering paragraphs.  I often write
+
+    s/^(\d+)/1 + $1/
+
+or from within vi, just
+
+    %!perl -pe 's/^(\d+)/1 + $1/'
+
+Here's a more elaborate example of this. 
+If you wanted to expand %d or %s or whatnot, you might just do
+
+    s/%(.)/$percent{$1}/g;
+
+given a %percent definition like this:
+
+    %percent = (
+                'd'     => 'digit',
+                's'     => 'string',
+    );
+
+But in fact, that's got quite enough.  You might well want
+to call a function, like
+
+    s/%(.)/unpercent($1)/ge;
+
+(assuming you have an unpercent() function defined.)
+
+You can even use /ee for a double-eval, but that seems going overboard in
+most cases.  It is, however, nice for converting embedded variables like
+$foo or whatever in text into their values.  This way a sentence with
+$HOME and $TERM in it, assuming there were valid variables, might become a
+sentence with /home/tchrist and xterm in it.  Just do this:
+
+   s/(\$\w+)/$1/eeg;
+
+Ok, what more can we do with perl patterns?  Split takes a pattern.
+Imagine that you have a record stored in plain text as blank line
+separated paragraphs with FIELD: VALUE pairs on each line.
+
+    field: value here
+    somefield: some value here
+    morefield: other value here
+
+    field: second record's value here
+    somefield: some value here
+    morefield: other value here
+    newfield: other funny stuff
+
+You could process that this way.  We'll put it into key value
+pairs in a hash, just as though it had been initialized as
+
+    %hash = (
+        'field'         => 'value here',
+        'somefield'     => 'some value here',
+        'morefield'     => 'other value here',
+    );
+
+I'll use a few command line switches for short cuts:
+
+    #!/usr/bin/perl -00n
+    %hash = split( /^([^:]+):\s*/m );
+    if ( $hash{"somefield"} =~ /here/) {
+        print "record $. has here in somefield\n";
+    } 
+
+The /m flag governs whether ^ can match internally.  I
+believe this is the POSIX value REG_NEWLINE.  Normally
+perl does not have ^ match anywhere but the beginning
+of the string. (
+
+Or you could eschew shortcuts and write:
+
+    #!/usr/bin/perl 
+    use English;
+    $RS = '';
+    while ( $line = <ARGV> ) {
+        %hash = split(/^([^:]+):\s*/m, $line);
+        if ( $hash{"somefield"} =~ /here/) {
+            print "record $NR has here in somefield\n";
+        } 
+    } 
+
+Actually, in the current version of perl, you can use the getline() object
+method on the predefined ARGV file handle object:
+
+    #!/usr/bin/perl 
+    use English;
+    $RS = '';
+    while ( $line = ARGV->getline() ) {
+        %hash = split(/^([^:]+):\s*/m, $line);
+        if ( $hash{"somefield"} =~ /here/) {
+            print "record $NR has here in somefield\n";
+        } 
+    } 
+
+This can be especially convenient for handling mail messages. 
+
+Here, for example, is a bair-bones mail-sorting program:
+
+    #!/usr/bin/perl -00
+    while (<>) {
+        if ( /^From / ) {
+            ($id) = /^Message-ID:\s*(.*)/mi;
+            $sub{$id} = /^Subject:\s*(Re:\s*)*(.*)/mi 
+                            ? uc($2)
+                            : $id;
+        } 
+        $msg{$id} .= $_;
+    }
+    print @msg{ sort { $sub{$a} cmp $sub{$b} } keys %msg};
+
+Now, I still haven't mentioned a couple of features which 
+are to my mind critical in any analysis of the strengths of
+Perl's pattern matching.  These are stingy matching and
+lookaheads. 
+
+Stingy matching solves the problem greedy matching.  A greedy
+match picks up everything, as in:
+
+       $line = "The food is under the bar in the barn.";
+       if ( $line =~ /foo(.*)bar/ ) {
+           print "got <$1>\n";
+       }
+
+That prints out
+
+    <d is under the bar in the >
+
+Which is often not what you want.  Instead, we can add an extra ? 
+after a repetition operator to render it stingy instead of greedy.
+
+       if ( $line =~ /foo(.*?)bar/ ) {
+           print "got <$1>\n";
+       }
+
+That prints out
+
+       got <d is under the >
+
+which is often more what folks want.  It turns out that having both
+stringy and greedy repetition operators in no way compromises a 
+regexp engines regularity, nor is it particularly hard to implement.
+This comes up in matching quoted things.  You can do tricks like
+using [^:] or [^"] or [^"'] for the simple cases, but negating
+multicharacter strings is hard.  You can just use stingy matching
+instead.
+
+Or you could just use lookaheads.
+
+This is other important aspect of perl matching I wanted to mention.
+These are 0-width assertions that state that what follows must match or
+must not match a particular thing.    These are phrased as either
+(?=pattern) for the assertion or (?!pattern) for the negation.
+
+    /\bfoo(?!bar)\w+/
+
+That will match "foostuff" but not "foo" or "foobar", because I said
+there must be some alphanums after the word foo, but these may 
+not begin with bar.
+
+Why would you need this?  Oh, there are lots of times.  Imagine splitting
+on newlines that are not followed by a space or a tab:
+
+    @list_of_results = split ( /\n(?![\t ])/, $data );
+
+Let's put this all together and look at a couple of examples.  Both have
+to do with HTML munging, the current rage.  First, let's solve the problem
+of detecting URLs in plaintext and highlighting them properly.  A problem
+is if the URL has trailling punctuation, like ftp://host/path.file.  Is
+that last dot supposed to be in the URL?  We can probably just assume that
+a trailing dot doesn't count, but even so, most scanners seem to get this
+wrong.  Here's a different approach:
+  
+  #!/usr/bin/perl 
+  # urlify -- tchrist@perl.com
+  require 5.002;  # well, or 5.000 if you see below
+  
+  $urls = '(' . join ('|', qw{
+                http
+                telnet
+                gopher
+                file
+                wais
+                ftp
+            } ) 
+        . ')';
+  
+  $ltrs = '\w';
+  $gunk = '/#~:.?+=&%@!\-';
+  $punc = '.:?\-';
+  $any  = "${ltrs}${gunk}${punc}";
+  
+  while (<>) {
+      ## use this if early-ish perl5 (pre 5.002)
+      ##  s{\b(${urls}:[$any]+?)(?=[$punc]*[^$any]|\Z)}{<A HREF="$1">$1</A>}goi;
+      ## otherwise use this -- it just has 5.002ish comments
+      s{
+        \b                          # start at word boundary
+        (                           # begin $1  {
+          $urls     :               # need resource and a colon
+          [$any] +?                 # followed by on or more
+                                    #  of any valid character, but
+                                    #  be conservative and take only
+                                    #  what you need to....
+        )                           # end   $1  }
+        (?=                         # look-ahead non-consumptive assertion
+                [$punc]*            # either 0 or more puntuation
+                [^$any]             #   followed by a non-url char
+            |                       # or else
+                $                   #   then end of the string
+        )
+      }{<A HREF="$1">$1</A>}igox;
+      print;
+  }
+
+Pretty nifty, eh?  :-)
+
+Here's another HTML thing: we have an html document, and we
+want to remove all of its embedded markup text.  This requires
+three steps:
+
+    1) Strip <!-- html comments -->
+    2) Strip <TAGS>
+    3) Convert &entities; into what they should be.
+
+This is complicated by the horrible specs on how html comments work: 
+they can have embedded tags in them.  So you have to be way more
+careful.  But it still only takes three substitutions. :-)  I'll
+use the /s flag to make sure that my "." can stretch to match a 
+newline as well (normally it doesn't).
+
+    #!/usr/bin/perl -p0777
+    #
+    #########################################################
+    # striphtml ("striff tummel")
+    # tchrist@perl.com 
+    # version 1.0: Thu 01 Feb 1996 1:53:31pm MST 
+    # version 1.1: Sat Feb  3 06:23:50 MST 1996
+    #           (fix up comments in annoying places)
+    #########################################################
+    #
+    # how to strip out html comments and tags and transform
+    # entities in just three -- count 'em three -- substitutions;
+    # sed and awk eat your heart out.  :-)
+    #
+    # as always, translations from this nacré rendition into 
+    # more characteristically marine, herpetoid, titillative, 
+    # or indonesian idioms are welcome for the furthering of 
+    # comparitive cyberlinguistic studies.
+    #
+    #########################################################
+
+    require 5.001;      # for nifty embedded regexp comments
+
+    #########################################################
+    # first we'll shoot all the <!-- comments -->
+    #########################################################
+
+    s{ <!                   # comments begin with a `<!'
+                            # followed by 0 or more comments;
+
+        (.*?)           # this is actually to eat up comments in non 
+                            # random places
+
+         (                  # not suppose to have any white space here
+
+                            # just a quick start; 
+          --                # each comment starts with a `--'
+            .*?             # and includes all text up to and including
+          --                # the *next* occurrence of `--'
+            \s*             # and may have trailing while space
+                            #   (albeit not leading white space XXX)
+         )+                 # repetire ad libitum  XXX should be * not +
+        (.*?)           # trailing non comment text
+       >                    # up to a `>'
+    }{
+        if ($1 || $3) { # this silliness for embedded comments in tags
+            "<!$1 $3>";
+        } 
+    }gesx;                 # mutate into nada, nothing, and niente
+    
+    #########################################################
+    # next we'll remove all the <tags>
+    #########################################################
+
+    s{ <                    # opening angle bracket
+
+        (?:                 # Non-backreffing grouping paren
+             [^>'"] *       # 0 or more things that are neither > nor ' nor "
+                |           #    or else
+             ".*?"          # a section between double quotes (stingy match)
+                |           #    or else
+             '.*?'          # a section between single quotes (stingy match)
+        ) +                 # repetire ad libitum
+                            #  hm.... are null tags <> legal? XXX
+       >                    # closing angle bracket
+    }{}gsx;                 # mutate into nada, nothing, and niente
+
+    #########################################################
+    # finally we'll translate all &valid; HTML 2.0 entities
+    #########################################################
+
+    s{ (
+            &              # an entity starts with a semicolon
+            ( 
+                \x23\d+    # and is either a pound (# == hex 23)) and numbers
+                 |         #   or else
+                \w+        # has alphanumunders up to a semi
+            )         
+            ;?             # a semi terminates AS DOES ANYTHING ELSE (XXX)
+        )
+    } {
+
+        $entity{$2}        # if it's a known entity use that
+            ||             #   but otherwise
+            $1             # leave what we'd found; NO WARNINGS (XXX)
+
+    }gex;                  # execute replacement -- that's code not a string
+    
+    #########################################################
+    # but wait! load up the %entity mappings enwrapped in 
+    # a BEGIN that the last might be first, and only execute
+    # once, since we're in a -p "loop"; awk is kinda nice after all.
+    #########################################################
+
+    BEGIN {
+
+        %entity = (
+
+            lt     => '<',     #a less-than
+            gt     => '>',     #a greater-than
+            amp    => '&',     #a nampersand
+            quot   => '"',     #a (verticle) double-quote
+
+            nbsp   => chr 160, #no-break space
+            iexcl  => chr 161, #inverted exclamation mark
+            cent   => chr 162, #cent sign
+            pound  => chr 163, #pound sterling sign CURRENCY NOT WEIGHT
+            curren => chr 164, #general currency sign
+            yen    => chr 165, #yen sign
+            brvbar => chr 166, #broken (vertical) bar
+            sect   => chr 167, #section sign
+            uml    => chr 168, #umlaut (dieresis)
+            copy   => chr 169, #copyright sign
+            ordf   => chr 170, #ordinal indicator, feminine
+            laquo  => chr 171, #angle quotation mark, left
+            not    => chr 172, #not sign
+            shy    => chr 173, #soft hyphen
+            reg    => chr 174, #registered sign
+            macr   => chr 175, #macron
+            deg    => chr 176, #degree sign
+            plusmn => chr 177, #plus-or-minus sign
+            sup2   => chr 178, #superscript two
+            sup3   => chr 179, #superscript three
+            acute  => chr 180, #acute accent
+            micro  => chr 181, #micro sign
+            para   => chr 182, #pilcrow (paragraph sign)
+            middot => chr 183, #middle dot
+            cedil  => chr 184, #cedilla
+            sup1   => chr 185, #superscript one
+            ordm   => chr 186, #ordinal indicator, masculine
+            raquo  => chr 187, #angle quotation mark, right
+            frac14 => chr 188, #fraction one-quarter
+            frac12 => chr 189, #fraction one-half
+            frac34 => chr 190, #fraction three-quarters
+            iquest => chr 191, #inverted question mark
+            Agrave => chr 192, #capital A, grave accent
+            Aacute => chr 193, #capital A, acute accent
+            Acirc  => chr 194, #capital A, circumflex accent
+            Atilde => chr 195, #capital A, tilde
+            Auml   => chr 196, #capital A, dieresis or umlaut mark
+            Aring  => chr 197, #capital A, ring
+            AElig  => chr 198, #capital AE diphthong (ligature)
+            Ccedil => chr 199, #capital C, cedilla
+            Egrave => chr 200, #capital E, grave accent
+            Eacute => chr 201, #capital E, acute accent
+            Ecirc  => chr 202, #capital E, circumflex accent
+            Euml   => chr 203, #capital E, dieresis or umlaut mark
+            Igrave => chr 204, #capital I, grave accent
+            Iacute => chr 205, #capital I, acute accent
+            Icirc  => chr 206, #capital I, circumflex accent
+            Iuml   => chr 207, #capital I, dieresis or umlaut mark
+            ETH    => chr 208, #capital Eth, Icelandic
+            Ntilde => chr 209, #capital N, tilde
+            Ograve => chr 210, #capital O, grave accent
+            Oacute => chr 211, #capital O, acute accent
+            Ocirc  => chr 212, #capital O, circumflex accent
+            Otilde => chr 213, #capital O, tilde
+            Ouml   => chr 214, #capital O, dieresis or umlaut mark
+            times  => chr 215, #multiply sign
+            Oslash => chr 216, #capital O, slash
+            Ugrave => chr 217, #capital U, grave accent
+            Uacute => chr 218, #capital U, acute accent
+            Ucirc  => chr 219, #capital U, circumflex accent
+            Uuml   => chr 220, #capital U, dieresis or umlaut mark
+            Yacute => chr 221, #capital Y, acute accent
+            THORN  => chr 222, #capital THORN, Icelandic
+            szlig  => chr 223, #small sharp s, German (sz ligature)
+            agrave => chr 224, #small a, grave accent
+            aacute => chr 225, #small a, acute accent
+            acirc  => chr 226, #small a, circumflex accent
+            atilde => chr 227, #small a, tilde
+            auml   => chr 228, #small a, dieresis or umlaut mark
+            aring  => chr 229, #small a, ring
+            aelig  => chr 230, #small ae diphthong (ligature)
+            ccedil => chr 231, #small c, cedilla
+            egrave => chr 232, #small e, grave accent
+            eacute => chr 233, #small e, acute accent
+            ecirc  => chr 234, #small e, circumflex accent
+            euml   => chr 235, #small e, dieresis or umlaut mark
+            igrave => chr 236, #small i, grave accent
+            iacute => chr 237, #small i, acute accent
+            icirc  => chr 238, #small i, circumflex accent
+            iuml   => chr 239, #small i, dieresis or umlaut mark
+            eth    => chr 240, #small eth, Icelandic
+            ntilde => chr 241, #small n, tilde
+            ograve => chr 242, #small o, grave accent
+            oacute => chr 243, #small o, acute accent
+            ocirc  => chr 244, #small o, circumflex accent
+            otilde => chr 245, #small o, tilde
+            ouml   => chr 246, #small o, dieresis or umlaut mark
+            divide => chr 247, #divide sign
+            oslash => chr 248, #small o, slash
+            ugrave => chr 249, #small u, grave accent
+            uacute => chr 250, #small u, acute accent
+            ucirc  => chr 251, #small u, circumflex accent
+            uuml   => chr 252, #small u, dieresis or umlaut mark
+            yacute => chr 253, #small y, acute accent
+            thorn  => chr 254, #small thorn, Icelandic
+            yuml   => chr 255, #small y, dieresis or umlaut mark
+        );
+
+        ####################################################
+        # now fill in all the numbers to match themselves
+        ####################################################
+        for $chr ( 0 .. 255 ) { 
+            $entity{ '#' . $chr } = chr $chr;
+        }
+    }
+    
+    #########################################################
+    # premature finish lest someone clip my signature
+    #########################################################
+
+    # NOW FOR SOME SAMPLE DATA -- Switch ARGV to DATA above
+    # to test
+
+
+    __END__
+
+
+    <title>Tom Christiansen's Mox.Perl.COM Home Page</title>
+    <BODY BGCOLOR=#ffffff TEXT=#000000>
+    <!--
+
+    <BODY BGCOLOR="#000000" TEXT="#FFFFFF"
+          LINK="#FFFF00" VLINK="#22AA22" ALINK="#0077FF">
+
+    !-->
+
+
+
+    <A NAME=TOP>
+
+    <CENTER>
+    <h3>
+    <A HREF="#PERL">perl</a> /
+    <A HREF="#MAGIC">magic</a> /
+    <A HREF="#USENIX">usenix</a> /
+    <A HREF="#BOULDER">boulder</a>
+    </h3>
+    <BR>
+    The word of the day is <i>nidificate</i>.
+    </CENTER>
+
+    Testing: &#69; &#202; &Auml;
+    </a>
+
+    <HR NOSHADE SIZE=3>
+
+    <A NAME=PERL>
+    <CENTER>
+    <h1>
+    <IMG SRC="/deckmaster/gifs/camel.gif" ALT="">
+    <font size=7>
+    Perl
+    </font>
+    <IMG SRC="/deckmaster/gifs/camel.gif" ALT="">
+    </h1>
+    </a>
+
+    DOCTYPE START1
+    <!DOCTYPE  HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"
+      -- This is an annoying comment > --
+    >
+    END1
+
+    DOCTYPE START2
+    <!DOCTYPE  HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"
+      -- This is an annoying comment  --
+    >
+    END2
+
+    <I>
+    <BLOCKQUOTE>
+    <DL><DT>A ship then new they built for him
+    <DD>of mithril and of elven glass...
+    </DL>
+    </I>
+    </BLOCKQUOTE>
+    </CENTER>
+
+    <HR size=3 noshade>
+
+    <BLOCKQUOTE>
+        Wow!  I really can't believe that anyone has read this far 
+        in this very long news posting about irregular expressions. :-)
+        Is anyone really still with me?  If so, make my day and
+        drop me a piece of email.
+    </BLOCKQUOTE>
+
+    <UL>
+    <LI>
+    <A HREF="/perl/CPAN/README.html">CPAN
+    (Comprehensive Perl Archive Network)</a> sites are replicated around the world; please choose
+    from <A HREF="/perl/CPAN/CPAN.html">one near you</a>.
+    The <A HREF="ftp://mox.perl.com/pub/perl/CPAN/modules/01modules.index.html">CPAN index</a>
+    to the <A HREF="ftp://mox.perl.com/pub/perl/CPAN/modules/00modlist.long.html">full modules file</a>
+    are also good places to look.
+
+    <LI><IMG SRC="/deckmaster/gifs/new.gif" WIDTH=26 HEIGHT=13 ALT="NEW">
+    Here's a table of perl and CGI-related books and publications, in either 
+    <A HREF="/perl/info/books.html"><SMALL>HTML</SMALL> 3.0 table format</a>
+    or else in 
+    <A HREF="/perl/info/books.txt">pre-formatted</a> for old browsers.
+
+What's missing from Perl's regular expressions?  Anything?  Well, yes.
+The first is that they should be first-class objects.  There are some
+really embarassing optimization hacks to get around not having compiled
+regepxs directly-usable accessible.  The /o flag I used above is just one
+of them.  (I'm *not* talking about the study() function, which is a neat
+thing to turbo-ize your matching.)  A much more egregious hack
+involving closures is demonstrated here using the match_any 
+funtion, which itself returns a function to do the work:
+
+    $f = match_any('^begin', 'end$', 'middle');
+    while (<>) {
+	print if &$f();
+    } 
+
+    sub match_any {
+	die "usage: match_any pats" unless @_;
+	my $code = <<EOCODE;
+    sub {
+    EOCODE
+	$code .= <<EOCODE if @_ > 5;
+	study;
+    EOCODE
+	for $pat (@_) {
+	    $code .= <<EOCODE;
+	return 1 if /$pat/;
+    EOCODE
+	} 
+	$code .= "}\n";
+	print "CODE: $code\n";
+	my $func = eval $code;
+	die "bad pattern: $@" if $@;
+	return $func;
+    } 
+
+That's the kind of thing I just despise writing: the only thing
+worse would be not being able to do it at all. :-(  1st-class
+compiled regexps would surely help a great deal here.
+
+Sometimes people expect backreferences to be forward references, as in the
+pattern /\1\s(\w+)/, which just isn't the way it works.  A related issue
+is that while lookaheads work, these are not lookbehinds, which can
+confuse people.  This means /\n(?=\s)/ is ok, but you cannot use this for
+lookbehind: /(?!foo)bar/ will not find an occurrence of "bar" that is
+preceded by something which is not "foo".  That's because the (?!foo) is
+just saying that the next thing cannot be "foo"--and it's not, it's a
+"bar", so "foobar" will match.
+
+There isn't really much support for user-defined character classes.
+You see a bit of that in the urlify program above.  On the other 
+hand, this might be the most clear way of writing it.
+
+Another thing that would be nice to have is the ability to someone
+specify a recursive match with nesting.  That ways you could pull out
+matching parens or braces or begin/end blocks etc.  I don't know what a
+good syntax for this might be.  Maybe (?{...) for the opening one and
+(?}...) for the closing one, as in:
+
+    /\b(?{begin)\b.*\b(?}end)\b/i
+
+Finally, while it's cool that perl's patterns are 8-bit clean, 
+will match strings even with null bytes in them, and have 
+support for alternate 8-bit character sets, it would certainly
+make the world happy if there were full Unicode support.
+
+So Steve, did I answer your question? :-)
+
+--tom
+
+PS: There's a bug outstanding on using /m in conjunction with split()

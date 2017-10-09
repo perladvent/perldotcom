@@ -1,0 +1,1572 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2004/12/01/3d_engine.html">
+<dc:title>Building a 3D Engine in Perl</dc:title>
+<dc:description> This article is the first in a series aimed at building a full 3D engine. It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design...</dc:description>
+<dc:creator>Geoff Broadwell</dc:creator>
+<dc:date>2004-12-01T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2004/11/24/debugger_ref.html" title="Perl Debugger Quick Reference" />
+    <link rel="next bookmark" href="/pub/2004/12/p6pdigest/20041202.html" title="This Fortnight in Perl 6, November 16-30 2004" />
+    
+    
+    <title>Building a 3D Engine in Perl - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1028" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Building a 3D Engine in Perl</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Geoff Broadwell</span> on <abbr class="published" title="2004-12-01T00:00:00-08:00">December  1, 2004 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+<br clear="all" />
+<p>This article is the first in a series aimed at building a full 3D engine.  It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design suite, or whatever.</p>
+
+<p><em>Editor's note: see also the rest of the series, <a href="/pub/a/2004/12/29/3d_engine.html">events and keyboard handling</a>, <a href="/pub/a/2005/02/17/3d_engine.html">lighting and movement</a>, and <a href="/pub/a/2005/08/04/3d_engine.html">profiling your application</a>.</em></p>
+
+<p>First, I'll set some goals and ground rules to help guide the design.  I'm
+all for agile programming, but even the most agile development process needs
+some basic goals at the outset:</p>
+
+<ul>
+
+<li>I'm not going to make little demos.  Early on, the engine won't have much
+functionality, but it should always be a good foundation for future
+growth.</li>
+
+<li>The engine must be portable across architectures and operating systems.  I
+will use OpenGL for 3D rendering and SDL for general, operating system
+interaction, such as input handling and window creation.  The engine itself
+should contain almost no OS-specific code.</li>
+
+<li>The engine should be operational at every step of the way, from the very
+beginning.  I will flesh it out over time, and there may be some complex
+concepts that take some time to work through, but at the very least, every
+article should end with the whole engine working again.</li>
+
+<li>I'll leave out most error checking to save space and make the central
+concepts more clear.  For the same reasons, there is no included test library.
+In your own engine, you will want to have both!</li>
+
+<li>Don't be afraid to experiment.  The best way to learn this stuff is to play with it.  Start with what's in the articles and add to it.  Any time you spend now will repay itself many times over later, because it's easier to understand advanced topics when you have a solid understanding of the earlier topics.</li>
+
+</ul>
+
+<p>As a final note before we begin, some versions of SDL_Perl have bugs that
+will affect the engine.  If I know of any issues to watch out for, I'll let you
+know; conversely, if you find any bugs, let me know, and I'll include a note in
+a following article.</p>
+
+<h3><a name="Getting Started">Getting Started</a></h3>
+
+<p>The first step is to rough out a simple structure and make a runnable
+program right off.  Bear with me; there's a fair bit of code here for what it
+does, but that will simplify things later on.  Here's my starting point:</p>
+
+<pre><code>#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+my ($done, $frame);
+
+START: main();
+
+sub main
+{
+    init();
+    main_loop();
+    cleanup();
+}
+
+sub init
+{
+    $| = 1;
+}
+
+sub main_loop
+{
+    while (not $done) {
+        $frame++;
+        do_frame();
+    }
+}
+
+sub do_frame
+{
+    print '.';
+    sleep 1;
+    $done = 1 if $frame == 5;
+}
+
+sub cleanup
+{
+    print "\nDone.\n";
+}</code></pre>
+
+<p>The first few lines are the usual strict boilerplate, especially important
+since I'm working without a net (a test library).  Then I declare a couple of
+state variables (a "done" flag and a frame counter), and jump to the main
+program.</p>
+
+<p>The main program is pretty simple -- initialize, run the main loop for a
+while, and then clean up.  It's typical of how I structure a potentially
+complex program.  The top-level routines should be very simple, clear, and
+self-documenting.  Each conceptual piece is a separate routine, wherein reside
+all the gritty bits that actually do the real work.  I've seen huge programs
+(hundreds of thousands of lines) where the main procedures started with several
+hundred lines of initialization before finally branching to the "real" main
+body at the end.  That style is hard to debug, hard to profile, and just plain
+hard to understand.  I avoid it religiously.</p>
+
+<p>Back to the program at hand.  <code>init</code> sets autoflush on
+<code>STDOUT</code> so that partial lines print immediately, which I use later
+in <code>do_frame</code>.</p>
+
+<p>The <code>main_loop</code> simply loops until <code>$done</code> is true,
+producing one finished animation frame per loop.  Each loop increments the
+frame counter and calls the actual routine that does the work,
+<code>do_frame</code>.</p>
+
+<p><code>do_frame</code> prints a single dot to indicate a frame has begun, and
+sleeps for a second.  When it wakes up, it checks if five frames have
+completed, flagging <code>$done</code> if so.</p>
+
+<p>With <code>$done</code> set, <code>main_loop</code> ends and control returns
+to <code>main</code>, which calls the final <code>cleanup</code>.
+<code>cleanup</code> just notifies the user of a clean exit and ends.</p>
+
+<p>That's a fair amount of code to print two lines of text (over the course of
+five seconds) and exit; it doesn't even open a rendering window!  I'll do that
+next.</p>
+
+<h3><a name="Creating a Window">Creating a Window</a></h3>
+
+<p>First, I need to pull in the SDL and OpenGL libraries:</p>
+
+<pre><code>use SDL::App;
+use SDL::OpenGL;</code> </pre>
+
+<p>and add a couple more state variables (a config hash and an
+<code>SDL::App</code> object):</p>
+
+<pre><code>my ($conf, $sdl_app);</code> </pre>
+
+<h4><a name="Initialization">Initialization</a></h4>
+
+<p>I'm going to do two new types of initialization, so I create routines for
+them and call them from <code>init</code>:</p>
+
+<pre><code>sub init
+{
+    $| = 1;
+    init_conf();
+    init_window();
+}
+
+sub init_conf
+{
+    $conf = {
+        title  =&gt; 'Camel 3D',
+        width  =&gt; 400,
+        height =&gt; 400,
+    };
+}
+
+sub init_window
+{
+    my ($title, $w, $h) = @$conf{qw( title width height )};
+
+    $sdl_app = SDL::App-&gt;new(-title  =&gt; $title,
+                             -width  =&gt; $w,
+                             -height =&gt; $h,
+                             -gl     =&gt; 1,
+                            );
+    SDL::ShowCursor(0);
+}</code></pre>
+
+<p>At this point, <code>init_conf</code> just defines some configuration
+properties used immediately in <code>init_window</code>, which contains the
+first real SDL meat.</p>
+
+<p><code>init_window</code> performs two important actions.  First, it asks
+<code>SDL::App</code> to create a new window, with the appropriate title,
+width, and height.  The <em>-gl</em> option tells <code>SDL::App</code> to
+attach an OpenGL 3D-rendering context to this window instead of the default 2D-rendering context.  Second, it hides the mouse cursor (while it's within the
+new window's border) using <code>SDL::ShowCursor(0)</code>.</p>
+
+<h3><a name="Three Phases of Drawing">Three Phases of Drawing</a></h3>
+
+<p>Now that I have a nice new window, I'd like <code>do_frame</code> to do
+something with it.  I'll start by breaking the rendering into three phases:
+prepare, draw, and finish.</p>
+
+<pre><code>sub do_frame
+{
+    prep_frame();
+    draw_frame();
+    end_frame();
+}</code></pre>
+
+<p>For now, <code>draw_frame</code> contains exactly what <code>do_frame</code>
+used to contain:</p>
+
+<pre><code>sub draw_frame
+{
+    print '.';
+    sleep 1;
+    $done = 1 if $frame == 5;
+}</code></pre>
+
+<p>The new code is in <code>prep_frame</code> and <code>end_frame</code>; let's
+look at <code>prep_frame</code> first:</p>
+
+<pre><code>sub prep_frame
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+}</code></pre>
+
+<p>This is the first actual OpenGL call.  Before I explain the details, it's worth
+pointing out the OpenGL naming conventions.  OpenGL's design allows it to work
+with programming languages that have no concept of namespaces or packages.  In
+order to work around this, all OpenGL routine names look like
+<code>glFooBar</code> (CamelCase, no underscores, <code>gl</code> prepended),
+and all OpenGL constant names look like <code>GL_FOO_BAR</code> (UPPERCASE,
+underscores between words, <code>GL_</code> prepended).  In older languages,
+this prevents the OpenGL names from colliding with names used in other
+libraries.  In the Perl world, this isn't an issue for object-oriented modules.
+Because OpenGL is not object-oriented, SDL_Perl takes advantage of this
+convention and simply imports all of the names into the current package when
+you write <code>use SDL::OpenGL</code>.</p>
+
+<p>Note: If you read OpenGL code written in C, you may notice a short string of
+characters appended to the routine names, such as <code>3fv</code>.  This
+convention differentiates variants that have different numbers of parameters or
+whose parameters are different types.  In Perl, values know their own type and
+a function's parameters can vary in number, so this is unnecessary.  The Perl
+bindings simply drop these extra characters and <code>SDL::OpenGL</code> do the right thing for you.</p>
+
+<p>The OpenGL call in <code>prep_frame</code> clears the rendering area to
+black by calling <code>glClear</code> -- the general OpenGL "clear a buffer"
+routine -- with a constant that indicates it should clear the <em>color
+buffer</em>.  As the name indicates, the color buffer stores the color for each
+pixel and is what the user sees.  Several other OpenGL buffers exist; I'll
+describe those later.</p>
+
+<p>The alert reader may wonder why the code clears the color buffer to black as
+opposed to white or some other color.  OpenGL relies heavily on the concept of
+<em>current state</em>.  Many OpenGL routines do not actually request any
+rendering, instead altering one or more variables in the current state so that
+the next rendering command will perform its action differently.  When a program
+prepares to use OpenGL, which <code>SDL::App::new</code> does for us, the
+current state is set to (mostly) reasonable defaults.  One of these state
+variables is the color to use when clearing the color buffer.  Its default is
+black, which I haven't bothered to override.</p>
+
+<p>The remaining routine is <code>end_frame</code> :</p>
+
+<pre><code>sub end_frame
+{
+    $sdl_app-&gt;sync;
+}</code></pre>
+
+<p>This asks the SDL::App object to synchronize the window contents with those
+held in OpenGL's color buffer, so that the user can see the rendered image.  In
+this case, it's a black window for five seconds.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="Something to See">Something to See</a></h3>
+
+<p>It's time to draw something in that window.  To do so, I need to do three
+things:</p>
+
+<ol>
+
+<li>Choose a projection, so that OpenGL knows how I want to look at the
+scene.</li>
+
+<li>Set the view, so OpenGL knows from which direction to view the scene (the
+<em>viewpoint</em>) and in which direction I wish to look.</li>
+
+<li>Define an object in the scene, placed where the viewpoint can see it.</li>
+
+</ol>
+
+<p>To start, I need another config setting, so I'll add another line to the
+<code>$conf</code> hash in <code>init_conf</code>:</p>
+
+<pre><code>        fovy   =&gt; 90,</code></pre>
+
+<p>Next, for my three new functions, I add three new calls at the top of
+<code>draw_frame</code>:</p>
+
+<pre><code>sub draw_frame
+{
+    set_projection_3d();
+    set_view_3d();
+    draw_view();
+</code></pre>
+
+<h4><a name="Choose a Projection">Choose a Projection</a></h4>
+
+<p><code>set_projection_3d</code> is as follows:</p>
+
+<pre><code>sub set_projection_3d
+{
+    my ($fovy, $w, $h) = @$conf{qw( fovy width height )};
+    my $aspect = $w / $h;
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity;
+    gluPerspective($fovy, $aspect, 1, 1000);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity;
+}</code></pre>
+
+<p>This is the first place you can see an indication of the hard part of 3D
+graphics simmering below the surface -- math, and lots of it.  3D-rendering code often includes a fairly hefty load of linear algebra (matrix math, for
+those blocking out their high school and college years) and trigonometry.
+Thankfully, OpenGL does a lot of that math under the covers.  I've also defined
+a fairly simple projection and view, so this hides a lot of the complexity for
+now (aside from some of the OpenGL function names).</p>
+
+<p>The first section of the routine defines the viewing projection.  In the
+simplest case, that means choosing whether to use an <em>orthogonal</em>
+projection or a <em>perspective</em> projection.  Orthogonal projections have
+no foreshortening.  They commonly appear in architectural and engineering
+drawings, because parts that are the same size also appear the same size, no
+matter where they are in the scene.</p>
+
+<p>Perspective projections are what we see in the real world with our own eyes
+or with a camera; distant objects appear smaller than near objects.  It's also
+what you learn in a perspective drawing art class, in which the first
+assignment is commonly train tracks going off to the horizon.  Tracks farther
+from the viewer appear closer together as does the spacing between the ties.
+To replicate the real world, I've chosen a perspective projection.</p>
+
+<p>In OpenGL, you not only have to decide between an orthogonal or perspective
+projection, you have to define its basic dimensions.  In other words, how much
+can you see?  For a perspective projection, you define the vertical <em>field
+of view</em> (FOV), the <em>aspect ratio</em> of the view, and the distance to
+the nearest and farthest things visible.</p>
+
+<p>The vertical FOV (<code>$fovy</code> in the code) defines the angle from the
+viewpoint to the lowest and highest visible parts of the scene.  If you imagine
+drawing what someone would see if she were standing with her eyes at the
+viewpoint, this represents her vertical peripheral vision.  If you imagine a
+camera instead, this depends on the focal length of the lens.  A telephoto lens
+has a very small FOV because the angle from the camera to the top and bottom
+visible objects is very small.  Conversely, a wide-angle lens has a large FOV,
+and the FOV for a fisheye lens is even larger, approaching 180 degrees.</p>
+
+<p>The aspect ratio comes directly from the dimensions of the drawing area (width/height).  This allows OpenGL to compensate for the stretching effect
+of a non-square window.  In this case, the drawing area is square, so the
+aspect ratio is 1.</p>
+
+<p>After calculating the window's aspect ratio, I tell OpenGL that I want to
+modify the projection and to start from a blank slate, using
+<code>glMatrixMode(GL_PROJECTION)</code> and <code>glLoadIdentity</code>.  I
+then call <code>gluPerspective</code> to define the desired perspective.  You
+probably noticed that <code>gluPerspective</code> begins with <code>glu</code>
+instead of <code>gl</code>, like all of the other calls we've seen.  This is
+because I'm using one of the GLU (OpenGL Utility) routines to cover up some
+complexity in the equivalent raw OpenGL sequence.</p>
+
+<p>Finally, I switch back to model/view mode, and once again start with a blank
+slate, using <code>glMatrixMode(GL_MODELVIEW)</code> and
+<code>glLoadIdentity</code>.  You may wonder why I don't include this in the
+next routine instead of doing it here.  I like to make sure routines that
+change a commonly used OpenGL state, simply as a side effect of their main purpose,
+return that state to the way they found it, especially if there is no net
+performance effect to doing so.  In this case, I switch temporarily to
+projection mode and then switch back to the default model/view mode.</p>
+
+<h4><a name="Set the View">Set the View</a></h4>
+
+<p>The next step is to move the viewpoint to somewhere we can see the
+scene:</p>
+
+<pre><code>sub set_view_3d
+{
+    # Move the viewpoint so we can see the origin
+    glTranslate(0, -2, -10);
+}</code></pre>
+
+<p>I'm going to skip the detailed explanation for now, but in short the
+<code>glTranslate</code> call leaves the viewpoint a few units away from (and
+above) the origin of the scene, where I'll place my objects.  I keep the
+default viewing direction, because it happens to point right where I want it
+to.</p>
+
+<h4><a name="Define an Object">Define an Object</a></h4>
+
+<p>I'm going to start with a pretty simple scene -- just one object:</p>
+
+<pre><code>sub draw_view
+{
+    draw_axes();
+}
+
+sub draw_axes
+{
+    # Lines from origin along positive axes, for orientation
+    # X axis = red, Y axis = green, Z axis = blue
+    glBegin(GL_LINES);
+    glColor(1, 0, 0);
+    glVertex(0, 0, 0);
+    glVertex(1, 0, 0);
+
+    glColor(0, 1, 0);
+    glVertex(0, 0, 0);
+    glVertex(0, 1, 0);
+
+    glColor(0, 0, 1);
+    glVertex(0, 0, 0);
+    glVertex(0, 0, 1);
+    glEnd;
+}</code></pre>
+
+<p>The lone object is itself quite simple, just three short lines extending
+from the origin along the X, Y, and Z axes.  (I'm using "line" in the OpenGL
+sense, as a line segment, not the infinite line of rigorous mathematics.)</p>
+
+<p>In OpenGL, when you want to define something to render, you must notify
+OpenGL when you begin and end the definition; these are the
+<code>glBegin</code> and <code>glEnd</code> calls.  In addition, you must tell
+OpenGL what type of <em>primitive</em> you will use to create your object.
+There are several types of primitives, including points, lines, and triangles.
+In addition, each primitive type has variants based on how several primitives
+in a sequence connect (independently, connected in a strip, and so on).  In
+this case, I use <code>GL_LINES</code>, indicating independently placed line
+segments.</p>
+
+<p>I want each line to be a different color to make it easier to tell which is
+which.  To set the current drawing color, I call <code>glColor</code> with an
+RGB (Red, Green, Blue) triplet.  In OpenGL, each color component can range from
+0 (none) to 1 (full).  Therefore, (1, 0, 0) indicates pure red, (0, 1, 0) is
+pure green, and so on.  A medium gray is (.5, .5, .5).  For further mnemonic
+value, I assign the colors so that the RGB triplets match the coordinates of
+the endpoints of the lines -- red for the X axis, green for Y, and blue for
+Z.</p>
+
+<p>For each line, after defining the color, I define the endpoints of the line
+using <code>glVertex</code>.  Each line begins at the origin and extends one
+unit along the appropriate axis.  In other words, this sequence defines a red
+line from (0, 0, 0) to (1, 0, 0):</p>
+
+<pre><code>    glColor(1, 0, 0);
+    glVertex(0, 0, 0);
+    glVertex(1, 0, 0);</code></pre>
+
+<p>With these routines in place, we finally have something to look at!  As you
+can see, the X axis points to the right, the Y axis points up, and the Z axis
+points out of the screen toward the viewer (with OpenGL foreshortening it).
+Note the delay before the object first appears; that's because the sleep at the
+end of <code>draw_frame</code> creates a pause before
+<code>end_frame</code> syncs the screen with the drawing area.</p>
+
+<h3><a name="Moving Boxes Around">Moving Boxes Around</a></h3>
+
+<p>Next, let's try a box.  Anyone who's played a First Person Shooter game
+knows that their worlds have a surplus of boxes (a.k.a. "crates," "storage
+containers," and so on �- oddly, for <em>storage</em> containers, the larger
+they are, the less they seem to contain).  I'll start with a simple cube and
+add another call for it to the end of <code>draw_view</code>:</p>
+
+<pre><code>sub draw_view
+{
+    draw_axes();
+    draw_cube();
+}</code></pre>
+
+<h4><a name="Defining the Cube">Defining the Cube</a></h4>
+
+<p>Here's the code that actually draws the cube:</p>
+
+<pre><code>sub draw_cube
+{
+    # A simple cube
+    my @indices = qw( 4 5 6 7   1 2 6 5   0 1 5 4
+                      0 3 2 1   0 4 7 3   2 3 7 6 );
+    my @vertices = ([-1, -1, -1], [ 1, -1, -1],
+                    [ 1,  1, -1], [-1,  1, -1],
+                    [-1, -1,  1], [ 1, -1,  1],
+                    [ 1,  1,  1], [-1,  1,  1]);
+
+    glBegin(GL_QUADS);
+    foreach my $face (0 .. 5) {
+        foreach my $vertex (0 .. 3) {
+            my $index  = $indices[4 * $face + $vertex];
+            my $coords = $vertices[$index];
+            glVertex(@$coords);
+        }
+    }
+    glEnd;
+}</code></pre>
+
+<p>That looks pretty hairy, but it's actually not bad.  The
+<code>@vertices</code> array contains the coordinates for a cube two units on a
+side, centered at the origin, with its sides aligned with the X, Y, and Z axes.
+The <code>@indices</code> array defines which four vertices belong to each of
+the six faces of the cube and in what order to send them to OpenGL.  The
+order is very important; I've arranged it so that, as seen from the outside,
+the vertices of each face draw in counterclockwise order.  Using a consistent
+order helps OpenGL to determine the front and back side of each polygon; I've
+chosen to use the default counterclockwise order.</p>
+
+<p>After defining those arrays, I mark the beginning of a series of independent
+quadrilateral primitives using <code>glBegin(GL_QUADS)</code>.  I then iterate
+through each vertex of each face, finding the correct set of coordinates and
+sending them to OpenGL using <code>glVertex</code>.  Finally, I mark the end of
+this series of primitives using <code>glEnd</code>.</p>
+
+<p>Colloquial Perl purists will no doubt wonder why I have chosen C-style loops
+(with the attendant index math, yuck), rather than making <code>@indices</code>
+an array of arrays.  Mostly I'm just showing that it's not too hard to deal
+with this type of input data.  When the engine reads object descriptions from
+files, rather than hand-coded routines, the natural output of the file parser
+may be flattened.  It's often easier to do a little index math than to force
+the parser to output more structured data (and possibly more efficient too, but
+that's a clear call for benchmarking).</p>
+
+<p>The result is one blue cube.  Why blue?  Since I never specified a new
+color to use, OpenGL went back to the current state and looked up the current
+drawing color.  The last line in the axes was drawn in blue and that's still
+the current color.  Hence one blue cube.</p>
+
+<h4><a name="Two Colored Boxes">Two Colored Boxes</a></h4>
+
+<p>Let's fix that. At the same time, we can move the new cube out of the way of
+the axes so we can see them again.  Heck, I'll go all out and have two cubes --
+one to the left of the axis lines, and one to the right.  The nice thing is
+that because I'm just drawing more of something I've already described, I just
+need to change <code>draw_view</code>:</p>
+
+<pre><code>sub draw_view
+{
+    draw_axes();
+
+    glColor(1, 1, 1);
+    glTranslate(-2, 0, 0);
+    draw_cube();
+
+    glColor(1, 1, 0);
+    glTranslate( 2, 0, 0);
+    draw_cube();
+}</code></pre>
+
+<p>Now I set the current color to white using <code>glColor(1, 1, 1)</code>
+before drawing the first cube, and to yellow using <code>glColor(1, 1, 0)</code>
+before drawing the second cube.  The <code>glTranslate</code> calls should
+place the first cube two units to the left (along the negative X axis) and the
+second cube two units to the right (along the positive X axis).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4><a name="Cumulative Transformations">Cumulative Transformations</a></h4>
+
+<p>Unfortunately, no dice.  The white cube is two units to the left, but the
+yellow cube is right on top of the axis lines again, not two units to the right
+as intended.  This happened because <code>glTranslate</code> calls (and the
+other transformation calls I'll show later) are cumulative.  Unlike routines
+such as <code>glColor</code> that simply set the current state, most
+transformation calls instead modify the current state in a certain way.
+Because of this, the first cube starts at (-2, 0, 0), and the second starts at
+(-2, 0, 0) + (2, 0, 0) = (0, 0, 0) -- right back at the origin again.</p>
+
+<p>The solution to this problem requires peeking under the covers a little bit.
+OpenGL transformation calls really just set up a special matrix representing
+the effect that the requested transformation has on coordinates.  OpenGL then
+multiplies the current matrix by this new transformation matrix and replaces
+the current matrix with the results of the multiplication.</p>
+
+<p>What I need to fix this problem is some way to save the current matrix
+before performing a transformation, and then restore it after I'm done with it.
+Thankfully, OpenGL actually maintains a stack of matrices of each type.  I just
+need to push a copy of the current matrix onto the stack before drawing the
+white cube, and pop that copy off again afterwards to get back to the state before I
+did my translation.  I'm going to do this for both cubes:</p>
+
+<pre><code>sub draw_view
+{
+    draw_axes();
+
+    glColor(1, 1, 1);
+    glPushMatrix;
+    glTranslate(-2, 0, 0);
+    draw_cube();
+    glPopMatrix;
+
+    glColor(1, 1, 0);
+    glPushMatrix;
+    glTranslate( 2, 0, 0);
+    draw_cube();
+    glPopMatrix;
+}</code></pre>
+
+<p>That's a bit better.  The yellow cube now has its origin at (2, 0, 0), just
+as intended.</p>
+
+<h3><a name="Other Transformations">Other Transformations</a></h3>
+
+<p>Earlier I referred to other transformation calls; let's take a look at a few
+of them.  First, I'll scale the boxes (change their size).  I'm going to scale
+the left (white) box uniformly -- in other words, scaling each of its
+dimensions by the same amount.  To show the difference, I'll scale the right
+(yellow) box non-uniformly, with each dimension scaled differently.  Here's the
+new <code>draw_view</code>:</p>
+
+<pre><code>sub draw_view
+{
+    draw_axes();
+
+    glColor(1, 1, 1);
+    glPushMatrix;
+    glTranslate(-4, 0, 0);
+    glScale( 2, 2, 2);
+    draw_cube();
+    glPopMatrix;
+
+    glColor(1, 1, 0);
+    glPushMatrix;
+    glTranslate( 4, 0, 0);
+    glScale(.2, 1, 2);
+    draw_cube();
+    glPopMatrix;
+}</code></pre>
+
+<p>For the white box, I just doubled each dimension; the parameters to
+<code>glScale</code> are X, Y, and Z multipliers.  For the yellow box, I shrunk
+the X dimension by a factor of 5 (multiplied by .2), left Y alone, and doubled
+the Z dimension.  The boxes are now big enough that I've also pushed them
+farther apart, hence the updated values for <code>glTranslate</code> that place
+them four units on either side of the scene origin.</p>
+
+<h4><a name="Watch the Rotation">Watch the Rotation</a></h4>
+
+<p>I've done translation and scaling; next up is rotation.  To save space here,
+I'll demonstrate on the yellow cube alone.  Here's the new code snippet:</p>
+
+<pre><code>    glColor(1, 1, 0);
+    glPushMatrix;
+    glRotate( 40, 0, 0, 1);
+    glTranslate( 4, 0, 0);
+    glScale(.2, 1, 2);
+    draw_cube();
+    glPopMatrix;</code></pre>
+
+<p>The parameters to <code>glRotate</code> are the number of degrees to rotate
+and the axis around which to do the rotation.  In this case, I chose to rotate 40 degrees around the Z axis (0, 0, 1).  The direction of rotation follows the
+general pattern in OpenGL -- a positive value means counterclockwise when
+looking down the rotation axis toward the origin.</p>
+
+<h4><a name="Order of Transforms">Order of Transforms</a></h4>
+
+<p>This produces a flying yellow box in the upper-right quadrant.  Remember
+when I said that each new transformation is cumulative?  The order matters.  To
+understand why, I like to imagine each transformation as moving, rotating, or
+scaling the coordinate system in which I draw my objects.  In this case, by
+rotating first, I certainly rotated the box, but I really rotated the entire
+coordinate system in which I defined the box.  This meant the
+<code>glTranslate</code> call that immediately follows the rotation translated
+out along a rotated X axis, 40 degrees above the scene's X axis, to be
+precise.</p>
+
+<p>I'll move the rotation after the other two transformations to fix that:</p>
+
+<pre><code>    glTranslate( 4, 0, 0);
+    glScale(.2, 1, 2);
+    glRotate( 40, 0, 0, 1);</code></pre>
+
+<p>Now the box isn't flying, but it does appear squashed in an odd way.  The
+problem here is that because the nifty, non-uniform scaling happens before the
+rotation, I'm now trying to rotate through a space where the dimensions are
+different sizes.  Putting the rotation in the middle fixes it:</p>
+
+<pre><code>    glTranslate( 4, 0, 0);
+    glRotate( 40, 0, 0, 1);
+    glScale(.2, 1, 2);</code></pre>
+
+<p>If you compare this rendering from this version with the program with no
+<code>glRotate</code> call, you should see that it does the right thing
+now.</p>
+
+<h3><a name="Whoa, Deep!">Whoa, Deep!</a></h3>
+
+<p>The last item I wanted to bring up is what to do when something near the
+back draws after something near the front.  To see what I mean, I'll move the
+white box so that instead of being four units to the left of the scene origin,
+it is four units behind it (along the negative Z axis).  That merely involves
+changing the white box's <code>glTranslate</code> call from this:</p>
+
+<pre><code>    glTranslate(-4, 0, 0);</code></pre>
+
+<p>to this:</p>
+
+<pre><code>    glTranslate( 0, 0, -4);</code></pre>
+
+<p>As you can see, even though the white box should appear behind the axis
+lines, it instead appears in front because OpenGL drew it after the axis lines.
+By default, OpenGL assumes you intended to do this (it is more efficient to
+make this assumption), but I didn't.  To fix this, I need to tell OpenGL to pay
+attention to the depth of the various objects in the scene and not to overwrite
+near objects with far ones.</p>
+
+<p>To do this, I need to enable OpenGL's <em>depth buffer</em>.  This is
+similar to the color buffer, which stores the color of every pixel drawn.
+Instead of storing the color, however, it stores the depth (distance from the
+viewpoint along the viewing direction) of every pixel.  Just like the color
+buffer, I need to clear the depth buffer each frame.  Instead of clearing it to
+black, OpenGL clears it to the maximum depth value, so that any later rendering
+within the visible scene will be closer.</p>
+
+<p>I also need to tell OpenGL that it should perform a test each time it wants
+to draw a pixel, comparing the depth of the new pixel with what's already in
+the depth buffer.  If the new pixel is farther from the viewer than the pixel
+it is about to replace, it's safe to ignore the new pixel and to leave alone
+the old color.  Here's the updated <code>prep_frame</code>:</p>
+
+<pre><code>sub prep_frame
+{
+    glClear(GL_COLOR_BUFFER_BIT |
+            GL_DEPTH_BUFFER_BIT );
+
+    glEnable(GL_DEPTH_TEST);
+}</code></pre>
+
+<p>In this version, I tell <code>glClear</code> to clear both the color buffer
+and the depth buffer. You can now see why the constant names end with
+<code>_BIT</code>; they are, in fact, bit masks.  The reason for
+this odd interface is purely efficiency -- some OpenGL implementations can very
+rapidly clear all requested buffers simultaneously, and making the request for
+all needed buffers in just one call allows this optimization.  As for the
+choice of bit mask rather than a list of constants, SDL_Perl reflects the
+underlying C interface, so that people comfortable with that can more easily
+cross over to using OpenGL under Perl.</p>
+
+<p>The second routine I call, <code>glEnable</code>, is actually one of the
+most commonly used OpenGL routines, despite the fact that this is the first
+we've seen of it.  Much of the OpenGL current state is a set of flags that tell
+OpenGL when to do (or not do) certain things.  <code>glEnable</code> and the
+corresponding <code>glDisable</code> set these flags as desired.  In this case,
+I turn on the flag that tells OpenGL to perform the depth test, throwing away
+pixels drawn in the wrong order.</p>
+
+<p>With these changes, we can now once again see the axis lines, this time in
+front of the white box where they belong.</p>
+
+<h3><a name="Conclusion">Conclusion</a></h3>
+
+<p>The final results may look simple, but we've come a long way.  I started
+with some basic boilerplate and a simple main loop.  I didn't even load SDL or
+OpenGL or open a window.  By the end, I'd added a window to draw on; projection
+and viewing setup; multiple objects of different types, built using different
+OpenGL primitives, drawn in different colors, and transformed several different
+ways; and correct handling of out-of-order drawing.</p>
+
+<p>That's a lot for now, but we're just starting.  Next time I'll cover moving the viewpoint, SDL keyboard handling, and compensating for frame rate variations.  I'll build on the <a href="/2004/12/01/examples/perl_opengl_examples.tar.gz">example source code</a> built in this article, so feel free to download it and use it for your own applications.</p>
+
+<p>In the meantime, if you'd like to learn more visit the <a
+href="http://www.opengl.org/">OpenGL</a> and <a
+href="http://www.libsdl.org/">SDL</a> websites; each contains (and links to) mountains of information.</p>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Geoff%20Broadwell&amp;limit=20';return false;" rel="tag">Geoff Broadwell</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=OpenGL%20tutorial&amp;limit=20';return false;" rel="tag">OpenGL tutorial</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%203D&amp;limit=20';return false;" rel="tag">Perl 3D</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20game%20programming&amp;limit=20';return false;" rel="tag">Perl game programming</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20graphics&amp;limit=20';return false;" rel="tag">Perl graphics</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20OpenGL&amp;limit=20';return false;" rel="tag">Perl OpenGL</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20SDL&amp;limit=20';return false;" rel="tag">Perl SDL</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

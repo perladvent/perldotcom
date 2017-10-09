@@ -1,0 +1,134 @@
+Return-Path: tchrist Sun
+From: Tom Christiansen <tchrist@mox.perl.com>
+cc: soup@ampersand.com
+Newsgroups: comp.lang.perl
+Subject: Far More Than Everything You Always Wanted to Know About Array Slices (was: Can this be done without creating an extra variable?)
+Summary: 
+References: <SOUP.95Apr21100851@ampersand.ampersand.com>
+Reply-To: tchrist@mox.perl.com (Tom Christiansen)
+Followup-To: 
+Distribution: world
+Organization: Perl Consulting and Training
+Keywords: 
+
+In comp.lang.perl, soup@ampersand.com (Doug Campbell) writes:
+:Is there any way to *functionally* extract some array slice?
+:That is, I want to do something like:
+:
+:sub stuff { return ("no", "t ", "go", "od"); };
+:print STDOUT (splice (&stuff(), 2));
+:
+:to print out "good".  However, splice cannot operate on array
+:expressions, only on array variables.  I *don't* want to have
+:to create a new variable to do this, like:
+:
+:sub stuff { return ("no", "t ", "go", "od"); };
+:@a = &stuff();
+:splice (@a, 0, 2);
+:print STDOUT (@a);
+
+You need a slice, not a splice.  Slices are dreadfully simple little
+things (think of them sublists) that make every single beginner's brain
+ache and explode until they want to scream and pretend they'd never tried
+learning what splices are.  
+
+You could simply do this:
+
+    sub stuff { return ("no", "t ", "go", "od")[0,1]; };
+
+But you can't say
+
+     print ("no", "t ", "go", "od")[0,1]; 
+
+Because print's a listop so that's
+
+     (print ("no", "t ", "go", "od"))[0,1]; 
+
+So you'll need
+
+     print (("no", "t ", "go", "od")[0,1]); 
+
+Here's another slice use:
+
+    @foo[0..3]    = (5..8);
+
+And here's another:
+
+    @foo[0..3]    = @bar[5..8];
+
+You can even do indirect slicing:
+
+    @idx1          = (1,6,2);
+    @idx2          = (8,1,4);
+    @foo[@idx1]   = @bar[@idx2];
+
+You may subscript temporary lists, too:
+
+    $uid = (getpwnam($somebody))[2]; 
+    @pletters = (('a'..'z')[15,4,17,11);
+
+Or put it in a variable:
+
+    @letters = ('a'..'z')
+    @pletters = @letters[15, 4, 17, 11];
+
+This uses sliced rather cleverly:
+
+    for (@foo) { push(@idx, "\U$_") } 
+    @sorted_foo = @foo[sort { $idx[$a] cmp $idx[$b] } 0 .. $#foo ];
+
+And so does this:
+
+    @mount_dirs = @dev2mntpnt{sort {$devnum{$a} <=> $devnum{$b}} keys %devnum};
+
+Got all that?  Good, then here's Tom Terrible Type Treatise:
+
+    $x				# scalar
+    @x				# linear array (list, vector) 
+    %x				# associative array (hash, table, hash table)
+    $x[1]			# scalar
+    $x[1,2]			# bad scalar!  (same as $x[2])
+    @x[1,2]			# good slice (list)
+    @x[1]			# bad slice! (list of 1 elt!)
+    $x{"fred"}			# scalar
+    @x{"fred"}			# bad slice! (list of 1 elt!)
+    $x{"fred", "barney"}	# scalar (mdim array emulation)
+    @x{"fred", "barney"}	# good slice (list)
+    %x{"fred", "barney"}	# illegal
+
+    $x[1][2]			# scalar (perl5 mdim array/array)
+    $x{"fred"}{"barney"}	# scalar (perl5 mdim hash/hash)
+    $x{"stuff"}[1]		# scalar (perl5 mdim hash/array)
+    $x[2]{"funny"}		# scalar (perl5 mdim array/hash)
+
+The place the "bad slices" listed above will burn you when you 
+start using slices when you should be using regular scalars:
+
+    @foo[0] = `cmd args`;   	# EVIL AND WRONG
+    @foo[2] = <FILE>;       	# EVIL AND WRONG
+
+Since that really means this:
+
+    ($foo[0]) = `cmd args`; 	# EVIL AND WRONG
+    ($foo[2]) = <FILE>;     	# EVIL AND WRONG
+
+Because those have been
+
+    ($foo[0], $foo[1]) = `cmd args`;     # prolly wrong
+    ($foo[2], $foo[5]) = <FILE>;      	 # prolly wrong
+
+Which are the same as 
+
+    @foo[0,1] = `cmd args`; 		 # prolly wrong
+    @foo[2,5] = <FILE>;     	 	 # prolly wrong
+
+When all along you really desperately meaning to use these:
+
+    $foo[0] = `cmd args`;   
+    $foo[2] = <FILE>;
+
+There's stuff in the FAQ on this, and probably the man pages, too, but
+this is the shortest summary I have.
+
+--tom
+

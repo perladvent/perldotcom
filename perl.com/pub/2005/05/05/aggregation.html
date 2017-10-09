@@ -1,0 +1,1597 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2005/05/05/aggregation.html">
+<dc:title>Massive Data Aggregation with Perl</dc:title>
+<dc:description> This article is a case study of the use of Perl and XML/RDF technologies to channel disparate sources of data into a semi-structured repository. This repository helped to build structured OLAP warehouses by mining an RDF repository with SAX...</dc:description>
+<dc:creator>Fred Moyer</dc:creator>
+<dc:date>2005-05-05T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2005/04/p6pdigest/20050505.html" title="This Week in Perl 6, April 26 - May 3, 2005" />
+    <link rel="next bookmark" href="/pub/2005/05/12/rdice.html" title="Inside YAPC::NA 2005" />
+    
+    
+    <title>Massive Data Aggregation with Perl - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-768" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Massive Data Aggregation with Perl</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Fred Moyer</span> on <abbr class="published" title="2005-05-05T00:00:00-08:00">May  5, 2005 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+<p>This article is a case study of the use of <a
+href="http://www.perl.org/">Perl</a> and <a
+href="http://www.w3.org/XML/">XML</a>/<a href="http://www.w3.org/RDF/">RDF</a>
+technologies to channel disparate sources of data into a semi-structured
+repository. This repository helped to build structured <a
+href="http://en.wikipedia.org/wiki/OLAP">OLAP</a> warehouses by mining an RDF
+repository with <a
+href="http://search.cpan.org/~rbs/XML-SAX-Machines-0.41/lib/XML/SAX/Machines.pm">SAX
+machines</a>. Channels of data included user-contributed datasets, data from
+FTP and HTTP remote-based repositories, and data from other intra-enterprise
+based assets.  We called the system the 'Kitchen Sync', but one of the project's visionaries best described it as akin to a device that accepts piles of random
+coins and returns them sorted for analysis. This system collected voter data
+and was the primary data collection point in a national organization for the
+presidential campaign during the 2004 election.</p>
+
+<h3>Introduction</h3>
+
+<p>My initial question was why anyone would want to store data in XML/RDF
+formats. It's verbose, it lacks widely accepted query interfaces (such as SQL),
+and it generally requires more work than a database. XML, in particular, is a
+great messaging interface, but a poor persistence medium.</p>
+
+<p>Eventually, I concluded that this particular implementation did benefit from
+the use of XML and RDF as messaging protocols. The messaging interface involved
+the use of SAX machines to parse a queue of XML and RDF files. The XML files
+contained the metadata for what we called polls, and the RDF files contained
+data from those polls. We had a very large buffer, from which cron-based
+processes frequently constructed data warehouses for analysis.</p>
+
+<csperl file="grab" domain="on" record="b/708" template="b/article_sidebar.view">
+
+<h3>Hindsight and Realizations</h3>
+
+<p>The difficulty of this project was in the gathering of requirements and
+vendor interfacing. When implementing application workflow, it is critical to
+use a programming language that doesn't get in the way and allows you to do
+what you want--and that is where Perl really shined. A language that allows
+for quick development is an asset, especially in a rushed environment where
+projects are due &quot;yesterday&quot;. The code samples here are not examples of how to
+write great object-oriented Perl code. They are real world examples of the code
+used to get things done in this project.</p>
+
+<p>For example, when a voter-data vendor changed its poll format, our data
+collection spiders stopped returned data and alerted our staff immediately. In
+just minutes, we adapted our SAX machine to the vendor's new format and we had
+our data streams back up and running. It would have taken hours or days to call
+the vendor about the change and engage in a technical discussion to get them to
+do things our way. Instead, Perl allowed us to adapt to their ways quickly and
+efficiently.</p>
+
+<h3>Project Goals</h3>
+
+<p>The architects of this project specified several goals and metrics for the
+application. The main goals--with the penultimate objective being to
+accumulate as much data as possible before election day--were to:</p>
+
+<ul>
+
+<li><p>Develop a web-based application for defining metadata of polls, and
+uploading sets of poll data to the system.</p>
+
+<p>The application had to give the user the ability to define sets of questions
+and answers known as polls. Poll metadata could contain related data contained
+in documents of standard business formats (<em>.doc</em>, <em>.pdf</em>).
+The users also needed an easy method, one that minimized possible errors,
+to upload data to the system.</p></li>
+
+<li><p>Meet requirements of adding 50 million new records per day.</p>
+
+<p>That metric corresponds to approximately 578 records per second.
+Assuming a non-linear load distribution over time, peak transaction
+requirements were likely to be orders of magnitude higher than the
+average of 578 per second.</p></li>
+
+<li><p>Develop a persistent store for RDF and XML data representing
+polls and poll data.</p>
+
+<p>The web application had to generate XML documents from poll definitions and
+RDF documents from uploaded poll data.  We stored the poll data in RDF. We
+needed an API to manage these documents.</p></li>
+
+<li><p>Develop a mechanized data collection system for the retrieval of data from
+FTP- and HTTP-based data repositories.</p>
+
+<p>The plan was to assimilate data sources into our organization from several
+commercial and other types of vendors. Most vendors had varying schemas and
+formats for their data. We wanted to acquire as much data as possible before
+the election to gauge voter support levels and other key metrics crucial to
+winning a political election.</p></li>
+
+</ul>
+
+<h3>Web Application</h3>
+
+<p>When I started this project, I had been using <a
+href="http://perl.apache.org/docs/2.0/index.html">mod_perl2</a> extensively in
+prototyping applications and also as a means of finding all of the cool new
+features. Mod_perl2 had proven itself stable enough to use in production, so I
+implemented a Model-View-Controller application design pattern using a native
+mod_perl2 and an <a
+href="http://httpd.apache.org/apreq/docs/libapreq2/">libapreq2</a>-enabled <a
+href="http://httpd.apache.org/">Apache server</a>. I adopted the controller
+design patterns from recipes in the <a
+href="http://www.modperlcookbook.org/">Modperl Cookbook</a>. The model classes
+subclassed <a href="http://www.sleepycat.com/products/xml.shtml">Berkeley
+DBXML</a> and <a
+href="http://search.cpan.org/perldoc?XML::LibXML">XML::LibXML</a> for object
+methods and persistence.  We used <a
+href="http://search.cpan.org/perldoc?Template">Template Toolkit</a> to
+implement views. (I will present more about the specifics of the persistence
+layer later in this article.)</p>
+
+<p>Of primary importance with the web application component of the system was
+ease of use. If the system was not easy to use, then we would likely receive
+less data as a result of user frustration. The component of the web application
+that took extended transaction processing time was the poll data upload
+component.</p>
+
+<p>If the user uploads a 10MB file on a 10Kbps upstream
+connection (common for residential DSL lines), the transaction would take
+approximately twenty minutes. On a 100Kbps upstream connection
+(business grade DSL), the transaction would take two minutes--certainly much
+longer than most unsuspecting users would wait before clicking on the browser
+refresh button.</p>
+
+<p>To prevent the user from accidentally corrupting the lengthy upload process,
+I created a monitoring browser window which opened via the following <a
+href="http://www.mozilla.org/js/">JavaScript</a> call when the user clicked the
+upload button.</p>
+
+<pre><code>&lt;input type=submit name='submit' value='Upload'
+    onClick=&quot;window.open('/ksync/dataset/monitor', 'Upload',
+       'width=740,height=400')&quot;&gt;</code></pre>
+
+<p>The server forked off a child process which read the upload status from a <a
+href="http://www.sleepycat.com/products/db.shtml">BerkeleyDB</a> database. The
+parent process used a <a href="http://httpd.apache.org/apreq/">libapreq</a> <a
+href="http://httpd.apache.org/apreq/docs/libapreq2/group__apreq__xs__request.html#item_upload_hook">UPLOAD_HOOK</a>-based approach to measure the amount of data uploaded, and to write that plus a few other metrics to the BerkeleyDB database. The following is a snippet of
+code from the upload handler:</p>
+
+<pre><code>&lt;Location /ksync/poll/data/progress&gt;
+    PerlResponseHandler KSYNC::Apache::Data::Upload-&gt;progress
+&lt;/Location&gt;
+
+sub progress : method {
+    my ( $self, $r ) = @_;
+
+    # We deal with commas and tabs as delimiters currently
+    my $delimiter;
+
+    # Create a BerkeleyDB to keep track of upload progress
+    my $db = _init_status_db( DB_CREATE );
+
+    # Get the specifics of the poll we're getting data for
+    my $poll = $r-&gt;pnotes('SESSION')-&gt;{'poll'};
+
+    # Generate a unique identifier for files based on the poll
+    my $id = _file_id($poll);
+
+    # Store any data which does not validate according to the poll schema
+    my $invalid = IO::File-&gt;new();
+    my $ivfn = join '', $config-&gt;get('data_root'), '/invalid/', $id, '.txt';
+    $invalid-&gt;open(&quot;&gt; $ivfn&quot;);
+
+    # Set the rdf filename
+    my $gfn = join '', $config-&gt;get('data_root'), '/valid/', $id, '.rdf';
+
+    # Create an RDF document object to store the data
+    my $rdf = KSYNC::Model::Poll::Data::RDF-&gt;new(
+                $gfn, 
+                $poll,
+                $r-&gt;pnotes('SESSION')-&gt;{'creator'}, 
+                DateTime-&gt;now-&gt;ymd, 
+    );
+
+    # Get the poll questions for to make sure the answers are valid
+    my $questions = $poll-&gt;questions;
+
+    # Create a data structure to hold the answers to validate against.
+    my @valid_answers = _valid_answers($questions);
+
+    # And a data structure to hold the validation results
+    my $question_data = KSYNC::Model::Poll::validation_results($questions);
+
+    # Set progress store parameters
+    my $length              = 0;
+    my $good_lines_total    = 0;
+    my $invalid_lines_total = 0;
+    my $began;              # Boolean to determine if we've started parsing data
+    my $li                  = 1;    # Starting line number
+
+    # The subroutine to process uploaded data
+    my $fragment;
+    my $upload_hook = sub {
+        my ( $upload, $data, $data_len, $hook_data ) = @_;
+
+        if ( !$began ) {   # If this is the first set check the array length
+
+            # Chop up the stream
+            my @lines = split &quot;\n&quot;, $data;
+
+            # Determine the delimiter for this line
+            $delimiter = _delimiter(@lines);
+
+            unless ( ( split( /$delimiter/, $lines[0] ) ) ==
+                scalar( @{$question_data} ) + 1 )
+            {
+                $db-&gt;db_put( 'done', '1' );
+                
+                # The dataset isn't valid, so throw an exception
+                KSYNC::Apache::Exception-&gt;throw('Invalid Dataset!');
+            }
+        }
+
+        # Mark the start up the upload
+        $began = 1;
+
+        # Validate the data against the poll answers we've defined
+        my ( $good_lines, $invalid_lines );
+
+        ( $good_lines, $invalid_lines, $question_data, $li, $fragment ) =
+          KSYNC::Model::Poll::Data::validate( \@valid_answers, 
+                                              $data, 
+                                              $question_data,
+                                              $li, 
+                                              $delimiter, 
+                                              $fragment );
+
+        # Keep up the running count of good and invalid lines
+        $good_lines_total     += scalar( @{$good_lines} );
+        $invalid_lines_total  += scalar( @{$invalid_lines} );
+
+        # Increment the number of bytes processed
+        $length += length($data);
+
+        # Update the status for the monitor process
+        $db-&gt;db_put(
+                     valid     =&gt; $good_lines_total,
+                     invalid   =&gt; $invalid_lines_total,
+                     bytes     =&gt; $length,
+                     filename  =&gt; $upload-&gt;filename,
+                     filetype  =&gt; $upload-&gt;type,
+                     questions =&gt; $question_data,
+                   );
+
+        # And store the data we've collected
+        $rdf-&gt;write( $good_lines ) if scalar( @{$good_lines} );
+
+        # Write out any invalid data points to a separate file
+        _write_txt( $invalid, $invalid_lines ) if scalar( @{$invalid_lines} );
+    };
+
+    my $req = Apache::Request-&gt;new(
+        $r,
+        POST_MAX    =&gt; 1024 * 1024 * 1024,    # One Gigabyte
+        HOOK_DATA   =&gt; 'Note',
+        UPLOAD_HOOK =&gt; $upload_hook,
+        TEMP_DIR    =&gt; $config-&gt;get('temp_dir'),
+    );
+
+    my $upload = eval { $req-&gt;upload( scalar +( $req-&gt;upload )[0] ) };
+    if ( ref $@ and $@-&gt;isa(&quot;Apache::Request::Error&quot;) ) {
+
+        # ... handle Apache::Request::Error object in $@
+        $r-&gt;headers_out-&gt;set( Location =&gt; 'https://'
+              . $r-&gt;construct_server
+              . '/ksync/poll/data/upload/aborted' );
+        return Apache::REDIRECT;
+    }
+
+    # Finish up
+    $invalid-&gt;close;
+    $rdf-&gt;save;
+
+    # Set status so the progress window will close
+    $db-&gt;db_put('done', 1');
+    undef $db;
+    
+    # Send the user to the summary page
+    $r-&gt;headers_out-&gt;set(
+      Location =&gt; join('', 
+                       'https://', 
+                       $r-&gt;construct_server, 
+                       '/poll/data/upload/summary',
+                      )                   
+    );
+    return Apache::REDIRECT; 
+}</code></pre>
+
+<p>During the upload process, the users saw a status window which refreshed
+every two seconds and had a pleasant animated GIF to enhance their experience,
+as well as several metrics on the status of the upload. One user uploaded a
+file that took 45 minutes because of a degraded network connection, but the
+uploaded file had no errors.</p>
+
+<p>The system converted <a
+href="http://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> files that
+users uploaded into RDF and saved them to the RDF store during the upload
+process. Because of the use of the UPLOAD_HOOK approach for processing uploaded
+data, the mod_perl-enabled Apache processes never grew in size or leaked memory
+as a result of handling the upload content.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Poll and Poll Data Stores</h3>
+
+<p>Several parties involved raised questions about the use of XML and RDF as
+persistence mediums. Why not use a relational database? Our primary reasons for
+deciding against a relational database were that we had several different
+schemas and formats of incoming data, and we needed to be able to absorb huge
+influxes of data in very short time periods.</p>
+
+<p>Consider how a relational database could have handled the variation in
+schemas and formats. Creating vendor-specific drivers to handle each format
+would have been straightforward. To handle the variations in schema, we could
+have normalized each data stream and its attributes so that we could store all
+the data in source, object, attribute, and value tables. The problem with that
+approach is that you get one really big table with all the values, which
+becomes more difficult to manage as time goes on. Another possible approach,
+which I have used in the past, is to create separate tables for each data
+stream to fit the schema, and then use the power of left, right, and outer
+joins to extract the needed information. It scales much better than the first
+approach but it is not as well suited for data mining as warehouses are.</p>
+
+<p>With regard to absorbing a lot of data very quickly, transactional
+relational databases have limitations when you insert or update data in a table
+with many rows. Additionally, the insert and update transactions are not
+asynchronous. When inserting or updating a record, the transaction will not
+complete until the indexes associated with the indexed fields of that record have
+updated.  This slows down as the database grows in size.</p>
+
+<p>We wanted the transactions between users, machines, and the Kitchen Sync to
+be as asynchronous as possible. Our ability to take in data in RDF format would
+not degrade with increasing amounts of data already taken in before warehousing
+for analysis. Data exchange challenges between vendors and us included a few large
+transactions in RDF format per data set, and how the length of the transaction
+time depended solely on the speed of the network connection between the vendor
+and our data center.</p>
+
+<p>With the decision to use XML for storing poll metadata and RDF for storing
+poll data in place, we turned our attention to the specifics of the persistence
+layer.  We stored the poll objects in XML, as shown in this example:</p>
+
+<pre><code>
+&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;poll&gt;
+    &lt;creator&gt;Fred Moyer&lt;/creator&gt;
+    &lt;date&gt;2005-03-01&lt;/date&gt;
+    &lt;vendor&gt;Voter Data Inc.&lt;/vendor&gt;
+    &lt;location&gt;https://www.voterdatainc.com/poll/1234&lt;/location&gt;
+    &lt;questions&gt;
+        &lt;question&gt;
+            &lt;name&gt;Who is buried in Grant's Tomb?&lt;/name&gt;
+            &lt;answers&gt;
+                &lt;answer&gt;
+                    &lt;name&gt;Ulysses Grant&lt;/name&gt;
+                    &lt;value&gt;0&lt;/value&gt;
+                &lt;/answer&gt;
+                &lt;answer&gt;
+                    &lt;name&gt;John Kerry&lt;/name&gt;
+                    &lt;value&gt;1&lt;/value&gt;
+                &lt;/answer&gt;
+                &lt;answer&gt;
+                    &lt;name&gt;George Bush&lt;/name&gt;
+                    &lt;value&gt;2&lt;/value&gt;
+                &lt;/answer&gt;
+                &lt;answer&gt;
+                    &lt;name&gt;Alfred E.  Neumann&lt;/name&gt;
+                    &lt;value&gt;3&lt;/name&gt;
+                &lt;/answer&gt;
+            &lt;/answers&gt;
+        &lt;/question&gt;
+    &lt;/questions&gt;
+    &lt;media&gt;
+        &lt;pdf&gt;
+            &lt;name&gt;Name of a PDF file describing this poll&lt;/name&gt;
+            &lt;raw&gt;The raw contents of the PDF file&lt;/raw&gt;
+            &lt;text&gt;The text of the PDF file, generated with XPDF libs&lt;/text&gt;
+        &lt;/pdf&gt;
+    &lt;/media&gt;
+&lt;/poll&gt;</code></pre>
+
+<p>We also needed an API to manage those documents. We chose <a
+href="http://www.sleepycat.com/products/xml.shtml">Berkeley DBXML</a> because
+of its simple but effective API and its ability to scale to terabyte size if
+needed. We created a poll class which subclassed the Sleepycat and XML::LibXML
+modules and provided some Perlish methods for manipulating polls.</p>
+
+<pre><code>package KSYNC::Model::Poll;
+
+use strict;
+use warnings;
+
+use base qw(KSYNC::Model);
+use SleepyCat::DbXml qw(simple);
+use XML::LibXML;
+use KSYNC::Exception;
+
+my $ACTIVITY_LOC = 'data/poll.dbxml';
+
+BEGIN {
+    # Initialize the DbXml database
+    my $container = XmlContainer-&gt;new($ACTIVITY_LOC);
+}
+
+# Call base class constructor KSYNC::Model-&gt;new
+sub new {
+    my ($class, %args) = @_;
+
+    my $self = $class-&gt;SUPER::new(%args);
+    return $self;
+}
+
+# Transform the poll object into an xml document
+sub as_xml {
+    my ($self, $id) = @_;
+    
+    my $dom = XML::LibXML::Document-&gt;new();
+    my $pi = $dom-&gt;createPI( 'xml-styleshet', 
+                             'href=&quot;/css/poll.xsl&quot; type=&quot;text/xsl&quot;' );
+    $dom-&gt;appendChild($pi);
+    my $element = XML::LibXML::Element-&gt;new('Poll');
+
+    $element-&gt;appendTextChild('Type',        $self-&gt;type);
+    $element-&gt;appendTextChild('Creator',     $self-&gt;creator);
+    $element-&gt;appendTextChild('Description', $self-&gt;description);
+    $element-&gt;appendTextChild('Vendor',      $self-&gt;vendor);
+    $element-&gt;appendTextChild('Began',       $self-&gt;began);
+    $element-&gt;appendTextChild('Completed',   $self-&gt;completed);
+
+    my $questions = XML::LibXML::Element-&gt;new('Questions');
+
+    for my $question ( @{ $self-&gt;{question} } ) {
+        $questions-&gt;appendChild($question-&gt;as_element);
+    }
+
+    $element-&gt;appendChild($questions);
+
+    $dom-&gt;setDocumentElement($element);
+    return $dom;
+}
+
+sub save {
+    my $self = shift;
+
+    # Connect to the DbXml databae
+    $container-&gt;open(Db::DB_CREATE);
+
+    # Create a new document for storage from xml serialization of $self
+    my $doc = XmlDocument-&gt;new();
+    $doc-&gt;setContent($self-&gt;as_xml);
+    
+    # Save, throw an exception if problems happen
+    eval { $container-&gt;putDocument($doc); };
+    KSYNC::Exception-&gt;throw(&quot;Could not add document: $@&quot;) if $@;
+
+    # Return the ID of the newly added document
+    return $doc-&gt;getID();
+}</code></pre>
+
+<p>We chose RDF as the format for poll data because the format contains links
+to resources that describe the namespaces of the document, making the document
+self-describing. The availability of standardized namespaces such as <a
+href="http://dublincore.org/">Dublin Core</a> gave us predefined tags such as
+<code>dc:date</code> and <code>dc:creator</code>. We added our own namespaces
+for representation of poll data. Depending on what verbosity of data the
+vendors kept, we could add <code>dc:date</code> tags to different portions of
+the document to provide historical references. We constructed our URLs in a <a
+href="http://en.wikipedia.org/wiki/REST">REST</a> format for all web-based
+resources.</p>
+
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;rdf:RDF
+	xmlns:RDF=&quot;http://www.w3.org/1999/02/22-rdf-syntax-ns#&quot;
+        xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot;
+	xmlns:ourparty=&quot;http://www.ourparty.org/xml/schema#&quot;&gt;
+	
+	&lt;rdf:Description rdf:about=&quot;http://www.ourparty.org/poll/1234&quot;&gt;
+	    &lt;dc:date&gt;2004-10-14&lt;/dc:date&gt;
+            &lt;dc:creator&gt;fmoyer@plusthree.com&lt;/dc:creator&gt;
+        &lt;/rdf:Description&gt;
+        
+        &lt;rdf:Bag&gt;
+        &lt;rdf:li ourparty:id=&quot;6372095736&quot; ourparty:question=&quot;1&quot;
+		    ourparty:answer=&quot;1&quot; dc:date=&quot;2005-03-01&quot; /&gt;
+        &lt;rdf:li ourparty:id=&quot;2420080069&quot; ourparty:question=&quot;2&quot;
+            ourparty:answer=&quot;3&quot; dc:date=&quot;2005-03-02&quot; /&gt;
+	&lt;/rdf:Bag&gt;
+&lt;/rdf:RDF&gt;</code></pre>
+
+<p>We used <a href="http://search.cpan.org/perldoc?XML::SAX::Machines">SAX
+machines</a> as drivers to generate summary models of RDF files and <a
+href="http://search.cpan.org/perldoc?XML::LibXML">LibXML</a> streaming parsers
+to traverse the RDF files.  We stacked drivers by using <a
+href="http://search.cpan.org/perldoc?XML::SAX::Pipeline">pipelined SAX
+machines</a> and constructed SAX drivers for the different vendor data schemas.
+Cron-based machines scanned the RDF store, identified new poll data, and
+processed them into summary XML documents which we served to administrative
+users via XSLT transformations. Additionally, we used the SAX machines to
+create denormalized SQL warehouses for data mining.</p>
+
+<p>An example SAX driver for Voter Data, Inc. RDF poll data:</p>
+
+<pre><code>package KSYNC::SAX::Voterdatainc;
+
+use strict;
+use warnings;
+
+use base qw(KSYNC::SAX);
+
+my %NS = (
+    rdf      =&gt; 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+    dc       =&gt; 'http://purl.org/dc/elements/1.1/',
+    ourparty =&gt; 'http://www.ourparty.org/xml/schema#',
+);
+
+my $VENDOR = 'Voter Data, Inc.';
+
+sub new {
+    my $class = shift;
+
+    # Call the super constructor to create the driver
+    my $self = $class-&gt;SUPER::new(@_, { vendor =&gt; $VENDOR });
+
+    return $self;
+}
+
+sub start_element {
+    my ($self, $data) = @_;
+    
+    # Process rdf:li elements
+    if ( $data-&gt;{Name} eq 'rdf:li' ) {
+    
+        # Grab the data
+        my $id      = $data-&gt;{Attributes}{ &quot;{$NS{ourparty}}id&quot; }{Value};
+        my $answer  = $data-&gt;{Attributes}{ &quot;{$NS{ourparty}}answer&quot; }{Value};
+        my $creator = $data-&gt;{Attributes}{ &quot;{$NS{dc}}creator&quot; }{Value};
+        my $date    = $data-&gt;{Attributes}{ &quot;{$NS{dc}}date&quot; }{Value};
+
+        # Map the data to a common response
+        $self-&gt;add_response({ vendor        =&gt; $VENDOR,
+                              voter_id      =&gt; $id, 
+                              support_level =&gt; $answer, 
+                              creator       =&gt; $creator,
+                              date          =&gt; $date,
+                           });
+
+        # Call the base class start_element method to do something with the data
+        $self-&gt;SUPER::start_element($data);
+}
+
+1;</code></pre>
+
+<p>We stored RDF documents compressed in bzip2 format, because bzip2
+compression algorithm is especially efficient at compressing repeating element
+data. As shown below in the SAX machine example, using <code>bzcat</code> as
+the intake to a pipeline parser allowed decompression of the bzip2 documents for
+parsing and creating a summary of a poll data set.</p>
+
+<pre><code>#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use KSYNC::SAX::Voterdatainc;
+use XML::SAX::Machines qw(Pipeline);
+
+# The poll data
+my $rdf = 'data/voterdatainc/1759265.rdf.bz2';
+
+# Create a vendor specific driver
+my $driver = KSYNC::SAX::Voterdatainc-&gt;new();
+
+# Create a driver to add the data to a data warehouse handle
+my $dbh = KSYNC::DBI-&gt;connect();
+my $warehouser = KSYNC::SAX::DBI-&gt;new(
+                    source =&gt; 'http://www.voterdatainc/ourparty/poll.xml',
+                    dbh    =&gt; $dbh,
+                );
+
+# Create a parser which uncompresses the poll data set, summarizes it, and 
+# outputs data to a filter which warehouses the denormalized data
+my $parser = Pipeline(
+                &quot;bzcat $rdf |&quot; =&gt;
+                $driver        =&gt; 
+                $warehouser    =&gt; 
+;
+
+# Parse the poll data
+$parser-&gt;parse();
+
+# Summarize the poll data
+print &quot;Average support level:  &quot;,   $driver-&gt;average_support_level, &quot;\n&quot;;
+print &quot;Starting date:  &quot;, 	    $driver-&gt;minimum_date, &quot;\n&quot;;
+print &quot;Ending date:  &quot;, 	    $driver-&gt;maximum_date, &quot;\n&quot;;</code></pre>
+
+<p>Between the polls, the XML Schema dictionaries, and the RDF files, we know
+who the polls contacted, what they saw, and how they responded. A major benefit
+of keeping the collected information in RDF format is the preservation of
+historical information. We constructed SQL warehouses to analyze changes in
+voter support levels over time.  This was critical for measuring the effect of
+events such as presidential debates on voter interest and support.</p>
+
+<p>Using RDF also provided us with the flexibility to map new data sources as
+needed. If a vendor collected some information which we had not processed
+before, they would add an <code>about</code> tag such as
+<code>&lt;rdf:Description
+rdf:about=&quot;http://www.datavendor.com/ourparty/poll5.xml&quot; /&gt;</code> , which
+we would map to features of our SAX machines as needed.</p>
+
+<p>We added some hooks to the SAX machines to match certain URIs and then
+process selected element data. Late in the campaign, when early voting
+started, we were able to quickly modify our existing SAX machines to collect
+early voting data from the data streams and produce SQL warehouses for
+analysis.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Mechanization of Data Collection</h3>
+
+<p>A major focus of the application was retrieving data from remote sources.
+Certain vendors used our secure FTP site to send us data, but most had web and
+FTP sites to which they posted the information. We needed a way to collect data
+from those servers. Some vendors were able to provide data to us in XML and RDF
+formats, but for the most part, we would receive data in CSV, TSV, or some
+form of XML.  Each vendor generally had supplementary data beyond the normal
+voter data fields which we also wanted to capture. Using that additional data
+was not an immediate need, but by storing it in RDF format we could extract it
+and generate SQL warehouses whenever necessary.</p>
+
+<p>We developed a part of the application known as the spider and created a
+database table containing information on the data source authentication,
+protocol, and data structure details. A factory class
+<code>KSYNC::Model::Spider</code> read the data source entries and constructed
+spider objects for each data source. These spiders used <a
+href="http://search.cpan.org/perldoc?Net::FTP">Net::FTP</a> and <a
+href="http://search.cpan.org/perldoc?LWP">LWP</a> to retrieve poll data, and
+processed the data using the appropriate <code>KSYNC::SAX</code> machine. To
+add a new data source to our automated collection system, an entry in the
+database configured the spider, and if the new data source had data in a format
+that we did not support, we added a SAX machine for that data source.</p>
+
+<p>An example of spider usage:</p>
+
+<pre><code>package KSYNC::Model::Spider;
+
+use strict;
+use warnings;
+
+use Carp 'croak';
+use base 'KSYNC::Model';
+
+sub new {
+    my ($class, %args) = @_;
+    
+    # Create an FTP or HTTP spider based on the type specified in %args
+    my $spider_pkg = $class-&gt;_factory($args{type});
+    my $self = $spider_pkg-&gt;new(%args);
+
+    return $self;
+}
+
+sub _factory {
+    my ($class, $type) = @_;
+
+    # Create the package name for the spider type
+    my $pkg = join '::', $class, $type;
+    
+    # Load the package
+    eval &quot;use $pkg&quot;;
+    croak(&quot;Error loading factory module: $@&quot;) if $@;
+
+    return $pkg;
+}
+
+1;
+
+package KSYNC::Model::Spider::FTP;
+
+use Net::FTP;
+use KSYNC::Exception;
+
+sub new {
+    my ($class, %args) = @_;
+    
+    my $self = { %args };
+
+    # Load the appropriate authentication package via Spider::Model::Auth 
+    # factory class
+    $self-&gt;{auth} = Spider::Model::Auth-&gt;new(%{$args{auth}});
+
+    return bless $self, $class;
+}
+
+sub authenticate {
+    my $self = shift;
+    
+    # Login
+    eval { $self-&gt;ftp-&gt;login($self-&gt;auth-&gt;username, $self-&gt;auth-&gt;password); };
+     
+    # Throw an exception if problems occurred
+    KSYNC::Exception-&gt;throw(&quot;Cannot login &quot;, $self-&gt;ftp-&gt;message) if $@;
+}
+
+sub crawl {
+    my $self = shift;
+    
+    # Set binary retrieval mode
+    $self-&gt;ftp-&gt;binary;
+
+    # Find new poll data
+    my @datasets = $self-&gt;_find_new();
+
+    # Process that poll data
+    foreach my $dataset (@datasets) {
+        eval { $self-&gt;_process($dataset); };
+        $self-&gt;error(&quot;Could not process poll data $dataset-&gt;id&quot;, $@) if $@;
+    }
+}
+
+sub ftp { 
+    croak(&quot;Method Not Implemented!&quot;) if @_ &gt; 1; 
+    $_[0]-&gt;{ftp} ||= Net::FTP-&gt;new($self-&gt;auth-&gt;host); 
+}
+
+1;
+
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use KSYNC::Model::Spider;
+use KSYNC::Model::Vendor;
+
+# Retrieve a vendor so we can grab their latest data
+my $vendor = KSYNC::Model::Vendor-&gt;retrieve({ 
+  name =&gt; 'Voter Data, Inc.',
+});
+
+# Construct a spider to crawl their site
+my $spider = KSYNC::Model::Spider-&gt;new({ type =&gt; $vendor-&gt;type });
+
+# Login
+$spider-&gt;login();
+
+# Grab the data
+$spider-&gt;crawl();
+
+# Logout
+$spider-&gt;logout();
+
+1;</code></pre>
+
+<h3>Conclusions</h3>
+
+<p>In this project, getting things done was of paramount importance.  Perl
+allowed us to deal with the complexities of the business requirements and the
+technical details of data schemas and formats without presenting additional
+technical obstacles, as programming languages occasionally do. The <a
+href="http://www.cpan.org">CPAN</a>, <a
+href="http://perl.apache.org">mod_perl</a>, and <a
+href="http://httpd.apache.org/apreq">libapreq</a> provided the components that
+allowed us to quickly build an application to deal with complex, semi-structured
+data on an enterprise scale. From creating a user friendly web application to
+automating data collection and SQL warehouse generation, Perl was central to
+the success of this project.</p>
+
+<h3>Credits</h3>
+
+<p>Thanks to the following people who made this possible and contributed to
+this project: Thomas Burke, Charles Frank, Lyle Brooks, Lina Brunton, Aaron
+Ross, Alan Julson, Marc Schloss, and Robert Vadnais.</p>
+
+<p>Thanks to <a href="http://www.plusthree.com/">Plus Three LP</a> for
+sponsoring work on this project.</p>
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Data%20aggregation&amp;limit=20';return false;" rel="tag">Data aggregation</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=data%20warehousing&amp;limit=20';return false;" rel="tag">data warehousing</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=enterprise%20Perl&amp;limit=20';return false;" rel="tag">enterprise Perl</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=large%20Perl%20systems&amp;limit=20';return false;" rel="tag">large Perl systems</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20RDF&amp;limit=20';return false;" rel="tag">Perl RDF</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Perl%20XML&amp;limit=20';return false;" rel="tag">Perl XML</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=SAX%20Machines&amp;limit=20';return false;" rel="tag">SAX Machines</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,952 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2002/02/visperl.html" title="Visual Perl" />
+    <link rel="next bookmark" href="/pub/2002/02/20020209.html" title="This Fortnight on Perl 6 (27 Jan - 9 Feb 2002)" />
+    
+    
+    <title>Optimizing Your Perl - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1258" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Optimizing Your Perl</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            <abbr class="published" title="2002-02-12T00:00:00-08:00">February 12, 2002 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+
+
+<p>Is your Perl program taking too long to run?  This might be because
+you've chosen a data structure or algorithm that takes a long time to
+run.  By rethinking how you've implemented a function, you might be
+able to realize huge gains in speed.</p>
+
+<h3><a name="some simple complexity theory">Some Simple Complexity Theory</a></h3>
+<p>Before we can talk about speeding up something, we need a way to
+describe how long something takes.  Because we're talking about
+algorithms that may have varying amounts of input, the actual "time"
+to do something isn't conclusive.  Computer scientists and
+mathematicians use a system called big-O notation to describe the
+order of magnitude of how long something will take.  Big-O notation
+represents a worst-case analysis.  There are other notations to
+represent the magnitude of minimum and actual runtimes.</p>
+
+<p>Don't let the talk of computer scientists and mathematicians scare you.  The next few paragraphs talk about a way to describe the
+difference between orders of magnitude such as a second, minute, hour
+or day.  Or 1, 10, 100 and 1,000.  You don't need to know any fancy or
+scary math to understand it.</p>
+
+<p>It's simple.  If the runtime of a function is constant, then this is
+written as O(1).  (Note the capital or "big" O.)  Constant means that
+no matter how much data is processed, (i.e., how much input there is)
+the time doesn't change.</p>
+
+<p>If the runtime is directly related to the amount of input
+(a.k.a. linear), then this is O(n).  If there is twice as much input, then the
+algorithm will take twice as long to run.  Some functions are <code>O(n^2)</code>
+(quadratic) or <code>O(n^3)</code> (cubic) or even worse.</p>
+<p>Because we are only looking at orders of magnitude (is the operation
+going to take one minute or one hour) we can ignore constant factors and
+smaller terms.  <code>O(2n)</code> and <code>O(n)</code> are equivalent.  
+As are <code>O(n+1)</code> and
+<code>O(n)</code> or <code>O(n^2+n)</code> and <code> O(n^2)</code>.  The smaller term 
+is insignificant
+compared to the larger.</p>
+
+<p>There are rules for analyzing code and determining its big-O, but the
+simplest way is to look at how many times you iterate over the data.
+if you don't iterate, then it's O(1).  If you iterate over it once, then it's
+O(n).  If you have two nested loops, then it's probably O(n^2).</p>
+
+<p><img src="/pub/2002/02/12/graphics/graph-orders.jpg" alt="Orders"></p>
+
+<h3><a name="example #1: graphing">Example #1: Graphing</a></h3>
+
+<p>I developed a new graph module for a project at my day job, because
+the <a href="http://search.cpan.org/search?dist=Graph">existing
+one</a> was overkill, yet did not support a feature I needed.  It was
+easy to implement and worked very well, until the graph got very
+big.  I needed flattened subgraphs to do dependency checks, but it was
+taking more than two minutes to compute (on a 1Ghz P3) for a 1,000 node
+graph.  I needed the computation to be much faster, or my users would
+get mad.</p>
+<p>My initial Graph module looked like this.  (Simplified to only show
+relevant parts.)</p>
+<pre><code>
+ package Graph; # for Directed Graphs
+ use strict;
+ sub new {
+  my $this = { edges =&gt; [],
+               vertices =&gt; {} };
+  bless $this, &quot;Graph&quot;;
+ }
+ sub add_edge { # from x to y
+  my ($this,$x,$y) = @_;
+  $this-&gt;{vertices}{$x}++;
+  $this-&gt;{vertices}{$y}++;
+  push @{$this-&gt;{edges}},[$x=&gt;$y];
+ }
+ sub in_edges {
+  my ($this,$v) = @_;
+  grep { $_-&gt;[1] eq $v } @{$this-&gt;{edges}};
+ }</code></pre>
+<p>The add_edge method is <code>O(1)</code> because it will always take the same
+amount of time no matter how many nodes/edges are in the graph.  The
+in_edges method is <code>O(n)</code> because it has to iterate over each edge in
+the graph.  (The iteration is "inside" the grep.)</p>
+<p>The problematic section of the code looked like this:</p>
+<pre><code>
+ sub flat_subgraph {
+    my ($graph,$start) = @_;
+    my %seen;
+    my @worklist = ($start);
+    while (@worklist) {
+      my $x = shift @worklist;
+      push @worklist, $graph-&gt;in_edges($x) 
+         unless $seen{$x}++;
+    }
+    return keys %seen;
+ }</code></pre>
+<p>And I actually needed to do that for multiple vertices;</p>
+<pre><code>
+  my %dependencies;
+  for (keys %{$graph-&gt;{vertices}}) {
+   $dependencies{$_} = [ flat_subgraph( $graph, $_ ) ];
+  }</code></pre>
+<p>This would make the entire flattening operation O(n^3).  ( The
+dependency loop is O(n), flat_subgraph is effectively O(n), and
+in_edges is O(n)).  That means that it takes much longer to compute as
+the Graph becomes bigger.  (Imagine a curve with the following values:
+1,8,27,64..., that's the curve of relative times.)</p>
+
+<h3><a name="caching">Caching</a></h3>
+<p>With my users expecting instant feedback, something had to be done. 
+The first thing I tried was to cache the in_edges computation.</p>
+<pre><code>
+ sub in_edges {
+  my ($this,$v) = @_;
+  if (exists $this-&gt;{cache}{in_edges}{$v}) {
+      return @{$this-&gt;{cache}{in_edges}{$v}};
+  } else {
+    my @t = grep { $_-&gt;[1] eq $v } @{$this-&gt;{edges}};
+    $this-&gt;{cache}{in_edges}{$v} = [@t];
+    return @t;
+   }
+ }</code></pre>
+ 
+
+<p>This helped, but not as much as I had hoped.  The in_edges calculation
+was still expensive when it wasn't cached.  It's still <code>O(n)</code> in
+the worst case, but becomes <code>O(1)</code> when cached.  On average, that means
+the entire flattening operation is somewhere between <code>O(n^2)</code> and <code>O(n^3)</code>,
+which is still potentially slow.</p>
+
+<p>In situations where the same functions are called with the same
+arguments, caching can be useful.  Mark-Jason Dominus has written
+a module called Memoize, which makes it easy to write caching
+functions.  See his Web site 
+<a href="http://perl.plover.com/MiniMemoize/">http://perl.plover.com/MiniMemoize/</a> for
+more information.</p>
+
+<h3><a name="change the structure">Change the Structure</a></h3>
+<p>The next thing I tried was to change the Graph data structure.  When I
+originally designed it, my goal was simplicity, not necessarily
+speed.  Now speed was becoming important and I had to make changes.</p>
+<p>I modified graph so that in_edges were calculated when the new edge
+was being added.</p>
+<pre><code>
+ package Graph; # for Directed Graphs
+ use strict;
+ sub new {
+  my $this = { edges =&gt; [],
+               vertices =&gt; {},
+               in_edges =&gt; {} };
+  bless $this, &quot;Graph&quot;;
+ }
+ sub add_edge { # from x to y
+  my ($this,$x,$y) = @_;
+  $this-&gt;{vertices}{$x}++;
+  $this-&gt;{vertices}{$y}++;
+  push @{$this-&gt;{in_edges}{$y}}, $x;
+  push @{$this-&gt;{edges}},[$x=&gt;$y];
+ }
+ sub in_edges {
+  my ($this,$v) = @_;
+  return @{$this-&gt;{in_edges}{$v}};
+ }</code></pre>
+<p>add_edge remains <code>O(1)</code> - it still executes in a constant time.
+in_edges is <code>O(1)</code> as well now; its runtime will not vary based on the
+number of edges.</p>
+<p>This was the solution I needed, getting a full flattening down from
+more than four minutes to only six seconds.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="the importance of good interfaces">The Importance of Good Interfaces</a></h3>
+<p>One of the things that made this fiddling possible was a good design
+for the Graph module's interface.  The interface hid all the details
+of the internals from me, so that different implementations could be
+plugged in.  (This is actually how I did the testing, I had a regular
+Graph, a Graph::Cached, and a Graph::Fast.  Once I decided that I
+liked Graph::Fast the best, I renamed it to just Graph.)</p>
+<p>I'm glad I designed Graph the way I did.  I put simplicity and design
+first.  There is a phrase you might have heard: "Premature
+optimization is the root of all evil."  If I had optimized the Graph
+module first, then I might have ended up with more complicated code that
+didn't work in all cases.  My initial cut of Graph was slow, but
+worked consistently.  Optimization happened later, after I had a
+baseline I could return to, to guarantee proper operation.</p>
+
+<h3><a name="example #2: duplicate message filter">Example #2: Duplicate Message Filter</a></h3>
+
+<p>You don't always need to try and optimize code to the fullest extent.
+Optimizing code takes your time and energy, and it isn't always worth
+it.  If you spend two days to shave two seconds off a program, then it's
+probably not worth it.  (Unless of course, that program is running
+hundreds of times each day.)  If a program is "fast enough", then making it
+faster isn't worth it.</p>
+<p>Our second example is a duplicate message filter for e-mail.  This
+filter is useful when you receive cc's of messages also sent to
+mailing lists you are on, but you don't want to see both.</p>
+<p>The general idea behind this filter is simple.</p>
+<pre><code>
+  skip $message if seen $message-&gt;id;</code></pre>
+<p>It's only the seen function that interests us.  It searches some form
+of cache of id's.  How we implement it can have a large effect on the
+speed of our mailfilter.  (For more information on filtering mail with
+perl, take a look at 
+<a href="http://search.cpan.org/search?dist=Mail-Audit">Mail::Audit</a>.)</p>
+<p>The two most obvious methods that come to mind for implementing seen
+are a simple linear search (O(n)) or the use of a persistent
+database/hash table to do the lookup.  O(1).  I'll ignore the cost of
+maintaining the database, eliminating old Message-Id's, etc.</p>
+<p>A linear approach writes out the message id's with some sort of
+separator.  Some programs use null bytes, others use newlines.</p>
+<p>The database/hash method stores the message id's in a binary database like a
+DBM or Berkeley DB file.  At the expense of using more disk space,
+lookups are generally faster.</p>
+<p>But - there's one more factor to take into account - overhead.  The
+linear search has little overhead, while the DB file has a large
+overhead.  (Overhead here means time to open the file and initialize
+the appropriate data structures.)</p>
+<pre><code>
+ TABLE: Comparison
+ 
+  Records | Comment
+  -----------------
+    100   | linear is 415% faster
+    250   | linear is 430% faster
+    500   | hash is 350% faster
+   1000   | hash is 690% faster</code></pre>
+<p>I performed a set of timings with a rough example implementation on my
+P2/400, and received the above results.  The hash lookup speeds remained
+constant, while the linear lookup dropped off rapidly after 250 items
+in the cache.</p>
+<p>Returning to the big picture, we need to take our message-id cache
+size into account when determining the method to use.  For this kind
+of cache, there's usually not a reason to keep a huge amount of
+entries around, only two or three days worth should catch most
+duplicate messages.  (And probably even one day's worth in most cases.)</p>
+<p>For this problem, an <code>O(1)</code> solution is possible, but the constant time
+it takes might be higher than an <code>O(n)</code> solution.  Both cases are
+trivial to implement, but in some situations it will be difficult to
+implement <code>O(1)</code> - and not worth it either.</p>
+
+<h3><a name="conclusion">Conclusion</a></h3>
+
+<p>Perl is a powerful language, but it doesn't prevent the
+programmer from making poor decisions and shooting him/herself in the
+foot.  One mistake is to choose the wrong data structure or algorithm
+for the job.  By using a little bit of complexity theory, it's
+possible to optimize your code and get huge speed gains.</p>
+<p>I've only touched the surface of big-O notation and complexity
+theory.  It's a highly researched topic that delves into the deep dark
+corners of math and computers.  But, hopefully there's enough here to
+give you a basic tool set.</p>
+<p>As the second example showed, you don't necessarily want to spend too
+much time thinking about optimization.  Over-optimization isn't always
+worth it.</p>
+
+<h3><a name="for more information">For More Information</a></h3>
+<dl>
+<dt><strong><a name="item_Google">Google</a></strong><br />
+<dd>
+<pre>
+ <a href="http://www.google.com/search?q=big-O+complexity">http://www.google.com/search?q=big-O+complexity</a></pre>
+<dt><strong><a name="item_Introduction_to_the_Theory_of_Computation">Introduction to the Theory of Computation</a></strong><br />
+<dd>
+Part Three of Sipser, Michael. "Introduction to the Theory of
+Computation". PWS Publishing Company. Boston, MA. 1997.
+<p></p>
+<dt><strong><a name="item_Algorithms_and_Complexity%2C_Internet_Edition">Algorithms and Complexity, Internet Edition</a></strong><br />
+<dd>
+<a href="http://www.cis.upenn.edu/%7Ewilf/AlgComp3.html">http://www.cis.upenn.edu/~wilf/AlgComp3.html</a>
+<p></p></dl>
+
+<h3><a name="special thanks">Special Thanks</a></h3>
+<p>Walt Mankowski</p>
+
+
+
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/programming/" rel="tag">Programming</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=big-O%20data%20structure%20algorithm%20efficiency&amp;limit=20';return false;" rel="tag">big-O data structure algorithm efficiency</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

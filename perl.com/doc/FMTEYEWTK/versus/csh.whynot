@@ -1,0 +1,556 @@
+From: Tom Christiansen <tchrist@mox.perl.com>
+Subject: Csh Programming Considered Harmful 
+Organization: scant
+Newsgroups: comp.unix.shell,comp.unix.questions,comp.unix.programmer,comp.answers,news.answers
+Followup-to: comp.unix.shell
+Expires: Fri, 1 Nov 1994 12:00:00 GMT
+Approved: news-answers-request@MIT.Edu
+
+Archive-name: unix-faq/shell/csh-whynot
+Version: $Id: csh-faq,v 1.6 94/10/01 09:35:06 tchrist Exp Locker: tchrist $
+
+The following periodic article answers in excruciating detail
+the frequently asked question "Why shouldn't I program in csh?".
+It is available for anon FTP from convex.com in /pub/csh.whynot .
+
+
+	       *** CSH PROGRAMMING CONSIDERED HARMFUL ***
+
+    Resolved: The csh is a tool utterly inadequate for programming, 
+	      and its use for such purposes should be strictly banned!
+
+I am continually shocked and dismayed to see people write test cases,
+install scripts, and other random hackery using the csh.  Lack of
+proficiency in the Bourne shell has been known to cause errors in /etc/rc
+and .cronrc files, which is a problem, because you *must* write these files
+in that language.
+
+The csh is seductive because the conditionals are more C-like, so the path
+of least resistance is chosen and a csh script is written.  Sadly, this is
+a lost cause, and the programmer seldom even realizes it, even when they
+find that many simple things they wish to do range from cumbersome to
+impossible in the csh.
+
+
+1. FILE DESCRIPTORS
+
+The most common problem encountered in csh programming is that
+you can't do file-descriptor manipulation.  All you are able to 
+do is redirect stdin, or stdout, or dup stderr into stdout. 
+Bourne-compatible shells offer you an abundance of more exotic
+possibilities.    
+
+1a. Writing Files
+
+In the Bourne shell, you can open or dup arbitrary file descriptors.
+For example, 
+
+    exec 2>errs.out
+
+means that from then on, stderr goes into errs file.
+
+Or what if you just want to throw away stderr and leave stdout
+alone?    Pretty simple operation, eh?
+
+    cmd 2>/dev/null
+
+Works in the Bourne shell.  In the csh, you can only make a pitiful 
+attempt like this:
+
+    (cmd > /dev/tty) >& /dev/null
+
+But who said that stdout was my tty?  So it's wrong.  This simple
+operation *CANNOT BE DONE* in the csh.
+
+
+Along these same lines, you can't direct error messages in csh scripts
+out stderr as is considered proper.  In the Bourne shell, you might say:
+
+	echo "$0: cannot find $file" 1>&2
+
+but in the csh, you can't redirect stdout out stderr, so you end
+up doing something silly like this:
+
+	sh -c 'echo "$0: cannot find $file" 1>&2'
+
+1b. Reading Files
+
+In the csh, all you've got is $<, which reads a line from your tty.  What
+if you've redirected stdin?  Tough noogies, you still get your tty, which 
+you really can't redirect.  Now, the read statement 
+in the Bourne shell allows you to read from stdin, which catches
+redirection.  It also means that you can do things like this:
+
+    exec 3<file1
+    exec 4<file2
+
+Now you can read from fd 3 and get lines from file1, or from file2 through
+fd 4.   In modern, Bourne-like shells, this suffices: 
+
+    read some_var 0<&3
+    read another_var 0<&4
+
+Although in older ones where read only goes from 0, you trick it:
+
+    exec 5<&0  # save old stdin
+    exec 0<&3; read some_var
+    exec 0<&4; read another_var
+    exec 0<&5  # restore it
+
+
+1c. Closing FDs
+
+In the Bourne shell, you can close file descriptors you don't
+want open, like 2>&-, which isn't the same as redirecting it
+to /dev/null.
+
+1d. More Elaborate Combinations
+
+Maybe you want to pipe stderr to a command and leave stdout alone.
+Not too hard an idea, right?  You can't do this in the csh as I
+mentioned in 1a.  In a Bourne shell, you can do things like this:
+
+    exec 3>&1; grep yyy xxx 2>&1 1>&3 3>&- | sed s/file/foobar/ 1>&2 3>&-
+    grep: xxx: No such foobar or directory
+
+Normal output would be unaffected.  The closes there were in case
+something really cared about all its FDs.  We send stderr to sed,
+and then put it back out 2.
+
+Consider the pipeline:
+
+    A | B | C
+
+You want to know the status of C, well, that's easy: it's in $?, or
+$status in csh.  But if you want it from A, you're out of luck -- if
+you're in the csh, that is.  In the Bourne shell, you can get it, although
+doing so is a bit tricky.  Here's something I had to do where I ran dd's
+stderr into a grep -v pipe to get rid of the records in/out noise, but had
+to return the dd's exit status, not the grep's:
+
+    device=/dev/rmt8
+    dd_noise='^[0-9]+\+[0-9]+ records (in|out)$'
+    exec 3>&1
+    status=`((dd if=$device ibs=64k 2>&1 1>&3 3>&- 4>&-; echo $? >&4) |
+		egrep -v "$dd_noise" 1>&2 3>&- 4>&-) 4>&1`
+    exit $status;
+
+
+The csh has also been known to close all open file descriptors besides
+the ones it knows about, making it unsuitable for applications that 
+intend to inherit open file descriptors.
+
+
+2. COMMAND ORTHOGONALITY
+
+2a. Built-ins
+
+The csh is a horrid botch with its built-ins.  You can't put them
+together in many reasonable ways.   Even simple little things like this:	
+
+	    % time | echo
+
+which while nonsensical, shouldn't give me this message:
+
+	    Reset tty pgrp from 9341 to 26678
+
+Others are more fun:
+
+	    % sleep 1 | while
+	    while: Too few arguments.
+	    [5] 9402
+	    % jobs
+	    [5]     9402 Done                 sleep |
+
+
+Some can even hang your shell.  Try typing ^Z while you're sourcing 
+something, or redirecting a source command.  Just make sure you have
+another window handy.  Or try 
+
+    % history | more
+
+on some systems.
+
+Aliases are not evaluated everywhere you would like them do be:
+
+    % alias lu 'ls -u'
+    % lu
+    HISTORY  News     bin      fortran  lib      lyrics   misc     tex
+    Mail     TEX      dehnung  hpview   logs     mbox     netlib
+    % repeat 3 lu
+    lu: Command not found.
+    lu: Command not found.
+    lu: Command not found.
+
+    % time lu
+    lu: Command not found.
+
+
+2b. Flow control
+
+You can't mix flow-control and commands, like this:
+    
+    who | while read line; do
+	echo "gotta $line"
+    done
+
+
+You can't combine multiline constructs in a csh using semicolons.
+There's no easy way to do this
+
+    alias cmd 'if (foo) then bar; else snark; endif'
+
+
+You can't perform redirections with if statements that are
+evaluated solely for their exit status:
+
+    if ( { grep vt100 /etc/termcap > /dev/null } ) echo ok
+
+And even pipes don't work:
+
+    if ( { grep vt100 /etc/termcap | sed 's/$/###' } ) echo ok
+
+But these work just fine in the Bourne shell:
+
+    if grep vt100 /etc/termcap > /dev/null ; then echo ok; fi   
+
+    if grep vt100 /etc/termcap | sed 's/$/###/' ; then echo ok; fi
+
+
+Consider the following reasonable construct:
+
+  if ( { command1 | command2 } ) then
+      ...
+  endif
+
+The output of command1 won't go into the input of command2.  You will get
+the output of both commands on standard output.  No error is raised.  In
+the Bourne shell or its clones, you would say 
+
+    if command1 | command2 ; then
+	...
+    fi
+
+
+2c. Stupid parsing bugs
+
+Certain reasonable things just don't work, like this:
+
+    % kill -1 `cat foo`
+    `cat foo`: Ambiguous.
+
+But this is ok:
+
+    % /bin/kill -1 `cat foo`
+
+If you have a stopped job:
+
+    [2]     Stopped              rlogin globhost
+
+You should be able to kill it with 
+
+    % kill %?glob
+    kill: No match
+
+but
+
+    % fg %?glob
+
+works.
+
+White space can matter:
+
+    if(expr)
+
+may fail on some versions of csh, while
+
+    if (expr)
+
+works!  Your vendor may have attempted to fix this bug, but odds are good
+that their csh still won't be able to handle
+
+    if(0) then
+      if(1) then
+          echo A: got here
+      else
+          echo B: got here
+      endif
+      echo We should never execute this statement
+    endif
+
+
+
+3. SIGNALS
+
+In the csh, all you can do with signals is trap SIGINT.  In the Bourne
+shell, you can trap any signal, or the end-of-program exit.    For example,
+to blow away a tempfile on any of a variety of signals:
+
+    $ trap 'rm -f /usr/adm/tmp/i$$ ;
+	    echo "ERROR: abnormal exit";
+	    exit' 1 2 3 15
+
+    $ trap 'rm tmp.$$' 0   # on program exit
+
+
+
+4. QUOTING
+
+You can't quote things reasonably in the csh:
+
+    set foo = "Bill asked, \"How's tricks?\""
+
+doesn't work.  This makes it really hard to construct strings with
+mixed quotes in them.  In the Bourne shell, this works just fine. 
+In fact, so does this:
+
+     cd /mnt; /usr/ucb/finger -m -s `ls \`u\``
+
+Dollar signs cannot be escaped in double quotes in the csh.  Ug.
+
+    set foo = "this is a \$dollar quoted and this is $HOME not quoted" 
+    dollar: Undefined variable.
+
+You have to use backslashes for newlines, and it's just darn hard to
+get them into strings sometimes.
+
+    set foo = "this \
+    and that";
+    echo $foo
+    this  and that
+    echo "$foo"
+    Unmatched ".  
+
+Say what?  You don't have these problems in the Bourne shell, where it's
+just fine to write things like this:
+
+    echo 	'This is 
+	     some text that contains
+	     several newlines.'
+
+
+As distributed, quoting history references is a challenge.  Consider:
+
+    % mail adec23!alberta!pixel.Convex.COM!tchrist
+    alberta!pixel.Convex.COM!tchri: Event not found.
+
+
+5. VARIABLE SYNTAX
+
+There's this big difference between global (environment) and local
+(shell) variables.  In csh, you use a totally different syntax 
+to set one from the other.  
+
+In the Bourne shell, this 
+    VAR=foo cmds args
+ is the same as
+    (export VAR; VAR=foo; cmd args)
+or csh's
+    (setenv VAR;  cmd args)
+ 
+You can't use :t, :h, etc on envariables.  Watch:
+	echo Try testing with $SHELL:t
+
+It's really nice to be able to say
+    
+    ${PAGER-more}
+or
+    FOO=${BAR:-${BAZ}}
+
+to be able to run the user's PAGER if set, and more otherwise.
+You can't do this in the csh.  It takes more verbiage.
+
+You can't get the process number of the last background command from the
+csh, something you might like to do if you're starting up several jobs in
+the background.  In the Bourne shell, the pid of the last command put in
+the background is available in $!.
+
+The csh is also flaky about what it does when it imports an 
+environment variable into a local shell variable, as it does
+with HOME, USER, PATH, and TERM.  Consider this:
+
+    % setenv TERM '`/bin/ls -l / > /dev/tty`'
+    % csh -f
+
+And watch the fun!
+
+
+6. EXPRESSION EVALUATION
+
+Consider this statement in the csh:
+
+
+    if ($?MANPAGER) setenv PAGER $MANPAGER
+
+
+Despite your attempts to only set PAGER when you want
+to, the csh aborts:
+
+    MANPAGER: Undefined variable.
+
+That's because it parses the whole line anyway AND EVALUATES IT!
+You have to write this:
+
+    if ($?MANPAGER) then
+	setenv PAGER $MANPAGER
+    endif
+
+That's the same problem you have here:
+
+    if ($?X && $X == 'foo') echo ok
+    X: Undefined variable
+
+This forces you to write a couple nested if statements.  This is highly
+undesirable because it renders short-circuit booleans useless in
+situations like these.  If the csh were the really C-like, you would
+expect to be able to safely employ this kind of logic.  Consider the
+common C construct:
+
+    if (p && p->member) 
+
+Undefined variables are not fatal errors in the Bourne shell, so 
+this issue does not arise there.
+
+While the csh does have built-in expression handling, it's not
+what you might think.  In fact, it's space sensitive.  This is an
+error
+
+   @ a = 4/2
+
+but this is ok
+
+   @ a = 4 / 2
+
+
+The ad hoc parsing csh employs fouls you up in other places 
+as well.  Consider:
+
+    % alias foo 'echo hi' ; foo
+    foo: Command not found.
+    % foo
+    hi
+
+
+
+7. ERROR HANDLING
+
+Wouldn't it be nice to know you had an error in your script before
+you ran it?   That's what the -n flag is for: just check the syntax.
+This is especially good to make sure seldom taken segments of code
+code are correct.  Alas, the csh implementation of this doesn't work.
+Consider this statement:
+
+    exit (i)
+
+Of course, they really meant
+
+    exit (1)
+
+or just
+
+    exit 1
+
+Either shell will complain about this.  But if you hide this in an if
+clause, like so:
+
+    #!/bin/csh -fn
+    if (1) then
+	exit (i)
+    endif
+
+The csh tells you there's nothing wrong with this script.  The equivalent
+construct in the Bourne shell, on the other hand, tells you this:
+
+
+    #!/bin/sh -n
+    if (1) then
+	exit (i)
+    endif
+
+    /tmp/x: syntax error at line 3: `(' unexpected
+
+
+
+RANDOM BUGS
+
+Here's one:
+
+    fg %?string
+    ^Z
+    kill  %?string
+    No match.
+
+Huh? Here's another
+
+    !%s%x%s
+
+Coredump, or garbage.
+
+If you have an alias with backquotes, and use that in backquotes in 
+another one, you get a coredump.
+
+Try this:
+    % repeat 3 echo "/vmu*"
+    /vmu*
+    /vmunix
+    /vmunix
+What???
+
+
+Here's another one:
+
+    % mkdir tst
+    % cd tst
+    % touch '[foo]bar'
+    % foreach var ( * )
+    > echo "File named $var"
+    > end
+    foreach: No match.
+
+
+8. SUMMARY
+
+
+While some vendors have fixed some of the csh's bugs (the tcsh also does
+much better here), many have added new ones.  Most of its problems can
+never be solved because they're not actually bugs per se, but rather the
+direct consequences of braindead design decisions.  It's inherently flawed.
+
+Do yourself a favor, and if you *have* to write a shell script, do it in the 
+Bourne shell.  It's on every UNIX system out there.  However, behavior 
+can vary.
+
+There are other possibilities.
+
+The Korn shell is the preferred programming shell by many sh addicts,
+but it still suffers from inherent problems in the Bourne shell's design,
+such as parsing and evaluation horrors.  The Korn shell or its
+public-domain clones and supersets (like bash) aren't quite so ubiquitous
+as sh, so it probably wouldn't be wise to write a sharchive in them that
+you post to the net.  When 1003.2 becomes a real standard that companies
+are forced to adhere to, then we'll be in much better shape.  Until
+then, we'll be stuck with bug-incompatible versions of the sh lying about.
+
+The Plan 9 shell, rc, is much cleaner in its parsing and evaluation; it is
+not widely available, so you'd be significantly sacrificing portability.
+No vendor is shipping it yet.
+
+If you don't have to use a shell, but just want an interpreted language,
+many other free possibilities present themselves, like Perl, REXX, TCL,
+Scheme, or Python.  Of these, Perl is probably the most widely available
+on UNIX (and many other) systems and certainly comes with the most
+extensive UNIX interface.  Increasing numbers vendors ship Perl with 
+their standard systems.  (See the comp.lang.perl FAQ for a list.)
+
+If you have a problem that would ordinarily use sed or awk or sh, but it
+exceeds their capabilities or must run a little faster, and you don't want
+to write the silly thing in C, then Perl may be for you.  You can get
+at networking functions, binary data, and most of the C library. There
+are also translators to turn your sed and awk scripts into Perl scripts,
+as well as a symbolic debugger.  Tchrist's personal rule of thumb is
+that if it's the size that fits in a Makefile, it gets written in the
+Bourne shell, but anything bigger gets written in Perl.
+
+See the comp.lang.{perl,rexx,tcl} newsgroups for details about these
+languages (including FAQs), or David Muir Sharnoff's comparison of 
+freely available languages and tools in comp.lang.misc and news.answers.

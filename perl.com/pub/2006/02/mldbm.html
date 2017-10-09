@@ -1,0 +1,1130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2006/02/debug-mod-perl.html" title="Debugging and Profiling mod_perl Applications" />
+    <link rel="next bookmark" href="/pub/2006/02/advanced-subroutines.html" title="Advanced Subroutine Techniques" />
+    
+    
+    <title>Managing Rich Data Structures - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-684" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Managing Rich Data Structures</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Dave Baker</span> on <abbr class="published" title="2006-02-16T00:00:00-08:00">February 16, 2006 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars-->
+<!-- sidebar ends -->
+
+<p>As a Perl beginner, I wrote many scripts that created text files to store
+snippets of data. Eventually I had hundreds of little text files in a data
+directory, each one holding one piece of information in the form of a text
+string. I decided to move from snippets to a single database. Here's how I did
+it.</p>
+
+<p>I didn't go all the way to creating a relational database with SQL, in part
+because I had not yet learned to use Perl modules to work with such databases.
+Plus I wanted to try the apparently simpler technique described in Chapters 11
+and 14 of <a href="http://www.oreilly.com/catalog/perlckbk2/">Perl Cookbook,
+2nd Edition</a>, namely the use of one of the DBM libraries. I was intrigued by
+the idea of creating and using a database without needing to learn SQL or run a
+database server such as PostgreSQL or MySQL.</p>
+
+<p>One of my scripts created HTML for a clickable banner ad; the HTML would be
+inserted into an HTML email newsletter I publish daily. For any particular
+issue, the script pulled data from three different text files, each of which
+held a different piece of information in the form of a text string on the
+file's first and only line:</p>
+
+<ul>
+<li>The URL of the advertiser's web page, to which the reader would be taken when the banner is clicked,</li>
+<li>The location of the .gif file (the banner), or</li>
+<li>A one-line headline that would appear above the banner.</li>
+</ul>
+
+<p>A different script created those files and named them according to (i) the
+type of data in the file and (ii) the date of the newsletter in which the ad
+would appear. For example, data for the December 9, 2005 ad was contained in
+three files named <em>url_2005_12_09</em>, <em>gif_2005_12_09</em> and
+<em>headline_2005_12_09</em>.</p>
+
+<h3>A Hash of Hashes</h3>
+
+<p>First I considered the kind of data structure needed to hold the data. I
+looked at the relationship between the three text files. It became clear that I
+basically had a hash for each ad. The data for any particular ad consisted of
+three different keys and their values: URL, gif and headline. The name of any
+particular file would provide the key (the type of information contained in the
+file). The contents of the file would provide the key's value.</p>
+
+<p>I thought about finding some way to store those hashes as an array of
+anonymous hashes (one hash per ad), but then I realized that an array wouldn't
+let me access a particular ad's data easily. The hashes would be in the order
+in which I saved them into the array, but that wouldn't translate easily to the
+ad for a particular date. For example, how would I know where to find the data
+for next Monday's newsletter? Is it in <code>$array[8] </code> or
+<code>$array[17]</code>? </p>
+
+<p>Hmm. Each anonymous hash could be identified by a particular date--the key
+(!) to locating the ad for any particular date. What kind of data structure
+associates a unique key with a value? A hash, of course! My data would fit
+nicely into a hash of hashes.</p>
+
+<p>The name I chose for the hash was <code>%data_for_ad_on</code>. Choosing a
+hash name that ends in a preposition provides a more natural-reading and
+meaningful name; the key for data for the December 8, 2005 banner ad would be
+<code>2005_12_08</code>, for example, and the way to access the value
+associated with that key would be <code>$data_for_ad_on{2005_12_08}</code>.</p>
+
+<p>In code, this is how the data for two days of newsletters could be
+represented as a hash of hashes:</p>
+
+<pre><code>%data_for_ad_on = (
+
+  '2005_12_08' =&gt; { 'url'      =&gt; 'http://roadrunners-r-us.com/index.html',
+                    'gif'      =&gt; 'http://myserver.com/banners/roadrunners_banner.gif',
+                    'headline' =&gt; 'Use Roadrunners R Us for speedy, reliable deliveries!',
+                  },
+
+  '2005_12_09' =&gt; { 'url'      =&gt; 'http://acme.com/index.html',
+                    'gif'      =&gt; 'http://myserver.com/banners/acme_banner.gif',
+                    'headline' =&gt; 'Look to Acme for quality, inexpensive widgets!',
+                  },
+);</code></pre>
+
+<p>The keys of the named hash are 2005_12_08 and 2005_12_09. Each key's value
+is a reference to an anonymous hash that contains its own keys and values. When
+a hash is created using braces instead of parentheses, its value is a reference
+to that unnamed, "anonymous" hash. I need to use a reference because a hash is
+permitted to contain only scalar keys and scalar values; another hash can't be
+stored as a value. A reference to that hash works, because it acts like a
+scalar.</p>
+
+<!-- sidebar begins -->
+ <csperl file="grab" domain="on" record="b/1714" template="b/article_sidebar2.view">
+<!-- sidebar ends -->
+
+<h3>Storing the Data</h3>
+
+<p>Now I knew what the data structure would be; but how would I store it? Being
+Perl, of course there's more than one way to store data to disk. Some of those
+solutions involve the parsing of potentially large amounts of data and then the
+need to programmatically find a particular desired piece of data, however.</p>
+
+<p>I came across a single-file database solution in Recipes 11.14 and 14.6 of
+<em>Perl Cookbook, 2nd Edition</em>. These describe the use of a DBM file on
+disk. A Perl script can read data from a DBM file as if it were contained in a
+hash in memory. For data having unique keys, it's a great fit. In addition to
+data persistence from one run of your script to the next, using a DBM database
+file means your script won't need to read all the data into memory. Instead,
+you pull up only data associated with a particular key. This applies especially
+to large data sets; a DBM database file on disk might hold data for hundreds of
+thousands of keys.</p>
+
+<p>A straightforward but tedious way to get data into a DBM file is shown
+below. The code creates a database called ad_data.db and inserts data for two
+newsletters.</p>
+
+<pre><code>#!/usr/local/bin/perl
+use strict;
+use warnings;
+use MLDBM qw( DB_File Storable );
+use Fcntl qw( :flock O_CREAT O_RDWR );
+
+my $db = '/www/cgi-bin/databases/ad_data.db';
+my %data_for_ad_on;
+
+tie %data_for_ad_on, 'MLDBM', $db, O_CREAT|O_RDWR, 0644
+  or die "Trouble opening $db, stopped: $!";
+
+%data_for_ad_on = (
+  '2005_12_09' =&gt; { 'url'      =&gt; 'http://acme.com/index.html',
+                    'gif'      =&gt; 'http://myserver.com/banners/acme_banner.gif',
+                    'headline' =&gt; 'Look to Acme for quality, inexpensive widgets!',
+                  },
+
+  '2005_12_08' =&gt; { 'url'      =&gt; 'http://roadrunners-r-us.com/index.html',
+                    'gif'      =&gt; 'http://myserver.com/banners/roadrunners_banner.gif',
+                    'headline' =&gt; 'Use Roadrunners R Us for speedy, reliable deliveries!',
+                  },
+);</code></pre>
+
+<p>After the script is run, the data contained in <code>%data_for_ad_on</code>
+are saved automatically into the DBM database file named
+<code>/www/cgi-bin/databases/ad_data.db</code>.</p>
+
+<p>The secret is Perl's <code>tie</code> function. It associates a particular
+hash (here named <code>%data_for_ad_on </code>) with a "class" and a file. A
+class that works for "complex" data (data containing references) is the <a
+href= "http://search.cpan.org/perldoc?MLDBM">MLDBM</a> module, available from
+CPAN.</p>
+
+<p>Note: if the values being stored are scalars only, a tied hash using the
+DB_File module as the class, rather than the <code>MLDBM</code> module, will be
+much easier to work with. I'm using <code>MLDBM</code> because my values
+include references to data structures. I'll discuss some of
+<code>MLDBM</code>'s limitations later in this article.</p>
+
+<p>The script shown above uses the <a
+href="http://search.cpan.org/perldoc?Fcntl">Fcntl</a> module to make it easier
+to create or update the DBM database file. The imported <code>
+O_CREAT|O_RDWR</code> parameters tell the script to create the database file if
+it doesn't yet exist or to update (read/write) the file if it exists.</p>
+
+<p>The <code>DB_File</code> and <code>Storable</code> parameters passed to
+<code>MLDBM</code> specify the particular kind of DBM database to use and the
+serialization module to use. They handle the behind-the-scenes conversion of
+references into strings. (A recent version of <code>MLDBM</code> is necessary
+to be able to specify such parameters.) <code>DB_File</code> won't work with
+every system, however, because it depends upon your system's configuration,
+like all DBM modules. In particular, the Berkeley DB library (a C library) must
+be present; see the <code>DB_File</code> documentation for details. You can get
+another DBM module from CPAN if <code>DB_File</code> won't work for you.</p>
+
+<p>Manually entering hash keys and their values into a script is time-consuming
+and error-prone, of course. I prefer to programmatically add data created or
+copied from existing files, and used a script to copy data from my hundreds of
+text files into the DBM database file.<p>
+
+<pre><code>#!/usr/local/bin/perl -T
+use strict;
+use warnings;
+use MLDBM qw( DB_File Storable );
+use Fcntl qw( :flock O_CREAT O_RDWR );
+
+my $db = '/www/cgi-bin/databases/ad_data.db';
+my %data_for_ad_on;
+
+tie %data_for_ad_on, 'MLDBM', $db, O_CREAT|O_RDWR, 0644
+  or die "Can't open $db: $!";
+
+my $data_dir = '/www/cgi-bin/newsletter_data_text_files';
+
+opendir my $dir_handle, $data_dir
+  or die "Can't open $data_dir, stopped: $!";
+
+# All of the data files are in the same directory; each file's name
+# is url_YYYY_MM_DD, gif_YYYY_MM_DD or headline_YYYY_MM_DD (where
+# YYYY is the year, MM is the month, with a leading zero if needed,
+# and DD is the day of the month, with a leading zero if needed).
+# No other files in that directory end with YYYY_MM_DD.
+
+my @data_files = grep { /\d\d\d\d_\d\d_\d\d$/ } readdir $dir_handle;
+
+close $dir_handle;
+
+my $entry;
+foreach my $file ( @data_files ) {
+
+  # Test the filename to see if the file contains the advertiser's
+  # URL...
+
+  if ($file =~ /^url_(\d\d\d\d_\d\d_\d\d)/ ) {
+
+      $entry = $data_for_ad_on{$1};
+
+      open (FILE, "$data_dir/$file") or die;
+      my $url = do { local $/; &lt;FILE&gt; };
+      close FILE;
+
+      $entry-&gt;{url}       = $url;
+      $data_for_ad_on{$1} = $entry;
+      print "Advertiser's URL for $1 has been saved.\n";
+
+  # Test the filename to see if the file contains the .gif location...
+
+  } elsif ($file =~ /^gif_(\d\d\d\d_\d\d_\d\d)/ ) {
+
+      $entry = $data_for_ad_on{$1};
+
+      open (FILE, "$data_dir/$file") or die;
+      my $gif = do { local $/; &lt;FILE&gt; };
+      close FILE;
+
+      $entry-&gt;{gif}       = $gif;
+      $data_for_ad_on{$1} = $entry;
+      print ".gif file location for $1 has been saved.\n";
+
+  # Test the filename to see if the file contains the headline...
+
+  } elsif ($file =~ /^headline_(\d\d\d\d_\d\d_\d\d)/ ) {
+
+      $entry = $data_for_ad_on{$1};
+
+      open (FILE, "$data_dir/$file") or die;
+      my $headline = do { local $/; &lt;FILE&gt; };
+      close FILE;
+
+      $entry-&gt;{headline}  = $headline;
+      $data_for_ad_on{$1} = $entry;
+      print "Headline for $1 has been saved.\n";
+  }
+
+}</code></pre>
+
+<p>A limitation of <code>MLDBM</code> is that you can't work piecemeal with the
+data structures (the values for keys in the tied hash). You must retrieve a
+copy of the data structure in the form of a reference (<code>$entry</code> in
+the example); use that reference to add, update or delete parts of the data
+structure; and then save the reference back to the database in order for
+<code>MLDBM</code> to put the changed data structure back onto disk. This is
+because the data structure is no longer tied, once it has been retrieved from
+disk.</p>
+
+<p>For example, the script above works piecemeal with the data structure: it
+builds one key at a time in the anonymous hash.  A temporary variable called
+$entry holds a reference to the retrieved anonymous hash, which now exists in
+memory; then <code>$entry</code> is used to dereference the anonymous hash (and
+to select a named key in the hash, on the right side of the infix operator);
+then the script alters a part of that data structure (assigning a value to the
+named key); then the now-changed anonymous hash is saved back into the database
+file on disk by assigning <code>$entry</code> to the key.</p>
+
+<p>As shown in earlier examples, an entire data structure can be stored as the
+value of a key in the tied hash without fetching the existing data structure
+(if any) associated with that key. In such a case, you're overwriting any
+existing data structure completely, so there is no need to fetch the existing
+data structure first or to work with it using the temporary variable
+technique.</p>
+
+<p>Note: a recently added CPAN module called <code>DBM_Deep</code> allows tied
+hashes of complex data as does <code>MLDBM</code>, but appears to avoid the
+need for fetching data first in order to work with it through a temporary
+variable.</p>
+
+<p>By the way, <code>MLDBM</code> allows stored data structures to be arrays,
+not just hashes. Hence <code>MLDBM</code> might be a good disk-based storage
+solution for you if a hash of arrays works best to hold your data. Plus,
+whether you're storing a hash of hashes or a hash of arrays, those stored
+hashes or arrays are permitted to contain values that consist of even more
+hashes or arrays!</p>
+
+<p>Another thing to know about <code>MLDBM</code> is that file locking is not
+provided automatically. The solution presented in this article works well in a
+single-user environment, but data corruption is possible when more than one
+instance of the script (or more than one script) needs to access the disk-based
+data while another process is writing to it. See section 10.2.1 of <a
+href="http://www.oreilly.com/catalog/cgi2/">CGI Programming with Perl</a> for
+an example of file locking with the DB_File DBM module.</p>
+
+<h3>Reading HoH Data</h3>
+
+<p>Here is a portion of a script that prints a report for my stored newsletter
+data.</p>
+
+<p>I reach into the <code>%data_for_ad_on</code> hash by specifying a key (the
+date of a particular newsletter); the key's associated value is a reference to
+the anonymous hash holding ad data for that date.  Use infix (arrow) notation
+to dereference the anonymous hash and also to access a specified key.</p>
+
+<pre><code>tie %data_for_ad_on, 'MLDBM', $db, O_RDWR, 0644
+  or die "Can't open $db: $!";
+
+my @newsletter_dates = sort keys %data_for_ad_on;
+
+foreach my $date ( @newsletter_dates ) {
+
+   my $url      = $data_for_ad_on{$date}-&gt;{url};
+   my $gif      = $data_for_ad_on{$date}-&gt;{gif};
+   my $headline = $data_for_ad_on{$date}-&gt;{headline};
+
+   print "\nHere are details for the banner ad in the $date newsletter:\n";
+   print "          Advertiser's URL: $url\n";
+   print "        Location of banner: $gif\n";
+   print "     Headline above banner: $headline\n";
+}</code></pre>
+
+<p>A temporary variable to work with the data was unnecessary because I was
+merely reading data. I had no need to save a changed data structure back to
+disk after working with it. A temporary variable would be needed as a reference
+to the data structure, as noted earlier, if I were adding, updating or deleting
+something in the data structure, in order to save the changed data structure
+back to disk.</p>
+
+<p>Nevertheless, a temporary variable is useful for storing a fetched data
+structure even when a tied hash is being used only to read data from disk. The
+<code>MLDBM</code> documentation points out that disk fetch occurs each time a
+script names a key in the tied hash; a new copy of the entire data structure
+for that key gets created with each fetch. For efficiency, scripts that merely
+    read data work better if the data structure for a particular key is stored
+    first into a temporary variable and the script works with that single copy
+    of data in memory. For example, the lines in the preceding code that get
+    values for <code>$url</code>, <code>$gif</code>, and <code>$headline</code>
+    should be rewritten to cut the number of fetches from three to one:</p>
+
+<pre><code>   my $entry    = $data_for_ad_on{$date};
+   my $url      = $entry-&gt;{url};
+   my $gif      = $entry-&gt;{gif};
+   my $headline = $entry-&gt;{headline};
+</code></pre>
+
+<h3>Updating HoH Data</h3>
+
+<p>My next task was to update existing data. An advertiser informed me that its
+web page had changed. The advertiser's banner ad in a particular upcoming
+newsletter needed to point to the new page rather than to the URL I had stored
+earlier for the ad. So I tried this:</p>
+
+<pre><code>tie %data_for_ad_on, 'MLDBM', $db, O_CREAT|O_RDWR, 0644
+  or die "Can't open $db: $!";
+
+$data_for_ad_on{'2005_12_14'}-&gt;{url}
+  = 'http://roadrunners-r-us.com/new_home_page.html';   # WRONG</code></pre>
+
+<p>Despite the apparently correct syntax, the line marked "# WRONG" did not
+change the data in the tied hash. <code>MLDBM</code> can't add, update or
+delete just a part of a data structure stored on disk; it must retrieve the
+entire data structure first. Unfortunately that doesn't happen automatically
+when a part of the tied hash is used as an lvalue (the left side of an
+assignment).</p>
+
+<p>Here is the correct syntax for updating part of a data structure:</p>
+
+<pre><code>my $entry = $data_for_ad_on{'2005_12_14'};                        # Get
+$entry-&gt;{url} = 'http://roadrunners-r-us.com/new_home_page.html'; # Change
+$data_for_ad_on{'2005_12_14'} = $entry;                           # Save</code></pre>
+
+<p>A different kind of update would be to add a new kind of information to an
+existing data structure. Until now I have been working with each ad's data as
+an anonymous hash of three keys because I only had three pieces of information
+per ad. Here's how I can modify the data structure for any particular ad--that
+is, the value of any particular key in the tied hash--to include a fourth piece
+of information. I'll record whether or not a particular ad has been billed.</p>
+
+<pre><code>tie %data_for_ad_on, 'MLDBM', $db, O_CREAT|O_RDWR, 0644
+  or die "Can't open $db: $!";
+
+my $entry = $data_for_ad_on{'2005_12_02'};  # Get
+$entry-&gt;{has_been_billed} = 'yes';           # Change (by creating a key and value)
+$data_for_ad_on{'2005_12_02'} = $entry;      # Save
+</code></pre>
+
+<p>Adding a fourth key as shown is not remarkable because it's done the same
+way I created the original three keys. But note how I've added a fourth key to
+just one of the ads (for the 2005_12_02 newsletter). I don't need to define
+such a fourth key in each of the other anonymous hashes because
+<code>MLDBM</code> doesn't require that the anonymous hashes have the same
+structure.</p>
+
+<p>Now that I've added a fourth key to one of the ads, I want to see that key's
+information when I run my report, even though the information for each of the
+other newsletters is incomplete. Just as with a hash in memory, the
+<code>exists</code> operator can test for the existence of a key in a tied
+hash, or test for the existence of a key in one of the stored anonymous hashes.
+The earlier reporting script can be improved:</p>
+
+<pre><code>foreach my $date ( @newsletter_dates ) {
+
+   my $entry    = $data_for_ad_on{$date};
+   my $url      = $entry-&gt;{url};
+   my $gif      = $entry-&gt;{gif};
+   my $headline = $entry-&gt;{headline};
+
+   my $has_been_billed = exists ( $entry-&gt;{has_been_billed} ) ?
+                         $entry-&gt;{has_been_billed}
+                         : 'Billing status is unknown';
+
+   print "\nHere are details for the banner ad in the $date newsletter:\n";
+   print "            Advertiser's URL: $url\n";
+   print "          Location of banner: $gif\n";
+   print "       Headline above banner: $headline\n";
+   print "  Has advertiser been billed? $has_been_billed\n";
+}
+</code></pre>
+
+<p>Note how a default value is provided for <code>$has_been_billed</code> (the
+string 'Billing status is unknown'). If
+<code>$entry-&gt;{has_been_billed}</code> had been assigned to
+<code>$has_been_billed</code> without providing a default value, the script (if
+it is using the <code>warnings</code> pragma) would report "Use of
+uninitialized value in concatenation (.) or string" every time it processes the
+"Has advertiser been billed?" statement for an anonymous hash that has no
+<code>'has_been_billed'</code> key. The value of a nonexistent key in a hash is
+undefined, whether or not the hash is tied.</p>
+
+<p>Because the value of a nonexistent key in a hash is undefined, remember when
+working with <code>MLDBM</code> not to assume your tied hash's keys will return
+either a reference to a data structure or a reference to an empty data
+structure. For example, this code produces a runtime error if the '2005_12_32'
+key does not exist in the tied hash (there is no December 32) and the script is
+using the strict pragma:</p>
+
+<code><pre>my $entry = $data_for_ad_on{2005_12_32};
+my %named_hash = %{ $entry };
+
+if ( $named_hash{url} ) {
+    print "The advertiser's URL for the ad dated 2005_12_32 is $named_hash{url}.\n";
+
+} else {
+    print "We have no URL on file for the ad dated 2005_12_32.\n";
+}</code></pre>
+
+<p>The runtime error would be 'Can't use string ("") as a HASH ref while "strict refs" in use' on the line number of <code>my %named_hash = %{ $entry }</code>. The code doesn't create a named hash that has no elements.</p>
+
+<h3>Conclusion</h3>
+
+<p>I hope this article helps you move from a swamp of weedy text files into the simplicity of a single disk-based database file. A DBM database file enables you to work with your data as if it were a single hash of keys and their values.</p>
+
+<p>The <code>MLDBM</code> module extends the "hash on a disk" capability by letting you store a key's value as a hash, as illustrated in this article, or store a key's value as an array.<p>
+
+<p><code>MLDBM</code> requires a special technique for working piecemeal with
+stored hashes (or stored arrays). Also, the solution described works well in my
+single-user environment; file locking to protect the disk-based data would
+become important in a multi-user environment such as a script executed by a
+publicly accessible web server.  Still, you get all this hash-like goodness for
+key-based data without running a relational database server or using SQL,
+without parsing large amounts of disk-based data, and without storing all the
+data in memory first.</p>
+
+<p>Happy hashing!</p>
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/cpan/" rel="tag">CPAN</a><span class="delimiter">,</span></li> <li class="entry-category"><a href="/pub/data-structures/" rel="tag">Data Structures</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=data%20persistence&amp;limit=20';return false;" rel="tag">data persistence</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=DBM&amp;limit=20';return false;" rel="tag">DBM</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=MLDBM&amp;limit=20';return false;" rel="tag">MLDBM</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=nested%20data%20structures&amp;limit=20';return false;" rel="tag">nested data structures</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=persistence&amp;limit=20';return false;" rel="tag">persistence</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=references&amp;limit=20';return false;" rel="tag">references</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

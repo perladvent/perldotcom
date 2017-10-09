@@ -1,0 +1,1158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2002/06/threads.html" title="Where Wizards Fear To Tread" />
+    <link rel="next bookmark" href="/pub/2002/06/synopsis5.html" title="Synopsis 5" />
+    
+    
+    <title>Improving mod_perl Sites' Performance: Part 2 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1316" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Improving mod_perl Sites' Performance: Part 2</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Stas Bekman</span> on <abbr class="published" title="2002-06-19T00:00:00-08:00">June 19, 2002 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+<p><i>In this article we will talk about tools that we need before we can start working on the performance of our service.</i></p>
+<p>
+</p>
+
+<h2><a name="essential_tools">Essential Tools</a></h2>
+<p>In order to improve performance, we need measurement tools. The main
+tool categories are benchmarking and code profiling.</p>
+<p>It's important to understand that, in a large number of the
+benchmarking tests that we will execute, we will not look at the
+absolute result numbers but the relation between two or more
+result sets. The purpose of the benchmarks is to try to show which
+coding approach is preferable. You shouldn't try to compare the
+<strong>absolute</strong> results presented in the articles with those that you get
+while running the same benchmarks on your machine, since you won't
+have the exact hardware and software setup anyway. This kind of
+comparison would be misleading.  If you compare the relative results
+from the tests running on your machine, then you will do the right thing.</p>
+
+<h3><a name="benchmarking_applications">Benchmarking Applications</a></h3>
+
+<p>How much faster is mod_perl than mod_cgi (aka plain Perl/CGI)?  There
+are many ways to benchmark the two.  I'll present a few examples and
+numbers below.  Check out the <code>benchmark</code> directory of the mod_perl
+distribution for more examples.</p>
+
+<csperl file="grab" domain="on" record="b/832" template="b/article_sidebar2.view">
+
+<p>There is no need to write a special benchmark though.  If you want to
+impress your boss or colleagues, then just take some heavy CGI script you
+have (e.g. a script that crunches some data and prints the results to
+STDOUT), open two xterms and call the same script in mod_perl mode in
+one xterm and in mod_cgi mode in the other. You can use <code>lwp-get</code>
+from the <code>LWP</code> package to emulate the browser.  The <code>benchmark</code>
+directory of the mod_perl distribution includes such an example.</p>
+
+<h4><a name="benchmarking_perl_code">Benchmarking Perl Code</a></h4>
+<p>If you are going to write your own benchmarking utility, then use the
+<code>Benchmark</code> module and the <code>Time::HiRes</code> module where you need
+better time precision (&lt;10msec).</p>
+
+<p>An example of the <code>Benchmark.pm</code> module usage:</p>
+
+<pre><code>
+  benchmark.pl
+  ------------
+  use Benchmark;
+  
+  timethis (1_000,
+   sub {
+    my $x = 100;
+    my $y = log ($x ** 100)  for (0..10000);
+  });
+
+  % perl benchmark.pl
+  timethis 1000: 25 wallclock secs (24.93 usr +  0.00 sys = 24.93 CPU)</code></pre>
+
+<p>If you want to get the benchmark results in microseconds, then you will
+have to use the <code>Time::HiRes</code> module. Its usage is similar to
+<code>Benchmark</code>'s.</p>
+
+<pre><code>
+  use Time::HiRes qw(gettimeofday tv_interval);
+  my $start_time = [ gettimeofday ];
+  sub_that_takes_a_teeny_bit_of_time();
+  my $end_time = [ gettimeofday ];
+  my $elapsed = tv_interval($start_time,$end_time);
+  print &quot;The sub took $elapsed seconds.&quot;</code></pre>
+
+<h4><a name="benchmarking_a_graphic_hits_counter_with_persistent_db_connections">Benchmarking a Graphic Hits Counter with Persistent DB Connections</a></h4>
+<p>Here are the numbers from Michael Parker's mod_perl presentation at
+the Perl Conference (Aug, 98).  The script is a standard hits counter,
+but it logs the counts into a mysql relational DataBase:</p>
+
+<pre><code>
+    Benchmark: timing 100 iterations of cgi, perl...  [rate 1:28]
+    
+    cgi: 56 secs ( 0.33 usr 0.28 sys = 0.61 cpu) 
+    perl: 2 secs ( 0.31 usr 0.27 sys = 0.58 cpu) 
+    
+    Benchmark: timing 1000 iterations of cgi,perl...  [rate 1:21]
+     
+    cgi: 567 secs ( 3.27 usr 2.83 sys = 6.10 cpu) 
+    perl: 26 secs ( 3.11 usr 2.53 sys = 5.64 cpu)      
+    
+    Benchmark: timing 10000 iterations of cgi, perl   [rate 1:21]
+     
+    cgi: 6494 secs (34.87 usr 26.68 sys = 61.55 cpu) 
+    perl: 299 secs (32.51 usr 23.98 sys = 56.49 cpu)</code></pre>
+
+<p>We don't know what server configurations were used for these tests,
+but I guess the numbers speak for themselves.</p>
+
+<p>The source code of the script was available online, but, sadly, isn't
+anymore. However, you can reproduce the same performance speedup with
+pretty much any CGI script written in Perl.</p>
+
+<h4><a name="benchmarking_response_times_with_apachebench">Benchmarking Response Times With ApacheBench</a></h4>
+
+<p>ApacheBench (<strong>ab</strong>) is a tool for benchmarking your Apache HTTP
+server.  It is designed to give you an idea of the performance that
+your current Apache installation can give.  In particular, it shows
+you how many requests per second your Apache server is capable of
+serving.  The <strong>ab</strong> tool comes bundled with the Apache source
+distribution.</p>
+
+<p>Let's try it.  We will simulate 10 users concurrently requesting a
+light script at <code>www.example.com/perl/test.pl</code>.  Each simulated
+user makes 10 requests.</p>
+
+<pre><code>
+  % ./ab -n 100 -c 10 www.example.com/perl/test.pl</code></pre>
+
+<p>The results are:</p>
+
+<pre><code>
+  Document Path:          /perl/test.pl
+  Document Length:        319 bytes
+  
+  Concurrency Level:      10
+  Time taken for tests:   0.715 seconds
+  Complete requests:      100
+  Failed requests:        0
+  Total transferred:      60700 bytes
+  HTML transferred:       31900 bytes
+  Requests per second:    139.86
+  Transfer rate:          84.90 kb/s received
+  
+  Connection Times (ms)
+                min   avg   max
+  Connect:        0     0     3
+  Processing:    13    67    71
+  Total:         13    67    74</code></pre>
+
+<p>We can see that under load of 10 concurrent users our server is
+capable of processing 140 requests per second. Of course, this
+benchmark is correct only when the script under test is used. We can
+also learn about the average processing time, which in this case was
+67 milliseconds. Other numbers reported by <code>ab</code> may or may not be of
+interest to you.</p>
+
+<p>For example, if we believe that the script <em>perl/test.pl</em> is not
+efficient, then we will try to improve it and run the benchmark again to
+see whether we have any improvement in performance.</p>
+
+<h4><a name="benchmarking_response_times_with_httperf">Benchmarking Response Times With httperf</a></h4>
+
+<p>httperf is a utility written by David Mosberger.  Just like
+ApacheBench, it measures the performance of the Web server.</p>
+
+<p>A sample command line is shown below:</p>
+
+<pre><code>
+  httperf --server hostname --port 80 --uri /test.html \
+   --rate 150 --num-conn 27000 --num-call 1 --timeout 5</code></pre>
+
+<p>This command causes httperf to use the Web server on the host with IP
+name <code>hostname</code>, running at port 80.  The Web page being retrieved is
+<em>/test.html</em> and, in this simple test, the same page is retrieved
+repeatedly.  The rate at which requests are issued is 150 per second.
+The test involves initiating a total of 27,000 TCP connections and on
+each connection one HTTP call is performed.  A call consists of
+sending a request and receiving a reply.</p>
+
+<p>The timeout option defines the number of seconds that the client is
+willing to wait to hear back from the server.  If this timeout
+expires, then the tool considers the corresponding call to have failed.
+Note that with a total of 27,000 connections and a rate of 150 per
+second, the total test duration will be approximately 180 seconds
+(27,000/150), independently of what load the server can actually
+sustain.  Here is a result that one might get:</p>
+
+<pre><code>
+     Total: connections 27000 requests 26701 replies 26701 test-duration 179.996 s
+    
+     Connection rate: 150.0 conn/s (6.7 ms/conn, &lt;=47 concurrent connections)
+     Connection time [ms]: min 1.1 avg 5.0 max 315.0 median 2.5 stddev 13.0
+     Connection time [ms]: connect 0.3
+     
+     Request rate: 148.3 req/s (6.7 ms/req)
+     Request size [B]: 72.0
+     
+     Reply rate [replies/s]: min 139.8 avg 148.3 max 150.3 stddev 2.7 (36 samples)
+     Reply time [ms]: response 4.6 transfer 0.0
+     Reply size [B]: header 222.0 content 1024.0 footer 0.0 (total 1246.0)
+     Reply status: 1xx=0 2xx=26701 3xx=0 4xx=0 5xx=0
+     
+     CPU time [s]: user 55.31 system 124.41 (user 30.7% system 69.1% total 99.8%)
+     Net I/O: 190.9 KB/s (1.6*10^6 bps)
+     
+     Errors: total 299 client-timo 299 socket-timo 0 connrefused 0 connreset 0
+     Errors: fd-unavail 0 addrunavail 0 ftab-full 0 other 0</code></pre>
+
+<h4><a name="benchmarking_response_times_with_http_load">Benchmarking Response Times With http_load</a></h4>
+
+<p><code>http_load</code> is yet another utility that does Web server load
+testing. It can simulate a 33.6 modem connection (<em>-throttle</em>) and
+allows you to provide a file with a list of URLs, which we be fetched
+randomly. You can specify how many parallel connections to run using
+the <em>-parallel N</em> option, or you can specify the number of requests
+to generate per second with <em>-rate N</em> option. Finally, you can tell
+the utility when to stop by specifying either the test time length
+(<em>-seconds N</em>) or the total number of fetches (<em>-fetches N</em>).</p>
+<p>A sample run with the file <em>urls</em> including:</p>
+
+<pre><code>
+  http://www.example.com/foo/
+  http://www.example.com/bar/</code></pre>
+
+<p>We ask to generate three requests per second and run for only two
+seconds. Here is the generated output:</p>
+
+<pre><code>
+  % ./http_load -rate 3 -seconds 2 urls
+  http://www.example.com/foo/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/bar/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/bar/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/bar/: check-connect SUCCEEDED, ignoring
+  http://www.example.com/foo/: check-connect SUCCEEDED, ignoring
+  5 fetches, 3 max parallel, 96870 bytes, in 2.00258 seconds
+  19374 mean bytes/connection
+  2.49678 fetches/sec, 48372.7 bytes/sec
+  msecs/connect: 1.805 mean, 5.24 max, 0.79 min
+  msecs/first-response: 291.289 mean, 560.338 max, 34.349 min</code></pre>
+<p>So you can see that it has reported 2.5 requests per second. Of course,
+for the real test you will want to load the server heavily and run the
+test for a longer time to get more reliable results.</p>
+<p>Note that when you provide a file with a list of URLs make sure that
+you don't have empty lines in it. If you do, then the utility won't work,
+complaining:</p>
+
+<pre><code>
+  ./http_load: unknown protocol -</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h4><a name="benchmarking_response_times_with_the_crashme_script">Benchmarking Response Times With crashme Script</a></h4>
+
+<p>This is another crashme suite originally written by Michael Schilli
+(and was located at <a href="http://www.linux-magazin.de">http://www.linux-magazin.de</a> site, but now the link
+has gone).  I made a few modifications, mostly adding <code>my()</code> operators.
+I also allowed it to accept more than one url to test, since sometimes
+you want to test more than one script.</p>
+
+<p>The tool provides the same results as <strong>ab</strong> above but it also allows
+you to set the timeout value, so requests will fail if not served
+within the time out period.  You also get values for <strong>Latency</strong>
+(seconds per request) and <strong>Throughput</strong> (requests per second).  It can
+do a complete simulation of your favorite Netscape browser :) and give
+you a better picture.</p>
+
+<p>I have noticed while running these two benchmarking suites, that <strong>ab</strong>
+gave me results from two and a half to three times better.  Both
+suites were run on the same machine, with the same load and the same
+parameters, but the implementations were different.</p>
+
+<p>Sample output:</p>
+
+<pre><code>
+  URL(s):          http://www.example.com/perl/access/access.cgi
+  Total Requests:  100
+  Parallel Agents: 10
+  Succeeded:       100 (100.00%)
+  Errors:          NONE
+  Total Time:      9.39 secs
+  Throughput:      10.65 Requests/sec
+  Latency:         0.85 secs/Request</code></pre>
+  
+<p>And the code:</p>
+
+<pre><code>
+  #!/usr/bin/perl -w
+  
+  use LWP::Parallel::UserAgent;
+  use Time::HiRes qw(gettimeofday tv_interval);
+  use strict;
+  
+  ###
+  # Configuration
+  ###
+  
+  my $nof_parallel_connections = 10; 
+  my $nof_requests_total = 100; 
+  my $timeout = 10;
+  my @urls = (
+            'http://www.example.com/perl/faq_manager/faq_manager.pl',
+            'http://www.example.com/perl/access/access.cgi',
+           );
+  
+  
+  ##################################################
+  # Derived Class for latency timing
+  ##################################################
+  
+  package MyParallelAgent;
+  @MyParallelAgent::ISA = qw(LWP::Parallel::UserAgent);
+  use strict;
+  
+  ###
+  # Is called when connection is opened
+  ###
+  sub on_connect {
+    my ($self, $request, $response, $entry) = @_;
+    $self-&gt;{__start_times}-&gt;{$entry} = [Time::HiRes::gettimeofday];
+  }
+  
+  ###
+  # Are called when connection is closed
+  ###
+  sub on_return {
+    my ($self, $request, $response, $entry) = @_;
+    my $start = $self-&gt;{__start_times}-&gt;{$entry};
+    $self-&gt;{__latency_total} += Time::HiRes::tv_interval($start);
+  }
+  
+  sub on_failure {
+    on_return(@_);  # Same procedure
+  }
+  
+  ###
+  # Access function for new instance var
+  ###
+  sub get_latency_total {
+    return shift-&gt;{__latency_total};
+  }
+  
+  ##################################################
+  package main;
+  ##################################################
+  ###
+  # Init parallel user agent
+  ###
+  my $ua = MyParallelAgent-&gt;new();
+  $ua-&gt;agent(&quot;pounder/1.0&quot;);
+  $ua-&gt;max_req($nof_parallel_connections);
+  $ua-&gt;redirect(0);    # No redirects
+  
+  ###
+  # Register all requests
+  ###
+  foreach (1..$nof_requests_total) {
+    foreach my $url (@urls) {
+      my $request = HTTP::Request-&gt;new('GET', $url);
+      $ua-&gt;register($request);
+    }
+  }
+  
+  ###
+  # Launch processes and check time
+  ###
+  my $start_time = [gettimeofday];
+  my $results = $ua-&gt;wait($timeout);
+  my $total_time = tv_interval($start_time);
+  
+  ###
+  # Requests all done, check results
+  ###
+  
+  my $succeeded     = 0;
+  my %errors = ();
+  
+  foreach my $entry (values %$results) {
+    my $response = $entry-&gt;response();
+    if($response-&gt;is_success()) {
+      $succeeded++; # Another satisfied customer
+    } else {
+      # Error, save the message
+      $response-&gt;message(&quot;TIMEOUT&quot;) unless $response-&gt;code();
+      $errors{$response-&gt;message}++;
+    }
+  }
+  
+  ###
+  # Format errors if any from %errors 
+  ###
+  my $errors = join(',', map &quot;$_ ($errors{$_})&quot;, keys %errors);
+  $errors = &quot;NONE&quot; unless $errors;
+  
+  ###
+  # Format results
+  ###
+  
+  #@urls = map {($_,&quot;.&quot;)} @urls;
+  my @P = (
+        &quot;URL(s)&quot;          =&gt; join(&quot;\n\t\t &quot;, @urls),
+        &quot;Total Requests&quot;  =&gt; &quot;$nof_requests_total&quot;,
+        &quot;Parallel Agents&quot; =&gt; $nof_parallel_connections,
+        &quot;Succeeded&quot;       =&gt; sprintf(&quot;$succeeded (%.2f%%)\n&quot;,
+                                   $succeeded * 100 / $nof_requests_total),
+        &quot;Errors&quot;          =&gt; $errors,
+        &quot;Total Time&quot;      =&gt; sprintf(&quot;%.2f secs\n&quot;, $total_time),
+        &quot;Throughput&quot;      =&gt; sprintf(&quot;%.2f Requests/sec\n&quot;, 
+                                   $nof_requests_total / $total_time),
+        &quot;Latency&quot;         =&gt; sprintf(&quot;%.2f secs/Request&quot;, 
+                                   ($ua-&gt;get_latency_total() || 0) / 
+                                   $nof_requests_total),
+       );
+  
+  my ($left, $right);
+  ###
+  # Print out statistics
+  ###
+  format STDOUT =
+  @&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; @*
+  &quot;$left:&quot;,        $right
+  .
+  
+  while(($left, $right) = splice(@P, 0, 2)) {
+    write;
+  }</code></pre>
+  
+<h4><a name="benchmarking_perlhandlers">Benchmarking PerlHandlers</a></h4>
+
+<p>The <code>Apache::Timeit</code> module does <code>PerlHandler</code> Benchmarking.  With
+the help of this module you can log the time taken to process the
+request, just like you'd use the <code>Benchmark</code> module to benchmark a
+regular Perl script.  Of course, you can extend this module to perform
+more advanced processing like putting the results into a database for
+a later processing.  But all it takes is adding this configuration
+directive inside <em>httpd.conf</em>:</p>
+
+<pre><code>
+  PerlFixupHandler Apache::Timeit</code></pre>
+
+<p>Since scripts running under <code>Apache::Registry</code> are running inside the
+PerlHandler these are benchmarked as well.</p>
+
+<p>An example of the lines which show up in the <em>error_log</em> file:</p>
+
+<pre><code>
+  timing request for /perl/setupenvoff.pl:
+    0 wallclock secs ( 0.04 usr +  0.01 sys =  0.05 CPU)
+  timing request for /perl/setupenvoff.pl:
+    0 wallclock secs ( 0.03 usr +  0.00 sys =  0.03 CPU)</code></pre>
+
+<p>The <code>Apache::Timeit</code> package is a part of the <em>Apache-Perl-contrib</em>
+files collection available from CPAN.</p>
+
+<h2><a name="references">References</a></h2>
+<ul>
+
+<li>
+The mod_perl site's URL: <br /> <a href="http://perl.apache.org">http://perl.apache.org</a>
+</li>
+
+<br /><br />
+<li>
+httperf -- webserver Benchmarking tool<br />
+<a href="http://www.hpl.hp.com/personal/David_Mosberger/httperf.html">http://www.hpl.hp.com/personal/David_Mosberger/httperf.html</a></li>
+
+<br /><br />
+<li>
+http_load -- another webserver Benchmarking tool<br />
+<a href="http://www.acme.com/software/http_load/">http://www.acme.com/software/http_load/</a></li>
+
+<br /><br />
+<li>
+Apache-Perl-contrib package<br />
+<a href="http://perl.apache.org/dist/contrib/">http://perl.apache.org/dist/contrib/</a></li>
+
+<br /><br />
+<li>
+<code>Time::HiRes</code><br />
+<a href="http://search.cpan.org/search?dist=Time-HiRes">http://search.cpan.org/search?dist=Time-HiRes</a> <br />
+and <code>Benchmark</code> is a part of the Core Perl</li>
+
+<br /> <br />
+<li>
+<code>LWP</code> (libwww-perl)<br />
+<a href="http://search.cpan.org/search?dist=libwww-perl">http://search.cpan.org/search?dist=libwww-perl</a></li>
+</ul>
+
+<hr size="1" noshade="noshade" />
+
+<p>Return to <a href="/">Perl.com</a></p>
+
+
+
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/mod-perl/" rel="tag">mod_perl</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=mod_perl%20benchmarking%20test&amp;limit=20';return false;" rel="tag">mod_perl benchmarking test</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

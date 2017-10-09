@@ -1,0 +1,1137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2003/03/20030302.html" title="This week on Perl 6, week ending 2003-03-02" />
+    <link rel="next bookmark" href="/pub/2003/03/apocalypse6.html" title="Apocalypse 6" />
+    
+    
+    <title>Improving mod_perl Sites' Performance: Part 8 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1082" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Improving mod_perl Sites' Performance: Part 8</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Stas Bekman</span> on <abbr class="published" title="2003-03-04T00:00:00-08:00">March  4, 2003 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+
+<p>In this article we continue talking about how to optimize your site
+for performance without touching code, buying new hardware or telling
+casts. A few simple <em>httpd.conf</em> configuration changes can improve the
+performance tremendously.</p>
+
+
+<h3><a name="choosing_minspareservers,_maxspareservers_and_startservers">Choosing MinSpareServers, MaxSpareServers and StartServers</a></h3>
+<p>With mod_perl enabled, it might take as much as 20 seconds from the
+time you start the server until it is ready to serve incoming
+requests.  This delay depends on the OS, the number of preloaded
+modules and the process load of the machine.  It's best to set
+<a href="#item_startservers"><code>StartServers</code></a> and <a href="#item_minspareservers"><code>MinSpareServers</code></a> to high numbers, so that if you
+get a high load just after the server has been restarted, the fresh
+servers will be ready to serve requests immediately.  With mod_perl,
+it's usually a good idea to raise all three variables higher than normal.</p>
+<p>In order to maximize the benefits of mod_perl, you don't want to kill
+servers when they are idle, rather you want them to stay up and
+available to handle new requests immediately.  I think an ideal
+configuration is to set <a href="#item_minspareservers"><code>MinSpareServers</code></a> and <a href="#item_maxspareservers"><code>MaxSpareServers</code></a> to
+similar values, maybe even the same.  Having the <a href="#item_maxspareservers"><code>MaxSpareServers</code></a>
+close to <a href="#item_maxclients"><code>MaxClients</code></a> will completely use all of your resources (if
+<a href="#item_maxclients"><code>MaxClients</code></a> has been chosen to take the full advantage of the
+resources), but it'll make sure that at any given moment your system
+will be capable of responding to requests with the maximum speed
+(assuming that number of concurrent requests is not higher than
+<a href="#item_maxclients"><code>MaxClients</code></a>).</p>
+<p>Let's try some numbers.  For a heavily loaded Web site and a dedicated
+machine, I would think of (note 400Mb is just for example):</p>
+<pre><code>
+  Available to webserver RAM:   400Mb
+  Child's memory size bounded:  10Mb
+  MaxClients:                   400/10 = 40 (larger with mem sharing)
+  StartServers:                 20
+  MinSpareServers:              20
+  MaxSpareServers:              35</code></pre>
+<p>However, if I want to use the server for many other tasks, but make it
+capable of handling a high load, I'd try:</p>
+<pre><code>
+  Available to webserver RAM:   400Mb
+  Child's memory size bounded:  10Mb
+  MaxClients:                   400/10 = 40
+  StartServers:                 5
+  MinSpareServers:              5
+  MaxSpareServers:              10</code></pre>
+<p>These numbers are taken off the top of my head, and shouldn't be used
+as a rule, but rather as examples to show you some possible scenarios.
+Use this information with caution.</p>
+
+<csperl file="grab" domain="on" record="b/832" template="b/article_sidebar2.view">
+
+<h3><a name="summary_of_benchmarking_to_tune_all_5_parameters">Summary of Benchmarking to Tune All 5 Parameters</a></h3>
+<p>OK, we've run various benchmarks -- let's summarize the conclusions:</p>
+<ul>
+<li><strong><a name="item_maxrequestsperchild">MaxRequestsPerChild</a></strong><br />
+
+If your scripts are clean and don't leak memory, then set this variable to
+a number as large as possible (10000?). If you use
+<code>Apache::SizeLimit</code>, then you can set this parameter to 0 (treated as
+infinity). You will want this parameter to be smaller if your code
+becomes gradually more unshared over the process' life. As well as this,
+<code>Apache::GTopLimit</code>
+can help, with its shared memory limitation feature.</li>
+
+
+<li><strong><a name="item_startservers">StartServers</a></strong><br />
+
+If you keep a small number of servers active most of the time, then keep
+this number low.  Keep it low especially if <a href="#item_maxspareservers"><code>MaxSpareServers</code></a> is also
+low, as if there is no load, Apache will kill its children before they
+have been utilized at all. If your service is heavily loaded, then make
+this number close to <a href="#item_maxclients"><code>MaxClients</code></a>, and keep <a href="#item_maxspareservers"><code>MaxSpareServers</code></a> equal
+to <a href="#item_maxclients"><code>MaxClients</code></a>.</li>
+
+
+<li><strong><a name="item_minspareservers">MinSpareServers</a></strong><br />
+
+If your server performs other work besides Web serving, then make this low
+so the memory of unused children will be freed when the load is light.
+If your server's load varies (you get loads in bursts) and you want
+fast response for all clients at any time, then you will want to make it
+high, so that new children will be respawned in advance and are
+waiting to handle bursts of requests.</li>
+
+
+<li><strong><a name="item_maxspareservers">MaxSpareServers</a></strong><br />
+
+The logic is the same as for <a href="#item_minspareservers"><code>MinSpareServers</code></a> - low if you need the
+machine for other tasks, high if it's a dedicated Web host and you
+want a minimal delay between the request and the response.</li>
+
+
+<li><strong><a name="item_maxclients">MaxClients</a></strong><br />
+
+Not too low, so you don't get into a situation where clients are
+waiting for the server to start serving them (they might wait, but not
+for very long).  However, do not set it too high.  With a high
+MaxClients, if you get a high load, then the server will try to serve all
+requests immediately.  Your CPU will have a hard time keeping up, and
+if the child size * number of running children is larger than the
+total available RAM, then your server will start swapping.  This will slow
+down everything, which in turn will make things even slower, until
+eventually your machine will die.  It's important that you take pains
+to ensure that swapping does not normally happen.  Swap space is an
+emergency pool, not a resource to be used routinely. If you are low on
+memory and you badly need it, then buy it.  Memory is cheap.
+<p>But based on the test I conducted above, even if you have plenty of
+memory like I have (1Gb), increasing <a href="#item_maxclients"><code>MaxClients</code></a> sometimes will give
+you no improvement in performance.  The more clients are running, the
+more CPU time will be required, the less CPU time slices each process
+will receive.  The response latency (the time to respond to a request)
+will grow, so you won't see the expected improvement.  The best
+approach is to find the minimum requirement for your kind of service
+and the maximum capability of your machine.  Then start at the minimum
+and test as I did, successively raising this parameter until you
+find the region on the curve of the graph of latency and/or throughput
+against MaxClients where the improvement starts to diminish.  Stop
+there and use it.  When you make the measurements on a production
+server you will have the ability to tune them more precisely, since
+you will see the real numbers.</p>
+<p>Don't forget that if you add more scripts, or even just modify the
+existing ones, then the processes will grow in size as you compile in more
+code.  When you do this, your parameters probably will need to be recalculated.</p></li>
+
+</ul>
+
+
+<h3><a name="keepalive">KeepAlive</a></h3>
+<p>If your mod_perl server's <em>httpd.conf</em> includes the following
+directives:</p>
+<pre><code>
+  KeepAlive On
+  MaxKeepAliveRequests 100
+  KeepAliveTimeout 15</code></pre>
+<p>you have a real performance penalty, since after completing the
+processing for each request, the process will wait for
+<code>KeepAliveTimeout</code> seconds before closing the connection and will
+therefore not be serving other requests during this time.  With this
+configuration, you will need many more concurrent processes on a server
+with high traffic.</p>
+<p>If you use some server status reporting tools, then you will see the
+process in <em>K</em> status when it's in <code>KeepAlive</code> status.</p>
+<p>The chances are that you don't want this feature enabled. Set it Off
+with:</p>
+<pre><code>
+  KeepAlive Off</code></pre>
+<p>The other two directives don't matter if <code>KeepAlive</code> is <code>Off</code>.</p>
+<p>You might want to consider enabling this option if the client's
+browser needs to request more than one object from your server for a
+single HTML page.  If this is the situation, then by setting
+<code>KeepAlive</code> <code>On</code> you will save
+the HTTP connection overhead for all requests but the first one for each
+page.</p>
+<p>For example: If you have a page with 10 ad banners, which is not
+uncommon today, then your server will work more effectively if a single
+process serves them all during a single connection.  However, your
+client will see a slightly slower response, since banners will be
+brought one at a time and not concurrently as is the case if each
+<code>IMG</code> tag opens a separate connection.</p>
+<p>Since keepalive connections will not incur the additional three-way
+TCP handshake, turning it on will be kinder to the network.</p>
+<p>SSL connections benefit the most from <code>KeepAlive</code> in cases
+where you haven't configured the server to cache session ids.</p>
+<p>You have probably followed the usual advice to send all the requests for
+static objects to a plain Apache server.  Since most pages include
+more than one unique static image, you should keep the default
+<code>KeepAlive</code> setting of the non-mod_perl server, i.e. keep it <code>On</code>.
+It will probably be a good idea also to reduce the timeout a little.</p>
+<p>One option would be for the proxy/accelerator to keep the connection
+open to the client but make individual connections to the server, read
+the response, buffer it for sending to the client and close the server
+connection.  Obviously, you would make new connections to the server as
+required by the client's requests.</p>
+<p>Also, you should know that <code>KeepAlive</code> requests only work with
+responses that contain a <code>Content-Length</code> header. To send this header
+do:</p>
+<pre><code>
+  $r-&gt;header_out('Content-Length', $length);</code></pre>
+
+
+<h3><a name="perlsetupenv_off">PerlSetupEnv Off</a></h3>
+<p><code>PerlSetupEnv Off</code> is another optimization you might consider. This
+directive requires mod_perl 1.25 or later.</p>
+<p><em>mod_perl</em> fiddles with the environment to make it appear as if the
+script were being called under the CGI protocol.  For example, the
+<code>$ENV{QUERY_STRING}</code> environment variable is initialized with the
+contents of <em>Apache::args()</em>, and the value returned by
+<em>Apache::server_hostname()</em> is put into <code>$ENV{SERVER_NAME}</code>.</p>
+<p>But <code>%ENV</code> population is expensive.  Those who have moved to the Perl
+Apache API no longer need this extra <code>%ENV</code> population, and can gain by
+turning it <strong>Off</strong>. Scripts using the <code>CGI.pm</code> module require
+<code>PerlSetupEnv On</code> because that module relies on a properly populated
+CGI environment table.</p>
+<p>By default it is "On."</p>
+<p>Note that you can still set environment variables.  For example, when
+you use the following configuration:</p>
+<pre><code>
+  PerlSetupEnv Off
+  PerlModule Apache::RegistryNG
+  &lt;Location /perl&gt;
+    PerlSetupEnv On
+    PerlSetEnv TEST hi
+    SetHandler perl-script
+    PerlHandler Apache::RegistryNG
+    Options +ExecCGI
+  &lt;/Location&gt;</code></pre>
+<p>and issue a request (for example
+<a href="http://localhost/perl/setupenvoff.pl)">http://localhost/perl/setupenvoff.pl)</a> for this script:</p>
+<pre><code>
+  setupenvoff.pl
+  --------------
+  use Data::Dumper;
+  my $r = Apache-&gt;request();
+  $r-&gt;send_http_header('text/plain');
+  print Dumper(\%ENV);</code></pre>
+<p>you should see something like this:</p>
+<pre><code>
+  $VAR1 = {
+            'GATEWAY_INTERFACE' =&gt; 'CGI-Perl/1.1',
+            'MOD_PERL' =&gt; 'mod_perl/1.25',
+            'PATH' =&gt; '/usr/lib/perl5/5.00503:... snipped ...',
+            'TEST' =&gt; 'hi'
+          };</code></pre>
+<p>Notice that we have got the value of the environment variable <em>TEST</em>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="reducing_the_number_of_stat()_calls_made_by_apache">Reducing the Number of <code>stat()</code> Calls Made by Apache</a></h3>
+
+<p>If you watch the system calls that your server makes (using <em>truss</em>
+or <em>strace</em>) while processing a request, then you will notice that a few
+<code>stat()</code> calls are made. For example, when I fetch
+http://localhost/perl-status and I have my DocRoot set to
+<em>/home/httpd/docs</em> I see:</p>
+<pre><code>
+  [snip]
+  stat(&quot;/home/httpd/docs/perl-status&quot;, 0xbffff8cc) = -1 
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;, {st_mode=S_IFDIR|0755, 
+                                 st_size=1024, ...}) = 0
+  [snip]</code></pre>
+<p>If you have some dynamic content and your virtual relative URI is
+something like <em>/news/perl/mod_perl/summary</em> (i.e., there is no such
+directory on the web server, the path components are only used for
+requesting a specific report), then this will generate <code>five(!)</code> <code>stat()</code>
+calls, before the <code>DocumentRoot</code> is found. You will see something
+like this:</p>
+<pre><code>
+  stat(&quot;/home/httpd/docs/news/perl/mod_perl/summary&quot;, 0xbffff744) = -1 
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs/news/perl/mod_perl&quot;,         0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs/news/perl&quot;,                  0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs/news&quot;,                       0xbffff744) = -1
+                      ENOENT (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;, 
+                      {st_mode=S_IFDIR|0755, st_size=1024, ...})  =  0</code></pre>
+<p>How expensive are those calls? Let's use the <code>Time::HiRes</code> module to
+find out.</p>
+<pre><code>
+  stat_call_sample.pl
+  -------------------
+  use Time::HiRes qw(gettimeofday tv_interval);
+  my $calls = 1_000_000;
+  
+  my $start_time = [ gettimeofday ];
+  
+  stat &quot;/app&quot; for 1..$calls;
+  
+  my $end_time = [ gettimeofday ];
+  
+  my $elapsed = tv_interval($start_time,$end_time) / $calls;
+  
+  print &quot;The average execution time: $elapsed seconds\n&quot;;</code></pre>
+<p>This script takes a time sample at the beginning, then does 1,000,000
+<code>stat()</code> calls to a nonexisting file, samples the time at the end
+and prints the average time it took to make a single <code>stat()</code> call.
+I'm sampling a million stats, so I'd get a correct average result.</p>
+<p>Before we actually run the script, one should distinguish between two
+different situations. When the server is idle, the time between the
+first and the last system call will be much shorter than the same time
+measured on the loaded system. That is because on the idle system, a
+process can use CPU very often, and on the loaded system lots of
+processes compete over it and each process has to wait for a longer
+time to get the same amount of CPU time.</p>
+<p>So first we run the above code on the unloaded system:</p>
+<pre><code>
+  % perl stat_call_sample.pl
+  The average execution time: 4.209645e-06 seconds</code></pre>
+<p>So it takes about 4 microseconds to execute a <code>stat()</code> call. Now let's
+start a CPU intensive process in one console. The following code keeps
+the CPU busy all the time.</p>
+<pre><code>
+  % perl -e '1**1 while 1'</code></pre>
+<p>And now run the <em>stat_call_sample.pl</em> script in the other console.</p>
+<pre><code>
+  % perl stat_call_sample.pl
+  The average execution time: 8.777301e-06 seconds</code></pre>
+<p>You can see that the average time has more than doubled (about 8
+microseconds). And this is obvious, since there were two processes
+competing for the CPU. Now if we run 4 occurrences of the above code:</p>
+<pre><code>
+  % perl -e '1**1 while 1' &amp;
+  % perl -e '1**1 while 1' &amp;
+  % perl -e '1**1 while 1' &amp;
+  % perl -e '1**1 while 1' &amp;</code></pre>
+<p>And when running our script in parallel with these processes, we get:</p>
+<pre><code>
+  % perl stat_call_sample.pl
+  2.0853558e-05 seconds</code></pre>
+<p>about 20 microseconds. So the average <code>stat()</code> system call is five times
+longer now. Now, if you have 50 mod_perl processes that keep the CPU
+busy all the time, the <code>stat()</code> call will be 50 times slower and it'll
+take 0.2 milliseconds to complete a series of call. If you have five
+redundant calls as in the strace example above, then they add up to 1
+millisecond. If you have more processes constantly consuming CPU, then this
+time adds up. Now multiply this time by the number of processes that
+you have and you get a few seconds lost. As usual, for some services,
+this loss is insignificant, while for others a very significant one.</p>
+<p>So why does Apache make all these redundant <code>stat()</code> calls?  You can blame
+the default installed <code>TransHandler</code> for this inefficiency.  Of
+course, you could supply your own, which will be smart enough not to
+look for this virtual path and immediately return <code>OK</code>. But in cases
+where you have a virtual host that serves only dynamically generated
+documents, you can override the default <code>PerlTransHandler</code> with this
+one:</p>
+<pre><code>
+  &lt;VirtualHost 10.10.10.10:80&gt;
+    ...
+    PerlTransHandler  Apache::OK
+    ...
+  &lt;/VirtualHost&gt;</code></pre>
+<p>As you see it affects only this specific virtual host.</p>
+<p>This has the effect of short circuiting the normal <code>TransHandler</code>
+processing of trying to find a filesystem component that matches the
+given URI -- no more 'stat's!</p>
+<p>Watching your server under strace/truss can often reveal more
+performance hits than trying to optimize the code itself!</p>
+<p>For example, unless configured correctly, Apache might look for the
+<em>.htaccess</em> file in many places, even if you don't have one, and
+make many unnecessary
+<code>open()</code> calls.</p>
+<p>Let's start with this simple configuration. We will try to reduce the
+number of irrelevant system calls.</p>
+<pre><code>
+  DocumentRoot &quot;/home/httpd/docs&quot;
+  &lt;Location /app/test&gt;
+    SetHandler perl-script
+    PerlHandler Apache::MyApp
+  &lt;/Location&gt;</code></pre>
+<p>The above configuration allows us to make a request to <em>/app/test</em>
+and the Perl <code>handler()</code> defined in <code>Apache::MyApp</code> will be
+executed. Notice that in the test setup there is no file to be
+executed (like in <code>Apache::Registry</code>). There is no <em>.htaccess</em> file
+as well.</p>
+<p>This is a typical generated trace.</p>
+<pre><code>
+  stat(&quot;/home/httpd/docs/app/test&quot;, 0xbffff8fc) = -1 ENOENT 
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs/app&quot;,      0xbffff8fc) = -1 ENOENT 
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;, 
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+  open(&quot;/.htaccess&quot;, O_RDONLY)                 = -1 ENOENT 
+        (No such file or directory)
+  open(&quot;/home/.htaccess&quot;, O_RDONLY)            = -1 ENOENT 
+        (No such file or directory)
+  open(&quot;/home/httpd/.htaccess&quot;, O_RDONLY)      = -1 ENOENT 
+        (No such file or directory)
+  open(&quot;/home/httpd/docs/.htaccess&quot;, O_RDONLY) = -1 ENOENT 
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs/test&quot;, 0xbffff774)    = -1 ENOENT 
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;, 
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0</code></pre>
+<p>Now we modify the <code>&lt;Directory&gt;</code> entry and add AllowOverride&nbsp;None,
+which among other things disables <em>.htaccess</em> files and will not try
+to open them.</p>
+<pre><code>
+  &lt;Directory /&gt;
+    AllowOverride None
+  &lt;/Directory&gt;</code></pre>
+<p>We see that the four <code>open()</code> calls for <em>.htaccess</em>
+have gone:</p>
+<pre><code>
+  stat(&quot;/home/httpd/docs/app/test&quot;, 0xbffff8fc) = -1 ENOENT 
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs/app&quot;,      0xbffff8fc) = -1 ENOENT 
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;, 
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
+  stat(&quot;/home/httpd/docs/test&quot;, 0xbffff774)    = -1 ENOENT 
+        (No such file or directory)
+  stat(&quot;/home/httpd/docs&quot;, 
+        {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0</code></pre>
+<p>Let's try to shortcut the <em>app</em> location with:</p>
+<pre><code>
+  Alias /app /</code></pre>
+<p>Which makes Apache to look for the file in the <em>/</em> directory and not
+under <em>/home/httpd/docs/app</em>. Let's run it:</p>
+<pre><code>
+  stat(&quot;//test&quot;, 0xbffff8fc) = -1 ENOENT (No such file or directory)</code></pre>
+<p>Wow, we've got only one stat call left!</p>
+<p>Let's remove the last <code>Alias</code> setting and use:</p>
+<pre><code>
+    PerlTransHandler  Apache::OK</code></pre>
+<p>as explained above. When we issue the request, we see no <code>stat()</code>
+calls. But this is possible only if you serve only dynamically
+generated documents, i.e. no CGI scripts. Otherwise, you will have to
+write your own <em>PerlTransHandler</em> to handle requests as desired.</p>
+<p>For example, this <em>PerlTransHandler</em> will not lookup the file on the
+filesystem if the URI starts with <em>/app</em>, but will use the default
+<em>PerlTransHandler</em> otherwise:</p>
+<pre><code>
+  PerlTransHandler 'sub { return shift-&gt;uri() =~ m|^/app| \
+                        ? Apache::OK : Apache::DECLINED;}'</code></pre>
+<p>Let's see the same configuration using the <code>&lt;Perl&gt;</code> section and a
+dedicated package:</p>
+<pre><code>
+  &lt;Perl&gt;  
+    package My::Trans;
+    use Apache::Constants qw(:common);
+    sub handler{
+       my $r = shift;
+       return OK if $r-&gt;uri() =~ m|^/app|;
+       return DECLINED;
+    }</code></pre>
+<pre><code>
+    package Apache::ReadConfig;  
+    $PerlTransHandler = &quot;My::Trans&quot;;
+  &lt;/Perl&gt;</code></pre>
+<p>As you see we have defined the <code>My::Trans</code> package and implemented
+the <code>handler()</code> function. Then we have assigned this handler to the
+<code>PerlTransHandler</code>.</p>
+<p>Of course you can move the code in the module into an external file,
+(e.g. <em>My/Trans.pm</em>) and configure the <code>PerlTransHandler</code> with</p>
+<pre><code>
+  PerlTransHandler My::Trans</code></pre>
+<p>in the normal way (no <code>&lt;Perl&gt;</code> section required).</p>
+
+
+<hr />
+<h1><a name="references">References</a></h1>
+<ul>
+<li>
+The mod_perl site's URL: <a href="http://perl.apache.org/">http://perl.apache.org/</a></li>
+
+
+<li>
+<code>Time::HiRes</code>:
+<a href="http://search.cpan.org/search?dist=Time-HiRes">http://search.cpan.org/search?dist=Time-HiRes</a></li>
+
+</ul>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/mod-perl/" rel="tag">mod_perl</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=mod_perl%20apache%20performance&amp;limit=20';return false;" rel="tag">mod_perl apache performance</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

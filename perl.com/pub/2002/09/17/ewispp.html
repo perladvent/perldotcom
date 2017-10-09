@@ -1,0 +1,1397 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2002/09/17/ewispp.html">
+<dc:title>Embedding Web Servers</dc:title>
+<dc:description> As with most of my previous articles, this one grew out of a project at my $DAY_JOB. The project du-jour involves large dependency graphs, often containing thousands of nodes and edges. Some of the relationships are automatically generated and...</dc:description>
+<dc:creator></dc:creator>
+<dc:date>2002-09-18T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2002/09/p6pdigest/20020915.html" title="This week on Perl 6 (9/9 - 9/15, 2002)" />
+    <link rel="next bookmark" href="/pub/2002/09/p6pdigest/20020922.html" title="This week on Perl 6 (9/16 - 9/22, 2002)" />
+    
+    
+    <title>Embedding Web Servers - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1360" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Embedding Web Servers</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            <abbr class="published" title="2002-09-18T00:00:00-08:00">September 18, 2002 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+
+<p>As with most of my previous articles, this one grew out of a project at
+my $DAY_JOB.  The project du-jour involves large dependency graphs,
+often containing thousands of nodes and edges.  Some of the
+relationships are automatically generated and can be quite
+complicated.  When something goes wrong, it's useful to be able to
+visualize the graph.</p>
+<p>Simple Graph:</p>
+<img src="/pub/2002/09/17/graphics/graph.gif" alt="A Simple Graph" /><p>We 
+use <a href="http://www.graphviz.org">GraphViz</a> for rendering the graph,
+but it falls down on huge graphs.  They turn into an unreadable mess
+of thick lines -- less than useful.  To work around this, we trim down the
+graph to just a segment, centered around one node, and display
+only n inputs or outputs.</p>
+<p>This works great, except that the startup time to create the graph
+data can be quite long, because of all the graph processing that is
+necessary to make sure the information is up to date.  (The actually
+graph rendering is quite fast, for small graphs.)</p>
+<p>The solution?  Process the data once, and render it multiple times,
+using, yes, you guessed it, a Web interface!</p>
+
+
+<h4><a name="mechanics_of_http">Mechanics of HTTP</a></h4>
+<p>The <a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html">Hyper Text Transfer Protocol (HTTP)</a>, is the
+protocol on which most of the Web thrives.  It is a simple
+client/server protocol that runs over TCP/IP sockets.</p>
+<p>Extremely oversimplified, it looks like this:</p>
+
+<ul>
+<li>
+Client sends request to server: &quot;Send me document named X&quot;</li>
+
+<li>
+Server responds to client: &quot;Here's the data you asked for&quot; (or &quot;Sorry!
+I don't know what you mean.&quot;)</li>
+
+</ul>
+
+<p>In practice, it's not much more complicated:</p>
+<p>We will use <a href="http://www.wget.org">wget</a> to examine a sample HTTP
+request:</p>
+<p><code>wget -dq http://www.perl.org/index.shtml</code></p>
+<pre><code>
+ ---request begin---
+ GET /index.shtml HTTP/1.0
+ User-Agent: Wget/1.8.1
+ Host: www.perl.org
+ Accept: */*
+ Connection: Keep-Alive
+ 
+ ---request end---
+ HTTP/1.1 200 OK
+ Date: Tue, 13 Aug 2002 18:12:23 GMT
+ Server: Apache/2.0.40 (Unix)
+ Accept-Ranges: bytes
+ Content-Length: 10494
+ Keep-Alive: timeout=15, max=100
+ Connection: Keep-Alive
+ Content-Type: text/html; charset=ISO-8859-1
+ 
+ &lt;... data downloaded to a file by wget...&gt;</code></pre>
+<p>There's a lot of things we don't care about in a simple server - so
+lets boil it down to the guts.</p>
+<p>Request:</p>
+<pre><code>
+ GET /index.shtml HTTP/1.0</code></pre>
+ 
+<p><code>GET</code> is the type of HTTP action.  There are others, but they're
+beyond the scope of this article.</p>
+
+<p><code>/index.shtml</code> is the name of the page to retrieve.</p>
+
+<p><code>HTTP/1.0</code> is the protocol version supported by your client.</p>
+
+<p>Response:</p>
+<pre><code>
+ HTTP/1.1 200 OK
+ Content-Type: text/html;
+ 
+ &lt;data&gt;</code></pre>
+ 
+<p>The first line is the status response.  It includes the HTTP protocol
+version supported by the server, followed by the 
+<a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10">status code</a> and
+a short text string defining the status.</p>
+
+<p>For this article, we'll just care about status code 200 (everything
+is ok, here's the data) and code '404' (not found).</p>
+
+<p>The next line is the MIME content type.  This is required so that the
+Web browser knows how to display the data.</p>
+
+<p>Common Content-Types:</p>
+
+<pre><code>
+        text/html       a HTML document
+        text/plain      a plain text document
+        image/jpeg      a JPEG image
+        image/gif       a GIF image</code></pre>
+		
+<p>After the above &quot;header&quot; section, there must be a blank line, and then
+the bytes containing the data.  There's a lot more information that
+can go into the header block, but for the simple applications we will
+be developing, they are not needed.</p>
+
+<p>You can use a telnet client to retrieve data from any Web server.  You
+need to be careful though - many modern Web servers are virtual hosted,
+which means they require the Host: header in the request to retrieve
+the appropriate data.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="writing_a_simple_webserver">Writing A Simple Web Server</a></h3>
+
+
+<h4><a name="the_basics">The Basics</a></h4>
+
+<p>With the above information, it isn't hard to write your own simple
+Web server.  There are several ways to do this and a few already
+written on CPAN.  We're going to start from first principles though,
+and pretend, for the moment, we don't know about CPAN.</p>
+
+<p>A good place to start looking for client/server information is in the
+<a href="http://www.perldoc.com/perl5.8.0/pod/perlipc.html">perlipc</a> document.
+About 2/3 of the way through is a section on &quot;Internet TCP Clients and
+Servers&quot;.  This section shows how to use simple socket commands to
+setup a simple server.  A little further down is the section we're
+interested in - it demonstrates using the IO::Socket module to write a
+simple TCP server.  I'll replicate that here.</p>
+
+<pre><code>
+ #!/usr/bin/perl -w
+ use IO::Socket;
+ use Net::hostent;              # for OO version of gethostbyaddr
+ 
+ $PORT = 9000;                  # pick something not in use
+ 
+ $server = IO::Socket::INET-&gt;new( Proto     =&gt; 'tcp',
+                                  LocalPort =&gt; $PORT,
+                                  Listen    =&gt; SOMAXCONN,
+                                  Reuse     =&gt; 1);
+								  
+ die &quot;can't setup server&quot; unless $server;
+ print &quot;[Server $0 accepting clients at http://localhost:$PORT/]\n&quot;;
+ 
+ while ($client = $server-&gt;accept()) {
+   $client-&gt;autoflush(1);
+   print $client &quot;Welcome to $0; type help for command list.\n&quot;;
+   $hostinfo = gethostbyaddr($client-&gt;peeraddr);
+   printf &quot;[Connect from %s]\n&quot;, $hostinfo-&gt;name || $client-&gt;peerhost;
+   print $client &quot;Command? &quot;;
+   while ( &lt;$client&gt;) {
+     next unless /\S/;       # blank line
+     if    (/quit|exit/i)    { last; }
+     elsif (/date|time/i)    { printf $client &quot;%s\n&quot;, scalar localtime; }
+     elsif (/who/i )         { print  $client `who 2&gt;&amp;1`; }
+     elsif (/cookie/i )      { print  $client `/usr/games/fortune 2&gt;&amp;1`; }
+     elsif (/motd/i )        { print  $client `cat /etc/motd 2&gt;&amp;1`; }
+     else {
+       print $client &quot;Commands: quit date who cookie motd\n&quot;;
+     }
+   } continue {
+      print $client &quot;Command? &quot;;
+   }
+   close $client;
+ }</code></pre>
+
+
+<h4><a name="httpify_it">HTTPify It</a></h4>
+
+<p>That's not a HTTP server by any stretch of the imagination, but with a
+different inner loop it could easily become one:</p>
+
+<pre><code>
+ while ($client = $server-&gt;accept()) {
+   $client-&gt;autoflush(1);
+   
+   my $request = &lt;$client&gt;;
+   if ($request =~ m|^GET /(.+) HTTP/1.[01]|) {
+      if (-e $1) {
+       print $client &quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&quot;;
+       open(my $f,&quot;&lt;$1&quot;);
+       while(&lt;$f&gt;) { print $client $_ }; 
+      } else {
+       print $client &quot;HTTP/1.0 404 FILE NOT FOUND\n&quot;;
+       print $client &quot;Content-Type: text/plain\n\n&quot;;
+       print $client &quot;file $1 not found\n&quot;;
+      }      
+   } else {
+     print $client &quot;HTTP/1.0 400 BAD REQUEST\n&quot;;
+     print $client &quot;Content-Type: text/plain\n\n
+     print $client &quot;BAD REQUEST\n&quot;;
+   }
+   close $client;
+ }</code></pre>
+ 
+<p>Let's look at the changes piece by piece:</p>
+
+<pre><code>
+   my $request = &lt;$client&gt;;</code></pre>
+   
+<p>Retrieve one line from the socket connected to the client.  For this
+to be a valid HTTP request, it must match the following:</p>
+
+<pre><code>
+   if ($request =~ m|^GET /(.+) HTTP/1.[01]|) {</code></pre>
+   
+<p>That checks that it's a HTTP GET request, and is of a protocol version
+we know about.</p>
+
+<pre><code>
+      if (-e $1) {
+       print &quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&quot;;
+       open(my $f,&quot;&lt;$1&quot;);
+       while(&lt;$f&gt;) { print $client $_ };</code></pre>
+	   
+<p>If the requested file exists, then send back a HTTP header that says that,
+along with a content type, and then the data.  (We are assuming the
+content type is HTML here.  Most http servers figure out the content
+type from the extension of the file.)</p>
+
+<pre><code>
+      } else {
+       print $client &quot;HTTP/1.0 404 FILE NOT FOUND\n&quot;;
+       print $client &quot;Content-Type: text/plain\n\n&quot;
+       print $client &quot;file $1 not found\n&quot;;
+      }</code></pre>
+	  
+<p>If the file doesn't exist, then send back a 404 error.  The content of the
+error is a description of what went wrong.</p>
+
+<pre><code>
+   } else {
+     print $client &quot;HTTP/1.0 400 BAD REQUEST\n&quot;;
+     print $client &quot;Content-Type: text/plain\n\n
+     print $client &quot;BAD REQUEST\n&quot;;
+   }</code></pre>
+   
+<p>A similar error handler, in case we can't parse the request.</p>
+
+<p>Almost 50 percent of the code is for error handling, and that doesn't even
+take into account the error handling we didn't do for I/O issues.  But
+that's the core of a Web server, all in about 15 lines of Perl.</p>
+
+<p>
+If you use the above code without modification, it will allow <I>every          
+file on your system</i> to be read.  Generally, this is a bad thing.  An          
+explanation of proper security is outside the scope of this article,           
+but generally you want to limit access to a subset of files, located           
+under some directory prefix.  <code>File::Spec::canonpath</code> and
+<code>Cwd::realpath</code> are useful functions for testing this. 
+</p>
+
+<h3><a name="single_threaded,_non_forking,_blocking">Single Threaded, Nonforking, Blocking</a></h3>
+<p>The Web server presented above is very simple.  It only deals with
+one request at a time.  If a second request is received while the
+first is being processed, then it will be <strong>blocked</strong> until the first
+completes.</p>
+
+<p>There are two schemes used to take advantage of modern computers'
+ability to multiprocess (run more than one thing at once.)  The
+simplest way is to fork off a Web server process for each incoming
+request.  Because of forking overhead, many servers pre-fork.  The
+second method is to create multiple threads.  (Threads are lighter
+weight than processes.)</p>
+
+<p>For a simple embedded server, it isn't much more difficult to build a
+forking server, but the extra work is unnecessary if it's only going
+to be used by one person or with a low hit-rate.  The only advantage
+to the forking method is that it can serve multiple pages at once.
+(Taking advantage of modern operating systems ability to
+multiprocess.)</p>
+
+<p>More information on forking servers, can be found in the
+<a href="http://www.perldoc.com/perl5.8.0/pod/perlipc.html">perlipc</a>
+documentation.</p>
+
+<p>With a simple modification to our loop, we can turn our Web server into
+a forking client:</p>
+
+<pre><code>
+ while ($client = $server-&gt;accept()) {
+   my $pid = fork();
+   die &quot;Cannot fork&quot; unless defined $pid;
+   do { close $client; next; } if $pid; # parent
+   # fall through in child
+   $client-&gt;autoflush(1);</code></pre>
+
+
+
+
+<h3><a name="structure">Structure</a></h3>
+<p>The example server above is useful for simple reporting of generated
+data.  Because the accept loop is closed, all processing by the main
+part of the program needs to be complete before the Web server is run.
+(Of course, actions from the Web server can trigger other pieces of the
+program to run.)</p>
+<p>There are other ways to integrate a simple Web server depending on the
+structure of your program, but for this article, we'll stick with the
+design above.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="graph_walker">Graph Walker</a></h3>
+<p>Above we mentioned using GraphViz to create an embedded graph viewer.
+To do that we'll use a Graph class that has some methods that will
+make our life easier.  (There isn't actually a class that does all
+this, but you can do it with a combination of Graph and GraphViz
+available on CPAN.)</p>
+<p>It is outside the scope of this article to cover graph operations, but
+I've named the methods so that they should be easy to figure out.  I
+am also going to gloss over some of the GraphViz details.  They can be
+picked up from a tutorial.</p>
+
+
+<h4><a name="three_easy_steps">Three Easy Steps</a></h4>
+
+<ol>
+<li><p><strong><a name="item_define_the_goal">Define the Goal</a></strong></p>
+
+<p>This is the easy part.
+</p>
+<p>To develop a graph browser that allows the user to click on a node to
+recenter the graph.</p>
+</li>
+
+<li><p><strong><a name="item_define_the_url_scheme">Define the URL scheme</a></strong></p>
+
+<p>How is the Web browser going to communicate back to the Web server?
+The only way it can is by requesting pages (via URLs.)  For a graph
+browser we need two different kinds.
+</p>
+
+<p>First, an image representing the graph.  Second, a HTML page containing
+the <strong>IMG</strong> tag for the graph and the 
+<a href="http://www.cris.com/~automata/tutorial.shtml">imagemap</a>.</p>
+
+<p>Since every node has a unique name we can use that to represent which
+node, and then use an extension to determine whether it is the HTML
+page or the graphic.</p>
+<pre><code>
+    node1.html - HTML page for graph centered on node1
+    node1.gif  - GIF image for graph centered on node1</code></pre>
+
+</li>
+
+<li><p><strong><a name="item_implement%21">Implement!</a></strong></p>
+
+<p>Now that you know what you're building, you can put it all together
+and implement it.
+</p>
+
+</li>
+</ol>
+
+<pre><code>
+ my $graph = do_something_and_build_a_graph();
+ 
+ while ($client = $server-&gt;accept()) {
+   $client-&gt;autoflush(1);
+   
+   my $request = &lt;$client&gt;;
+   if ($request =~ m|^GET /(.+)\.(html|gif) HTTP/1.[01]|) {
+      if ($graph-&gt;has_node($1)) {
+       if ($2 eq &quot;gif&quot;) {
+         send_gif( $client, $1 );
+       } else { # $2 must be 'html'
+         send_html( $client, $1 );
+       }
+      } else {
+       print $client &quot;HTTP/1.0 404 NODE NOT FOUND\n&quot;;
+       print $client &quot;Content-Type: text/plain\n\n&quot;;
+       print $client &quot;node $1 not found\n&quot;;
+      }      
+   } else {
+     print $client &quot;HTTP/1.0 400 BAD REQUEST\n&quot;;
+     print $client &quot;Content-Type: text/plain\n\n
+     print $client &quot;BAD REQUEST\n&quot;;
+   }
+   close $client;
+ }
+ 
+ sub send_html {
+    my ($client, $node) = @_;
+	
+    my $subgraph = $graph-&gt;subgraph( $node, 2, 2 );
+    
+    my $csimap = $subgraph-&gt;as_csimap( &quot;graphmap&quot; );
+    my $time = scalar localtime;
+	
+    print $client &quot;HTTP/1.0 200 OK\nContent-Type: text/html\n\n&quot;;
+	
+    print $client&lt;&lt;&quot;EOF&quot;;
+	
+    &lt;HTML&gt;
+     &lt;HEAD&gt;
+      &lt;TITLE&gt;Graph centered on $node&lt;/TITLE&gt;
+      $csimap
+     &lt;/HEAD&gt;
+     &lt;BODY&gt;
+     &lt;H1&gt;Graph centered on $node&lt;/H1&gt;
+     &lt;IMG SRC=&quot;/$node.gif&quot; USEMAP=&quot;graphmap&quot; BORDER=0&gt;
+     &lt;HR&gt;
+     &lt;SMALL&gt;Page generated at $time&lt;/SMALL&gt;
+     &lt;/BODY&gt;
+    &lt;/HTML&gt;
+  
+  EOF
+     ;
+	 
+  }
+  
+ sub send_gif {
+    my ($client, $node) = @_;
+	
+    my $subgraph = $graph-&gt;subgraph( $node, 2, 2 );
+    
+    my $gif = $subgraph-&gt;as_gif();
+	
+    print $client &quot;HTTP/1.0 200 OK\nContent-Type: text/gif\n\n&quot;;
+	
+    print $client $gif;
+	
+  }     
+    
+And that's it!  We have created a dynamic graph browser.</code></pre>
+
+<p>I will admit that we glossed over some of the HTML and Client Side
+Imagemap details -- because they're tangential to the issue of embedding
+a Web server into a tool.  An embedded Web server is like merging the
+Web server, cgi script and source of the data into one program --
+sometimes the best way to build one is to start with a standard CGI
+script and use that.</p>
+
+
+<h3><a name="more_details">More Details</a></h3>
+
+
+<h4><a name="query_strings">Query Strings</a></h4>
+
+<p>Because our embedded Web server isn't serving actual files off of your
+hard drive you have lots of flexibility as to how to parse the
+requested URL.  In normal Web servers the common way to pass extra
+arguments to requested pages/scripts is by using a <strong>query string</strong>.</p>
+
+<p>A URL with a query string looks like this:</p>
+
+<pre><code>
+    http://foo.bar/thepage.html?querystring</code></pre>
+	
+<p>There is a convention for passing key/value data in query strings
+(from HTML FORM's for example):</p>
+
+<pre><code>
+    http://foo.bar/page.html?keyone=dataone&amp;keytwo=datatwo&amp;keythree=3&quot;</code></pre>
+	
+<p>It's easy to modify our embedded webserver template to accept query
+strings.  Just add it to the regular expression that parses the
+request:</p>
+
+<pre><code>
+   if ($request =~ m|^GET /(.+)(?:\?(.*))? HTTP/1.[01]|) {</code></pre>
+   
+<p>$2 will then contain the query string.  You can parse it by hand or
+pass it to CGI.pm or another CGI Module to parse it.</p>
+
+
+<h4><a name="uri_escaping">URI Escaping</a></h4>
+
+<p>Some characters have special meaning in URIs.  (We've already seen ?
+and &amp;.  Others are &quot; (space), %, and #.  See the RFC for the full
+list.)  In order to allow them to be passed in requests they need to
+be escaped.  Escaping a URI changes the special characters into their
+hex representation with a prepended %.  For example, &quot; becomes %20.</p>
+
+<p>The easiest way to perform this encoding is to use the URI::Escape
+module.</p>
+
+<pre><code>
+ use URI::Escape;
+ $safe = uri_escape(&quot;10% is enough\n&quot;);
+  # $safe is &quot;10%25%20is%20enough%0D&quot;;
+ $str  = uri_unescape($safe);
+  # $str is 10% is enough\n</code></pre>
+  
+<p>We will want to unescape any data received from the client:</p>
+
+<pre><code>
+    if ($request =~ m|^GET /(.+)(?:\?(.*))? HTTP/1.[01]|) {
+      my $page = uri_unescape($1);
+      my $querystring = uri_unescape($2);</code></pre>
+
+
+
+
+<h3><a name="more_ideas">More Ideas</a></h3>
+
+<p>You might want to embed a Web server into a tool to display the status
+of a task in a complicated way.  Sure, you could just write the file
+to disk, but that's less fun!</p>
+
+<p>If a task has multiple possible outputs, then you could use the Web server
+to allow the user to choose between them visually, or pop up a browser at various states of a project to let the user
+confirm that things are going according to plan.</p>
+
+<p>Speaking of popping up, you don't need to make the user do anything to
+see the results of the page.  You can force the browser to do it
+for you.</p>
+
+<p>On UNIX systems you can use Mozilla/Netscape's 
+<a href="http://wp.netscape.com/newsref/std/x-remote.html">X-Remote protocol</a>:</p>
+
+<pre><code>
+    system(q[netscape -remote 'openURL(&quot;http://localhost:9000/&quot;)' &amp;]);</code></pre>
+	
+<p>Our example code has a port number hardcoded into it.  If that port is
+already being used on your system, then the IO::Socket::INET::new() call
+will fail.  An easy improvement is to loop over a range of ports, or
+random port numbers, until an available port is found.</p>
+
+
+<h3><a name="reusable_code">Reusable Code</a></h3>
+
+<p>In some cases, I've avoided the use of modules in this article.  There
+are many things that could be done with modules including argument
+handling (CGI.pm), URI/URL parsing (the URI family of modules), and
+even the HTTP server itself.  (HTTP::Daemon)</p>
+
+<p>The code we've presented here tries to go through the behind the
+scenes process so you know what's going on.</p>
+
+<p>For quick and dirty servers, HTTP::Daemon is probably easier to use.
+Here's an example:</p>
+
+<pre><code>
+ use HTTP::Daemon;
+ use HTTP::Status;
+ use Pod::Simple::HTML;
+ 
+ my $file = shift;
+ die &quot;File $file not found&quot; unless -e $file;
+ 
+ my $d = HTTP::Daemon-&gt;new || die;
+ print &quot;Please contact me at: &lt;URL:&quot;, $d-&gt;url, &quot;&gt;\n&quot;;
+ while (my $c = $d-&gt;accept) {
+   while (my $r = $c-&gt;get_request) {
+     if ($r-&gt;method eq 'GET') {
+       my $rs = new HTTP::Response(RC_OK);
+       $rs-&gt;content( Pod::Simple::HTML-&gt;filter($file) );
+       $c-&gt;send_response($rs);
+     } else {
+       $c-&gt;send_error(RC_FORBIDDEN)
+     }
+   }
+   $c-&gt;close;
+   undef($c);
+ }</code></pre>
+ 
+<p>The above HTTP::Daemon based server is a simple, single purpose,
+POD-&gt;HTML converter.  I provide it with the name of a pod file to
+parse, and every time I reload the page, it will pass it through
+Pod::Simple and display the HTML to the browser.</p>
+
+<p>You'll note it has the same structure as our hand-made examples, but
+it handles some of the nitty-gritty work for you by encapsulating it
+in classes.</p>
+
+<p>(If you think that HTTP::Daemon is much simpler than the original, then you
+should see the first version of this article which used the low-level
+socket calls.)</p>
+
+
+<h3><a name="in_conclusion">In Conclusion</a></h3>
+<p>Embedded hardware is all the rage these days - but embedded software
+can be quite useful, too.  By embedding a Web server into your software
+you gain lots of possible output options that were difficult to have
+before.  Tables, graphics and color!  (Not to mention, output can be
+viewed by multiple computers.)  Embedded Web servers open a world of
+opportunities to you.</p>
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+Option Explicit
+Sub RunShellCommandOnSelection()
+Static sShellCommand As String
+sShellCommand = InputBox(prompt:="Enter full Shell Command to run on selection:", _
+                Title:="ShellCommandOnRegion", _
+                Default:=sShellCommand)
+
+If Len(sShellCommand) = 0 Then Exit Sub
+
+If Selection.Type = wdSelectionIP Then
+    MsgBox "Please select some text first."
+    Exit Sub
+End If
+
+If ShellCommandOnRegion(sShellCommand) = False Then
+    MsgBox "Shell command failed"
+End If
+End Sub
+
+Function ShellCommandOnRegion(sShellCommand As String, _
+                    Optional ByVal sngMaxWaitSeconds As Single = 5, _
+                    Optional ByVal bReplaceCurrentSelection As Boolean = False) As Boolean
+Dim lPID As Long
+Dim sSemaphore As String
+
+Dim sngStartTime As Single
+Dim oClipboard As New DataObject
+Dim sel As Selection
+Dim sResult As String
+
+
+Set sel = Selection
+
+If sel.Type = wdSelectionIP Then
+    StatusBar = "Please select some text first."
+    Exit Function
+End If
+
+sel.Copy
+
+
+sngStartTime = Timer
+
+lPID = Shell("perl c:\clip2shell.pl " + Chr(34) + sShellCommand + Chr(34))
+sSemaphore = Environ("TEMP") + "\" + CStr(lPID) + ".tmp"
+MkDir sSemaphore
+
+Do: DoEvents
+Loop Until Len(Dir(sSemaphore, vbDirectory)) = 0 _
+            Or ((Timer - sngStartTime) > sngMaxWaitSeconds)
+
+If Not Len(Dir(sSemaphore, vbDirectory)) = 0 Then
+    RmDir sSemaphore
+    Exit Function
+End If
+
+oClipboard.GetFromClipboard
+sResult = oClipboard.GetText
+
+If bReplaceCurrentSelection Then
+    Selection.Paste
+Else
+    If Len(sResult) >= 80 Then
+        MsgBox sResult, vbOKOnly, "Shell Command on Region"
+    Else
+        StatusBar = sResult
+    End If
+End If
+
+ShellCommandOnRegion = True
+End Function
+

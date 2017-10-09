@@ -1,0 +1,777 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2004/02/20040208.html" title="This week on Perl 6, week ending 2004-02-08" />
+    <link rel="next bookmark" href="/pub/2004/02/20040215.html" title="This week on Perl 6, week ending 2004-02-15" />
+    
+    
+    <title>Mail to WAP Gateways - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-874" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Mail to WAP Gateways</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Pete Sergeant</span> on <abbr class="published" title="2004-02-13T00:00:00-08:00">February 13, 2004 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        <p>It's coming up to Valentine&#39;s day again,
+and invariably my thoughts turn back to last year&#39;s rather memorable weekend-break to Stockholm,
+in which I learned two things:</p>
+
+<ol>
+<li>Stockholm makes a great Valentine&#39;s destination.</li>
+
+<li>My girlfriend of the time was not happy with me cracking out my iBook and checking my email halfway into the break.</li>
+</ol>
+
+<p>The relationship, predictably,
+didn&#39;t last much longer, but it did occur to me that a quick and easy way to check my email when away from my computer would be very useful. One of the items that travels everywhere with me,
+and has some limited Internet access is my phone -- although admittedly this has only WAP access. WAP access, it seemed, would have to do...</p>
+
+<p>The tool I ended up building fills <b>my</b> needs very well,
+but possibly won&#39;t be such a great match for others. This article looks at considerations when rendering email for display online,
+especially when space is very limited.</p>
+
+<h3><a name="Overview_of_messages">Overview of Messages</a></h3>
+
+<p>The first challenge is reading the contents of our target mailbox.
+For this,
+we turn to the Perl Email Project&#39;s <a href="http://search.cpan.org/perldoc?Email::Folder"><code>Email::Folder</code></a>:</p>
+
+<pre><code> use Email::Folder;
+ 
+ my $folder = Email::Folder&#45;&#62;new( &#39;/home/sheriff/mbox&#39; );
+ 
+ for my $message ( $folder&#45;&#62;messages ) {
+ 
+        ...</code></pre>
+
+<p><a href="http://search.cpan.org/perldoc?Email::Folder"><code>Email::Folder</code></a>&#39;s messages() function returns <a href="http://search.cpan.org/perldoc?Email::Simple"><code>Email::Simple</code></a> objects. For my folder&#45;view, I chose to group messages by date, and use the sender&#39;s "real name" as the subject. Something like:</p>
+
+<pre><code> 30 Jan 2004
+    Michael Roberts
+  * Paul Makepeace
+    Uri Guttman
+ 29 Jan 2004
+    Kate Pugh</code></pre>
+
+<p>Extracting header fields from <a href="http://search.cpan.org/perldoc?Email::Simple"><code>Email::Simple</code></a> objects couldn&#39;t be simpler:</p>
+
+<pre><code> my $from = $message&#45;&#62;header(&#39;from&#39;)</code></pre>
+
+<p>But people familiar with the various email RFCs will know that since email headers have to use only printable US&#45;ASCII, they&#39;re very often encoded: your header field might well look like:</p>
+
+<pre><code>  =?iso&#45;8859&#45;1?q?Pete=20Sergeant?= &#60;pete@clueball.com&#62;</code></pre>
+
+<p>This will not look pretty if you use it literally. Thankfully, <a href="http://search.cpan.org/perldoc?MIME::WordDecoder"><code>MIME::WordDecoder</code></a> exports the function <code lang='und' xml:lang='und'>unmime</code> -- rendering the above as "Pete Sergeant &#60;pete@clueball.com&#62;."</p>
+
+<p>Getting the date from an email is also somewhat nontrivial -- an example "Date" header looks like:</p>
+
+<pre><code> Fri, 30 Jan 2004 14:09:51 &#45;0000</code></pre>
+
+<p>And that&#39;s if you&#39;re lucky, and it&#39;s well-formed, without starting to think about time zones. If we want to do anything useful with dates, we&#39;re going to want the date as an epoch time. Luckily, <a href="http://search.cpan.org/perldoc?DateTime::Format::Mail"><code>DateTime::Format::Mail</code></a> steps in, and not only parses our date, but returns a highly useful <a href="http://search.cpan.org/perldoc?DateTime"><code>DateTime</code></a> object, allowing us to do all kinds of fun date stuff. To simply reformat the date as Day/Month/Year:</p>
+
+<pre><code> my $datetime = DateTime::Format::Mail&#45;&#62;new( loose =&#62; 1 );
+ my $time = $datetime&#45;&#62;parse_datetime( $message&#45;&#62;header(&#39;date&#39;) );
+ my $day_month_year = $time&#45;&#62;dmy;</code></pre>
+
+<p>Finally, we&#39;re going to want to know if an email is new or not. Luckily, most MUAs will set/edit an email&#39;s status header. Rather than checking if an email is new, we check if it&#39;s been read -- denoted by a <code lang='und' xml:lang='und'>R</code> in the status header:</p>
+
+<pre><code> $new_flag++ if $message&#45;&#62;header(&#39;Status&#39;) !~ m/R/;</code></pre>
+
+<p>Now let&#39;s put this all together to produce a listing of a folder. We&#39;ll use the well-known Schwartzian transform to make the sorting efficient, but unlike the usual practice, we keep the array reference around, as we&#39;ll be using the date as well.</p>
+
+<pre><code> use Email::Folder;
+ use MIME::WordDecoder qw( unmime );
+ use DateTime::Format::Mail;
+
+ my $folder = Email::Folder&#45;&#62;new( &#39;/home/sheriff/mbox&#39; );
+ my @to_sort;
+ my $prev_date = &#34;&#34;;
+ for (sort { $a&#45;&#62;[1] cmp $b&#45;&#62;[1]    }
+      map  { [$_, message2dmy($_) ] } 
+      $folder&#45;&#62;messages) {
+     my ($message, $date) = @$_;
+     if ($date ne $prev_date) { print $date, &#34;\n&#34;; $prev_date = $date; }
+     print $message&#45;&#62;header(&#39;Status&#39;) =~ m/R/ ? &#34;   &#34; : &#34; * &#34;;
+     print unmime($message&#45;&#62;header(&#39;from&#39;)), &#34;\n&#34;;
+ }
+
+ sub message2dmy {
+     my $message = shift;
+     my $datetime = DateTime::Format::Mail&#45;&#62;new( loose =&#62; 1 );
+     my $time = $datetime&#45;&#62;parse_datetime( $message&#45;&#62;header(&#39;date&#39;) );
+     my $day_month_year = $time&#45;&#62;dmy;
+ }</code></pre>
+
+<h3><a name="Displaying_individual_messages">Displaying Individual Messages</a></h3>
+
+<p>Those are the main challenges of a folder&#45;view. Viewing an individual message presents a different set of challenges.</p>
+
+<p>First and foremost is the appalling habit people have of sending each other HTML-"enriched" emails, with all sorts of attachments. If you&#39;re trying to read the email on a cell phone over a slow connection, you don&#39;t want to be battling with this -- you want a nice plain-text representation of the email. So, <a href="http://search.cpan.org/perldoc?Email::StripMIME"><code>Email::StripMIME</code></a> is your friend. Assuming we have an <a href="http://search.cpan.org/perldoc?Email::Simple"><code>Email::Simple</code></a> object, we can simply:</p>
+
+<pre><code> my $string = $email_simple_object&#45;&#62;as_string();
+ $string = Email::StripMIME::strip_mime( $string );
+ $email_simple_object = Email::Simple&#45;&#62;new( $string );</code></pre>
+
+<p>Of course, if we really wanted to cut down on the amount of content we&#39;re receiving, and we&#39;re only using this tool to get an overview of our messages, we can cut out quoted text, remnants of the email that the sender was replying to, and so on. <a href="http://search.cpan.org/perldoc?Text::Original"><code>Text::Original</code></a> does just this for us, as well as stripping out attribution lines:</p>
+
+<pre><code> my $body = $email_simple_object&#45;&#62;body();
+ $body = first_lines( $body, 20);
+ $email_simple_object&#45;&#62;body( $body );</code></pre>
+
+<p>The final problem is in creating actual real WML. Sadly, this is nontrivial, and in the past, I've tended to resort to outputting it by hand. But it doesn&#39;t have to be that way --; <a href="http://search.cpan.org/perldoc?CGI::WML"><code>CGI::WML</code></a> just about handles the task for us. <a href="http://search.cpan.org/perldoc?CGI::WML"><code>CGI::WML</code></a> is a subclass of <a href="http://search.cpan.org/perldoc?CGI"><code>CGI</code></a>, with methods specific to WAP.</p>
+
+<h3><a name="Conclusion">Conclusion</a></h3>
+
+<p>There is no fully working demo at the end of this article. My personal tool works in a way that&#39;s probably a little too specific for most people&#39;s needs. Hopefully however, it's introduced you to one or more modules you didn&#39;t know existed, and given you some inspiration to tinker around with Perl and email-handling.</p>
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/mail-and-usenet-news/" rel="tag">Mail and USENET News</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=cellphone%20email&amp;limit=20';return false;" rel="tag">cellphone email</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=cellphone%20mail&amp;limit=20';return false;" rel="tag">cellphone mail</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=email%20WAP&amp;limit=20';return false;" rel="tag">email WAP</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=mail%20to%20WAP%20gateway&amp;limit=20';return false;" rel="tag">mail to WAP gateway</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=mobile%20mail&amp;limit=20';return false;" rel="tag">mobile mail</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=WAP&amp;limit=20';return false;" rel="tag">WAP</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

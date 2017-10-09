@@ -1,0 +1,167 @@
+
+<TITLE> Internet TCP Clients and Servers </TITLE>
+
+<CENTER>
+<H1> 
+<A NAME="perlipc_internet_0">
+Internet TCP Clients and Servers</A>
+</H1>
+</CENTER>
+<P>
+
+
+Use Internet-domain sockets when you want to do client-server
+communication that might extend to machines outside of your own system.
+<p>Here's a sample TCP client using Internet-domain sockets:
+<p>
+<XMP>
+    #!/usr/bin/perl -w
+    require 5.002;
+    use strict;
+    use Socket;
+    my ($remote,$port, $iaddr, $paddr, $proto, $line);
+    $remote  = shift || 'localhost';
+    $port    = shift || 2345;  # random port
+    if ($port =~ /\D/) { $port = getservbyname($port) }
+    die "No port" unless $port;
+    $iaddr   = inet_aton($remote)               || die "no host: $remote";
+    $paddr   = sockaddr_in($port, $iaddr);
+    $proto   = getprotobyname('tcp');
+    socket(SOCK, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
+    connect(SOCK, $paddr)    || die "connect: $!";
+    while ($line = <SOCK>) {
+        print $line;
+    } 
+    close (SOCK)            || die "close: $!";
+    exit;
+
+</XMP>
+<p>And here's a corresponding server to go along with it.  We'll
+leave the address as INADDR_ANY so that the kernel can choose
+the appropriate interface on multihomed hosts:
+<p>
+<XMP>
+    #!/usr/bin/perl -Tw
+    require 5.002;
+    use strict;
+    BEGIN { $ENV{PATH} = '/usr/ucb:/bin' }
+    use Socket;
+    use Carp;
+    sub spawn;  # forward declaration
+    sub logmsg { print "$0 $$: @_ at ", scalar localtime, "\n" } 
+    my $port = shift || 2345;
+    my $proto = getprotobyname('tcp');
+    socket(SERVER, PF_INET, SOCK_STREAM, $proto)        || die "socket: $!";
+    setsockopt(SERVER, SOL_SOCKET, SO_REUSEADDR, 1)     || die "setsockopt: $!";
+    bind(SERVER, sockaddr_in($port, INADDR_ANY))        || die "bind: $!";
+    listen(SERVER,5)                                    || die "listen: $!";
+    logmsg "server started on port $port";
+    my $waitedpid = 0;
+    my $paddr;
+    sub REAPER { 
+        $SIG{CHLD} = \&REAPER;  # loathe sysV
+        $waitedpid = wait;
+        logmsg "reaped $waitedpid" . ($? ? " with exit $?" : '');
+    }
+    $SIG{CHLD} = \&REAPER;
+    for ( $waitedpid = 0; 
+          ($paddr = accept(CLIENT,SERVER)) || $waitedpid; 
+          $waitedpid = 0, close CLIENT) 
+    {
+        next if $waitedpid;
+        my($port,$iaddr) = sockaddr_in($paddr);
+        my $name = gethostbyaddr($iaddr,AF_INET);
+        logmsg "connection from $name [", 
+                inet_ntoa($iaddr), "] 
+                at port $port";
+        spawn sub { 
+            print "Hello there, $name, it's now ", scalar localtime, "\n";
+            exec '/usr/games/fortune' 
+                or confess "can't exec fortune: $!";
+        };
+    } 
+    sub spawn {
+        my $coderef = shift;
+        unless (@_ == 0 && $coderef && ref($coderef) eq 'CODE') { 
+            confess "usage: spawn CODEREF";
+        }
+        my $pid;
+        if (!defined($pid = fork)) {
+            logmsg "cannot fork: $!";
+            return;
+        } elsif ($pid) {
+            logmsg "begat $pid";
+            return; # i'm the parent
+        }
+        # else i'm the child -- go spawn
+        open(STDIN,  "<&CLIENT")   || die "can't dup client to stdin";
+        open(STDOUT, ">&CLIENT")   || die "can't dup client to stdout";
+        ## open(STDERR, ">&STDOUT") || die "can't dup stdout to stderr";
+        exit &$coderef();
+    } 
+
+</XMP>
+<p>This server takes the trouble to clone off a child version via <EM>fork()</EM> for
+each incoming request.  That way it can handle many requests at once,
+which you might not always want.  Even if you don't <EM>fork()</EM>, the <EM>listen()</EM>
+will allow that many pending connections.  Forking servers have to be
+particularly careful about cleaning up their dead children (called
+"zombies" in Unix parlance), because otherwise you'll quickly fill up your
+process table.
+<p>We suggest that you use the <STRONG>-T</STRONG> flag to use taint checking (see the <EM>perlsec</EM>  manpage
+)
+even if we aren't running setuid or setgid.  This is always a good idea
+for servers and other programs run on behalf of someone else (like CGI
+scripts), because it lessens the chances that people from the outside will
+be able to compromise your system.
+<p>Let's look at another TCP client.  This one connects to the TCP "time"
+service on a number of different machines and shows how far their clocks
+differ from the system on which it's being run:
+<p>
+<XMP>
+    #!/usr/bin/perl  -w
+    require 5.002;
+    use strict;
+    use Socket;
+    my $SECS_of_70_YEARS = 2208988800;
+    sub ctime { scalar localtime(shift) } 
+    my $iaddr = gethostbyname('localhost'); 
+    my $proto = getprotobyname('tcp');   
+    my $port = getservbyname('time', 'tcp');  
+    my $paddr = sockaddr_in(0, $iaddr);
+    my($host);
+    $| = 1;
+    printf "%-24s %8s %s\n",  "localhost", 0, ctime(time());
+    foreach $host (@ARGV) {
+        printf "%-24s ", $host;
+        my $hisiaddr = inet_aton($host)     || die "unknown host";
+        my $hispaddr = sockaddr_in($port, $hisiaddr);
+        socket(SOCKET, PF_INET, SOCK_STREAM, $proto)   || die "socket: $!";
+        connect(SOCKET, $hispaddr)          || die "bind: $!";
+        my $rtime = '    ';
+        read(SOCKET, $rtime, 4);
+        close(SOCKET);
+        my $histime = unpack("N", $rtime) - $SECS_of_70_YEARS ;
+        printf "%8d %s\n", $histime - time, ctime($histime);
+    }
+
+</XMP>
+<p>
+<Hr> 
+
+<P>
+<CENTER>
+<A HREF="perlipc.html"> overview </a> /
+<A HREF="signals.html"> signals </a> /
+<A HREF="fifo.html"> fifos </a> /
+<A HREF="popen.html">pipes</a> /
+<A HREF="safepopen.html">safe-pipes</a> /
+<A HREF="openplex.html">open2</a> /
+<A HREF="sockets.html">sockets</a> /
+<A HREF="unix.html">AF_UNIX</a> /
+<A HREF="udp.html">udp</a> /
+<A HREF="sysv.html">sys5</a>
+</CENTER>
+<P>
+
+</HTML>

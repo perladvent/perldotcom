@@ -1,0 +1,198 @@
+></P>
+
+<P>
+
+
+<!-- This week on perl5-porters (13--20 Nov 2000) -->
+
+<br />
+<!::field::date::><br /><ul>
+  <li><a href="#Notes">Notes</a>
+  <li><a href="#Fixing_the_Regexp_Engine">Fixing the Regexp Engine</a>
+  <li><a href="#UTF8_and_Charnames">UTF8 and Charnames</a>
+  <li><a href="#PerlIO_again">PerlIO (again)</a>
+  <li><a href="#head3_again">=head3 (again)</a>
+  <li><a href="#New_subspm">New subs.pm</a>
+  <li><a href="#Congratulations">Congratulations</a>
+  <li><a href="#Various">Various</a>
+</ul>
+
+      <H3><a name="Notes">Notes</a></H3>
+
+</P>
+
+<P>
+
+You can subscribe to an e-mail version of this summary by sending an
+empty message to 
+<a href="mailto:p5p-digest-subscribe@plover.com"><tt>p5p-digest-subscribe@plover.com</tt>.</a></P>
+
+<P>
+Please send corrections and additions to 
+<CODE>simon@brecon.co.uk</CODE></P>
+
+<P>
+There were more than 250 messages this week.
+<H3><a name="Fixing_the_Regexp_Engine">Fixing the Regexp Engine</a></H3>
+
+</P>
+
+<P>
+
+There's been a lot of work on the regular-expression engine this week,
+from Jarkko and Ilya. If you recall, there have been two major problems
+with the regular-expression engine. First, there's re-entrancy. What this means is that if you try to say
+</P>
+
+</P><PRE>
+    m/something(?{s|foo|bar|})bad/
+</PRE>
+
+<P>
+then by the time you get to 
+<CODE>bad</CODE>, the engine will be confused,
+because it can't restore context properly after the 
+<CODE>s|foo|bar</CODE>. It can now, thanks to Ilya, who noted:
+<blockquote></P>
+
+<P>
+ 
+Why such a trivial patch should wait for me to do it?!
+</P>
+
+<P>
+Doing a similar edit of regexec() is left as an exercise to the
+reader.
+</blockquote></P>
+
+<P>
+
+Jarkko retaliated, &quot;Most us mortals find the 
+<CODE>reg*.[hc]</CODE> rather daunting.&quot; I note that the &quot;trivial patch&quot; was 89k.
+</P>
+
+<P>
+The second problem is recursion; (See
+<a href="http://www.perl.com/pub/2000/11/p5pdigest/THISWEEK-20001107.html#The_Regex_Stack_Problem">coverage two weeks ago</a>)
+what this means is that things
+such as the pathological example that Dan Brumlevel produced this week
+causes stack overflows:
+</P>
+
+</P><PRE>
+    '' =~ ($re = qr((??{$i++ < 10e4 ? $re : ''})));
+</PRE>
+
+<P>
+Ilya also started work on &quot;flattening&quot; the regular expression engine to
+remove this recursion. While his patch doesn't solve the problem, it
+mitigates it considerably and also allows stack unwinding on things like
+alternation.
+</P>
+
+<P>
+The famous &quot;polymorphic regular expression&quot; problem also saw some work,
+thanks to Jarkko. This problem occurs when matching inside UTF8 strings;
+it goes a little like this: Given a character string which contains
+character 300, which is represented in UTF8 as character 196 followed by
+character 172, should character 172 match? Of course, it shouldn't, but
+it currently does. What's needed is to turn each &quot;node&quot; of a regular
+expression into something that can make sense as a character and
+also as a series of bytes, and then it can behave appropriately when matched
+in 
+<CODE>byte</CODE> mode and in character mode.  (See
+<a href="/pub/2000/07/p5pdigest/THISWEEK-20000702.html#Unicode_Regex_Matching">previous discussion of this</a>.)
+</P>
+
+<P>
+Jarkko reports that most of it is now working, apart from the special
+match variables (
+<CODE>$&</CODE>, 
+<CODE>$`</CODE> and 
+<CODE>$'</CODE>) and the POSIX character classes.
+<H3><a name="UTF8_and_Charnames">UTF8 and Charnames</a></H3>
+
+</P>
+
+<P>
+
+Andrew McNaughton found that 
+<CODE>Charnames</CODE> didn't produce UTF8-encoded strings on code points less than 255. He
+produced some patches to make it do so, but Nick and I
+didn't believe that it should be UTF8-encoding if it doesn't need
+to be. Perl's UTF8 encoding is done lazily - strings are upgraded if Perl
+can't avoid upgrading them.
+<H3><a name="PerlIO_again">PerlIO (again)</a></H3>
+
+</P>
+
+<P>
+
+Nick's sterling work on PerlIO continues, and this week he raised the
+question of where to store the defaults that 
+<CODE>use open</CODE> sets; currently, there are four bits set in the CV, two for input and two
+for output. However, since this only gives you four states, it's not
+exactly extensible to user-defined disciplines. The suggestion from
+Sarathy was to use the same area used by the lexical warnings pragma.
+The whole thread contains a good discussion about how the semantics of
+PerlIO disciplines will pad out.
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00780.html">Read about it.</a></P>
+
+<P>
+
+<H3><a name="head3_again">=head3 (again)</a></H3>
+
+</P>
+
+<P>
+Casey Tweten's unstinting drive to make POD support 
+<CODE>=head3</CODE> and further levels continues. He first patched the documentation, and
+then patched 
+<CODE>Pod::Checker</CODE> to make sure it wouldn't complain about the new levels. Russ Allbery
+ released a new version of the podlaters to support them.
+<H3><a name="New_subspm">New subs.pm</a></H3>
+
+</P>
+
+<P>
+
+Jeff Pinyan put forward a new 
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00822.html">version of subs.pm</a> which is supposed to deal with pre-declaring prototypes and attributes.
+It needed a little smoothing out, but it's looking quite good now.
+<H3><a name="Congratulations">Congratulations</a></H3>
+
+</P>
+
+<P>
+
+Two sets of congratulations are in order this week. First, to the
+dedicated team of bug squashers; there are now less than 1,000
+open bugs in Perl, and none of those is considered fatal.
+</P>
+
+<P>
+Congratulations are also due to Perl hacker Mark Fisher, who just
+become a daddy.
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00934.html">Read about it.</a></P>
+
+<P>
+
+<H3><a name="Various">Various</a></H3>
+
+</P>
+
+<P>
+Quite a lot of useful minor fixes, and a few noninteresting bug
+reports. Lots of the usual test results. Only two flames this week, and
+one each from your illustrious perl5-porters digest authors. You'd think
+we'd know better.
+</P>
+
+<P>
+Until next week I remain, your humble and obedient servant,
+</P>
+
+<hr>
+
+<a href="mailto:simon@brecon.co.uk">Simon Cozens</a>
+

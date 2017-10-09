@@ -1,0 +1,283 @@
+</P>
+
+<P>
+
+
+<!-- This week on perl5-porters (02--08 Apr 20XX) -->
+
+<br />
+<!::field::date::><br />
+      <H3><a name="Notes">Notes</a></H3>
+
+</P>
+
+<P>
+
+You can subscribe to an email version of this summary by sending an
+empty message to 
+<a href="mailto:perl5-porters-digest-subscribe@netthink.co.uk"><tt>perl5-porters-digest-subscribe@netthink.co.uk</tt>.</a></P>
+
+<P>
+Please send corrections and additions to 
+<CODE>perl-thisweek-YYYYMM@simon-cozens.org</CODE> where 
+<CODE>YYYYMM</CODE> is the current year and month.  Changes and additions to the 
+<a href="http://simon-cozens.org/writings/whos-who.html">perl5-porters</a> biographies are particularly welcome.
+</P>
+
+<P>
+Apologies for the delay in this week's summary; I was travelling this
+weekend, and didn't get back until Tuesday.
+<H3><a name="Perl_561_and_Perl_571_Released">Perl 5.6.1 and Perl 5.7.1 Released!</a></H3>
+
+</P>
+
+<P>
+
+The big news this week is that, as you probably already know by now,
+Perl 5.6.1 and Perl 5.7.1 are available. Get them from 
+<a href="http://www.cpan.org/src/">CPAN</a>. Well done to Sarathy and Jarkko for getting these out of the door.
+<H3><a name="Robin_Houston_Left_On_ALL_WEEK">Robin Houston Left On ALL WEEK</a></H3>
+
+</P>
+
+<P>
+
+Someone has just far too much free time on their hands. Robin Houston
+started the week by adding a warning to 
+</P>
+
+</P><PRE>
+    push @array;
+</PRE>
+
+<P>
+This was slightly controversial, as it might introduce new warnings to old
+code, (albeit old, broken code) and some people - myself included - wanted
+to see 
+<CODE>push</CODE> default to 
+<CODE>$_</CODE> instead. That really would change the semantics of old code, however.
+Mark-Jason Dominus wondered whether anyone could write 
+<CODE>push @array</CODE> by accident, or even have a program write it legimitately, but both
+Ronald and Jarkko confessed to have written it when they meant 
+<CODE>push @array, $_</CODE>. 
+</P>
+
+<P>
+Then he moved over to hacking on 
+<CODE>B::Concise</CODE>; he found an interesting optimisation where you have code like 
+</P>
+
+<P>
+  @a = split(/pat/, str);
+</P>
+
+<P>
+Perl actually places the symbol table entry for 
+<CODE>@a</CODE> inside the opcode for the regular expression, casting it into an OP as
+ it goes. 
+<CODE>B::Concise</CODE> wasn't aware of this peculiarity and thought that the op was, well, an
+op. Boom.
+</P>
+
+<P>
+Next, he fixed up something with lexicals; the way lexicals are stored
+is quite complex, as he explains:
+<blockquote>perl stores the names of lexical variables in SV structures.
+But of course it doesn't stop there. Oh no! Not only are the
+IVX and NVX slots used to hold scope information, but SvCUR
+is used for some nefarious purpose which I don't understand.
+(look in op.c/Perl_newASSIGNOP for (at least some of) this
+SvCUR chicanery. It seems to be connected with the mysterious
+variable PL_generation.)
+</P>
+
+<P>
+B::Concise is making naive assumptions about perl's sanity
+again. Try this, for example:
+</P>
+
+<P>
+  perl -MO=Concise -e 'my @x; @x=2;' |less
+</P>
+
+<P>
+The variable name (&quot;@x&quot;) is followed by all kinds of weird
+binary data, because B::Concise believed perl when it gave
+the length of the string, not suspecting for a moment that
+the slot which ordinarily holds the length happens to be
+used for devil-worship in this situation.
+</blockquote></P>
+
+<P>
+This is, as Stephen McCamant explained, related to a clever optimization
+to allow both
+</P>
+
+</P><PRE>
+    ($a, $b) = ($c, $d);
+</PRE>
+
+<P>
+and
+</P>
+
+</P><PRE>
+    ($a, $b) = ($b, $a);
+</PRE>
+
+<P>
+to both work - in the second case, Perl needs to use a temporary variable
+to swap the values over. It determines whether or not the left-hand and
+right-hand sides have elements in common by &quot;marking&quot; each element, and
+that's what the devil-worship was for.
+</P>
+
+<P>
+Robin realised that this meant that variables with very long names used
+in a list assignment would be truncated, so he fixed them up as well.
+</P>
+
+<P>
+By now, however, Robin is unstoppable. He made 
+<CODE>B::Deparse</CODE> give sensible output for variables which start with control characters
+such as 
+<CODE>$^WIDE_SYSTEM_CALLS</CODE>. Realising this was a common problem, he made a 
+<CODE>B::GV::SAFENAME</CODE> method to ensure the name was printable and converted all the 
+<CODE>B::*</CODE> modules to use that. Good work!
+</P>
+
+<P>
+But no, it doesn't end here. He fixed up 
+<CODE>B::*</CODE> to cope with IVs that were actually UVs, 
+<CODE>B::Deparse</CODE> handling of regular expressions,
+<CODE>"${foo}bar"</CODE> and 
+<CODE>binmode</CODE>, and made it warning-clean.
+</P>
+
+<P>
+By the end of the week, he was pleased to report that you can now run 
+<CODE>t/base/lex.t</CODE> through 
+<CODE>B::Deparse</CODE> and back through Perl, and all tests pass. Wow.
+<H3><a name="More_on_glob">More on glob</a></H3>
+
+</P>
+
+<P>
+
+Benjamin Sugars tried to speed up 
+<CODE>glob</CODE>. As you may or may not now, core's 
+<CODE>glob</CODE> automagically loads up 
+<CODE>File::Glob</CODE> and uses the 
+<CODE>glob</CODE> function that that provides. Unfortunately, this also pulls in 
+<CODE>Exporter</CODE> and all sorts of other modules. Benjamin rewrote 
+<CODE>File::Glob</CODE> to avoid the compile-time dependencies on these modules, and fiddled
+the bit in the core (after a few false starts) which loads up the module
+to make it equivalent to 
+<CODE>use File::Glob ()</CODE>. He also documented 
+<CODE>load_module</CODE>, which is the core function for magical module using.
+<H3><a name="Changes_files_in_core">Changes files in core</a></H3>
+
+</P>
+
+<P>
+
+John Allen asked &quot;does anyone else think it may be time
+to grant the voluminous ChangesX.XXX files in the standard perl
+distribution their own separately downloadable gzip file?&quot; Well, as usual,
+some did and some didn't. The motivation for not doing so would be that
+it would not be necessary to download anything other than the Perl source
+tarball to understand the sources. Further, Jarkko pointed out that the
+Changes files describe patches that affect more than one file at once and
+wouldn't be sensibly documented in any single one of them. 
+</P>
+
+<P>
+Benjamin Sugars suggested moving them to a separate directory rather than
+getting rid of them altogether; Jarkko hinted that he wasn't going to go
+through the Perforce hell of moving files just for the sake of moving them. 
+</P>
+
+<P>
+John's eventual compromise was to keep them in the development sources
+for those people who want to hack on them, and remove them from the 
+stable sources. This seems to suit everyone, but nobody said anything 
+further.
+<H3><a name="How_Magic_and_Ties_Work">How Magic and Ties Work</a></H3>
+
+</P>
+
+<P>
+
+I provided a sample few sections from my forthcoming Perl Internals
+training course about 
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-04/msg00238.html">how magic and ties work</a>. Enjoy.
+<H3><a name="Various">Various</a></H3>
+
+</P>
+
+<P>
+
+Olaf Flebbe turned in EPOC fixes before 5.6.1 went out, and Craig Berry
+updated 
+<CODE>README.vms</CODE> while Peter Prymmer updated all sorts of other VMS things; 
+<a href="http://simon-cozens.org/writings/whos-who.html#AAS">Gisle</a> came up with a neat patch to let 
+</P>
+
+</P><PRE>
+    @foo = do { ... };
+</PRE>
+
+<P>
+propagate array context to the 
+<CODE>do</CODE> block.
+</P>
+
+<P>
+Paul Schinder came up with some OS X fixes for 5.6.1; apparently OS X's
+gcc isn't very gcc, and this caused the preprocessor to do weird things
+which broke 
+[Errno].
+</P>
+
+<P>
+John Peacock fixed up some bugs in 
+<CODE>Math::BigFloat</CODE> found by Tom Roche but the only thanks he got was a discussion of
+the indentation style of the Perl sources. 8-wide tabs, 4 spaces,
+people. (
+<a href="http://simon-cozens.org/writings/whos-who.html#ALLBERY">Russ</a> says we should use spaces instead of tabs, but it's a bit late now.)
+</P>
+
+<P>
+Jonathan Stowe tried to change something about 
+<CODE>$#</CODE>; Sarathy suggested that this might break some ten year old code, even
+though the bug's been in there since forever...
+</P>
+
+<P>
+The 
+<CODE>TIESLICE</CODE>/
+<CODE>STORESLICE</CODE> issue came back. The discussion produced more light than heat.
+</P>
+
+<P>
+And finally... Dan Brian explained
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-04/msg00188.html">what happens if you cross Black and White with Perl5-Porters.</a></P>
+
+<P>
+Until next week I remain, your humble and obedient servant,
+</P>
+
+<hr>
+
+<a href="mailto:simon@brecon.co.uk">Simon Cozens</a>
+
+
+<ul>
+  <li><a href="#Notes">Notes</a>
+  <li><a href="#Perl_561_and_Perl_571_Released">Perl 5.6.1 and Perl 5.7.1 Released!</a>
+  <li><a href="#Robin_Houston_Left_On_ALL_WEEK">Robin Houston Left On ALL WEEK</a>
+  <li><a href="#More_on_glob">More on glob</a>
+  <li><a href="#Changes_files_in_core">Changes files in core</a>
+  <li><a href="#How_Magic_and_Ties_Work">How Magic and Ties Work</a>
+  <li><a href="#Various">Various</a>
+</ul>

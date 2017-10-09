@@ -1,0 +1,42 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use lib 'bin/lib';
+use Article;
+use Text::CSV;
+use JSON::XS;
+
+# generate json entries for all authors in the index
+
+my $csv = Text::CSV->new();
+my $json = JSON::XS->new->utf8->pretty;
+my $base_author_path = 'data/author';
+my $author_base_obj = { image => '/images/site/avatar.png', bio => '' };
+
+open my $article_index, '<:utf8', "perl.com/pub/articles-index-20171008.csv" or die $!;
+my @column_names = qw(date title authors file categories tags);
+
+unlink <data/author/*.json>;
+
+while (my $cols = $csv->getline($article_index)) {
+  my %args = map { $column_names[$_] => $cols->[$_] } 0..$#$cols;
+  # we don't care about constructor warnings
+  my $a = eval { Article->new(\%args) };
+  write_author_json($a);
+}
+
+sub write_author_json {
+  my $a = shift;
+  for my $author (@{ $a->{authors} }) {
+    my $author_path = gen_author_path($author);
+    next if -e $author_path;
+    my $author_data = +{ %$author_base_obj, name => $author };
+    open my $author_fh, '>:utf8', $author_path or die $!;
+    print $author_fh $json->encode($author_data);
+  }
+}
+
+sub gen_author_path {
+  my $name = shift;
+  return "$base_author_path/" . (lc($name) =~ s/\W/-/gr) . '.json';
+}

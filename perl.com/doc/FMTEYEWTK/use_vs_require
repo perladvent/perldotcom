@@ -1,0 +1,281 @@
+Article 5128 of comp.lang.perl.misc:
+Path: csnews!boulder!bloom-beacon.mit.edu!spool.mu.edu!howland.reston.ans.net!news.sprintlink.net!in2.uu.net!newsfeed.pitt.edu!dsinc!netnews.upenn.edu!Lehigh.EDU!usenet
+From: lusol@Turkey.CC.Lehigh.EDU
+Newsgroups: comp.lang.perl.misc
+Subject: USE vs. REQUIRE explained, mostly (-:
+Date: 31 Aug 1995 18:57:59 GMT
+Organization: Lehigh University Computing Center
+Lines: 268
+Message-ID: <4250nn$fro@fidoii.cc.lehigh.edu>
+NNTP-Posting-Host: turkey.cc.lehigh.edu
+
+Some require/use clarification:
+
+> I'm writing a perl script to deal with some data sets. I've drawn up a
+> design that involves three classes, and I'm about to start coding. I'd
+> like to put all my class definitions in one file, and the program that
+> uses them in another.
+
+> The question is, should I create a file called linkLib.pl and then
+> require it, or should I create linkLib.pm and then use it?
+
+> I've read the man pages but it all seems to subtle for me to
+> understand. Can someone out there please tell me what is the practical
+> difference between these two approaches?
+
+	As a reminder, in Perl 5 all "modules" whether used or
+required are stored in .pm files (.pl is Perl 4).  So that answers 1/2
+of your question in paragraph 2.  And since you stated you are
+creating classes which implies OO, the answer to the second 1/2 of the
+question is you use `require'; thus you create file linkLib.pm and use
+it thusly:
+
+  require linkLib;
+
+	In Perl 5 a module can act just like a Perl 4 package, or it
+can define a class in the OO sense.  From now on I'll use the phrase
+"plain old module" for a non-class module, to make the distinction
+between it and a class module, which is a package that defines objects
+and class/object constructors and destructors.
+
+	In paragraph 1 you mention you have 3 classes: by convention
+each class should reside in its own .pm file and they should be
+required by the main program and not used.  By using a file there is
+an implicit assumption that it's exporting something, a subroutine or
+variable, say, into your program, but a properly written class module
+never exports anything.  Below is a trivial class module named Frog
+whose purpose is to compare the implementation of a class versus its
+usage, and which contains two methods, one of which is an object
+constructor.  I had to cheat here and define the class in the same
+"file" as the code (-: But notice that there is NO use of Exporter ...
+
+
+  #!/usr/local/bin/perl -w
+  
+  package Frog;
+  use English;
+  
+  # Sample class module Frog, consisting of the static constructor method
+  # `new' that creates new instances of Frog objects, and the virtual method 
+  # `show_color' which queries a Frog's -lipophore attribute to determine its 
+  # color and print it.
+  #
+  # Notice that within the class, implementation details are exposed; i.e. you
+  # know that the object is really a Perl hash and the key "-lipophores" holds
+  # a Frog's lipophore information.
+  
+  sub new {
+      my($class, %args) = @ARG;
+      my $objref = {%args};
+      return bless $objref, $class;
+  } # end new
+  
+  sub show_color {
+      my($objref, @args) = @ARG;
+      my $color = $objref->{'-lipophores'} eq 'yes' ? 'green' : 'blue';
+      print "objref=$objref, color=$color.\n";
+      return $objref;
+  } # end show_color
+  
+  package main;
+  use English;
+  
+  # Test code that creates two Frogs and displays their color. Unlike code
+  # within the class module, users of the class Frog should not write code
+  # based on how a Frog is implemented, but rather invoke methods provided by
+  # the class.
+  #
+  # When `show_color' is invoked Perl looks for the method in the class module
+  # Frog; after all, that's the class the object belongs too, and indeed is why
+  # &main::show_color is never called.  To inherit a method from another class 
+  # you initialize the Perl "is-a" list @ISA with additional class module 
+  # names, which Perl searches to locate missing methods.
+  
+  sub show_color {
+      print "You'll never see this show_color!\n";
+  } # end show_color
+  
+  $frog1 = Frog->new(-lipophores => 'yes');
+  $frog1->show_color;
+  Frog->new(-lipophores => 'no')->show_color;
+
+
+Notice that you can string methods together just so long as they all
+return an object reference, which means that a second ephemeral Frog
+can spring into existence just long enough to show us it's color.
+
+	Since your garden variety frog is colored green due to the
+combination of refracted blue light from guanine crystals and
+transmitted yellow light from lipophores, frogs lacking lipophores are
+blue.  As a user of class Frog however, you do not have to know this.
+When a Frog is created you simply indicate to the constructor its
+"lipophore status", and leave it up to the class method `show_color'
+to determine a Frog's color.  Here is the program's output:
+
+  objref=Frog=HASH(0x200dca0c), color=green.
+  objref=Frog=HASH(0x200dca24), color=blue.
+
+-------------------------------------------------------------------------------
+
+	Now, Tom gave you examples of plain old modules (not class
+modules) that export subroutines and variables into your program's
+namespace:
+
+    T> == Foo.pm ==
+    T>     package Foo;
+    T>     require Exporter;
+    T>     @ISA = qw(Exporter);
+    T>     @EXPORT = qw(func1 func2 $foo_var);
+
+Unconditionally exports &func1, &func2 and $foo_var into your program
+if the file is `use'd.  If `require'd then symbol names must be
+explicitly qualified with the package name, since the export list
+@EXPORT is not honored.
+
+    T>     $foo_var = 1;
+    T>     sub func1 { ... }
+    T>     sub func2 { ... }
+    T>     1;
+
+    T> == Bar.pm ==
+    T>     package Bar;
+    T>     require Exporter;
+    T>     @ISA = qw(Exporter);
+    T>     @EXPORT = qw(func3 func4 $bar_var);
+    T>     $bar_var = 1;
+    T>     sub func3 { ... }
+    T>     sub func4 { ... }
+    T>     1;
+
+    T> === main perl program: require
+
+    T>     require Foo;
+    T>     require Bar;
+    T>     Foo::func1();
+    T>     Foo::func2();
+    T>     Bar::func3();
+    T>     Bar::func4();
+    T>     print $Foo::foo_var, $Bar::bar_var;
+
+A require defines the functions and variables but does NOT import them
+into your program, that's why you must explicitly qualify all the names.
+However:
+
+    T> === main perl program: use
+
+    T>     use Foo;
+    T>     use Bar;
+    T>     func1();
+    T>     func2();
+    T>     func3();
+    T>     func4();
+    T>     print $foo_var, $bar_var;
+
+A use both defines and imports the names so they can be accessed without
+qualification.
+
+> So with packages and use, I don't need to provide the package name,
+> and with packages and require, I do need to provide the package name,
+> as long as the symbols have been exported.
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+	Not quite: if you know the symbol names you can explicitly get
+to anything in a package with explicit qualification whether or not
+it's exported.  Whether you SHOULD be doing this is another question!
+The purpose of exporting is so you don't have to qualify names;
+besides, they're the symbols the package designer intended for you to
+see.
+
+> So I think that the module and use method is better, but I don't quite
+> see why the require method can be a problem, though it does involve
+> more typing.
+
+You're making this more difficult that necessary, although it is confusing!
+In your case pattern you class modules after Frog and require them and forget
+about Exporter.
+
+> In fact, it seems to me that more namespace problems are likely if I
+> use the use method, because I might have two different packages export
+> the same symbol, and then I'd be confused in when looking at my main
+> program, trying to figure which one is being used. (This means a
+> namespace problem for me. Somehow I have the feeling that perl could
+> figure this out, but could I?)
+
+See below, that's what @EXPORT_OK is for; it lists symbols not exported by
+default by which will be if you explicitly specify then on the `use'.
+
+    T> You might also prefer something more like:
+
+    T> == Bar.pm ==
+    T>     package Bar;
+    T>     require Exporter;
+    T>     @ISA = qw(Exporter);
+    T>     @EXPORT = qw(func3 func4);
+    T>     @EXPORT_OK = qw($bar_var);
+
+A "use Bar;" exports &func3 and &func4 but not $bar_var.
+
+A "use Bar qw($bar_var);" exports $bar_var only.
+
+A "use Bar qw(func3 func4 $bar_var);" == "use Bar qw(:DEFAULT $bar_var);" and
+exports all the symbols.
+
+    T>     $bar_var = 1;
+    T>     sub func3 { ... }
+    T>     sub func4 { ... }
+    T>     1;
+
+    T> === main perl program: use with args
+
+    T>     use Foo;
+    T>     use Bar qw(:DEFAULT $bar_var);
+    T>     func1();
+    T>     func2();
+    T>     func3();
+    T>     func4();
+    T>     print $foo_var, $bar_var;
+
+------------------------------------------------------------------------------
+
+    O> package XxxYyy;
+    O> require Exporter;
+    O> @ISA = qw(Exporter);
+    O> @EXPORT = qw(foo);
+    O> @EXPORT_OK = qw(bar);
+
+> At the risk of seeming dense, what do the final two lines do?
+
+> I gather that they make the function foo available in main's
+> namespace, without making anything else from package XxxYyy available
+> in main's namespace (except that one can still use $XxxYyy::blah to
+> get at variable $blah in this package, right?)
+
+Yes!  (Again, it might be impolite to poke around a package's
+un-exported symbols.)
+
+> And EXPORT_OK, I glean from the manpages, seems to make bar available,
+> but only if the user specifically asks for bar when using XxxYyy by
+> saying:
+
+> use XxxYxx 'bar';
+
+Yes.
+
+> In this case foo and bar would both be available in main's namespace
+> and could be called just as if they were defined in main itself.
+
+> Is this an accurate perception?
+
+Not quite:  &foo isn't available unless you do:
+
+  use XxxYxx qw(foo bar);
+
+or
+
+  use XxxYxx qw(:DEFAULT bar);
+
+:DEFAULT sucks in all the symbols from @EXPORT, and then &bar is added
+because it's in @EXPORT_OK and is thus OK.
+
+
+

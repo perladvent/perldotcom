@@ -1,0 +1,1294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2004/04/08/bloom_filters.html">
+<dc:title>Using Bloom Filters</dc:title>
+<dc:description> Anyone who has used Perl for any length of time is familiar with the lookup hash, a handy idiom for doing existence tests: foreach my $e ( @things ) { $lookup{$e}++ } sub check { my ( $key )...</dc:description>
+<dc:creator>Maciej Ceglowski</dc:creator>
+<dc:date>2004-04-08T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2004/04/p6pdigest/20040404.html" title="This week on Perl 6, week ending 2004-04-04" />
+    <link rel="next bookmark" href="/pub/2004/04/16/a12.html" title="Apocalypse 12" />
+    
+    
+    <title>Using Bloom Filters - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-908" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Using Bloom Filters</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Maciej Ceglowski</span> on <abbr class="published" title="2004-04-08T00:00:00-08:00">April  8, 2004 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+
+<p>Anyone who has used Perl for any length of time is familiar with the lookup
+hash, a handy idiom for doing existence tests:</p>
+
+<pre><code>foreach my $e ( @things ) { $lookup{$e}++ }
+
+sub check {
+	my ( $key ) = @_;
+	print &quot;Found $key!&quot; if exists( $lookup{ $key } );
+}</code></pre>
+
+<p> As useful as the lookup hash is, it can become unwieldy for very large
+lists or in cases where the keys themselves are large.  When a lookup hash
+grows too big, the usual recourse is to move it to a database or flat file,
+perhaps keeping a local cache of the most frequently used keys to improve
+performance.  </p>
+
+<p> Many people don't realize that there is an elegant alternative to the lookup
+hash, in the form of a venerable algorithm called a <em>Bloom filter</em>.
+Bloom filters allow you to perform membership tests in just a fraction of the
+memory you'd need to store a full list of keys, so you can avoid the
+performance hit of having to use a disk or database to do your lookups.  As you
+might suspect, the savings in space comes at a price: you run an adjustable
+risk of false positives, and you can't remove a key from a filter once you've
+added it in.  But in the many cases where those constraints are acceptable, a
+Bloom filter can make a useful tool.  </p>
+
+<p>For example, imagine you run a high-traffic online music store along the
+lines of iTunes, and you want to minimize the stress on your database by only
+fetching song information when you know the song exists in your collection. You
+can build a Bloom filter at startup, and then use it as a quick existence check
+before trying to perform an expensive fetching operation:</p>
+
+<pre><code>use Bloom::Filter;
+
+my $filter = Bloom::Filter-&gt;new( error_rate =&gt; 0.01, capacity =&gt; $SONG_COUNT );
+open my $fh, "enormous_list_of_titles.txt" or die "Failed to open: $!";
+
+while (&lt;$fh&gt;) {
+	chomp;
+	$filter-&gt;add( $_ );
+}
+
+sub lookup_song {
+	my ( $title ) = @_;
+	return unless $filter-&gt;check( $title );
+	return expensive_db_query( $title ) or undef;
+}</code></pre>
+
+<p>In this example, there's a 1% chance that the test will give a false
+positive, which means the program will perform the expensive fetch operation
+and eventually return a null result. Still, you've managed to avoid the
+expensive query 99% of the time, using only a fraction of the memory you would
+have needed for a lookup hash. As we'll see further on, a filter with a 1%
+error rate requires just under 2 bytes of storage per key.  That's far less
+memory than you would need for a lookup hash.</p>
+
+<csperl file="grab" domain="on" record="b/515" template="b/article_sidebar.view">
+
+<p>Bloom filters are named after Burton Bloom, who first described them in a
+1970 paper entitled <a href="http://portal.acm.org/citation.cfm?id=362692&dl=ACM&coll=portal">Space/time trade-offs in hash coding with allowable errors</a>. In those days of limited
+memory, Bloom filters were prized primarily for their compactness; in fact, one
+of their earliest applications was in spell checkers. However, there are less
+obvious features of the algorithm that make it especially well-suited to
+applications in social software.</p>
+
+<p>Because Bloom filters use one-way hashing to store their data, it is
+impossible to reconstruct the list of keys in a filter without doing an
+exhaustive search of the keyspace. Even that is unlikely to be of much help,
+since the false positives from an exhaustive search will swamp the list of real
+keys. Bloom filters therefore make it possible to share information about what
+you have without broadcasting a complete list of it to the world.  For that
+reason, they may be especially valuable in peer-to-peer applications, where
+both size and privacy are important constraints.</p>
+
+<h3><a name="how_bloom_filters_work" id="how_bloom_filters_work">How Bloom Filters Work</a></h3>
+
+<p>A Bloom filter consists of two components: a set of <code>k</code> hash
+functions and a bit vector of a given length.  We choose the length of the bit
+vector and the number of hash functions depending on how many keys we want
+to add to the set and how high an error rate we are willing to put up with -- more on that a little bit further on.</p>
+
+<p>All of the hash functions in a Bloom filter are configured so that their
+range matches the length of the bit vector. For example, if a vector is 200
+bits long, the hash functions return a value between 1 and 200.  It's important
+to use high-quality hash functions in the filter to guarantee that output is
+equally distributed over all possible values -- "hot spots" in a hash
+function would increase our false-positive rate.</p>
+
+<p>To enter a key into a Bloom filter, we run it through each one of the
+<code>k</code> hash functions and treat the result as an offset into the bit
+vector, turning on whatever bit we find at that position. If the bit is already
+set, we leave it on. There's no mechanism for turning bits off in a Bloom
+filter.</p>
+
+<p>As an example, let's take a look at a Bloom filter with three hash functions
+and a bit vector of length 14. We'll use spaces and asterisks to represent the
+bit vector, to make it easier to follow along. As you might expect, an empty
+Bloom filter starts out with all the bits turned off, as seen in Figure 1.</p>
+
+<p class="secondary"><img src="/pub/2004/04/08/graphics/bloom_1.gif" width="284" height="24" alt="an empty Bloom filter" /><br /> 
+<em>Figure 1. An empty Bloom filter.</em></p>
+
+<p>Let's now add the string <code>apples</code> into our filter. To do so, we
+hash <code>apples</code> through each of our three hash functions and collect
+the output:</p>
+
+<pre><code>hash1("apples") = 3
+hash2("apples") = 12
+hash3("apples") = 11</code></pre>
+
+<p>Then we turn on the bits at the corresponding positions in the vector -- in this case bits 3, 11, and 12, as shown in Figure 2.</p>
+
+<p class="secondary"><img src="/pub/2004/04/08/graphics/bloom_2.gif" width="284" height="24" alt="a Bloom filter with three bits enabled" /><br />
+<em>Figure 2. A Bloom filter with three bits enabled.</em></p>
+
+<p>To add another key, such as <code>plums</code>, we repeat the hashing
+procedure:</p>
+
+<pre><code>hash1("plums") = 11
+hash2("plums") = 1
+hash3("plums") = 8</code></pre>
+
+<p>And again turn on the appropriate bits in the vector, as shown with
+highlights in Figure 3.  </p>
+
+<p class="secondary"><img src="/pub/2004/04/08/graphics/bloom_3.gif" width="284" height="24" alt="the Bloom filter after adding a second key"/><br />
+<em>Figure 3. The Bloom filter after adding a second key.</em></p>
+
+<p>Notice that the bit at position 11 was already turned on -- we had set
+it when we added <code>apples</code> in the previous step. Bit 11 now does
+double duty, storing information for both <code>apples</code> and
+<code>plums</code>. As we add more keys, it may store information for some of
+them as well. This overlap is what makes Bloom filters so compact -- any
+one bit may be encoding multiple keys simultaneously.  This overlap also means
+that you can never take a key out of a filter, because you have no guarantee
+that the bits you turn off don't carry information for other keys. If we tried
+to remove <code>apples</code> from the filter by reversing the procedure we
+used to add it in, we would inadvertently turn off one of the bits that encodes
+<code>plums</code>.  The only way to strip a key out of a Bloom filter is to
+rebuild the filter from scratch, leaving out the offending key.</p>
+
+<p>Checking to see whether a key already exists in a filter is exactly
+analogous to adding a new key. We run the key through our set of hash
+functions, and then check to see whether the bits at those offsets are all
+turned on. If any of the bits is off, we know for certain the key is not in the
+filter. If all of the bits are on, we know the key is probably there.</p>
+
+<p>I say "probably" because there's a certain chance our key might be a false
+positive. For example, let's see what happens when we test our filter for the
+string <code>mango</code>. We run <code>mango</code> through the set of hash
+functions:</p>
+
+<pre><code>hash1("mango") = 8
+hash2("mango") = 3
+hash3("mango") = 12</code></pre>
+
+<p>And then examine the bits at those offsets, as shown in Figure 4.</p>
+
+<p class="secondary"><img src="/pub/2004/04/08/graphics/bloom_4.gif" width="284" height="24" alt="a false positive in the Bloom filter" /><br />
+<em>Figure 4. A false positive in the Bloom filter.</em></p>
+
+<p>All of the bits at positions 3, 8, and 12 are on, so our filter will report
+that <code>mango</code> is a valid key.</p>
+
+<p>Of course, <code>mango</code> is <strong>not</strong> a valid key -- the filter we built contains only <code>apples</code> and <code>plums</code>.
+The fact that the offsets for <code>mango</code> point to enabled bits is just
+coincidence. We have found a false positive -- a key that seems to be in
+the filter, but isn't really there.</p>
+
+<p>As you might expect, the false-positive rate depends on the bit vector
+length and the number of keys stored in the filter. The roomier the bit vector,
+the smaller the probability that all <code>k</code> bits we check will be on, unless the key actually exists in the filter. The relationship between the
+number of hash functions and the false-positive rate is more subtle.  If you
+use too few hash functions, there won't be enough discrimination between keys;
+but if you use too many, the filter will be very dense, increasing the
+probability of collisions. You can calculate the false-positive rate for any
+filter using the formula:</p>
+
+<pre>c = ( 1 - e(-kn/m) )k</pre>
+
+<p>Where <code>c</code> is the false positive rate, <code>k</code> is the
+number of hash functions, <code>n</code> is the number of keys in the filter,
+and <code>m</code> is the length of the filter in bits.</p>
+
+<p>When using Bloom filters, we very frequently have a desired false-positive rate in mind and we are also likely to have a rough idea of how many keys we
+want to add to the filter. We need some way of finding out how large a bit
+vector is to make sure the false-positive rate never exceeds our limit. The
+following equation will give us vector length from the error rate and number of
+keys:</p>
+
+<pre><code>m = -kn / ( ln( 1 - c ^ 1/k ) )</code></pre>
+
+<p>You'll notice another free variable here: <code>k</code>, the number of hash
+functions. It's possible to use calculus to find a minimum for <code>k</code>, but
+there's a lazier way to do it:</p>
+
+<pre><code>sub calculate_shortest_filter_length {
+	my ( $num_keys, $error_rate ) = @_;
+	my $lowest_m;
+	my $best_k = 1;
+
+	foreach my $k ( 1..100 ) {
+		my $m = (-1 * $k * $num_keys) / 
+			( log( 1 - ($error_rate ** (1/$k))));
+
+		if ( !defined $lowest_m or ($m &lt; $lowest_m) ) {
+			$lowest_m = $m;
+			$best_k   = $k;
+		}
+	}
+	return ( $lowest_m, $best_k );
+}</code></pre>
+
+<p>To give you a sense of how error rate and number of keys affect the storage
+size of Bloom filters, Table 1 lists some sample vector sizes for a variety of
+capacity/error rate combinations.</p>
+
+<table border="1" cellpadding="3">
+
+<tr><th>Error Rate</th><th>Keys</th><th>Required
+Size</th><th>Bytes/Key</th></tr>
+
+<tr><td>1%</td><td>1K</td><td>1.87 K</td><td>1.9</td></tr>
+<tr><td>0.1%</td><td>1K</td><td>2.80 K</td><td>2.9</td></tr>
+<tr><td>0.01%</td><td>1K</td><td>3.74 K</td><td>3.7</td></tr>
+<tr><td>0.01%</td><td>10K</td><td>37.4 K</td><td>3.7</td></tr>
+<tr><td>0.01%</td><td>100K</td><td>374 K</td><td>3.7</td></tr>
+<tr><td>0.01%</td><td>1M</td><td>3.74 M</td><td>3.7</td></tr>
+<tr><td>0.001%</td><td>1M</td><td>4.68 M</td><td>4.7</td></tr>
+<tr><td>0.0001%</td><td>1M</td><td>5.61 M</td><td>5.7</td></tr>
+</table>
+
+<p>You can find further lookup tables for various combinations of error rate,
+filter size, and number of hash functions at <a href="http://www.cs.wisc.edu/~cao/papers/summary-cache/node8.html#tab:bf-config-1">Bloom
+Filters -- the math</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2><a name="building_a_bloom_filter_in_perl" id="building_a_bloom_filter_in_perl">Building a Bloom Filter in Perl</a></h2>
+
+<p>To make a working Bloom filter, we need a good set of hash functions These
+are easy to come by -- there are several excellent hashing algorithms
+available on CPAN. For our purposes, a good choice is
+<code>Digest::SHA1</code>, a cryptographically strong hash with a fast C
+implementation. We can use the module to create as many hash functions as we
+like by salting the input with a list of distinct values. Here's a subroutine
+that builds a list of unique hash functions:</p>
+
+<pre><code>use Digest::SHA1 qw/sha1/;
+
+sub make_hashing_functions {
+	my ( $count ) = @_;
+	my @functions;
+
+	for my $salt (1..$count ) {
+		push @functions, sub { sha1( $salt, $_[0] ) };
+	}
+
+	return @functions;
+}</code></pre>
+
+<p>To be able to use these hash functions, we have to find a way to control their
+range. <code>Digest::SHA1</code> returns an embarrassingly lavish 160 bits of
+hashed output, useful only in the unlikely case that our vector is
+2<sup>160</sup> bits long. We'll use a combination of bit chopping and division
+to scale the output down to a more usable size.</p>
+
+<p>Here's a subroutine that takes a key, runs it through a list of hash
+functions, and returns a bitmask of length <code>$FILTER_LENGTH</code>:</p>
+
+<pre><code>sub make_bitmask {
+	my ( $key ) = @_;
+	my $mask    = pack( "b*", '0' x $FILTER_LENGTH);
+
+	foreach my $hash_function ( @functions ){ 
+
+		my $hash       = $hash_function-&gt;($key);
+		my $chopped    = unpack("N", $hash );
+		my $bit_offset = $result % $FILTER_LENGTH;
+
+		vec( $mask, $bit_offset, 1 ) = 1;       
+	}
+	return $mask;
+}</code></pre>
+
+<p>That's a dense stretch of code, so let's look at it line by line:</p>
+
+<pre><code>my $mask = pack( "b*", '0' x $FILTER_LENGTH);</code></pre>
+
+<p>We start by using Perl's <code>pack</code> operator to create a zeroed bit
+vector that is <code>$FILTER_LENGTH</code> bits long.  <code>pack</code> takes two
+arguments, a template and a value. The <code>b</code> in our template tells
+<code>pack</code> that we want it to interpret the value as bits, and the
+<code>*</code> indicates "repeat as often as necessary," just like in a regular
+expression. Perl will actually pad our bit vector to make its length a multiple
+of eight, but we'll ignore those superfluous bits.</p>
+
+<p>With a blank bit vector in hand, we're ready to start running our key
+through the hash functions.</p>
+
+<pre><code>my $hash = $hash_function-&gt;($key);
+my $chopped = unpack("N", $hash );</code></pre>
+
+<p>We're keeping the first 32 bits of the output and discarding the rest. This
+prevents us from having to require <code>BigInt</code> support further along. The second line does the actual bit chopping. The <code>N</code> in the
+template tells <code>unpack</code> to extract a 32-bit integer in network byte
+order. Because we don't provide any quantifier in the template,
+<code>unpack</code> will extract just one integer and then stop.</p>
+
+<p>If you are extra, super paranoid about bit chopping, you could split the hash
+into five 32-bit pieces and XOR them together, preserving all the information
+in the original hash:</p>
+
+<pre><code>my $chopped = pack( "N", 0 );
+my @pieces  =  map { pack( "N", $_ ) } unpack("N*", $hash );
+$chopped    = $_ ^ $chopped foreach @pieces;</code></pre>
+
+<p>But this is probably overkill.</p>
+
+<p>Now that we have a list of 32-bit integer outputs from our hash functions,
+all we have to do is scale them down with the modulo operator so they fall in
+the range (1..<code>$FILTER_LENGTH</code>).</p>
+
+<pre><code>my $bit_offset = $chopped % $FILTER_LENGTH;</code></pre>
+
+<p>Now we've turned our key into a list of bit offsets, which is exactly what
+we were after.</p>
+
+<p>The only thing left to do is to set the bits using <code>vec</code>, which
+takes three arguments: the vector itself, a starting position, and the number
+of bits to set. We can assign a value to <code>vec</code> like we would to a
+variable:</p>
+
+<pre><code>vec( $mask, $bit_offset, 1 ) = 1;</code></pre>
+
+<p>After we've set all the bits, we wind up with a bitmask that is the same
+length as our Bloom filter. We can use this mask to add the key into the
+filter:</p>
+
+<pre><code>sub add {
+	my ( $key, $filter ) = @_;
+
+	my $mask = make_bitmask( $key );
+	$filter  = $filter | $mask;
+}</code></pre>
+
+<p>Or we can use it to check whether the key is already present:</p>
+
+<pre><code>sub check {
+	my ( $key, $filter ) = @_;
+	my $mask  = make_bitmask( $key );
+	my $found = ( ( $filter &amp; $mask ) eq $mask );
+	return $found;
+}</code></pre>
+
+<p>Note that those are the bitwise OR (<code>|</code>) and AND
+(<code>&amp;</code>) operators, not the more commonly used logical OR
+(<code>||</code>) and AND ( <code>&amp;&amp;</code> ) operators.  Getting the
+two mixed up can lead to hours of interesting debugging. The first example ORs
+the mask against the bit vector, turning on any bits that aren't already set.
+The second example compares the mask to the corresponding positions in the
+filter -- if all of the on bits in the mask are also on in the filter, we
+know we've found a match.</p>
+
+<p>Once you get over the intimidation factor of using <code>vec</code>,
+<code>pack</code>, and the bitwise operators, Bloom filters are actually quite
+straightforward. <a href="/2004/04/08/examples/Filter.pm">Listing 1</a> shows a complete
+object-oriented implementation called <code>Bloom::Filter</code>.</p>
+
+<h3><a name="bloom_filters_in_distributed_social_networks"
+id="bloom_filters_in_distributed_social_networks">Bloom Filters in Distributed
+Social Networks</a></h3>
+
+<p>One drawback of existing social network schemes is that they require
+participants to either divulge their list of contacts to a central server
+(Orkut, Friendster) or publish it to the public Internet (FOAF), in both cases
+sacrificing a great deal of privacy.  By exchanging Bloom filters instead of
+explicit lists of contacts, users can participate in social networking
+experiments without having to admit to the world who their friends are. A Bloom
+filter encoding someone's contact information can be checked to see whether it
+contains a given name or email address, but it can't be coerced into revealing
+the full list of keys that were used to build it. It's even possible to turn
+the false-positive rate, which may not sound like a feature, into a powerful
+tool.</p>
+
+<p>Suppose that I am very concerned about people trying to reverse-engineer my
+social network by running a dictionary attack against my Bloom filter. I can
+build my filter with a prohibitively high false-positive rate (50%, for
+example) and then arrange to send multiple copies of my Bloom filter to
+friends, varying the hash functions I use to build each filter. The more
+filters my friends collect, the lower the false-positive rate they will see.
+For example, with five filters the false-positive rate will be
+(0.5)<sup>5</sup>, or 3% -- and I can reduce the rate further by sending
+out more filters.</p>
+
+<p>If any one of the filters is intercepted, it will register the full 50%
+false-positive rate. So I am able to hedge my privacy risk across several
+interactions, and have some control over how accurately other people can see my
+network. My friends can be sure with a high degree of certainty whether someone is on my contact list, but someone who manages to snag just one or two
+of my filters will learn almost nothing about me.</p>
+
+<p>Here's a Perl function that checks a key against a set of noisy filters:</p>
+
+<pre><code>use Bloom::Filter;
+        
+sub check_noisy_filters {
+	my ( $key, @filters ) = @_;
+	foreach my $filter ( @filters ) {
+		return 0 unless $filter-&gt;check( $key );
+	}
+	return 1;
+}</code></pre>
+
+<p>If you and your friends agree to use the same filter length and set of hash
+functions, you can also use bitwise comparisons to estimate the degree of
+overlap between your social networks. The number of shared on bits in two Bloom filters will give a usable measure of the distance between them.</p>
+
+<pre><code>sub shared_on_bits {
+	my ( $filter_1, $filter_2 ) = @_;
+	return unpack( "%32b*",  $filter_1 &amp; $filter_2 )
+}</code></pre>
+
+<p>Additionally, you can combine two Bloom filters that have the same length
+and hash functions with the bitwise OR operator to create a composite filter.
+For example, if you participate in a small mailing list and want to create a whitelist from the address books of everyone in the group, you can have each
+participant create a Bloom filter individually and then OR the filters together
+into a Voltron-like master list. None of the members of the group will know who
+the other members' contacts are, and yet the filter will exhibit the correct
+behavior.</p>
+
+<p>There are sure to be other neat Bloom filter tricks with potential
+applications to social networking and distributed applications. The references
+below list a few good places to start mining.</p>
+
+<h3><a name="references" id="references">References</a></h3>
+
+<ul>
+
+<li><strong><a name="item_http_3a_2f_2fwww_2ecs_2ewisc_2eedu_2f_7ecao_2fpape"
+id="item_http_3a_2f_2fwww_2ecs_2ewisc_2eedu_2f_7ecao_2fpape"></a><a href="http://www.cs.wisc.edu/~cao/papers/summary-cache/node8.html"> Bloom
+Filters -- the math</a></strong>.  A good place to start for an overview
+of the math behind Bloom filters.</li>
+
+<li><strong><a name="item_http_3a_2f_2fwww_2ecap_2dlore_2ecom_2fcode_2fbloom"
+id="item_http_3a_2f_2fwww_2ecap_2dlore_2ecom_2fcode_2fbloom"></a><a href="http://www.cap-lore.com/code/BloomTheory.html"> Some Motley Bloom Tricks</a></strong>.  Handy filter tricks and theory page.</li>
+
+<li><strong><a name="item_http_3a_2f_2fwww_2eeecs_2eharvard_2eedu_2f_7emicha"
+id="item_http_3a_2f_2fwww_2eeecs_2eharvard_2eedu_2f_7emicha"></a><a href="http://www.eecs.harvard.edu/~michaelm/NEWWORK/postscripts/BloomFilterSurvey.pdf">Bloom
+Filter Survey</a></strong>.  A handy survey article on Bloom filter network
+applications.</li>
+
+<li><strong><a name="item_loaf" id="item_loaf" /><a href="http://loaf.cantbedone.org">LOAF</a></strong>.  Our own system for
+incorporating social networks onto email using Bloom filters.</li>
+
+<li><strong><a href="http://www.eecs.harvard.edu/~michaelm/NEWWORK/postscripts/cbf2.pdf">
+Compressed Bloom Filters</a></strong>.  If you are passing filters around a
+network, you will want to optimize them for minimum size; this paper gives a
+good overview of compressed Bloom filters.</li>
+
+<li><strong><a name="item_bloom16" id="item_bloom16" /><a href="http://search.cpan.org/~iwoodhead/Bloom16-0.01/Bloom16.pm"><code>Bloom16</code></a>.</strong>
+A CPAN module implementing a counting Bloom filter.</li>
+
+<li><strong><a name="item_bloom" id="item_bloom" /><a href="http://search.cpan.org/~aspinelli/Text-Document-1.07/Bloom.pod"><code>Text::Bloom</code></a></strong>.
+CPAN module for using Bloom filters with text collections.</li>
+
+<li><strong><a name="item_http_3a_2f_2fwww_2eresearch_2eatt_2ecom_2f_7esmb_2"
+id="item_http_3a_2f_2fwww_2eresearch_2eatt_2ecom_2f_7esmb_2" /><a href="http://www.research.att.com/~smb/papers/bloom-encrypt.pdf">
+Privacy-Enhanced Searches Using Encryted Bloom Filters</a></strong>.  This
+paper discusses how to use encryption and Bloom filters to set up a query
+system that prevents the search engine from knowing the query you are
+running.</li>
+
+<li><strong><a href="http://www.cs.wisc.edu/~cao/papers/summary-cache/node9.html">Bloom
+Filters as Summaries</a></strong>.  Some performance data on actually using
+Bloom filters as cache summaries.</li>
+
+<li><strong><a href="http://www.research.att.com/~smb/papers/draft-bellovin-dnsext-bloomfilt-00.txt">
+Using Bloom Filters for Authenticated Yes/No Answers in the DNS</a></strong>.
+Internet draft for using Bloom filters to implement Secure DNS</li>
+
+</ul>
+
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Bloom%20filters&amp;limit=20';return false;" rel="tag">Bloom filters</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Bloom16&amp;limit=20';return false;" rel="tag">Bloom16</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=LOAF&amp;limit=20';return false;" rel="tag">LOAF</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Maciej%20Ceglowski&amp;limit=20';return false;" rel="tag">Maciej Ceglowski</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=set%20membership&amp;limit=20';return false;" rel="tag">set membership</a><span class="delimiter">,</span></li> <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=Text%3A%3ABloom&amp;limit=20';return false;" rel="tag">Text::Bloom</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

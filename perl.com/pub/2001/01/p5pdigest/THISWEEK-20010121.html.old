@@ -1,0 +1,246 @@
+<!-- This week on perl5-porters (15--21 Jan 2001) -->
+
+<br />
+<!::field::date::><br />
+      <H3><a name="Notes">Notes</a></H3>
+
+
+<ul>
+  <li><a href="#Notes">Notes</a>
+  <li><a href="#sigsetjmp_wrangling_continues">sigsetjmp wrangling continues</a>
+  <li><a href="#Safe_Signals">Safe Signals</a>
+  <li><a href="#Large_file_support_wrangling_continues">Large file support wrangling continues</a>
+  <li><a href="#Multiple_Pre_Incrementing">Multiple Pre-Incrementing</a>
+  <li><a href="#TestHarness_Megapatch">Test::Harness Megapatch</a>
+  <li><a href="#Tokeniser_reporting_and_pretty_printing">Tokeniser reporting and pretty-printing</a>
+  <li><a href="#Unicode">Unicode </a>
+  <li><a href="#Various">Various</a>
+</ul>
+
+</P>
+
+<P>
+
+You can subscribe to an email version of this summary by sending an
+empty message to 
+<a href="mailto:p5p-digest-subscribe@plover.com"><tt>p5p-digest-subscribe@plover.com</tt>.</a></P>
+
+<P>
+Please send corrections and additions to 
+<CODE>perl-thisweek-YYYYMM@simon-cozens.org</CODE> where 
+<CODE>YYYYMM</CODE> is the current year and month.
+<H3><a name="sigsetjmp_wrangling_continues">sigsetjmp wrangling continues</a></H3>
+
+</P>
+
+<P>
+
+Last week, there was some discussion about whether Perl ought to use 
+<CODE>sigsetjmp</CODE> to jump out of 
+<CODE>eval</CODE>s and to 
+<CODE>die</CODE>. Part of the problem is that 
+<CODE>sigsetjmp</CODE> is quite a lot slower than 
+<CODE>setjmp</CODE>, so if we can get by without it, we ought to. Nick Ing-Simmons has
+removed 
+<CODE>sigsetjmp</CODE> from the current sources, but now Nick Clark has found that this can
+sometimes cause a slowdown due to bizarre optimizing.
+</P>
+
+<P>
+The discussion then veered onto the problems of using any sort of
+non-local jump with threads. Alan pointed out that neither 
+<CODE>sigjmp</CODE> nor 
+<CODE>sigsetjmp</CODE> were thread-safe at all, and since Perl uses them, Perl's threading
+implementation is horrifically broken.
+<!-- well, tell us something we didn't already know. -->There were no good suggestions <!-- but a couple of bad ones --> about how to get around this, or to getaway without non-local jumps for trapping exceptions. Alan declared Perl
+5 beyond hope, but said:
+<blockquote></P>
+
+<P>
+If perl6 has 
+something akin to the perl5 stack, eval/die will have to be implemented  
+so that that it rolls back up the stack on die, rather than the current   
+longjmp hack.
+</blockquote></P>
+
+<P>
+Alan also suggested that we would need to roll our own threading model
+in Perl 6 to have full control over exception handling; the discussion
+carried on about Perl 6 over on the 
+<CODE>perl6-internals</CODE> mailing list.
+</P>
+
+<P>
+The part where it gets interesting this week starts
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01023.html">here</a>.
+<H3><a name="Safe_Signals">Safe Signals</a></H3>
+
+</P>
+
+<P>
+
+Nick came up with a program for people to try to confirm his suspicions
+about signal handling. His plan was to have C set a flag in the signal
+handler which is checked after each op is performed, which seems the
+most obvious way of doing it, but he was worried about systems with
+signal handlers where 
+<CODE>SIGCHLD</CODE> didn't call 
+<CODE>wait</CODE>, meaning there would be still outstanding children when the signal
+handler returned, meaning a 
+<CODE>SIGCHLD</CODE> would be delivered, meaning the handler would get called, rince and
+repeat.
+</P>
+
+<P>
+However, every platform that was tested worked sensibly, so it looks
+like Nick is going to go ahead and try and implement safe signals.
+<H3><a name="Large_file_support_wrangling_continues">Large file support wrangling continues</a></H3>
+
+</P>
+
+<P>
+
+The discussion last week about Linux's large file support continued this
+week. The problem is that we need to find the right preprocessor
+directive to get the most use out of the system; most of the ones which
+look useful (
+<CODE>_GNU_SOURCE</CODE>, for instance) also expose other things that we don't necessarily want. 
+It would also throw up problems in programs embedding Perl. Russ
+Allbery had been through all this with both INN and 
+<CODE>autoconf</CODE>. His advice:
+<blockquote></P>
+
+<P>
+ Eventually, the autoconf folks decided to give up on glibc 2.1 as
+ broken for large files and just recommend people upgrade to glibc 2.2
+ or add -D_GNU_SOURCE manually if it works for their application.
+</blockquote><H3><a name="Multiple_Pre_Incrementing">Multiple Pre-Incrementing</a></H3>
+
+</P>
+
+<P>
+
+I decided to throw a spaniel in the works by submitting a patch to make
+</P>
+
+</P><PRE>
+    print (++$i, ++$i, ++$i)
+</PRE>
+
+<P>
+work as John Vromans would like; currently, Perl reserves the right to
+do, well, pretty much anything it wants in that situation, but the
+&quot;obvious&quot; thing for it to print would be (assuming 
+<CODE>$i</CODE> was undefined before hand) &quot;123&quot;. There were some arguments as to why
+this would be a bad idea - firstly, defining behaviour that is currently
+undefined robs us of the right to make clever optimizations in the future, 
+and also that the fix slows down the behaviour of pre-increment and
+pre-decrement for everyone, not just those
+<!-- complete sickos and obviously dangerous lunatics -->doing multiple pre-increments in a single statement.
+</P>
+
+<P>
+I also wondered whether the confusion at seeing Perl output &quot;333&quot; in the
+above code would be offset by the confusion required to try something
+like that in a serious program anyway.
+<H3><a name="TestHarness_Megapatch">Test::Harness Megapatch</a></H3>
+
+</P>
+
+<P>
+
+Michael Schwern did his usual trick of popping up out of nowhere with a
+40K patch - this time he rewrote 
+<CODE>Test::Harness</CODE> to support a lot of sensible things, like the trick of having comments
+after your message, like this:
+</P>
+
+</P><PRE>
+    ok 123 - Testing the frobnicator
+</PRE>
+
+<P>
+so that when tests fail you can can search for that string. He went back
+and forth with Andreas about some of the new features - Andreas felt
+that, for instance, allowing upper case output creates additional noise
+and distraction. Jarkko agreed, and the patch got fried. 
+</P>
+
+<P>
+Not put off, Schwern then went on to unify the 
+<CODE>skip</CODE> and
+<CODE>todo</CODE> interfaces. Unfortunately, that couldn't be done without breaking
+existing code, especially CPAN modules, so that patch died the death
+too. Oh, the embarrassment.
+<H3><a name="Tokeniser_reporting_and_pretty_printing">Tokeniser reporting and pretty-printing</a></H3>
+
+</P>
+
+<P>
+
+I did something evil again. After hearing a talk by Knuth about Literate
+Programming, I went back to bemoaning the lack of a Perl pretty-printer,
+and the depressing words in the FAQ:
+<blockquote></P>
+
+<P>
+There is no program that will reformat Perl as much as indent(1)
+will do for C.  The complex feedback between the scanner and the
+parser (this feedback is what confuses the vgrind and emacs
+programs) makes it challenging at best to write a stand-alone
+Perl parser.
+</blockquote></P>
+
+<P>
+So if I couldn't build a stand-alone parser, I'd use the one we've got - 
+<CODE>perl</CODE>. By adding a call to a reporting function every time Perl makes a
+decision about what a token is, you can generate a listing of all the
+tokens in a program and their types. Implementation of a robust
+pretty-printer is 
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg00833.html">left as an exercise for the reader</a>; answers on a postcard, please.
+</P>
+
+<P>
+(PS: I've since been alerted to the existence of Tim Maher's
+<a href="http://www.consultix-inc.com/perl_beautifier.html">Perl beautifier</a>, which is an equally cool hack.)
+<H3><a name="Unicode">Unicode </a></H3>
+
+</P>
+
+<P>
+
+How could I go a week without mentioning Unicode? Hiroto's 
+<CODE>qu</CODE> operator is in, and someone's obviously using it, because Nick Clark
+found that it was turning up a bug in UTF8 hashes - 
+<CODE>$foo{something}</CODE> and
+<CODE>$foo{qu/something/}</CODE> were being seen as two different keys. Hiroto said he was aware of it
+and meant to send a patch but hasn't managed to yet.
+</P>
+
+<P>
+UTF8 support on EBCDIC is starting to work, but it's being done in a
+bit of a bizarre way - we're actually using UTF8 to encode 
+<B>EBCDIC itself</B>, rather than Unicode. This means that whileEBCDIC and non-EBCDIC platforms now both &quot;support&quot; UTF8 and all the code
+(on the whole) works, Weird Things(TM) might happen if EBCDIC people
+start playing with character classes or other Unicode features.
+<H3><a name="Various">Various</a></H3>
+
+</P>
+
+<P>
+
+IV preservation is still buggy.
+</P>
+
+<P>
+I'll leave you with the news that several people reported problems with
+the bug-reporting system; Perl is so great, even its bugs have bugs.
+</P>
+
+<P>
+Until next week I remain, your humble and obedient servant,
+</P>
+
+<hr>
+
+<a href="mailto:simon@brecon.co.uk">Simon Couzens</a>

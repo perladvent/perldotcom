@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use lib 'bin/lib';
+use Article;
+use Text::CSV;
+use JSON::XS;
+
+# generate json entries for all authors in the index
+$SIG{__WARN__} = sub {};
+
+my $csv = Text::CSV->new();
+my $json = JSON::XS->new->utf8->pretty;
+my $base_article_path = 'content/article';
+
+open my $article_index, '<:utf8', "perl.com/pub/articles-index-20171008.csv" or die $!;
+my @column_names = qw(date title authors file categories tags);
+my $counter = 0;
+
+while (my $cols = $csv->getline($article_index)) {
+  my %args = map { $column_names[$_] => $cols->[$_] } 0..$#$cols;
+  my $a = Article->new(\%args);
+  open my $fh, '>:utf8', join('/', $base_article_path, $a->filepath) or die $!;
+  print $fh $a->serialize;
+  last if ++$counter == 10;
+}

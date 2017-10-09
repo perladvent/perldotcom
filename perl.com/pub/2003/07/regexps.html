@@ -1,0 +1,1106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.02" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+    
+    <link rel="prev bookmark" href="/pub/2003/06/perl6essentials.html" title="Perl 6 Design Philosophy" />
+    <link rel="next bookmark" href="/pub/2003/07/20030706.html" title="This week on Perl 6, week ending 2003-07-06" />
+    
+    
+    <title>Power Regexps, Part II - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <div id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<a href="http://www.perlfoundation.org/" target="_new">
+<img src="/i/tpf_banner.png" width="468" height="60" /></a>
+        </div> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description"></div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1158" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Power Regexps, Part II</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Simon Cozens</span> on <abbr class="published" title="2003-07-01T00:00:00-08:00">July  1, 2003 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                        
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+<p>In the previous article, we looked at some of the more intermediate features
+of regular expressions, including multiline matching, quoting, and
+interpolation. This time, we're going to look at
+more-advanced features. We'll also look at some
+modules that can help us handle regular expressions.</p>
+
+
+<h2><a name="look_forward,_look_back">Look Forward, Look Back</a></h2>
+<p>Perhaps the most misunderstood facility of regular expressions are the
+lookahead and lookbehind operators; let's begin with the simplest, the
+positive lookahead operator.</p>
+<p>This operator, spelled <code>(?= )</code>, attempts to match a pattern, and if
+successful, promptly forgets all about it. As its name implies, it peeks
+forward into the string to see whether the next part of the string matches
+the pattern. For instance:</p>
+<pre><code>
+    $a=&quot;13.15    Train to London&quot;; 
+    $a=~ /(?=.*London)([\d\.]+)/</code></pre>
+<p>This is perhaps an inefficient way of writing:</p>
+<pre><code>
+    $a =~ /([\d\.]+).*London/;</code></pre>
+<p>and it can be read as &quot;See if this string has 'London' in it somewhere,
+and if so, capture a series of digits or periods.&quot;</p>
+<p>Here's an example of it in real-life code; I want to turn some file
+names into names of Perl modules. I'll have a name like
+<em>/Library/Perl/Mail/Miner/Recogniser/Phone.pm</em> - this is part of my
+<code>Mail::Miner</code> module, so I can guarantee that the name of the module
+will start with <code>Mail/Miner</code> - and I want to get
+<code>Mail::Miner::Recogniser::Phone</code>. Here's the code that does it:</p>
+<pre><code>
+    our @modules = map {
+        s/.pm$//;
+        s{.*(?=Mail/Miner)}{};
+        join &quot;::&quot;, splitdir($_)
+    } @files;</code></pre>
+<p>We look at each of our files, and first take off the <code>.pm</code> from the
+end. Now what we need to do is remove everything before the
+<code>Mail/Miner</code> portion, stripping off <em>/Library/Perl</em> or whatever our
+path happens to be. Now we could write this as:</p>
+<pre><code>
+    s{.*Mail/Miner}{Mail/Miner};</code></pre>
+<p>removing everything which appears before <code>Mail/Miner</code> and then the text
+<code>Mail/Miner</code> itself, and then replacing all that with <code>Mail/Miner</code>
+again. This is obviously horribly long-winded, and it's much more
+natural to think of this in turns of &quot;get rid of everything but stop
+when you see <code>Mail/Miner</code>&quot;. In most cases, you can think of <code>(?= )</code> as
+meaning &quot;up to&quot;.</p>
+<p>Similar but subtly different is the negative counterpart <code>(?! )</code>. This
+again peeks forward into the string, but ensures that it <strong>doesn't</strong>
+match the pattern. A good way to think of this is &quot;so long as you don't
+see&quot;. Damian Conway's <code>Text::Autoformat</code> contains some code for
+detecting quoted lines of text, such as may be found in an e-mail
+message:</p>
+<pre><code>
+    % Will all this regular expression scariness go away in 
+    % Perl 6?</code></pre>
+<pre><code>
+    Yes, definitely; we're replacing it with a completely different set
+    of scariness.</code></pre>
+<p>Here the first two lines are quoted, and the expressions that check for
+this look like so:</p>
+<pre><code>
+    my $quotechar = qq{[!#%=|:]};
+    my $quotechunk = qq{(?:$quotechar(?![a-z])|[a-z]*&gt;+)};</code></pre>
+<p><code>$quotechar</code> contains the characters that we consider signify a
+quotation, and <code>$quotechunk</code> has two options for what a quotation looks
+like. The second is most natural: a greater-than sign, possibly preceded
+by some initials, such as produced by the popular Supercite <code>emacs</code>
+package:</p>
+<pre><code>
+    SC&gt; You're talking nonsense, you odious little gnome!</code></pre>
+<p>The left-hand side of the alternation in <code>$quotechunk</code> is a little more
+interesting. We look for one of our quotation characters, such as <code>%</code>
+as in the example above, but then we make sure that the next character
+we see is not alphabetic; this may be a quotation:</p>
+<pre><code>
+    % I think that all right-thinking people...</code></pre>
+<p>but this almost certainly isn't</p>
+<pre><code>
+    %options = ( verbose =&gt; 1, debug =&gt; 0 );</code></pre>
+<p>The <code>(?!)</code> acts as a &quot;make sure you don't see&quot; directive.</p>
+<p>The mistake everyone makes at least once with this is to assume you can
+say:</p>
+<pre><code>
+    /(?!foo)bar/;</code></pre>
+<p>and wonder why it matches against <code>foobar</code>. After all, we've made sure
+we didn't see a <code>foo</code> before the <code>bar</code>, right? Well, not exactly.
+These are lookahead operators, and so can't be used to find things
+&quot;before&quot; anything at all; they're only used to determine what we can or
+can't see after the current position. To understand why this is wrong,
+imagine what it would mean if it were a positive assertion:</p>
+<pre><code>
+    /(?=foo)bar/;</code></pre>
+<p>This means &quot;are the next three characters we see <code>foo</code>? If so, the next three characters we see are <code>bar</code>&quot;. This is obviously never
+going to happen, since a string can't contain both <code>foo</code> and <code>bar</code> at
+the same position and the same time. (Although I believe Damian has a
+paper on that.) So the negative version means &quot;are the next three
+characters we see <strong>not</strong> <code>foo</code>? Then match <code>bar</code>&quot;. <code>foo</code> is not
+<code>bar</code>, so this matches any <code>bar</code>. What was probably meant was a
+lookbehind assertion, which we will look at imminently.</p>
+<p>Now we've seen the two forward-facing assertions, we can turn (ha, ha)
+to the backward-facing assertions, positive and negative lookbehind.
+There's one important difference between these and their forward-facing
+counterparts; while lookahead operators can contain more or less any
+kind of regular expression pattern, for reasons of implementation the
+lookbehind operators must have a fixed width computable at compile time.
+That is, you're not allowed to use any indefinite quantifiers in your
+subpatterns.</p>
+<p>The positive lookbehind assertion is <code>(?&lt;=)</code>, and the only thing
+you need to know about it is that it's so rare I can't remember the last
+time I saw it in real code. I don't think I've ever used it, except
+possibly in error. If you think you want to use one of these, then you almost
+certainly need to rethink your strategy. Here's a quick example, though,
+from <code>IPC::Open3</code>:</p>
+<pre><code>
+    $@ =~ s/(?&lt;=value attempted) at .*//s;</code></pre>
+<p>The context for this is that we've just done the equivalent of</p>
+<pre><code>
+    eval { $_[0] = ... };</code></pre>
+<p>and if someone maliciously passes a constant value to the subroutine, 
+we want to through the <code>Modification of a read-only value attempted</code>
+error back in their face. We check we're seeing the error we expect,
+then strip off the <code> at .../IPC/Open3.pm, line 154</code> part of the message
+so that it can be fed to <code>croak</code>. The less Tom-Christianseny way to
+do this would be something like:</p>
+<pre><code>
+    croak &quot;You fed me bogus parameters&quot; if $@ =~ /attempted/;</code></pre>
+<p>The negative lookbehind assertion, on the other hand, is considerably
+more common; this is the answer to our &quot;<code>bar</code> not preceded by <code>foo</code>&quot;
+problem of the previous section.</p>
+<pre><code>
+    /(?!&lt;foo)bar/;</code></pre>
+<p>This will match <code>bar</code>, peeking backward into the string to make sure
+it doesn't see <code>foo</code> first. To take another example, suppose we're
+preparing some text for sending over the network, and we want to make
+sure that all the line feeds (<code>\n</code>) have carriage returns (<code>\r</code>)
+before them. Here's the truly lazy way to do it:</p>
+<pre><code>
+    # Make sure there's an \r in there somewhere
+    s{\n}  {\r\n}g;
+    # And then strip out duplicates
+    s{\r\r}{\r}  g;
+ 
+This is fine (if somewhat inefficient) unless it's OK for two carriage
+returns to appear without a line feed in the way. Here's the finesse:</code></pre>
+<pre><code>
+    s/(?&lt;!\r)\n/\r\n/g;</code></pre>
+<p>If you see a line feed that is <strong>not</strong> preceded by a carriage return,
+then stick a carriage return in there -- much cleaner, and much more efficient.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2><a name="split,_//g_and_other_shenanigans"><code>split</code>, <code>//g</code> and other shenanigans</a></h2>
+<p>In the previous article, we had a nice piece of multiline, formatted
+data, such as one might expect to parse with Perl:</p>
+<pre><code>
+    Name: Mark-Jason Dominus
+    Occupation: Perl trainer
+    Favourite thing: Octopodes</code></pre>
+<pre><code>
+    Name: Simon Cozens
+    Occupation: Hacker
+    Favourite thing: Sleep</code></pre>
+<p>Now, there's a boring way to parse this. If you're coming from a C
+or Java background, then you might try:</p>
+<pre><code>
+    my $record = {}
+    my @records;
+    for (split /\n/, $text {
+        chomp;
+        if (/([^:]+): (.*)/) {
+            $record-&gt;{$1} = $2;
+        } elsif ($_ =~ /^\s*$/) {
+            # Blank line =&gt; end of current record
+            push @records, $record;
+            $record = {};
+        } else {
+            die &quot;Wasn't expecting to see '$_' here&quot;;
+        }
+    }</code></pre>
+<p>And, of course, this will work. But there's several more
+Perl-ish solutions that this. When you know the fields provided by your
+data, it's rather nice to have a regular expression that reflects the
+data structure:</p>
+<pre><code>
+    while ($data =~ /Name:\s(.*)\n
+                     Occupation:\s(.*)\n 
+                     Favourite.*:\s(.*)/gx) {
+        push @records, { name =&gt; $1, occupation =&gt; $2, favourite =&gt; $3 }
+    }</code></pre>
+<p>Here we use the <code>/g</code> modifier, which allows us to resume the match from
+where it last left off.</p>
+<p>If we don't know the fields while we're writing our program, then we'll
+have to break the process up into two stages. First, we extract
+individual records: records are delimited by a blank line:</p>
+<pre><code>
+    my @texts = split /\n\s*\n/, $text;</code></pre>
+<p>And then for each record, we can either use the <code>/g</code> trick again, or
+simply split each record into lines. I prefer the latter, for reasons
+you'll see in a second:</p>
+<pre><code>
+    for (@texts) {
+        my $record = {};
+        for (split /\n/, $_) {
+            /([^:]+): (.*)/;
+            $record-&gt;{$1} = $2;
+        }
+        push @records, $record;
+    }</code></pre>
+<p>This is not dissimilar from the initial solution, but it allows us to
+make some interesting improvements. For starters, when you see code
+that transforms data with a <code>for</code> loop, you should wonder whether it
+could be better written with a <code>map</code> statement. This goes double if
+you're using <code>push</code> inside the <code>for</code> loop as we are here. So this
+version is a natural evolution:</p>
+<pre><code>
+    @records = map {
+        my $record = {};
+        for (split /\n/, $_) { 
+            /([^:]+): (.*)/;
+            $record-&gt;{$1} = $2;
+        }
+        $record;
+    } split /\n\s*\n/, $text;</code></pre>
+<p>And we can actually do away with the inner <code>for</code> loop too:</p>
+<pre><code>
+    @records = map {
+        {
+            map { /([^:]+): (.*)/ and ($1 =&gt; $2) } split /\n/, $_
+        }
+    } split /\n\s*\n/, $text;</code></pre>
+<p>But if we're prepared to be a little lax about trailing whitespace,
+there's actually an even nicer way to do it, using the one thing that
+everyone forgets about <code>split</code>: if your <code>split</code> pattern contains
+parentheses, then the captured text is inserted into the list returned
+by <code>split</code>. That is, the following code:</p>
+<pre><code>
+    split( /(\W+)/, &quot;perl-5.8.0.tar.gz&quot;)</code></pre>
+<p>will produce the list</p>
+<pre><code>
+    (&quot;perl&quot;, &quot;-&quot;, &quot;5&quot;, &quot;.&quot;, &quot;8&quot;, &quot;.&quot;, &quot;0&quot;, &quot;.&quot;, &quot;tar&quot;, &quot;.&quot;, &quot;gz&quot;)</code></pre>
+<p>So we can actually use the field name, colon and space at the start of
+each line as the <code>split</code> expression itself:</p>
+<pre><code>
+    split /^([^:]+):\s*/m</code></pre>
+<p>There is a slight problem with this idea - because the first
+thing in each record is delimeter we're looking for, the first thing
+returned by <code>split</code> will be an empty string. But we can easily get
+around this by adding another <code>undef</code> to provide a fake <code>undef =&gt; ''</code>
+hash element. This allows us to reduce the parser code to:</p>
+<pre><code>
+    @records = map { 
+                     { undef, split /^([^:]+):\s*/m, $_ } 
+                   } split /\n\s*\n/, $text;</code></pre>
+<p>It may not be pretty, but it's quick and it works.</p>
+<p>Of course, you may also use lookahead and lookbehind assertions with
+<code>split</code>; I sometimes use the following code to break a string into
+tokens:</p>
+<pre><code>
+    split /(?&lt;=\W)|(?=\W)/, $string;</code></pre>
+<p>This is almost the same as</p>
+<pre><code>
+    split /(\W)/, $string</code></pre>
+<p>but with a subtle difference. Again, as Perl wants to see a nonword
+character as a delimiter, it will return an empty string between two
+adjacent nonwords:</p>
+<pre><code>
+    split /(\W)/, '$foo := $bar';
+    # '', '$', 'foo', ' ', '', ':', '', '=', '', ' ', '', '$', 'bar'</code></pre>
+<p>Splitting on a word boundary goes too much the other way:</p>
+<pre><code>
+    split /\b/, '$foo := $bar';
+    # '$', 'foo', ' := $', 'bar'</code></pre>
+<p>And so it turns out that we want to cleave the string where we've just
+seen a nonword character, or if we're about to see one:</p>
+<pre><code>
+    split /(?&lt;=\W)|(?=\W)/, $string;
+    # '$', 'foo', ' ', ':', '=', ' ', '$', 'bar'</code></pre>
+<p>And this gives us the sort of tokenisation we want.</p>
+
+
+<h2><a name="regexp_modules">Regexp Modules</a></h2>
+<p>Now, though, we are getting into the sort of regular expressions that
+are not written lightly, and we may need some help constructing and
+debugging these expressions. Thankfully, there are plenty of modules
+which make regexp handling much easier for us.</p>
+
+
+<h3><a name="re">re</a></h3>
+<p>The <code>re</code> module is as invaluable as it is obscure. It's one of those
+hidden treasures of the Perl core that Casey was talking about last
+month. As well as turning on two features of the regular expression
+engine, tainting subexpressions and evaluated assertions, it provides a
+debugging facility that allows you to watch your expression being
+compiled and executed.</p>
+<p>Here's a relative simple expression:</p>
+<pre><code>
+    $a =~ /([^:]+):\s*(.*)/;</code></pre>
+<p>When this code is run under <code>-Mre=debug</code>, then the following will be
+printed when the regexp is compiled:</p>
+<pre><code>
+    Compiling REx `([^:]+):\s*(.*)'
+    size 25 first at 4
+       1: OPEN1(3)
+       3:   PLUS(13)
+       4:     ANYOF[\0-9;-\377](0)
+      13: CLOSE1(15)
+      15: EXACT &lt;:&gt;(17)
+      17: STAR(19)
+      18:   SPACE(0)
+      19: OPEN2(21)
+      21:   STAR(23)
+      22:     REG_ANY(0)
+      23: CLOSE2(25)
+      25: END(0)</code></pre>
+<p>This tells us the instructions for the little machine that the regular
+expression compiler creates: it should first open a bracket, then go
+into a loop (<code>PLUS</code>) finding characters that are <code>ANYOF</code> character
+zero through to <code>9</code> and <code>;</code> through to character 255 - that is,
+everything apart from a <code>:</code>. Then we close the bracket, look for a
+specific character, and so on. The numbers in brackets after each
+instruction are the line number to jump to on completion; then the
+<code>PLUS</code> loop exits, it should go on to line 13, <code>CLOSE1</code> and so on.</p>
+<p>Next when we try to run this match against some text:</p>
+<pre><code>
+    $a = &quot;Name: Mark-Jason Dominus&quot;;</code></pre>
+<p>It will first tell us something about the optimizations it performs:</p>
+<pre><code>
+    Guessing start of match, REx `([^:]+):\s*(.*)' against `Name: ...'
+    Found floating substr `:' at offset 4...
+    Does not contradict STCLASS...
+    Guessed: match at offset 0</code></pre>
+<p>What this means is that it has found the constant element <code>:</code> in the
+regular expression, and tries to locate that in the string, and then
+work backward to find out where it should start the match. Since the
+<code>:</code> is at position four in our string, it will go on to deduce that
+the match should start at the beginning and...</p>
+<pre><code>
+    Matching REx `([^:]+):\s*(.*)' against `Name: Mark-Jason Dominus'
+    Setting an EVAL scope, savestack=3
+    0 &lt;&gt; &lt;Name: Mark-J&gt;    |  1:  OPEN1
+    0 &lt;&gt; &lt;Name: Mark-J&gt;    |  3:  PLUS
+    ANYOF[\0-9;-\377] can match 4 times out of 32767...</code></pre>
+<p>The <code>[^:]</code> can match four times, since it knows there are four things
+that are not colons there.</p>
+<p>The <code>re</code> module is absolutely essential for heavy-duty study of how the
+regular expression engine works, and why it doesn't do what you think it
+should.</p>
+
+
+<h3><a name="yape::regex::explain">YAPE::Regex::Explain</a></h3>
+<p>The description given by <code>re</code> is a little low-level for some people;
+well, most people. <code>YAPE::Regex::Explain</code> aims to put the explanation
+at a much higher level; for instance,</p>
+<pre><code>
+     % perl -MYAPE::Regex::Explain -e 'print 
+       YAPE::Regex::Explain-&gt;new(qr/(?&lt;=\W)|(?=\W)/)-&gt;explain'</code></pre>
+<p>will produce quite a verbose explanation of the regular expression like
+so:</p>
+<pre><code>
+    ----------------------------------------------------------------------
+    (?-imsx:                 group, but do not capture (case-sensitive)
+                             (with ^ and $ matching normally) (with . not
+                             matching \n) (matching whitespace and #
+                             normally):
+    ----------------------------------------------------------------------
+      (?&lt;=                     look behind to see if there is:
+    ----------------------------------------------------------------------
+        \W                       non-word characters (all but a-z, A-Z,
+                                 0-9, _)
+    ----------------------------------------------------------------------
+    ...</code></pre>
+
+
+<h3><a name="graphviz::regex">GraphViz::Regex</a></h3>
+<p>I find that one of the best ways to debug and understand a complex
+procedure is to draw a picture. <code>GraphViz::Regex</code> uses the <code>graphviz</code>
+visualization library to draw a state machine diagram for a given
+regular expression:</p>
+<pre><code>
+    use GraphViz::Regex;</code></pre>
+<pre><code>
+    my $regex = '(([abcd0-9])|(foo))';</code></pre>
+<pre><code>
+    my $graph = GraphViz::Regex-&gt;new($regex);
+    print $graph-&gt;as_png;</code></pre>
+
+
+<h3><a name="regexp::common">Regexp::Common</a></h3>
+<p>So much for explaining complicated regular expressions; what about
+generating them? The <code>Regexp::Common</code> module aims to be a repository
+for all kinds of commonly needed regular expressions, such as URIs,
+balanced texts, domain names and IP addresses. The interface
+is a little freaky, but it can hugely help to clarify complex regexps:</p>
+<pre><code>
+    my $ts = qr/\d+:\d+:\d+\.\d+/;
+    $tcpdump =~ /$ts ($RE{net}{IPv4}) &gt; ($RE{net}{IPv4}) : (tcp|udp) (\d+)/;</code></pre>
+
+
+<h3><a name="text::balanced">Text::Balanced</a></h3>
+<p>Finally, one particularly common family of things to match for are quoted,
+parenthesised or tagged text. Damian's <code>Text::Balanced</code> module helps
+produce both regular expressions and subroutines to match and extract
+balanced text sequences. For instance, we can create a regular
+expression for matching double-quoted strings like so:</p>
+<pre><code>
+    use Text::Balanced qw(gen_delimited_pat);
+    $pat = gen_delimited_pat(q{&quot;})
+    # (?:\&quot;(?:[^\\\&quot;]*(?:\\.[^\\\&quot;]*)*)\&quot;)</code></pre>
+<p>This pattern will match quoted text, but will also be aware of escape
+sequences like <code>\&quot;</code> and <code>\\</code>, and hence not break off in the middle of</p>
+<pre><code>
+    &quot;\&quot;So\&quot;, he said, \&quot;How about lunch?\&quot;&quot;</code></pre>
+<p><code>Text::Balanced</code> also contains routines for extracting tagged text,
+finding balanced pairs of parentheses, and much more.</p>
+
+
+<h2><a name="summary">Summary</a></h2>
+<p>We've looked at some slightly more-complex features of regular expressions,
+and shown how we can use these to slice and dice text with Perl. As these
+regexes get more complicated, the need for tools to help us debug them 
+increases; and so we've looked also at <code>re</code>, <code>YAPE</code> and <code>GraphViz::Regex</code>.</p>
+<p>Finally, the <code>Regexp::Common</code> and <code>Text::Balanced</code> modules help us create
+complex regular expressions of our own.</p>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+    
+                                    <div class="entry-categories">
+                                        <h4>Categories<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="/pub/regular-expressions/" rel="tag">Regular Expressions</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?blog_id=2&amp;tag=regexps%20regular%20expressions&amp;limit=20';return false;" rel="tag">regexps regular expressions</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2010/07/">July 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.02" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

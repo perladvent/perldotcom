@@ -1,0 +1,1265 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="Movable Type Pro 5.13-en" />
+<link rel="stylesheet" href="/pub/styles.css" type="text/css" />
+<link rel="start" href="/pub/" title="Home" />
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="/pub/atom.xml" />
+<script type="text/javascript" src="/pub/mt.js"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="/pub/2003/02/05/mod_perl.html">
+<dc:title>Improving mod_perl Sites&apos; Performance: Part 7</dc:title>
+<dc:description> Correct configuration of the MinSpareServers, MaxSpareServers, StartServers, MaxClients, and MaxRequestsPerChild parameters is very important. There are no defaults. If they are too low, then you will underutilize the system&apos;s capabilities. If they are too high, then chances are that...</dc:description>
+<dc:creator>Stas Bekman</dc:creator>
+<dc:date>2003-02-05T00:00:00-08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<script type="text/javascript">
+
+ var _gaq = _gaq || [];
+ _gaq.push(['_setAccount', 'UA-50555-22']);
+ _gaq.push(['_trackPageview']);
+
+ (function() {
+   var ga = document.createElement('script'); ga.type =
+   'text/javascript'; ga.async = true;
+   ga.src = ('https:' == document.location.protocol ? 'https://ssl' :
+   'http://www') + '.google-analytics.com/ga.js';
+   var s = document.getElementsByTagName('script')[0];
+   s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'></script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-4136420132070439");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-4136420132070439", "Perl_728x90");
+</script>
+<script type='text/javascript'>GA_googleFetchAds();</script>
+    
+    <link rel="prev bookmark" href="/pub/2003/02/p6pdigest/20030202.html" title="This week on Perl 6, week ending 2003-02-02" />
+    <link rel="next bookmark" href="/pub/2003/02/p6pdigest/20030209.html" title="This week on Perl 6, week ending 2003-02-09" />
+    
+    
+    <title>Improving mod_perl Sites' Performance: Part 7 - Perl.com</title>
+</head>
+<body id="perl-com" class="mt-entry-archive layout-wt">
+    <div id="container">
+        <div id="container-inner">
+
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+        <span id="top_advert"> 
+<!-- Put any landscape advert in here -->
+<!-- Perl_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("Perl_728x90");
+</script>
+        </span> 
+
+
+
+            <div id="header-name"><a href="/pub/" accesskey="1">Perl.com</a></div>
+            <div id="header-description">news and views of the Perl programming language</div>
+
+
+
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1066" class="entry-asset asset hentry">
+                                <div class="asset-header">
+                                    <h1 id="page-title" class="asset-name entry-title">Improving mod_perl Sites' Performance: Part 7</h1>
+                                    <div class="asset-meta">
+                                        <span class="byline">
+
+                                            By <span class="vcard author">Stas Bekman</span> on <abbr class="published" title="2003-02-05T00:00:00-08:00">February  5, 2003 12:00 AM</abbr>
+
+                                        </span>
+
+
+                                    </div>
+                                </div>
+                                <div class="asset-content entry-content">
+
+                                    <div class="asset-body">
+                                         
+<!-- sidebar begins -->
+<!-- don't move sidebars -->
+<!-- sidebar ends -->
+
+<p>Correct configuration of the <code>MinSpareServers</code>, <code>MaxSpareServers</code>,
+<code>StartServers</code>, <code>MaxClients</code>, and <code>MaxRequestsPerChild</code> parameters
+is very important.  There are no defaults.  If they are too low, then you
+will underutilize the system's capabilities.  If they are too high, then
+chances are that the server will bring the machine to its knees.</p>
+
+<p>All the above parameters should be specified on the basis of the
+resources you have.  With a plain Apache server, it's no big deal if
+you run many servers since the processes are about 1Mb and don't eat a
+lot of your RAM.  Generally, the numbers are even smaller with memory
+sharing.  The situation is different with mod_perl.  I have seen
+mod_perl processes of 20Mb and more.  Now, if you have <code>MaxClients</code>
+set to 50, then 50x20Mb = 1Gb. Maybe you don't have 1Gb of RAM - so how
+do you tune the parameters?  Generally, by trying different
+combinations and benchmarking the server.  Again, mod_perl processes
+can be made much smaller when memory is shared.</p>
+
+<csperl file="grab" domain="on" record="b/832" template="article_sidebar.view">
+
+<p>Before you start this task, you should be armed with the proper weapon.
+You need the <strong>crashme</strong> utility, which will load your server with the
+mod_perl scripts you possess.  You need it to have the ability to
+emulate a multiuser environment and to emulate the behavior of
+multiple clients calling the mod_perl scripts on your server
+simultaneously.  While there are commercial solutions, you can get
+away with free ones that do the same job.  You can use the
+ApacheBench utility that comes with the Apache distribution, the
+<code>crashme</code> script which uses <code>LWP::Parallel::UserAgent</code>, httperf or
+http_load all discussed in one of the previous articles.</p>
+
+<p>It is important to make sure that you run the load generator (the
+client which generates the test requests) on a system that is more
+powerful than the system being tested.  After all, we are trying to
+simulate Internet users, where many users are trying to reach your
+service at once.  Since the number of concurrent users can be quite
+large, your testing machine must be very powerful and capable of
+generating a heavy load.  Of course, you should not run the clients and
+the server on the same machine.  If you do, then your test results would be
+invalid.  Clients will eat CPU and memory that should be dedicated to
+the server, and vice versa.</p>
+
+<h3><a name="configuration_tuning_with_apachebench">Configuration Tuning with ApacheBench</a></h3>
+<p>I'm going to use the <code>ApacheBench</code> (<code>ab</code>) utility to tune our server's
+configuration. We will simulate 10 users concurrently requesting a
+very light script at <code>http://www.example.com/perl/access/access.cgi</code>.
+Each simulated user makes 10 requests.</p>
+<pre><code>
+  % ./ab -n 100 -c 10 http://www.example.com/perl/access/access.cgi</code></pre>
+<p>The results are:</p>
+<pre><code>
+  Document Path:          /perl/access/access.cgi
+  Document Length:        16 bytes
+  
+  Concurrency Level:      10
+  Time taken for tests:   1.683 seconds
+  Complete requests:      100
+  Failed requests:        0
+  Total transferred:      16100 bytes
+  HTML transferred:       1600 bytes
+  Requests per second:    59.42
+  Transfer rate:          9.57 kb/s received
+  
+  Connnection Times (ms)
+                min   avg   max
+  Connect:        0    29   101
+  Processing:    77   124  1259
+  Total:         77   153  1360</code></pre>
+<p>The only numbers we really care about are:</p>
+<pre><code>
+  Complete requests:      100
+  Failed requests:        0
+  Requests per second:    59.42</code></pre>
+<p>Let's raise the request load to 100 x 10 (10 users, each making 100
+requests):</p>
+<pre><code>
+  % ./ab -n 1000 -c 10  http://www.example.com/perl/access/access.cgi
+  Concurrency Level:      10
+  Complete requests:      1000
+  Failed requests:        0
+  Requests per second:    139.76</code></pre>
+<p>As expected, nothing changes -- we have the same 10 concurrent users.
+Now let's raise the number of concurrent users to 50:</p>
+<pre><code>
+  % ./ab -n 1000 -c 50  http://www.example.com/perl/access/access.cgi
+  Complete requests:      1000
+  Failed requests:        0
+  Requests per second:    133.01</code></pre>
+<p>We see that the server is capable of serving 50 concurrent users at
+133 requests per second!  Let's find the upper limit.  Using <code>-n
+10000 -c 1000</code> failed to get results (Broken Pipe?).  Using <code>-n 10000
+-c 500</code> resulted in 94.82 requests per second.  The server's
+performance went down with the high load.</p>
+
+<p>The above tests were performed with the following configuration:</p>
+<pre><code>
+  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 50
+  MaxRequestsPerChild 1500</code></pre>
+<p>Now let's kill each child after it serves a single request.  We will
+use the following configuration:</p>
+<pre><code>
+  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 100
+  MaxRequestsPerChild 1</code></pre>
+<p>Simulate 50 users each generating a total of 20 requests:</p>
+<pre><code>
+  % ./ab -n 1000 -c 50  http://www.example.com/perl/access/access.cgi</code></pre>
+<p>The benchmark timed out with the above configuration. I watched the
+output of <strong><code>ps</code></strong> as I ran it, the parent process just wasn't capable
+of respawning the killed children at that rate.  When I raised the
+<code>MaxRequestsPerChild</code> to 10, I got 8.34 requests per second.  Very
+bad - 18 times slower!  You can't benchmark the importance of the
+<code>MinSpareServers</code>, <code>MaxSpareServers</code> and <code>StartServers</code> with this
+type of test.</p>
+
+<p>Now let's reset <code>MaxRequestsPerChild</code> to 1500, but reduce
+<code>MaxClients</code> to 10 and run the same test:</p>
+<pre><code>
+  MinSpareServers 8
+  MaxSpareServers 6
+  StartServers 10
+  MaxClients 10
+  MaxRequestsPerChild 1500</code></pre>
+<p>I got 27.12 requests per second, which is better but still four to five times
+slower.  (I got 133 with <code>MaxClients</code> set to 50.)</p>
+
+<p><strong>Summary:</strong> I have tested a few combinations of the server
+configuration variables (<code>MinSpareServers</code>, <code>MaxSpareServers</code>,
+<code>StartServers</code>, <code>MaxClients</code> and <code>MaxRequestsPerChild</code>).  The
+results I got are as follows:</p>
+
+<p><code>MinSpareServers</code>, <code>MaxSpareServers</code> and <code>StartServers</code> are only
+important for user response times.  Sometimes users will have to wait a
+bit.</p>
+
+<p>The important parameters are <code>MaxClients</code> and <code>MaxRequestsPerChild</code>.
+<code>MaxClients</code> should be not too big, so it will not abuse your
+machine's memory resources, and not too small, for if it is, your users
+will be forced to wait for the children to become free to serve them.
+<code>MaxRequestsPerChild</code> should be as large as possible, to get the full
+benefit of mod_perl, but watch your server at the beginning to make
+sure your scripts are not leaking memory, thereby causing your server
+(and your service) to die very fast.</p>
+
+<p>Also, it is important to understand that we didn't test the response
+times in the tests above, but the ability of the server to respond
+under a heavy load of requests. If the test script was heavier, then the
+numbers would be different but the conclusions similar.</p>
+
+<p>The benchmarks were run with:</p>
+<ul>
+  <li>HW: RS6000, 1Gb RAM</li>
+  <li>SW: AIX 4.1.5 . mod_perl 1.16, apache 1.3.3</li>
+  <li>Machine running only mysql, httpd docs and mod_perl servers.</li>
+  <li>Machine was _completely_ unloaded during the
+  benchmarking.</li></ul>
+<p>After each server restart when I changed the server's configuration, I
+made sure that the scripts were preloaded by fetching a script at
+least once for every child.</p>
+
+<p>It is important to notice that none of the requests timed out, even if
+it was kept in the server's queue for more than a minute!  That is the
+way <strong>ab</strong> works, which is OK for testing purposes but will be
+unacceptable in the real world - users will not wait for more than
+five to 10 seconds for a request to complete, and the client
+(i.e. the browser) will time out in a few minutes.</p>
+
+<p>Now let's take a look at some real code whose execution time is more
+than a few milliseconds.  We will do some real testing and collect the
+data into tables for easier viewing.</p>
+
+<p>I will use the following abbreviations:</p>
+<pre><code>
+  NR    = Total Number of Request
+  NC    = Concurrency
+  MC    = MaxClients
+  MRPC  = MaxRequestsPerChild
+  RPS   = Requests per second</code></pre>
+<p>Running a mod_perl script with lots of mysql queries (the script under
+test is mysqld limited)
+(http://www.example.com/perl/access/access.cgi?do_sub=query_form),
+with the configuration:</p>
+<pre><code>
+  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+  MaxRequestsPerChild 5000</code></pre>
+<p>gives us:</p>
+<pre><code>
+     NR   NC    RPS     comment
+  ------------------------------------------------
+     10   10    3.33    # not a reliable figure
+    100   10    3.94    
+   1000   10    4.62    
+   1000   50    4.09</code></pre>
+<p><strong>Conclusions:</strong> Here I wanted to show that when the application is
+slow (not due to perl loading, code compilation and execution, but
+limited by some external operation) it almost does not matter what
+load we place on the server.  The RPS (Requests per second) is almost
+the same.  Given that all the requests have been served, you have the
+ability to queue the clients, but be aware that anything that goes
+into the queue means a waiting client and a client (browser) that
+might time out!</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>Now we will benchmark the same script without using the mysql (code
+limited by perl only):
+(http://www.example.com/perl/access/access.cgi), it's the same
+script but it just returns the HTML form, without making SQL queries.</p>
+<pre><code>
+  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+  MaxRequestsPerChild 5000
+
+     NR   NC      RPS   comment
+  ------------------------------------------------
+     10   10    26.95   # not a reliable figure
+    100   10    30.88   
+   1000   10    29.31
+   1000   50    28.01
+   1000  100    29.74
+  10000  200    24.92
+ 100000  400    24.95</code></pre>
+<p><strong>Conclusions:</strong> This time the script we executed was pure perl (not
+limited by I/O or mysql), so we see that the server serves the
+requests much faster.  You can see the number of requests per second
+is almost the same for any load, but goes lower when the number of
+concurrent clients goes beyond <code>MaxClients</code>.  With 25 RPS, the
+machine simulating a load of 400 concurrent clients will be served in
+16 seconds.  To be more realistic, assuming a maximum of 100
+concurrent clients and 30 requests per second, the client will be
+served in 3.5 seconds.  Pretty good for a highly loaded server.</p>
+
+<p>Now we will use the server to its full capacity, by keeping all
+<code>MaxClients</code> clients alive all the time and having a big
+<code>MaxRequestsPerChild</code>, so that no child will be killed during the
+benchmarking.</p>
+<pre><code>
+  MinSpareServers       50
+  MaxSpareServers       50
+  StartServers          50
+  MaxClients            50
+  MaxRequestsPerChild 5000
+  
+     NR   NC      RPS   comment
+  ------------------------------------------------
+    100   10    32.05
+   1000   10    33.14
+   1000   50    33.17
+   1000  100    31.72
+  10000  200    31.60</code></pre>
+<p>Conclusion: In this scenario, there is no overhead involving the parent
+server loading new children, all the servers are available, and the
+only bottleneck is contention for the CPU.</p>
+
+<p>Now we will change <code>MaxClients</code> and watch the results: Let's reduce
+<code>MaxClients</code> to 10.</p>
+<pre><code>
+  MinSpareServers        8
+  MaxSpareServers       10
+  StartServers          10
+  MaxClients            10
+  MaxRequestsPerChild 5000
+  
+     NR   NC      RPS   comment
+  ------------------------------------------------
+     10   10    23.87   # not a reliable figure
+    100   10    32.64 
+   1000   10    32.82
+   1000   50    30.43
+   1000  100    25.68
+   1000  500    26.95
+   2000  500    32.53</code></pre>
+<p><strong>Conclusions:</strong> Very little difference!  Ten servers were able to
+serve almost with the same throughput as 50.  Why?  My guess
+is because of CPU throttling.  It seems that 10 servers were serving
+requests five times faster than when we worked with 50 servers.  In that
+case, each child received its CPU time slice five times less
+frequently.  So having a big value for <code>MaxClients</code>, doesn't mean
+that the performance will be better.  You have just seen the numbers!</p>
+
+<p>Now we will start drastically to reduce <code>MaxRequestsPerChild</code>:</p>
+<pre><code>
+  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+
+     NR   NC    MRPC     RPS    comment
+  ------------------------------------------------
+    100   10      10    5.77 
+    100   10       5    3.32
+   1000   50      20    8.92
+   1000   50      10    5.47
+   1000   50       5    2.83
+   1000  100      10    6.51</code></pre>
+<p><strong>Conclusions:</strong> When we drastically reduce <code>MaxRequestsPerChild</code>, the
+performance starts to become closer to plain mod_cgi.</p>
+
+<p>Here are the numbers of this run with mod_cgi, for comparison:</p>
+<pre><code>
+  MinSpareServers        8
+  MaxSpareServers       16
+  StartServers          10
+  MaxClients            50
+  
+     NR   NC    RPS     comment
+  ------------------------------------------------
+    100   10    1.12
+   1000   50    1.14
+   1000  100    1.13</code></pre>
+<p><strong>Conclusion</strong>: mod_cgi is much slower. :) In the first test, when
+NR/NC was 100/10, mod_cgi was capable of 1.12 requests per second.  In
+the same circumstances, mod_perl was capable of 32 requests per
+second, nearly 30 times faster!  In the first test, each client waited
+about 100 seconds to be served.  In the second and third tests, they
+waited 1,000 seconds!</p>
+
+<h3><a name="choosing_maxclients">Choosing MaxClients</a></h3>
+<p>The <code>MaxClients</code> directive sets the limit on the number of
+simultaneous requests that can be supported.  No more than this number
+of child server processes will be created.  To configure more than 256
+clients, you must edit the <code>HARD_SERVER_LIMIT</code> entry in <code>httpd.h</code>
+and recompile.  In our case, we want this variable to be as small as
+possible, so we can limit the resources used by the
+server children.  Since we can restrict each child's process size with
+<code>Apache::SizeLimit</code> or <code>Apache::GTopLimit</code>, the calculation of
+<code>MaxClients</code> is pretty straightforward:</p>
+<pre><code>
+               Total RAM Dedicated to the Webserver
+  MaxClients = ------------------------------------
+                     MAX child's process size</code></pre>
+<p>So if I have 400Mb left for the Web server to run with, then I can set
+<code>MaxClients</code> to be of 40 if I know that each child is limited to 10Mb
+of memory (e.g. with <code>Apache::SizeLimit</code>).</p>
+
+<p>You will be wondering what will happen to your server if there are
+more concurrent users than <code>MaxClients</code> at any time.  This situation
+is signified by the following warning message in the <code>error_log</code>:</p>
+<pre><code>
+  [Sun Jan 24 12:05:32 1999] [error] server reached MaxClients setting,
+  consider raising the MaxClients setting</code></pre>
+<p>There is no problem -- any connection attempts over the <code>MaxClients</code>
+limit will normally be queued, up to a number based on the
+<code>ListenBacklog</code> directive.  When a child process is freed at the end
+of a different request, the connection will be served.</p>
+
+<p>It <strong>is an error</strong> because clients are being put in the queue rather
+than getting served immediately, despite the fact that they do not get
+an error response.  The error can be allowed to persist to balance
+available system resources and response time, but sooner or later you
+will need to get more RAM so you can start more child processes.  The
+best approach is to try not to have this condition reached at all, and
+if you reach it often you should start to worry about it.</p>
+
+<p>It's important to understand how much real memory a child occupies.
+Your children can share memory between them when the OS supports that.
+You must take action to allow the sharing to happen. We have
+disscussed this in one of the previous article whose main topic was
+shared memory. If you do this, then chances are that your <code>MaxClients</code>
+can be even higher.  But it seems that it's not so simple to calculate
+the absolute number.  If you come up with a solution, then please let us
+know!  If the shared memory was of the same size throughout the
+child's life, then we could derive a much better formula:</p>
+<pre><code>
+               Total_RAM + Shared_RAM_per_Child * (MaxClients - 1)
+  MaxClients = ---------------------------------------------------
+                              Max_Process_Size</code></pre>
+<p>which is:</p>
+<pre><code>
+                    Total_RAM - Shared_RAM_per_Child
+  MaxClients = ---------------------------------------
+               Max_Process_Size - Shared_RAM_per_Child</code></pre>
+<p>Let's roll some calculations:</p>
+<pre><code>
+  Total_RAM            = 500Mb
+  Max_Process_Size     =  10Mb
+  Shared_RAM_per_Child =   4Mb
+
+              500 - 4
+ MaxClients = --------- = 82
+               10 - 4</code></pre>
+<p>With no sharing in place</p>
+<pre><code>
+                 500
+ MaxClients = --------- = 50
+                 10</code></pre>
+<p>With sharing in place you can have 64 percent more servers without buying
+more RAM.</p>
+
+<p>If you improve sharing and keep the sharing level, let's say:</p>
+<pre><code>
+  Total_RAM            = 500Mb
+  Max_Process_Size     =  10Mb
+  Shared_RAM_per_Child =   8Mb
+
+              500 - 8
+ MaxClients = --------- = 246
+               10 - 8</code></pre>
+<p>392 percent more servers! Now you can feel the importance of having as much
+shared memory as possible.</p>
+
+<h3><a name="choosing_maxrequestsperchild">Choosing MaxRequestsPerChild</a></h3>
+<p>The <code>MaxRequestsPerChild</code> directive sets the limit on the number of
+requests that an individual child server process will handle.  After
+<code>MaxRequestsPerChild</code> requests, the child process will die.  If
+<code>MaxRequestsPerChild</code> is 0, then the process will live forever.</p>
+
+<p>Setting <code>MaxRequestsPerChild</code> to a non-zero limit solves some memory
+leakage problems caused by sloppy programming practices, whereas a
+child process consumes more memory after each request.</p>
+
+<p>If left unbounded, then after a certain number of requests the
+children will use up all the available memory and leave the server to
+die from memory starvation.  Note that sometimes standard system
+libraries leak memory too, especially on OSes with bad memory
+management (e.g. Solaris 2.5 on x86 arch).</p>
+
+<p>If this is your case, then you can set <code>MaxRequestsPerChild</code> to a small
+number.  This will allow the system to reclaim the memory that a
+greedy child process consumed, when it exits after
+<code>MaxRequestsPerChild</code> requests.</p>
+
+<p>But beware -- if you set this number too low, you will lose some of
+the speed bonus you get from mod_perl.  Consider using
+<code>Apache::PerlRun</code> if this is the case.</p>
+
+<p>Another approach is to use the <code>Apache::SizeLimit</code> or the
+<code>Apache::GTopLimit</code> modules.  By using either of these modules you
+should be able to discontinue using the <code>MaxRequestPerChild</code>,
+although for some developers, using both in combination does the
+job. In addition the latter module allows you to kill any servers
+whose shared memory size drops below a specified limit.</p>
+
+<h1><a name="references">References</a></h1>
+<ul>
+<li>
+The mod_perl site's URL: <a href="http://perl.apache.org/">http://perl.apache.org/</a></li>
+
+<li>
+<code>Apache::GTopLimit</code>
+<a href="http://search.cpan.org/search?dist=Apache-GTopLimit">http://search.cpan.org/search?dist=Apache-GTopLimit</a></li>
+</ul>
+
+
+                                    </div>
+
+
+                                </div>
+                                <div class="asset-footer">
+
+
+                                    <div class="entry-tags">
+                                        <h4>Tags<span class="delimiter">:</span></h4>
+                                        <ul>
+                                            <li><a href="javascript:void(0)" onclick="location.href='http://www.perl.com/mt-search.cgi?IncludeBlogs=2&amp;tag=mod_perl%20apache%20performance&amp;limit=20';return false;" rel="tag">mod_perl apache performance</a></li>
+                                        </ul>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                    
+                    
+
+
+                        </div>
+                    </div>
+
+
+                    <div id="beta">
+    <div id="beta-inner">
+
+
+    
+    <div class="widget-what-is-perl widget">
+    <div class="widget-content widget-content-what-is-perl">
+       Visit the home of the  Perl programming language: <a href="http://www.perl.org/">Perl.org</a
+    </div>
+</div>
+<div class="widget-find-out-more widget-archives widget">
+    <div class="widget-content">
+        <ul>
+            <li><a href="http://www.perl.org/get.html">Download</a></li>
+            <li><a href="http://perldoc.perl.org/">Documentation</a></li>
+            <li><a href="http://blogs.perl.org/">Perl Bloggers</a></li>
+            <li><a href="http://news.perlfoundation.org/">Foundation News</a></li>
+        </ul>
+    </div>
+</div><div class="widget-tcpc widget">
+<h3 class="widget-header">Sponsored by</h3>
+    <div class="widget-content">
+        <a href="http://training.perl.com/" alt="Perl Training" target="_blank"><img src="/i/tcpc.png" width="150" height="50"></a>
+    </div>
+</div>
+
+<div class="widget-syndication widget">
+    <div class="widget-content">
+        <ul>
+            <li><img src="/mt-static/images/status_icons/feed.gif" alt="Subscribe to feed" width="9" height="9" /> <a href="/pub/atom.xml">Subscribe to this website's feed</a></li>
+
+        </ul>
+    </div>
+</div>
+<div class="widget-archive-monthly widget-archive widget">
+    <h3 class="widget-header">Monthly <a href="/pub/archives.html">Archives</a></h3>
+    <div class="widget-content">
+        <ul>
+        
+            <li><a href="/pub/2014/02/">February 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2014/01/">January 2014 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/10/">October 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2013/01/">January 2013 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/12/">December 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/11/">November 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/10/">October 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/08/">August 2012 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/06/">June 2012 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/05/">May 2012 (18)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/04/">April 2012 (17)</a></li>
+        
+    
+        
+            <li><a href="/pub/2012/02/">February 2012 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/12/">December 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/09/">September 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/08/">August 2011 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/06/">June 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/05/">May 2011 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/04/">April 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/03/">March 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/02/">February 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2011/01/">January 2011 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/11/">November 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/10/">October 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/09/">September 2010 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/08/">August 2010 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/07/">July 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/04/">April 2010 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2010/03/">March 2010 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/05/">May 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/04/">April 2008 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/03/">March 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/02/">February 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2008/01/">January 2008 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/12/">December 2007 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/09/">September 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/08/">August 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/07/">July 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/06/">June 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/05/">May 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/04/">April 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/03/">March 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/02/">February 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2007/01/">January 2007 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/12/">December 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/11/">November 2006 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/10/">October 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/09/">September 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/08/">August 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/07/">July 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/06/">June 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/05/">May 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/04/">April 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/03/">March 2006 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/02/">February 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2006/01/">January 2006 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/12/">December 2005 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/11/">November 2005 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/10/">October 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/09/">September 2005 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/08/">August 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/07/">July 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/06/">June 2005 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/05/">May 2005 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/04/">April 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/03/">March 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/02/">February 2005 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2005/01/">January 2005 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/12/">December 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/11/">November 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/10/">October 2004 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/09/">September 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/08/">August 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/07/">July 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/06/">June 2004 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/05/">May 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/04/">April 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/03/">March 2004 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/02/">February 2004 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2004/01/">January 2004 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/12/">December 2003 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/11/">November 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/10/">October 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/09/">September 2003 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/08/">August 2003 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/07/">July 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/06/">June 2003 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/05/">May 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/04/">April 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/03/">March 2003 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/02/">February 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2003/01/">January 2003 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/12/">December 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/11/">November 2002 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/10/">October 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/09/">September 2002 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/08/">August 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/07/">July 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/06/">June 2002 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/05/">May 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/04/">April 2002 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/03/">March 2002 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/02/">February 2002 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2002/01/">January 2002 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/12/">December 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/11/">November 2001 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/10/">October 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/09/">September 2001 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/08/">August 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/07/">July 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/06/">June 2001 (13)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/05/">May 2001 (11)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/04/">April 2001 (9)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/03/">March 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/02/">February 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2001/01/">January 2001 (8)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/12/">December 2000 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/11/">November 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/10/">October 2000 (10)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/09/">September 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/08/">August 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/07/">July 2000 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/06/">June 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/05/">May 2000 (7)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/04/">April 2000 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/03/">March 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/02/">February 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/2000/01/">January 2000 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/12/">December 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/11/">November 1999 (6)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/10/">October 1999 (5)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/09/">September 1999 (4)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/08/">August 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/07/">July 1999 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/06/">June 1999 (3)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/04/">April 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/03/">March 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1999/01/">January 1999 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/12/">December 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/11/">November 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/07/">July 1998 (2)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/06/">June 1998 (1)</a></li>
+        
+    
+        
+            <li><a href="/pub/1998/03/">March 1998 (1)</a></li>
+        
+        </ul>
+    </div>
+</div>
+        
+    
+
+<div class="widget-powered widget">
+    <div class="widget-content">
+        <a href="http://www.movabletype.com/"><img src="/mt-static/images/bug-pbmt-white.png" alt="Powered by Movable Type 5.13-en" width="120" height="75" /></a>
+    </div>
+</div>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+                </div>
+            </div>
+
+
+            <div id="footer">
+    <div id="footer-inner">
+        <div id="footer-content">
+            <div class="widget-powered widget">
+                <div class="widget-content">
+                    Powered by <a href="http://www.movabletype.com/" rel="generator">Movable Type Pro</a>
+                </div>
+            </div>
+
+            <div class="widget-creative-commons widget">
+                <div class="widget-content">
+                    This blog is licensed under a <a href="http://creativecommons.org/licenses/by-nc-nd/3.0/">Creative Commons License</a>.
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+        </div>
+    </div>
+</body>
+</html>

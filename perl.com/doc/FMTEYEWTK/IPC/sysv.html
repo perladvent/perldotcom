@@ -1,0 +1,118 @@
+
+<title> 
+SysV IPC
+</H1>
+</title>
+
+<H1> 
+<A NAME="perlipc_sysv_0">
+SysV IPC</A>
+</H1>
+
+<P>
+
+While System V IPC isn't so widely used as sockets, it still has some
+interesting uses.  You can't, however, effectively use SysV IPC or
+Berkeley <EM>mmap()</EM> to have shared memory so as to share a variable amongst
+several processes.  That's because Perl would reallocate your string when
+you weren't wanting it to.
+<p>Here's a small example showing shared memory usage.  
+<p>
+<XMP>
+    $IPC_PRIVATE = 0;
+    $IPC_RMID = 0;
+    $size = 2000;
+    $key = shmget($IPC_PRIVATE, $size , 0777 );
+    die unless defined $key;
+    $message = "Message #1";
+    shmwrite($key, $message, 0, 60 ) || die "$!";
+    shmread($key,$buff,0,60) || die "$!";
+    print $buff,"\n";
+    print "deleting $key\n";
+    shmctl($key ,$IPC_RMID, 0) || die "$!";
+
+</XMP>
+<p>Here's an example of a semaphore:
+<p>
+<XMP>
+    $IPC_KEY = 1234;
+    $IPC_RMID = 0;
+    $IPC_CREATE = 0001000;
+    $key = semget($IPC_KEY, $nsems , 0666 | $IPC_CREATE );
+    die if !defined($key);
+    print "$key\n";
+
+</XMP>
+<p>Put this code in a separate file to be run in more that one process
+Call the file <EM>take</EM>:
+<p>
+<XMP>
+    # create a semaphore
+    $IPC_KEY = 1234;
+    $key = semget($IPC_KEY,  0 , 0 );
+    die if !defined($key);
+    $semnum = 0;
+    $semflag = 0;
+    # 'take' semaphore
+    # wait for semaphore to be zero
+    $semop = 0;
+    $opstring1 = pack("sss", $semnum, $semop, $semflag);
+    # Increment the semaphore count
+    $semop = 1;
+    $opstring2 = pack("sss", $semnum, $semop,  $semflag);
+    $opstring = $opstring1 . $opstring2;
+    semop($key,$opstring) || die "$!";
+
+</XMP>
+<p>Put this code in a separate file to be run in more that one process
+Call this file <EM>give</EM>:
+<p>
+<XMP>
+    # 'give' the semaphore
+    # run this in the original process and you will see
+    # that the second process continues
+    $IPC_KEY = 1234;
+    $key = semget($IPC_KEY, 0, 0);
+    die if !defined($key);
+    $semnum = 0;
+    $semflag = 0;
+    # Decrement the semaphore count
+    $semop = -1;
+    $opstring = pack("sss", $semnum, $semop, $semflag);
+    semop($key,$opstring) || die "$!";
+
+</XMP>
+<p><p><hr>
+
+<H1> 
+<A NAME="perlipc_warning_0">
+WARNING</A>
+</H1>
+
+The SysV IPC code above was written long ago, and it's definitely clunky
+looking.  It should at the very least be made to <CODE>use strict</CODE> and
+<CODE>require "sys/ipc.ph"</CODE>.  Better yet, perhaps someone should create an
+<CODE>IPC::SysV</CODE> module the way we have the <CODE>Socket</CODE> module for normal
+client-server communications.
+<p>(... time passes)  
+<p>Voila!  Check out the IPC::SysV modules written by Jack Shirazi.  You can
+find them at a CPAN store near you.
+<p><p><hr>
+<HR>
+<P>
+
+<CENTER>
+<A HREF="perlipc.html"> overview </a> /
+<A HREF="signals.html"> signals </a> /
+<A HREF="fifo.html"> fifos </a> /
+<A HREF="popen.html">pipes</a> /
+<A HREF="safepopen.html">safe-pipes</a> /
+<A HREF="openplex.html">open2</a> /
+<A HREF="sockets.html">sockets</a> /
+<A HREF="inet.html">AF_INET</a> /
+<A HREF="unix.html">AF_UNIX</a> /
+<A HREF="udp.html">udp</a> /
+</CENTER>
+<P>
+
+</HTML>

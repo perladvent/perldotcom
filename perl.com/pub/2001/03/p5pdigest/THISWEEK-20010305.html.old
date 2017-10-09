@@ -1,0 +1,305 @@
+</P>
+
+<P>
+
+
+<!-- This week on perl5-porters (27 Feb--05 Mar 2001) -->
+
+<br />
+<!::field::date::><br />
+      <H3><a name="Notes">Notes</a></H3>
+
+</P>
+
+<P>
+
+You can subscribe to an email version of this summary by sending an
+empty message to 
+<a href="mailto:perl5-porters-digest-subscribe@netthink.co.uk"><tt>perl5-porters-digest-subscribe@netthink.co.uk</tt>.</a></P>
+
+<P>
+Please send corrections and additions to 
+<CODE>perl-thisweek-YYYYMM@simon-cozens.org</CODE> where 
+<CODE>YYYYMM</CODE> is the current year and month.
+</P>
+
+<P>
+We're trying something new this week, and providing brief biographies of
+some of the more prolific porters. If you have anything to add to this,
+or object to something I've said about you, email me as above.
+<H3><a name="Locale_Support">Locale Support</a></H3>
+
+</P>
+
+<P>
+
+Andrew Pimlott filed a bug report related to 
+<CODE>POSIX::tolower</CODE>; basically, it is not as locale-aware as Perl's own 
+<CODE>lc</CODE>. He also found that 
+<CODE>lc</CODE> failed to be locale-aware while in the debugger. 
+<a href="http://simon-cozens.org/writings/whos-who.html#ING-SIMMONS">Nick Ing-Simmons</a> pointed out that 
+<CODE>use locale</CODE> is lexically scoped, and the debugger is in a different scope, meaning
+that it won't pick up on the pragma. Andrew thought this was probably a
+bug (the debugger not assuming the debuggee's scope) but it is unclear
+as to how that could be fixed. Nick wondered if the first was due to not
+calling 
+<CODE>setlocale</CODE>, but Andrew reported that this didn't help anything.
+</P>
+
+<P>
+Andrew then went digging around in 
+<CODE>POSIX.pm</CODE> and found that 
+<CODE>isalpha</CODE> is perfectly locale aware, but 
+<CODE>tolower</CODE> is not - this is because 
+<CODE>isalpha</CODE> is written in XS, but 
+<CODE>tolower</CODE> simply calls 
+<CODE>lc</CODE>; because it's in a different lexical context, it doesn't pick up on
+the 
+<CODE>use locale</CODE>. It transpires that XS code does execute in the same lexical context as
+the caller, which is quite strange. Andrew pointed out that there's no
+way to make a pragma dynamically scoped. He said:
+<blockquote>I think this raises some fundamental issues, but I'm not sure
+exactly which.  It seems clear that one would like to be able to
+write a correct tolower (ie, exactly equivalent to lc, as per the
+POSIX documentation) in pure Perl.  One possibility is a TCL-like
+&quot;uplevel&quot;, but I desperately hope that doesn't turn out to be the
+best option.
+</blockquote></P>
+
+<P>
+I asked why POSIX functions were being implemented in Perl instead of C,
+and Andrew replied that in some cases it already works merely by magic:
+Perl doesn't correctly turn on and off locale support lexically, so some
+functions inherit the support for free. 
+<a href="http://simon-cozens.org/writings/whos-who.html#HIETANIEMI">Jarkko</a> grumbled about locales in his customary manner, and said he'd take 
+a look at the areas which needed 
+<CODE>setlocale</CODE> calling, but then Andrew had a revelation:
+<blockquote>Hmm, looks like I missed an essential point:  locale support is not
+dependent on 'use locale' at all!  This seems to be intentional.
+perl unconditionally calls setlocale() on startup, and never calls
+it again (unless you use POSIX::setlocale() explictly).  So
+POSIX::isalpha() respects $LANG by default, even if you never
+mention the locale pragma.
+</P>
+
+<P>
+It is only where (core) perl has a choice between calling a
+locale-sensitive libc function, and doing things its own way (eg,
+hard-coding character semantics), that the locale pragma currently
+matters.  Since the string value of $! requires calling a
+locale-sensitive function (strerror()), $! always respects locale.
+</blockquote></P>
+
+<P>
+And you wonder why Jarkko throws his hands in the air at the mention of
+anything locale-related...
+<H3><a name="Coderef_INC">Coderef @INC</a></H3>
+
+</P>
+
+<P>
+
+<a href="http://simon-cozens.org/writings/whos-who.html#CLARK">Nicholas Clark </a> provided a patch which extended the little-known coderef-in-
+<CODE>@INC</CODE> feature to allow passing an object; if you pass an object instead of a
+ coderef, the 
+<CODE>INC</CODE> method will be called on it. This has allowed him to create an
+experimental pragma, 
+<a href="http://www.flirble.org/~nick/P/ex-lib-zip-0.01.tar.gz"><CODE>ex::lib::zip</CODE></a> which lets you put a module tree inside a ZIP archive and Perl will
+extract the modules it needs from it.
+</P>
+
+<P>
+He then also explained what it was all about, in the hope that someone
+would write some proper documentation. Nobody did so, (my fault, I
+promised to but didn't get around to it) but his
+extremely helpful explanation of the coderef-in-
+<CODE>@INC</CODE> API, and the cheap source filter API it allows can be found
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01780.html">here</a>.
+</P>
+
+<P>
+Briefly, you can do 
+</P>
+
+</P><PRE>
+    BEGIN {
+        push @INC, \&somesub;
+        sub somesub {
+            my ($owncoderef, $wanted_file) = @_;
+            # Produce a filehandle somehow
+            if ($got_a_handle) {
+                return *FH;
+            } else {
+                returm undef;
+            }
+        }
+    }
+</PRE>
+
+<P>
+and have your subroutine intercept calls to 
+<CODE>use</CODE>. The 
+<CODE>ByteCache</CODE> module on CPAN makes use of this to cache just-in-time compiled
+versions of modules.
+<H3><a name="More_Memory_Leak_Hunting">More Memory Leak Hunting</a></H3>
+
+</P>
+
+<P>
+
+Some people started complaining about the lateness of 5.6.1, and 
+<a href="http://simon-cozens.org/writings/whos-who.html#BURLISON">Alan</a> mentioned the he probably wouldn't be able to ship 5.6.1 in
+Solaris yet because of what he saw as &quot;the large number of leaks&quot;.
+<a href="http://simon-cozens.org/writings/whos-who.html#GURUSAMY">Sarathy </a> disagreed:
+<blockquote>I strongly suspect you'll end up shipping no version of Perl with 
+Solaris, then.  Every single version of Perl out there has more
+unfixed &quot;leaks&quot; than 5.6.1-to-be, and some &quot;real&quot; ones to boot.
+</P>
+
+<P>
+I say &quot;leaks&quot; because these are still totally hypothetical, given your
+vantage point of a -DPURIFY enabled build with the arena cleanup
+repressed (which is the right vantage point for someone who has set
+out to clean up all leaks, I should add).  However, this is not the
+real world.  In the real world, the arena cleanup is enabled and
+appears to do its thing (however ugly you or I say it is).
+</blockquote></P>
+
+<P>
+There was then some similarly ugly debate about what actually
+constitutes a leak: Alan considered a leak anything which allocated
+memory and lost the pointer to it; Sarathy was only considering
+monotonic process growth. Nick Clark suggested that he could trigger
+a leak in the Sarathy sense by repeatedly 
+<CODE>use</CODE>ing modules and clearing out 
+<CODE>%INC</CODE>, but this wasn't the case; the leak is due to some ugly fakery that
+goes on when the compiler sees 
+<CODE>use Module;</CODE>. Alan could, however, trigger a leak with 
+</P>
+
+</P><PRE>
+    sub X { sub {} }
+</PRE>
+
+<P>
+as the inner subroutine wasn't being properly reference counted.
+Alan and I scrambled around looking for the 
+<CODE>use</CODE> leak, and Alan found that the two were related. I'm not aware as to
+whether or not he's fixed it.
+</P>
+
+<P>
+In other news, Nicholas Clark is a wicked, wicked man and managed to compile the
+<a href="http://www.hpl.hp.com/personal/Hans_Boehm/gc/">Boehm Garbage Collector </a> into Perl. (As 
+<a href="http://simon-cozens.org/writings/whos-who.html#SCHWARTZ">Randal </a> pointed out off-list, no more Boehm garbage!) and
+ found a way to use it as a memory leak detector.
+<H3><a name="Weird_Memory_Corruption">Weird Memory Corruption</a></H3>
+
+</P>
+
+<P>
+
+Weird bug of the week came from Jarkko, who found that
+</P>
+
+</P><PRE>
+    $ENV{BAR} = 0;
+    reset;
+    if (0) {
+      if ("" =~ //) {
+      }
+    }
+</PRE>
+
+<P>
+caused all kinds of merry hell - on some platforms, it ran fine, on some
+it segfaulted; the problems were not consistent across platforms,
+meaning that some machines with identical setups produced differing
+results. This is obviously maddening. Nick Clark made it even weirder:
+<blockquote>./perl will pass.
+/usr/local/bin/perl will SEGV.
+They are byte for byte identical.
+</blockquote></P>
+
+<P>
+Jarkko thought this was a recent problem, but Nick managed to reproduce
+it in 5.005_02. Alan produced an 
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-03/msg00176.html">impressive explanation</a> of what was going on, which I greatly encourage you to read if you want
+to learn how to track this sort of thing down, but stopped short of an actual 
+fix.
+</P>
+
+<P>
+There was, of course, the usual discussion of how useless 
+<CODE>reset</CODE> was anyway, including one suggestion of rewriting the op in pure Perl.
+<H3><a name="Yet_More_Unicode_Wars">Yet More Unicode Wars</a></H3>
+
+</P>
+
+<P>
+
+87 messages this week were spent attempting to formulate a sensible and
+acceptable Unicode policy. The attempt failed. If you really want to
+jump in and have a look,
+<a href="http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01680.html">this</a> is as good a place to start as any.
+<H3><a name="Switch_is_broken">Switch is broken</a></H3>
+
+</P>
+
+<P>
+
+Jarkko reported that for some reason, Switch 2.01 from CPAN has suddenly
+started failing tests on bleadperl. It would be really, really, really
+great if someone out there could look into why this is happening and try
+to come up with an isolated bug report. Or even better, fix it.
+<H3><a name="Various">Various</a></H3>
+
+</P>
+
+<P>
+
+Olaf Flebbe chimed in a bunch of EPOC fixes, for those of you running
+Perl on your Psions; 
+Sarathy fixed a long-standing parser bug.
+Michael Stevens did some sterling work clearing up the POD markup of the
+documentation. 
+<a href="http://simon-cozens.org/writings/whos-who.html#BERRY">Craig Berry</a> turned in some updates to VMS's 
+<CODE>configure.com</CODE>. Daniel Stutz and Ed Peschko both rewrote 
+<CODE>perlcc</CODE>. 
+</P>
+
+<P>
+David Mitchell deserves an honourable mention for a really useful first patch,
+which lets 
+<CODE>perl -Dt</CODE> tell you which variables are being accessed, as well as another debug
+option, 
+<CODE>-DR</CODE> which tells you the reference counts of SVs in the stack.
+Very cool stuff, David, thanks.
+</P>
+
+<P>
+Someone reported that 
+<CODE>ExtUtils::Install</CODE> is naughty and doesn't check the return values of 
+<CODE>File::Copy::copy</CODE>; this would be easy enough to fix up if anyone out there is interested.
+(That's bug ID 20010227.005, by the way)
+</P>
+
+<P>
+Until next week I remain, your humble and obedient servant,
+</P>
+
+<hr>
+
+<a href="mailto:simon@brecon.co.uk">Simon Cozens</a>
+
+
+<ul>
+  <li><a href="#Notes">Notes</a>
+  <li><a href="#Locale_Support">Locale Support</a>
+  <li><a href="#Coderef_INC">Coderef @INC</a>
+  <li><a href="#More_Memory_Leak_Hunting">More Memory Leak Hunting</a>
+  <li><a href="#Weird_Memory_Corruption">Weird Memory Corruption</a>
+  <li><a href="#Yet_More_Unicode_Wars">Yet More Unicode Wars</a>
+  <li><a href="#Switch_is_broken">Switch is broken</a>
+  <li><a href="#Various">Various</a>
+</ul>

@@ -1,0 +1,129 @@
+#!/usr/bin/perl
+
+chop(@ARGV = <DATA>) unless @ARGV;
+
+my $file;
+my $ix;
+
+$SIG{PIPE} = sub { warn "SIGPIPE\n"; select STDOUT; };
+
+$SIG{INT} = sub { print "quit\n"; exit; };
+
+system 'stty cbreak';
+END { system 'stty -cbreak' }
+
+open(STDOUT, ">/dev/null");
+
+$ix = -1;
+nextone();
+vec($rin, 0, 1) = 1;
+
+for (;;) {
+    if ($nsel = select($rout=$rin, undef, undef, 0)) {
+	if (sysread(STDIN, $cmd, 20)) {
+	    print STDERR "\n";
+	    nextone() if $cmd =~ /^n/;
+	    nextone() if $cmd =~ /^ /;
+	    prevone() if $cmd =~ /^p/;
+	    kill(2, $pid), exit if $cmd =~ /^q/;
+	}
+    }
+    print "rotate y 1\n";
+}
+
+sub nextone {
+    ++$ix;
+    $ix %=  @ARGV;
+    startone();
+}
+
+sub prevone {
+    --$ix;
+    $ix %=  @ARGV;
+    startone();
+}
+
+sub startone {
+    $file = $ARGV[$ix];
+    if ($file =~ /\.au$/) {
+	system "play $file\n";
+	return;
+    }
+    if ($file =~ /\.(gif|jpg)$/) {
+	kill 2, $pid or warn "Couldn't kill $pid: $!\n" if $pid;
+	$pid = 0;
+	$pid = open(EE, "|ee $file") or die "Can't run ee";
+	select STDOUT;
+	return;
+    }
+    $file .= ".pdb" unless $file =~ /\.pdb$/;
+    warn "Starting $file (was $pid)\n";
+    kill 2, $pid or warn "Couldn't kill $pid: $!\n" if $pid;
+    $pid = open(RASMOL, "|rasmol -width 1000 -height 750") or die "Can't run rasmol";
+    warn "PID = $pid\n";
+    select RASMOL;
+    $| = 1;
+
+    $special = "";
+    $special = "rotate z 80\n" if $file =~ /ethyne/;
+    print <<"END";
+zoom 10
+set hourglass off
+load $file
+${special}color bonds blue
+wireframe 30
+spacefill .5
+select hydrogen
+spacefill .3
+zoom 20
+zoom 30
+zoom 40
+zoom 50
+zoom 60
+zoom 70
+zoom 80
+zoom 90
+zoom 100
+zoom 110
+zoom 120
+zoom 130
+END
+print "zoom 140\nzoom 150\nzoom 160\nzoom 170\nzoom 180\nzoom 190\nzoom 200\n"
+	if $file =~ /diamond/;
+}
+__DATA__
+pix/3rd.gif
+absorbed.au
+pix/hap.gif
+pix/psa.gif
+pdb/caffeine.pdb
+pix/gch.gif
+pix/pct.gif
+pdb/diamond.pdb
+pix/prl.gif
+pdb/sucrose.pdb
+WG_control.au
+pdb/cynac.pdb
+pdb/decane.pdb
+pdb/pentane.pdb
+pdb/hexamethylethane.pdb
+pdb/nitroglycerin.pdb
+pdb/tnt.pdb
+pdb/histamine.pdb
+pdb/benadryl.pdb
+pdb/cyclonite.pdb
+pdb/cubane.pdb
+pdb/dodecahedrane.pdb
+pdb/buckyball.pdb
+pix/pt2.gif
+pdb/banana.pdb
+pdb/vit-c.pdb
+pdb/vitamin-b12.pdb
+pdb/malathion.pdb
+pdb/nicotine.pdb
+pdb/ddt.pdb
+pix/roche.gif
+pdb/ethyne.pdb
+pdb/bcfimethane.pdb
+pdb/vit-e.pdb
+pix/3rd.gif
