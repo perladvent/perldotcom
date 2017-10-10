@@ -102,15 +102,50 @@ sub parse_html {
   my $dom = Mojo::DOM58->new($html);
   $self->extract_metadata($dom);
   $self->extract_html($dom);
-  $self->copy_graphics();
+  $self->copy_media();
 }
 
-sub copy_graphics {
+sub copy_media {
+  my ($self) = @_;
+  $self->copy_images();
+  $self->copy_internal_links();
+}
+
+sub copy_internal_links {
+  my ($self) = @_;
+
+  my $media_dir = $self->media_dirpath();
+  mkdir("static/$media_dir");
+
+  my $dom = Mojo::DOM58->new($self->{html});
+  $dom->find('a')->each(sub {
+      my $href = $_->attr('href');
+      next if $href =~ qr/^http/;
+
+      if (-f "perl.com$href") {
+        my $media = path "perl.com$href";
+        $media->copy("static$media_dir/" . $media->basename);
+        $_->attr('href', "$media_dir/" . $media->basename);
+      }
+      elsif (-f "perl.com/pub$href") {
+        my $media = path "perl.com/pub$href";
+        $media->copy("static$media_dir/" . $media->basename);
+        $_->attr('href', "$media_dir/" . $media->basename);
+      }
+      else  {
+        warn "Can't find internal link $href to copy\n";
+      }
+    });
+
+  $self->{html} = $dom->to_string;
+}
+
+sub copy_images {
   my ($self) = @_;
 
   # create new dir for images
   my $img_dir = $self->image_dirpath();
-  mkdir($img_dir);
+  mkdir("static/$img_dir");
 
   # copy all img files in the HTML
   my $dom = Mojo::DOM58->new($self->{html});
@@ -180,16 +215,28 @@ sub to_markdown {
   $mkdn =~ s/<\/div>$//;
   return $mkdn;
 }
+
 sub image_dirpath {
   my $self = shift;
-  my $dirpath = $self->{slug} =~ s{/}{_}gr;
-  return "/images/$dirpath";
-
+  my $filepath = $self->slug_to_filepath;
+  return "/images/$filepath";
 }
+
+sub media_dirpath {
+  my $self = shift;
+  my $filepath = $self->slug_to_filepath;
+  return "/media/$filepath";
+}
+
 sub filepath {
   my $self = shift;
-  my $filepath = $self->{slug} =~ s{/}{_}gr;
+  my $filepath = $self->slug_to_filepath;
   return "$filepath.md";
+}
+
+sub slug_to_filepath {
+  my $self = shift;
+  return $self->{slug} =~ s{/}{_}gr;
 }
 
 sub front_matter {
