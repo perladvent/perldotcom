@@ -236,7 +236,10 @@ sub filepath {
 
 sub slug_to_filepath {
   my $self = shift;
-  return $self->{slug} =~ s{/}{_}gr;
+  my $filepath = $self->{slug} =~ s{/}{_}gr;
+  # dont have consecutive underscores
+  $filepath =~ s/_+/_/g;
+  return $filepath;
 }
 
 sub front_matter {
