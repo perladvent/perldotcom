@@ -56,7 +56,7 @@ sub split_column {
   my $column = shift;
   my @values;
   if ($column) {
-    @values = split /, | & | and /, $column;
+    @values = split /,|&| and /, $column;
     @values = map { s/\s{2,}/ /g;s/^\s+//; s/\s+$//;$_ } @values;
   }
   return \@values;
