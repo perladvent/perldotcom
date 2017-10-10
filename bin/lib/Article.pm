@@ -108,26 +108,45 @@ sub parse_html {
 sub copy_graphics {
   my ($self) = @_;
 
-  my $parent = $self->{path}->parent;
+  # create new dir for images
+  my $img_dir = $self->image_dirpath();
+  mkdir($img_dir);
+
+  # copy all img files in the HTML
   my $dom = Mojo::DOM58->new($self->{html});
   $dom->find('img')->each(sub {
       my $src = $_->attr('src');
-      if (!$src) {
-        warn "<img> no src\n";
-        return;
+      if (-f "perl.com$src") {
+        my $img = path "perl.com$src";
+        $img->copy("static$img_dir/" . $img->basename);
+        $_->attr('src', "$img_dir/" . $img->basename);
       }
-      elsif ($src =~ qr(^/pub)) {
-        warn "img not found $src\n" unless -f "perl.com/${src}";
+      elsif (-f "perl.com/pub$src") {
+        my $img = path "perl.com/pub$src";
+        $img->copy("static$img_dir/" . $img->basename);
+        $_->attr('src', "$img_dir/" . $img->basename);
       }
-      elsif ($src =~ qr(^/)) {
-        warn "img not found $src\n" unless -f "perl.com/pub$src";
-      }
-      elsif ($src !~ qr/^https?:\/\//i) {
-        my $img_path = sprintf "%s/%s", $parent, $src;
-        warn "img non-std location: $src\n" unless -f $img_path;
+      else  {
+        warn "Can't find img $src to copy\n";
       }
     });
+
+  $self->{html} = $dom->to_string;
+
+  # copy all files in the article's "graphics" dir
+  my $graphics = $self->{path}->parent->child('graphics');
+  if ($graphics->is_dir) {
+    my $iter = $graphics->iterator({recurse => 1});
+    while (my $img = $iter->()) {
+      $img->copy("static$img_dir/" . $img->basename);
+      # thumbs begin with "111-" for some reason, pixel size?
+      if ($img->basename =~ /^111-/) {
+        $self->{thumbnail} = "$img_dir/" . $img->basename;
+      }
+    }
+  }
 }
+
 sub extract_html {
   my ($self, $dom) = @_;
 
@@ -161,7 +180,12 @@ sub to_markdown {
   $mkdn =~ s/<\/div>$//;
   return $mkdn;
 }
+sub image_dirpath {
+  my $self = shift;
+  my $dirpath = $self->{slug} =~ s{/}{_}gr;
+  return "/images/$dirpath";
 
+}
 sub filepath {
   my $self = shift;
   my $filepath = $self->{slug} =~ s{/}{_}gr;
@@ -180,6 +204,7 @@ sub front_matter {
     image => $self->{image},
     description => $self->{description},
     slug => $self->{slug},
+    thumbnail => $self->{thumbnail},
   };
 }
 
