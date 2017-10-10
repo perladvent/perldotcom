@@ -120,7 +120,7 @@ sub copy_internal_links {
   my $dom = Mojo::DOM58->new($self->{html});
   $dom->find('a')->each(sub {
       my $href = $_->attr('href');
-      next if $href =~ qr/^http/;
+      return if !$href || $href =~ qr/^(?:http|mailto|#)/i;
 
       if (-f "perl.com$href") {
         my $media = path "perl.com$href";
