@@ -105,8 +105,6 @@ sub parse_html {
   $self->copy_graphics();
 }
 
-my $base_dir = '/home/dfarrell/Projects/perltricks-static/perlcom/perl.com';
-
 sub copy_graphics {
   my ($self) = @_;
 
@@ -119,10 +117,10 @@ sub copy_graphics {
         return;
       }
       elsif ($src =~ qr(^/pub)) {
-        warn "img not found $src\n" unless -f "$base_dir${src}";
+        warn "img not found $src\n" unless -f "perl.com/${src}";
       }
       elsif ($src =~ qr(^/)) {
-        warn "img not found $src\n" unless -f "$base_dir/pub$src";
+        warn "img not found $src\n" unless -f "perl.com/pub$src";
       }
       elsif ($src !~ qr/^https?:\/\//i) {
         my $img_path = sprintf "%s/%s", $parent, $src;
