@@ -93,7 +93,7 @@ sub parse_rdf {
     $self->{date} = $xml->{Work}{'dc:date'};
   }
   else {
-    warn "rdf not found\n";
+    #warn "rdf not found\n";
   }
 }
 
@@ -188,7 +188,7 @@ sub extract_html {
   my $node = $dom->find('div.asset-body')->[0];
 
   unless ($node) {
-    warn "body div not found\n";
+    #warn "body div not found\n";
     $node = $dom;
   }
 
@@ -289,7 +289,7 @@ sub extract_title {
         $self->{title} = $a->text;
       }
     }
-    warn "unable to extract article title\n" unless $self->{title};
+    #warn "unable to extract article title\n" unless $self->{title};
   }
 }
 
@@ -301,7 +301,7 @@ sub extract_author {
       $self->{authors} = [ $span->text ];
     }
   }
-  warn "unable to extract author\n" unless @{$self->{authors}} && $self->{authors}[0];
+  #warn "unable to extract author\n" unless @{$self->{authors}} && $self->{authors}[0];
 }
 
 sub extract_date {
@@ -316,7 +316,7 @@ sub extract_date {
       $self->{date} = "$1-$2-$3T00:00:00-08:00";
     }
   }
-  warn "unable to extract date\n" unless $self->{date};
+  #warn "unable to extract date\n" unless $self->{date};
 }
 
 sub extract_slug {
@@ -328,7 +328,7 @@ sub extract_slug {
       $self->{slug} = $1;
     }
   }
-  warn "unable to extract slug\n" unless $self->{slug};
+  #warn "unable to extract slug\n" unless $self->{slug};
 }
 
 sub extract_tags {
@@ -336,7 +336,7 @@ sub extract_tags {
   unless (@{$self->{tags}}) {
     my @tags;
     $dom->find('div.entry-tags a')->each(sub { push @tags, format_tag($_->text) });
-    warn "no tags found\n" unless scalar @tags;
+    #warn "no tags found\n" unless scalar @tags;
     $self->{tags} = \@tags;
   }
 }
