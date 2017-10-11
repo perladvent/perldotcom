@@ -38,7 +38,7 @@ sub preprocess_args {
   die "file not found $args->{file}" unless $args->{path}->is_file;
 
   # authors and tags are arrays of values
-  $args->{authors} = split_column($args->{authors});
+  $args->{authors} = split_authors($args->{authors});
   $args->{tags} = split_tags($args->{tags});
 
   # date to datetime MM/DD/YYYY
@@ -52,7 +52,7 @@ sub preprocess_args {
   }
 }
 
-sub split_column {
+sub split_authors {
   my $column = shift;
   my @values;
   if ($column) {
@@ -244,10 +244,11 @@ sub slug_to_filepath {
 
 sub front_matter {
   my $self = shift;
+  my @author_keys = map { s/\W/-/g;lc } @{ $self->{authors} };
   return {
     title => $self->{title},
     date  => $self->{date},
-    authors => $self->{authors},
+    authors => \@author_keys,
     tags    => $self->{tags},
     categories => $self->{categories},
     draft => $self->{draft},
