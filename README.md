@@ -8,3 +8,4 @@ Launch a local version of the site with [hugo](https://gohugo.io).
 
   hugo server
 
+Once it's running you can browse the [local site](http://localhost:1313/article)
