@@ -1,21 +1,21 @@
 {
-   "title" : "Debugging and Profiling mod_perl Applications",
-   "thumbnail" : "/images/_pub_2006_02_09_debug_mod_perl/111-mod_perl_debug.gif",
    "categories" : "web",
-   "description" : " Because of the added complexity of being inside of the Apache web server, debugging mod_perl applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN...",
-   "authors" : [
-      "frank-wiles"
-   ],
-   "image" : null,
-   "draft" : null,
+   "slug" : "/pub/2006/02/09/debug_mod_perl",
+   "date" : "2006-02-09T00:00:00-08:00",
+   "title" : "Debugging and Profiling mod_perl Applications",
    "tags" : [
       "apache-db",
       "apache-dprof",
       "apache-smallprof",
       "mod-perl"
    ],
-   "date" : "2006-02-09T00:00:00-08:00",
-   "slug" : "/pub/2006/02/09/debug_mod_perl"
+   "thumbnail" : "/images/_pub_2006_02_09_debug_mod_perl/111-mod_perl_debug.gif",
+   "draft" : null,
+   "authors" : [
+      "frank-wiles"
+   ],
+   "description" : " Because of the added complexity of being inside of the Apache web server, debugging mod_perl applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN...",
+   "image" : null
 }
 
 
@@ -222,11 +222,11 @@ should be just enough to get you started:
 
   Command          Description
   ---------------- -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  `pÂ expression`   This prints out the value of an expression or variable, just like the `print` directive in Perl.
-  `xÂ expression`   This evaluates an expression and prettily prints it for you. Use it to make complex data structures readable.
+  `p expression`   This prints out the value of an expression or variable, just like the `print` directive in Perl.
+  `x expression`   This evaluates an expression and prettily prints it for you. Use it to make complex data structures readable.
   `s`              This tells the debugger to take a single *step*. A step is a single statement. If the next statement is a subroutine, the debugger will treat it as only one statement; you will not be able to step through each statement of that subroutine and the flow will continue without descending into it.
   `n`              This tells the debugger to go to the next statement. If the next statement is a subroutine, you will descend into it and be able to step through each line of that subroutine.
-  `lÂ line`         Display a particular line of source code.
+  `l line`         Display a particular line of source code.
   `M`              Display all loaded modules.
 
 ### Code Profiling with `Apache::DProf`

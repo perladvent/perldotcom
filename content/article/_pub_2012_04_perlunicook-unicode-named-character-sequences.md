@@ -1,23 +1,23 @@
 {
    "title" : "Perl Unicode Cookbook: Unicode Named Character Sequences",
+   "tags" : [],
    "categories" : "unicode",
+   "date" : "2012-04-17T06:00:01-08:00",
+   "slug" : "/pub/2012/04/perlunicook-unicode-named-character-sequences",
+   "draft" : null,
    "thumbnail" : null,
-   "description" : "â 9: Unicode named sequences Unicode includes the feature of named character sequences, which combine multiple Unicode characters behind a single name. The charnames pragma allows the use of these named sequences in literals, just as it allows the use...",
+   "image" : null,
+   "description" : "℞ 9: Unicode named sequences Unicode includes the feature of named character sequences, which combine multiple Unicode characters behind a single name. The charnames pragma allows the use of these named sequences in literals, just as it allows the use...",
    "authors" : [
       "tom-christiansen"
-   ],
-   "image" : null,
-   "draft" : null,
-   "tags" : [],
-   "date" : "2012-04-17T06:00:01-08:00",
-   "slug" : "/pub/2012/04/perlunicook-unicode-named-character-sequences"
+   ]
 }
 
 
 
 
 
-â 9: Unicode named sequences {#Unicode-named-sequences}
+℞ 9: Unicode named sequences {#Unicode-named-sequences}
 ----------------------------
 
 Unicode includes the feature of [named character
@@ -43,13 +43,13 @@ file](http://www.unicode.org/Public/UNIDATA/NamedSequences.txt) is
 always available. Perl 5.14 supports Unicode 6.0, and Perl 5.16 will
 support Unicode 6.1.
 
-Previous: [â 8: Unicode Named
+Previous: [℞ 8: Unicode Named
 Characters](/media/_pub_2012_04_perlunicook-unicode-named-character-sequences/perlunicook-unicode-named-characters.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_04_perlunicook-unicode-named-character-sequences/perlunicook-standard-preamble.html)
 
-Next: [â 10: Custom Named
+Next: [℞ 10: Custom Named
 Characters](/media/_pub_2012_04_perlunicook-unicode-named-character-sequences/perlunicook-custom-named-characters.html)
 
 

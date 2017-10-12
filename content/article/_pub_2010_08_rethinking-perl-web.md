@@ -1,20 +1,20 @@
 {
+   "draft" : null,
    "thumbnail" : null,
-   "categories" : "web",
-   "description" : "Modern Perl developments provide better capabilities for abstraction and reusable code.  Rethinking a project more than a decade old with modern techniques demonstrates how much Perl has improved-and how far it could go.",
-   "title" : "Rethinking Everything: Perl and the Web in 201x",
-   "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "draft" : null,
+   "image" : null,
+   "description" : "Modern Perl developments provide better capabilities for abstraction and reusable code.  Rethinking a project more than a decade old with modern techniques demonstrates how much Perl has improved-and how far it could go.",
+   "categories" : "web",
    "slug" : "/pub/2010/08/rethinking-perl-web",
+   "date" : "2010-08-20T10:30:56-08:00",
+   "title" : "Rethinking Everything: Perl and the Web in 201x",
    "tags" : [
       "cpan",
       "design",
       "web"
-   ],
-   "date" : "2010-08-20T10:30:56-08:00"
+   ]
 }
 
 

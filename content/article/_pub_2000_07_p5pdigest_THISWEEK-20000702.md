@@ -1,15 +1,15 @@
 {
-   "categories" : "community",
-   "thumbnail" : null,
    "description" : " Notes More Unicode Unicode Handling HOWTO Unicode Regex Matching I18N FAQ Normalization Simon Stops Working on Unicode Speeding up method lookups my __PACKAGE__ $foo cfgperl Missing Methods Signals on Windows New File::Spec Another depressing regex engine bug s/// Appears...",
-   "title" : "This Week on p5p 2000/07/02",
    "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
+   "thumbnail" : null,
    "draft" : null,
-   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000702",
    "tags" : [],
+   "title" : "This Week on p5p 2000/07/02",
+   "categories" : "community",
+   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000702",
    "date" : "2000-07-02T00:00:00-08:00"
 }
 
@@ -161,11 +161,11 @@ James.
 This led Simon to ask if Perl should have support for normalization.
 What is normalization? Unicode has a character for the letter 'e'
 (U+0065), and a character for an acute accent (U+00B4), which looks
-something like Â´ and is called a 'combining character' because it
+something like ´ and is called a 'combining character' because it
 combines with the following character to yield an accented character;
 when the string containing an acute accent is displayed, the accent
 should be superimposed on the previous character. But Unicode also has a
-character for the letter e *with* an acute accent (U+00E9), as Ã©. This
+character for the letter e *with* an acute accent (U+00E9), as é. This
 should be displayed the same way as the two character sequence U+00B4
 U+0065.
 

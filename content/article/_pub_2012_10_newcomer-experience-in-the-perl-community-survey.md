@@ -1,16 +1,16 @@
 {
-   "date" : "2012-10-15T06:00:01-08:00",
+   "title" : "Newcomer Experience in the Perl Community Survey",
    "tags" : [],
+   "categories" : "Community",
    "slug" : "/pub/2012/10/newcomer-experience-in-the-perl-community-survey",
+   "date" : "2012-10-15T06:00:01-08:00",
    "draft" : null,
+   "thumbnail" : null,
+   "image" : null,
+   "description" : "Kevin Carillo asks for assistance surveying newcomers to the Perl community about their experiences, positive and otherwise.",
    "authors" : [
       "kevin-carillo"
-   ],
-   "image" : null,
-   "title" : "Newcomer Experience in the Perl Community Survey",
-   "description" : "Kevin Carillo asks for assistance surveying newcomers to the Perl community about their experiences, positive and otherwise.",
-   "thumbnail" : null,
-   "categories" : "Community"
+   ]
 }
 
 
@@ -53,7 +53,7 @@ or even running away.
 
 This study tries to identify the important aspects of one's newcomer
 experience in Perl that have a positive influence in generating "good"
-contributorsâ"good" in terms of being good citizens for the Perl
+contributors—"good" in terms of being good citizens for the Perl
 community.
 
 How is it going to help Perl?

@@ -1,15 +1,15 @@
 {
-   "draft" : null,
-   "tags" : [],
-   "date" : "2012-04-23T06:00:01-08:00",
    "slug" : "/pub/2012/04/perlunicook-explicit-encode-decode",
-   "title" : "Perl Unicode Cookbook: Explicit encode/decode",
+   "date" : "2012-04-23T06:00:01-08:00",
    "categories" : "unicode",
+   "tags" : [],
+   "title" : "Perl Unicode Cookbook: Explicit encode/decode",
    "thumbnail" : null,
-   "description" : "â 12: Explicit encode/decode While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. On rare occasions, such as a database read, you may be given encoded...",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
+   "description" : "℞ 12: Explicit encode/decode While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. On rare occasions, such as a database read, you may be given encoded...",
    "image" : null
 }
 
@@ -17,7 +17,7 @@
 
 
 
-â 12: Explicit encode/decode {#Explicit-encode-decode}
+℞ 12: Explicit encode/decode {#Explicit-encode-decode}
 ----------------------------
 
 While the [standard Perl Unicode
@@ -41,17 +41,17 @@ known encoding.)
       my $bytes = encode("MIME-Header-ISO_2022_JP", $chars, 1);
 
 For streams all in the same encoding, don't use encode/decode; instead
-set the ï¬le encoding when you open the ï¬le or immediately after with
+set the ﬁle encoding when you open the ﬁle or immediately after with
 `binmode` as described in a future reference. Remember the canonical
 rule of Unicode: always encode/decode at the edges of your application.
 
-Previous: [â 11: Names of CJK
+Previous: [℞ 11: Names of CJK
 Codepoints](/media/_pub_2012_04_perlunicook-explicit-encode-decode/perlunicook-names-of-cjk-codepoints.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_04_perlunicook-explicit-encode-decode/perlunicook-standard-preamble.html)
 
-Next: [â 13: Decode @ARGV as
+Next: [℞ 13: Decode @ARGV as
 UTF-8](/media/_pub_2012_04_perlunicook-explicit-encode-decode/perlunicookbook-decode-argv-as-utf8.html)
 
 

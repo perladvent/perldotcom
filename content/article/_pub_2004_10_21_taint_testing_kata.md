@@ -1,12 +1,11 @@
 {
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_10_21_taint_testing_kata/111-kata.gif",
+   "description" : "Perl's taint mode can help you avoid using untrusted input insecurely. Here's how to practice using it.",
+   "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "image" : null,
-   "title" : "Perl Code Kata: Testing Taint",
-   "categories" : "testing",
-   "thumbnail" : "/images/_pub_2004_10_21_taint_testing_kata/111-kata.gif",
-   "description" : "Perl's taint mode can help you avoid using untrusted input insecurely. Here's how to practice using it.",
    "tags" : [
       "chromatic",
       "code-kata",
@@ -15,9 +14,10 @@
       "perl-taint",
       "perl-testing"
    ],
-   "date" : "2004-10-21T00:00:00-08:00",
+   "title" : "Perl Code Kata: Testing Taint",
    "slug" : "/pub/2004/10/21/taint_testing_kata",
-   "draft" : null
+   "date" : "2004-10-21T00:00:00-08:00",
+   "categories" : "testing"
 }
 
 
@@ -56,7 +56,7 @@ untaint the data by verifying it.
 
 The
 [CGI::Untaint](http://aspn.activestate.com/ASPN/CodeDoc/CGI-Untaint/CGI/Untaint.html)
-module family makes this process much easier for web programs â which
+module family makes this process much easier for web programs — which
 often need the most taint protection. There are modules to untaint
 dates, email addresses, and credit card numbers.
 

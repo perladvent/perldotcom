@@ -1,21 +1,21 @@
 {
-   "title" : "Web Basics with LWP",
-   "thumbnail" : null,
-   "categories" : "Web",
-   "description" : " Sean M. Burke is the author of Perl&nbsp;&amp;&nbsp;LWP Introduction LWP (short for \"Library for WWW in Perl\") is a popular group of Perl modules for accessing data on the Web. Like most Perl module-distributions, each of LWP's component modules...",
    "authors" : [
       "sean-m--burke"
    ],
+   "description" : " Sean M. Burke is the author of Perl&nbsp;&amp;&nbsp;LWP Introduction LWP (short for \"Library for WWW in Perl\") is a popular group of Perl modules for accessing data on the Web. Like most Perl module-distributions, each of LWP's component modules...",
    "image" : null,
    "draft" : null,
+   "thumbnail" : null,
+   "categories" : "Web",
+   "date" : "2002-08-20T00:00:00-08:00",
+   "slug" : "/pub/2002/08/20/perlandlwp",
+   "title" : "Web Basics with LWP",
    "tags" : [
       "library-for-www-in-perl",
       "lwp",
       "perl",
       "perl-and-lwp"
-   ],
-   "date" : "2002-08-20T00:00:00-08:00",
-   "slug" : "/pub/2002/08/20/perlandlwp"
+   ]
 }
 
 
@@ -23,7 +23,7 @@
 
 
 *Sean M. Burke is the author of
-[PerlÂ &Â LWP](http://www.oreilly.com/catalog/perllwp/)*
+[Perl & LWP](http://www.oreilly.com/catalog/perllwp/)*
 
 Introduction
 ------------
@@ -37,7 +37,7 @@ for information on doing even the simplest things.
 
 Introducing you to using LWP would require a whole book--a book that
 just happens to exist, called
-[*PerlÂ &Â LWP*](http://www.oreilly.com/catalog/perllwp/). This article
+[*Perl & LWP*](http://www.oreilly.com/catalog/perllwp/). This article
 offers a sampling of recipes that let you perform common tasks with LWP.
 
 ### Getting Documents with LWP::Simple
@@ -82,7 +82,7 @@ function for running a `HEAD` request on a URL (useful for checking
 links, or getting the last-revised time of a URL), and two functions for
 saving and mirroring a URL to a local file. See the [LWP::Simple
 documentation](http://search.cpan.org/author/GAAS/libwww-perl/lib/LWP/Simple.pm)
-for the full details, or Chapter 2, "Web Basics" of *PerlÂ &Â LWP* for
+for the full details, or Chapter 2, "Web Basics" of *Perl & LWP* for
 more examples.
 
 ### The Basics of the LWP Class Model
@@ -317,7 +317,7 @@ the URI class:
       
       my $response = $browser->get($url);
 
-See Chapter 5, "Forms" of *PerlÂ &Â LWP* for a longer discussion of HTML
+See Chapter 5, "Forms" of *Perl & LWP* for a longer discussion of HTML
 forms and of form data, as well as Chapter 6 through Chapter 9 for a
 longer discussion of extracting data from HTML.
 
@@ -386,7 +386,7 @@ That program then emits nicely absolute URLs:
       http://www.cpan.org/authors/id/A/AA/AASSAD/CHECKSUMS
       ...
 
-See Chapter 4, "URLs", of *PerlÂ &Â LWP* for a longer discussion of URI
+See Chapter 4, "URLs", of *Perl & LWP* for a longer discussion of URI
 objects.
 
 Of course, using a regexp to match hrefs is a bit simplistic, and for
@@ -666,7 +666,7 @@ from the following:
     (like turning "this & that" to and from "this%20%26%20that").
 
 -   `HTML::Entities`: Functions for HTML-escaping and HTML-unescaping
-    strings (like turning "C. & E. BrontÃ«" to and from "C. &amp; E.
+    strings (like turning "C. & E. Brontë" to and from "C. &amp; E.
     Bront&euml;").
 
 -   `HTML::TokeParser` and `HTML::TreeBuilder`: Classes for parsing
@@ -675,11 +675,11 @@ from the following:
 -   `HTML::LinkExtor`: Class for finding links in HTML documents.
 
 -   And last but not least, my book
-    [PerlÂ &Â LWP](http://www.oreilly.com/catalog/perllwp/).
+    [Perl & LWP](http://www.oreilly.com/catalog/perllwp/).
 
 ------------------------------------------------------------------------
 
-Copyright Â©2002, Sean M. Burke. You can redistribute this document
+Copyright ©2002, Sean M. Burke. You can redistribute this document
 and/or modify it, but only under the same terms as Perl itself.
 
 ------------------------------------------------------------------------

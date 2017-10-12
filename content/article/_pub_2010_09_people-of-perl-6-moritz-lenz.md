@@ -1,16 +1,16 @@
 {
-   "categories" : "perl-6",
-   "thumbnail" : null,
-   "description" : "<a href=\"http://perlgeek.de/\">Moritz Lenz</a> is a contributor to Perl 6 and <a href=\"http://www.rakudo.org/\">Rakudo Perl 6</a>.  You may know him as the writer of the popular <a href=\"http://perlgeek.de/blog-en/perl-6/\">Perlgeek.de Perl 6 blog</a> or a chief wrangler of the Perl 6 test suite.  Here are his own words on Perl 6 and Rakudo.",
    "title" : "People of Perl 6: Moritz Lenz",
+   "tags" : [],
+   "categories" : "perl-6",
+   "date" : "2010-09-13T17:04:35-08:00",
+   "slug" : "/pub/2010/09/people-of-perl-6-moritz-lenz",
+   "description" : "<a href=\"http://perlgeek.de/\">Moritz Lenz</a> is a contributor to Perl 6 and <a href=\"http://www.rakudo.org/\">Rakudo Perl 6</a>.  You may know him as the writer of the popular <a href=\"http://perlgeek.de/blog-en/perl-6/\">Perlgeek.de Perl 6 blog</a> or a chief wrangler of the Perl 6 test suite.  Here are his own words on Perl 6 and Rakudo.",
    "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "draft" : null,
-   "slug" : "/pub/2010/09/people-of-perl-6-moritz-lenz",
-   "date" : "2010-09-13T17:04:35-08:00",
-   "tags" : []
+   "thumbnail" : null,
+   "draft" : null
 }
 
 
@@ -156,9 +156,9 @@ development of both languages is mostly independent these days. Other
 people think that it's hopeless because it's been 10 years in the
 making, and there is still no version 1.0 (or 6.0) released. They don't
 realize that the difference between Perl 5 and Perl 6 is much larger
-than a difference of 1 in the version number suggestsâthey should think
+than a difference of 1 in the version number suggests—they should think
 of Perl 6 as Perl 12 or so, and ask how much time you should allocate
-for 7 major versions in oneâprobably much more than 10 years.
+for 7 major versions in one—probably much more than 10 years.
 
 **What projects are missing in the world of Perl 6?**
 

@@ -1,15 +1,15 @@
 {
+   "date" : "2000-05-28T00:00:00-08:00",
+   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000528",
+   "categories" : "community",
+   "title" : "This Week on p5p 2000/05/28",
+   "tags" : [],
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
-   "title" : "This Week on p5p 2000/05/28",
-   "categories" : "community",
-   "thumbnail" : null,
    "description" : " Notes Regex Engine Enhancements eq and UTF8 operator Caching of the get*by* Functions Forbidden Declarations Continued Perl in the News readonly Pragma Continues Magical Autoincrement Doctor, Doctor, it Hurts When I Do This! use strict 'formatting' Complex Expressions in...",
-   "tags" : [],
-   "date" : "2000-05-28T00:00:00-08:00",
-   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000528",
+   "image" : null,
+   "thumbnail" : null,
    "draft" : null
 }
 
@@ -56,7 +56,7 @@ one of our better weeks, I'm afraid.
 
 ### [Regex Engine Enhancements]{#Regex_Engine_Enhancements}
 
-Ben Tilly, Ilya Zakharevich, and FranÃ§ois DÃ©sarmÃ©nien had a discussion
+Ben Tilly, Ilya Zakharevich, and François Désarménien had a discussion
 about an alternative implementation of the regex engine. I'm going to
 try to summarize the necessary background as briefly as possible.
 

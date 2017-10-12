@@ -1,13 +1,15 @@
 {
-   "title" : "Idioms, or How to Write Perlish Perl",
-   "description" : "Any language&mdash;programming or natural&mdash;develops idioms, or common patterns of expression. The earth revolves, but we speak of the sun rising or setting. We talk of clever hacks and nasty hacks and slinging code. We ping each other on IRC to...",
    "thumbnail" : null,
-   "categories" : "development",
+   "draft" : null,
    "authors" : [
       "chromatic"
    ],
    "image" : null,
-   "draft" : null,
+   "description" : "Any language&mdash;programming or natural&mdash;develops idioms, or common patterns of expression. The earth revolves, but we speak of the sun rising or setting. We talk of clever hacks and nasty hacks and slinging code. We ping each other on IRC to...",
+   "categories" : "development",
+   "slug" : "/pub/2010/03/idioms-or-how-to-write-perlish-perl",
+   "date" : "2010-03-16T06:00:01-08:00",
+   "title" : "Idioms, or How to Write Perlish Perl",
    "tags" : [
       "idioms",
       "objects",
@@ -15,24 +17,22 @@
       "perl-5",
       "perl-programming",
       "schwartzian-transform"
-   ],
-   "date" : "2010-03-16T06:00:01-08:00",
-   "slug" : "/pub/2010/03/idioms-or-how-to-write-perlish-perl"
+   ]
 }
 
 
 
 
 
-Any languageâprogramming or naturalâdevelops *idioms*, or common
+Any language—programming or natural—develops *idioms*, or common
 patterns of expression. The earth revolves, but we speak of the sun
 rising or setting. We talk of clever hacks and nasty hacks and slinging
 code. We ping each other on IRC to discuss spaghetti code, and we factor
 and refactor away the artifacts of copy pasta.
 
 As you learn Perl 5 in more detail, you will begin to see and understand
-common idioms. They're not quite language featuresâyou don't *have* to
-use themâand they're not quite large enough that you can encapsulate
+common idioms. They're not quite language features—you don't *have* to
+use them—and they're not quite large enough that you can encapsulate
 them away behind functions and methods. They're something more than
 habits. They're mannerisms. They're our shared jargon of code. They're
 ways of writing Perl with a Perlish accent.
@@ -63,8 +63,8 @@ Without a module such as
 [MooseX::Multimethods](http://search.cpan.org/perldoc?MooseX::Multimethods),
 Perl 5's argument passing mechanism is simple: all arguments flatten
 into a single list accessible through `@_` (function\_parameters). While
-this simplicity is occasionally too simpleânamed parameters can be very
-useful at timesâit does not preclude the use of idioms to provide named
+this simplicity is occasionally too simple—named parameters can be very
+useful at times—it does not preclude the use of idioms to provide named
 parameters.
 
 The list context evaluation and assignment of `@_` allows you to unpack

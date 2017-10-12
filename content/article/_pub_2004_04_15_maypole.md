@@ -1,19 +1,19 @@
 {
-   "draft" : null,
+   "categories" : "web",
+   "date" : "2004-04-22T00:00:00-08:00",
+   "slug" : "/pub/2004/04/15/maypole",
    "tags" : [
       "maypole",
       "mvc"
    ],
-   "date" : "2004-04-22T00:00:00-08:00",
-   "slug" : "/pub/2004/04/15/maypole",
    "title" : "Rapid Web Application Deployment with Maypole",
-   "categories" : "web",
-   "thumbnail" : "/images/_pub_2004_04_15_maypole/111-apocalypse12.gif",
-   "description" : " You have a database. You have a web server. You have a deadline. Whether it's bringing up an e-commerce storefront for a new venture, implementing a new front-end to HR's employee database, or even providing a neat way to...",
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null
+   "description" : " You have a database. You have a web server. You have a deadline. Whether it's bringing up an e-commerce storefront for a new venture, implementing a new front-end to HR's employee database, or even providing a neat way to...",
+   "image" : null,
+   "thumbnail" : "/images/_pub_2004_04_15_maypole/111-apocalypse12.gif",
+   "draft" : null
 }
 
 

@@ -1,5 +1,4 @@
 {
-   "slug" : "/pub/2004/01/16/regexps",
    "tags" : [
       "brackets",
       "perl",
@@ -8,16 +7,17 @@
       "regexp",
       "regular-expressions"
    ],
+   "title" : "Maintaining Regular Expressions",
+   "categories" : "Regular Expressions",
    "date" : "2004-01-16T00:00:00-08:00",
+   "slug" : "/pub/2004/01/16/regexps",
+   "thumbnail" : "/images/_pub_2004_01_16_regexps/111-regexps.gif",
    "draft" : null,
    "image" : null,
+   "description" : " For some, regular expressions provide the chainsaw functionality of the much-touted Perl \"Swiss Army knife\" metaphor. They are powerful, fast, and very sharp, but like real chainsaws, can be dangerous when used without appropriate safety measures. In this article...",
    "authors" : [
       "aaron-mackey"
-   ],
-   "description" : " For some, regular expressions provide the chainsaw functionality of the much-touted Perl \"Swiss Army knife\" metaphor. They are powerful, fast, and very sharp, but like real chainsaws, can be dangerous when used without appropriate safety measures. In this article...",
-   "categories" : "Regular Expressions",
-   "thumbnail" : "/images/_pub_2004_01_16_regexps/111-regexps.gif",
-   "title" : "Maintaining Regular Expressions"
+   ]
 }
 
 

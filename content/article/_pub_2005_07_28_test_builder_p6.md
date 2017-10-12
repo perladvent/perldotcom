@@ -1,13 +1,8 @@
 {
-   "image" : null,
-   "authors" : [
-      "chromatic"
-   ],
    "categories" : "perl-6",
-   "thumbnail" : "/images/_pub_2005_07_28_test_builder_p6/111-testbuilder.gif",
-   "description" : "Pugs let real people write real Perl 6 code. This article presents a case study of porting Perl's venerable Test::Builder to Perl 6.",
-   "title" : "Porting Test::Builder to Perl 6",
    "slug" : "/pub/2005/07/28/test_builder_p6",
+   "date" : "2005-07-28T00:00:00-08:00",
+   "title" : "Porting Test::Builder to Perl 6",
    "tags" : [
       "parrot",
       "perl-6",
@@ -18,8 +13,13 @@
       "test-driven-design-of-perl-6",
       "test-builder"
    ],
-   "date" : "2005-07-28T00:00:00-08:00",
-   "draft" : null
+   "thumbnail" : "/images/_pub_2005_07_28_test_builder_p6/111-testbuilder.gif",
+   "draft" : null,
+   "authors" : [
+      "chromatic"
+   ],
+   "description" : "Pugs let real people write real Perl 6 code. This article presents a case study of porting Perl's venerable Test::Builder to Perl 6.",
+   "image" : null
 }
 
 
@@ -139,7 +139,7 @@ with Polymorphism". There are four different types of tests that have
 different reporting styles: `pass`, `fail`, `SKIP`, and `TODO`. It made
 sense to create separate classes for each of those, giving each the
 responsibility and knowledge to produce the correct TAP output. Thus I
-wrote Test::Builder::Test, a faÃ§ade factory class with a very smart
+wrote Test::Builder::Test, a façade factory class with a very smart
 constructor that creates and returns the correct test object based on
 the given arguments. When Test::Builder receives one of these test
 objects, it asks it to return the TAP string, passes that message to its
@@ -168,7 +168,7 @@ checking in this code pushed OO support higher on the schedule.
 
 Originally, I thought all test classes would inherit from
 Test::Builder::Test. As Damian Conway pointed out, my technique created
-an infinite loop. (He suggested that "Don't make a faÃ§ade factory class
+an infinite loop. (He suggested that "Don't make a façade factory class
 an ancestor of the instantiable classes" is a design mistake akin to
 "Don't get involved in a land war in Asia" and mumbled something else
 about battles of wits and Sicilians.) The code looked something like:

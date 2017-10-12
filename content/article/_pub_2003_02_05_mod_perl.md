@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2003/02/05/mod_perl",
+   "title" : "Improving mod_perl Sites' Performance: Part 7",
    "tags" : [
       "mod-perl-apache-performance"
    ],
-   "date" : "2003-02-05T00:00:00-08:00",
-   "thumbnail" : null,
    "categories" : "web",
+   "date" : "2003-02-05T00:00:00-08:00",
+   "slug" : "/pub/2003/02/05/mod_perl",
    "description" : " Correct configuration of the MinSpareServers, MaxSpareServers, StartServers, MaxClients, and MaxRequestsPerChild parameters is very important. There are no defaults. If they are too low, then you will underutilize the system's capabilities. If they are too high, then chances are that...",
-   "title" : "Improving mod_perl Sites' Performance: Part 7",
    "image" : null,
    "authors" : [
       "stas-bekman"
-   ]
+   ],
+   "thumbnail" : null,
+   "draft" : null
 }
 
 

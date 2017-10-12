@@ -1,16 +1,16 @@
 {
-   "date" : "2001-01-29T00:00:00-08:00",
-   "tags" : [],
    "slug" : "/pub/2001/01/soap",
+   "date" : "2001-01-29T00:00:00-08:00",
+   "categories" : "web",
+   "tags" : [],
+   "title" : "Quick Start with SOAP",
+   "thumbnail" : null,
    "draft" : null,
    "authors" : [
       "paul-kulchenko"
    ],
    "image" : null,
-   "title" : "Quick Start with SOAP",
-   "description" : "Quick Start with SOAP -> Table of Contents ÂQuick Start with SOAPÂWriting a CGI-based ServerÂClientÂPassing ValuesÂAutodispatchingÂObjects accessÂError handlingÂService dispatch (different services on one server)ÂTypes and NamesÂConclusion Part 2 of this series SOAP (Simple Object Access Protocol) is a way for...",
-   "thumbnail" : null,
-   "categories" : "web"
+   "description" : "Quick Start with SOAP -> Table of Contents Quick Start with SOAPWriting a CGI-based ServerClientPassing ValuesAutodispatchingObjects accessError handlingService dispatch (different services on one server)Types and NamesConclusion Part 2 of this series SOAP (Simple Object Access Protocol) is a way for..."
 }
 
 
@@ -22,18 +22,18 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Quick Start with SOAP](#quick%20start%20with%20soap)\               |
-| â¢[Writing a CGI-based Server](#writing%20a%20cgibased%20server)\      |
-| â¢[Client](#client)\                                                   |
-| â¢[Passing Values](#passing%20values)\                                 |
-| â¢[Autodispatching](#autodispatching)\                                 |
-| â¢[Objects access](#objects%20access)\                                 |
-| â¢[Error handling](#error%20handling)\                                 |
-| â¢[Service dispatch (different services on one                         |
+| •[Quick Start with SOAP](#quick%20start%20with%20soap)\               |
+| •[Writing a CGI-based Server](#writing%20a%20cgibased%20server)\      |
+| •[Client](#client)\                                                   |
+| •[Passing Values](#passing%20values)\                                 |
+| •[Autodispatching](#autodispatching)\                                 |
+| •[Objects access](#objects%20access)\                                 |
+| •[Error handling](#error%20handling)\                                 |
+| •[Service dispatch (different services on one                         |
 | server)](#service%20dispatch%20(different%20services%20on%20one%20ser |
 | ver))\                                                                |
-| â¢[Types and Names](#types%20and%20names)\                             |
-| â¢[Conclusion](#conclusion)\                                           |
+| •[Types and Names](#types%20and%20names)\                             |
+| •[Conclusion](#conclusion)\                                           |
 | \                                                                     |
 | **[Part 2 of this series](/media/_pub_2001_01_soap/soap.html)**       |
 +-----------------------------------------------------------------------+

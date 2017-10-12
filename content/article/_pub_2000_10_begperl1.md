@@ -1,16 +1,16 @@
 {
-   "draft" : null,
+   "title" : "Beginner's Introduction to Perl",
    "tags" : [],
    "date" : "2000-10-16T00:00:00-08:00",
    "slug" : "/pub/2000/10/begperl1",
-   "title" : "Beginner's Introduction to Perl",
-   "thumbnail" : null,
    "categories" : "development",
+   "image" : null,
    "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
    "authors" : [
       "doug-sheppard"
    ],
-   "image" : null
+   "thumbnail" : null,
+   "draft" : null
 }
 
 
@@ -34,27 +34,27 @@ be interested in the newer versions, available at:*
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢**[Part 2 of this                                                    |
+| •**[Part 2 of this                                                    |
 | series](/media/_pub_2000_10_begperl1/begperl2.html)**\                |
-| â¢**[Part 3 of this                                                    |
+| •**[Part 3 of this                                                    |
 | series](/media/_pub_2000_10_begperl1/begperl3.html)**\                |
-| â¢**[Part 4 of this                                                    |
+| •**[Part 4 of this                                                    |
 | series](/media/_pub_2000_10_begperl1/begperl4.html)**\                |
-| â¢**[Part 5 of this                                                    |
+| •**[Part 5 of this                                                    |
 | series](/media/_pub_2000_10_begperl1/begperl5.html)**\                |
-| â¢**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
+| •**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
 | \                                                                     |
-| â¢[A Word About Operating                                              |
+| •[A Word About Operating                                              |
 | Systems](#a%20word%20about%20operating%20systems)\                    |
-| â¢[Your First Perl Program](#your%20first%20perl%20program)\           |
-| â¢[Functions and Statements](#functions%20and%20statements)\           |
-| â¢[Numbers, Strings and Quotes](#numbers,%20strings%20and%20quotes)\   |
-| â¢[Variables](#variables)\                                             |
-| â¢[Comments](#comments)\                                               |
-| â¢[Loops](#loops)\                                                     |
-| â¢[The Miracle of Compound                                             |
+| •[Your First Perl Program](#your%20first%20perl%20program)\           |
+| •[Functions and Statements](#functions%20and%20statements)\           |
+| •[Numbers, Strings and Quotes](#numbers,%20strings%20and%20quotes)\   |
+| •[Variables](#variables)\                                             |
+| •[Comments](#comments)\                                               |
+| •[Loops](#loops)\                                                     |
+| •[The Miracle of Compound                                             |
 | Interest](#the%20miracle%20of%20compound%20interest)\                 |
-| â¢[Play Around!](#play%20around!)\                                     |
+| •[Play Around!](#play%20around!)\                                     |
 +-----------------------------------------------------------------------+
 
 Welcome to Perl.

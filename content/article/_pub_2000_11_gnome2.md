@@ -1,16 +1,16 @@
 {
+   "image" : null,
+   "description" : "Programming GNOME Applications with Perl, Part Two -> Table of Contents The Cookbook Application The Main Screen Columned Lists Displaying Recipes Where We Are, And Where We're Going Notes on the Last Article Last month's article examined how to create...",
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "title" : "Programming GNOME Applications with Perl - Part 2",
-   "description" : "Programming GNOME Applications with Perl, Part Two -> Table of Contents ÂThe Cookbook Application ÂThe Main Screen ÂColumned Lists ÂDisplaying Recipes ÂWhere We Are, And Where We're Going ÂNotes on the Last Article Last month's article examined how to create...",
-   "categories" : "apps",
+   "draft" : null,
    "thumbnail" : null,
    "tags" : [],
-   "date" : "2000-11-28T00:00:00-08:00",
+   "title" : "Programming GNOME Applications with Perl - Part 2",
+   "categories" : "apps",
    "slug" : "/pub/2000/11/gnome2",
-   "draft" : null
+   "date" : "2000-11-28T00:00:00-08:00"
 }
 
 
@@ -23,13 +23,13 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[The Cookbook Application](#the%20cookbook%20application)\           |
-| â¢[The Main Screen](#the%20main%20screen)\                             |
-| â¢[Columned Lists](#columned%20lists)\                                 |
-| â¢[Displaying Recipes](#displaying%20recipes)\                         |
-| â¢[Where We Are, And Where We're                                       |
+| •[The Cookbook Application](#the%20cookbook%20application)\           |
+| •[The Main Screen](#the%20main%20screen)\                             |
+| •[Columned Lists](#columned%20lists)\                                 |
+| •[Displaying Recipes](#displaying%20recipes)\                         |
+| •[Where We Are, And Where We're                                       |
 | Going](#where%20we%20are,%20and%20where%20we're%20going)\             |
-| â¢[Notes on the Last Article](#notes%20on%20the%20last%20article)\     |
+| •[Notes on the Last Article](#notes%20on%20the%20last%20article)\     |
 +-----------------------------------------------------------------------+
 
 Last month's article examined how to create a simple \`\`Hello World''

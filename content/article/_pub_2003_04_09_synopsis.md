@@ -1,19 +1,19 @@
 {
-   "draft" : null,
+   "title" : "Synopsis 6",
    "tags" : [
       "perl-6-apocalypse"
    ],
-   "date" : "2003-04-09T00:00:00-08:00",
    "slug" : "/pub/2003/04/09/synopsis",
-   "title" : "Synopsis 6",
-   "thumbnail" : "/images/_pub_2003_04_09_synopsis/111-synopsis.gif",
+   "date" : "2003-04-09T00:00:00-08:00",
    "categories" : "perl-6",
+   "thumbnail" : "/images/_pub_2003_04_09_synopsis/111-synopsis.gif",
+   "draft" : null,
+   "image" : null,
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. This document summarizes Apocalypse 6, which covers subroutines and the new type system. Subroutines and Other Code...",
    "authors" : [
       "damian-conway",
       "allison-randal"
-   ],
-   "image" : null
+   ]
 }
 
 
@@ -202,13 +202,13 @@ closing.
 Operator names can be any sequence of Unicode characters. For example:
 
         sub infix:(c)        ($text, $owner) { return $text but Copyright($owner) }
-        method prefix:Â± (Num $x) returns Num { return +$x | -$x }
+        method prefix:± (Num $x) returns Num { return +$x | -$x }
         multi postfix:!             (Int $n) { $n<2 ?? 1 :: $n*($n-1)! }
         macro circumfix:<!--...-->   ($text) { "" }
 
         my $document = $text (c) $me;
 
-        my $tolerance = Â±7!;
+        my $tolerance = ±7!;
 
         <!-- This is now a comment -->
 

@@ -1,16 +1,16 @@
 {
-   "categories" : "community",
-   "thumbnail" : null,
-   "description" : " Notes Regex Stress Testing Another Thread-Safing Patch Enormous perldoc discussion winds up Build patches for OS/2 Regex Engine Method calls on unblessed references Version Tuples Broken? Negative Subscripts for Tied Arrays Upcoming corrections Various Notes You can subscribe to...",
-   "title" : "This Week on p5p 2000/05/14",
-   "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
+   "description" : " Notes Regex Stress Testing Another Thread-Safing Patch Enormous perldoc discussion winds up Build patches for OS/2 Regex Engine Method calls on unblessed references Version Tuples Broken? Negative Subscripts for Tied Arrays Upcoming corrections Various Notes You can subscribe to...",
+   "image" : null,
    "draft" : null,
+   "thumbnail" : null,
    "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000514",
    "date" : "2000-05-14T00:00:00-08:00",
-   "tags" : []
+   "categories" : "community",
+   "tags" : [],
+   "title" : "This Week on p5p 2000/05/14"
 }
 
 

@@ -1,18 +1,18 @@
 {
    "slug" : "/pub/2001/08/27/bjornstad",
+   "date" : "2001-08-27T00:00:00-08:00",
+   "categories" : "Community",
+   "title" : "Perl Helps The Disabled",
    "tags" : [
       "disabled-accessibility-tk-bjornstad"
    ],
-   "date" : "2001-08-27T00:00:00-08:00",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "dan-brian"
    ],
    "description" : "As part of Mark-Jason Dominus's Lightning Talks at the 2001 O'Reilly Open Source Convention, Jon Bjornstad gave a talk about a Perl/Tk program he wrote to help a mute quadriplegic friend, Sue Simpson, speak and better use her computer. Jon's...",
-   "thumbnail" : "/images/_pub_2001_08_27_bjornstad/111-perldisabled.jpg",
-   "categories" : "Community",
-   "title" : "Perl Helps The Disabled"
+   "image" : null,
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2001_08_27_bjornstad/111-perldisabled.jpg"
 }
 
 
@@ -65,7 +65,7 @@ other choices available really didn't match her needs.
   ----------------------------------------------------------------------------------------------------------------------
   ![Screenshot of Word Prediction Software](/images/_pub_2001_08_27_bjornstad/300-words.gif){width="300" height="223"}
   [**Word Prediction Software in action**]{.secondary}
-  Â 
+   
   ![Screenshot of Keyboard Software](/images/_pub_2001_08_27_bjornstad/300-key.gif){width="300" height="223"}
   [**The Keyboard Interface**]{.secondary}
   ----------------------------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ leisure. I also allowed her to redirect the text input to a file (like
   ---------------------------------------------------------------------------------------------------------
   ![Screenshot of Dictionary](/images/_pub_2001_08_27_bjornstad/300-define.gif){width="300" height="223"}
   [**Looking up a word using the Dictionary**]{.secondary}
-  Â 
+   
   ![Screenshot of the Reader](/images/_pub_2001_08_27_bjornstad/300-alice.gif){width="300"}
   [**The Reader Display**]{.secondary}
   ---------------------------------------------------------------------------------------------------------

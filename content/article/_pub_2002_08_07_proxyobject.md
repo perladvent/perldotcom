@@ -1,17 +1,17 @@
 {
+   "date" : "2002-08-07T00:00:00-08:00",
+   "slug" : "/pub/2002/08/07/proxyobject",
+   "categories" : "development",
    "tags" : [
       "proxy-objects-pattern-circular-references"
    ],
-   "date" : "2002-08-07T00:00:00-08:00",
-   "slug" : "/pub/2002/08/07/proxyobject",
+   "title" : "Proxy Objects",
+   "thumbnail" : "/images/_pub_2002_08_07_proxyobject/111-proxy_objects.gif",
    "draft" : null,
    "authors" : [
       "matt-sergeant"
    ],
    "image" : null,
-   "title" : "Proxy Objects",
-   "thumbnail" : "/images/_pub_2002_08_07_proxyobject/111-proxy_objects.gif",
-   "categories" : "development",
    "description" : " In your time as a Perl programmer, it becomes almost inevitable that at some point you will have to manage in-memory tree structures of some sort. When you do this, it becomes important to be aware of how Perl..."
 }
 
@@ -231,11 +231,11 @@ see what happens with our example above:
       sub DESTROY { warn("CircObj::DESTROY\n") }
       
       for (1..1) {
-      Â Â my $parent = CircObj->new;
-      Â Â  my $child = CircObj->new;
-      Â Â  $parent->child($child);
-      Â Â  $child->parent($parent);
-      Â Â  warn("Leaving scope\n");
+        my $parent = CircObj->new;
+         my $child = CircObj->new;
+         $parent->child($child);
+         $child->parent($parent);
+         warn("Leaving scope\n");
       }
     warn("Scope left\n");
 

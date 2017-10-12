@@ -1,18 +1,18 @@
 {
+   "thumbnail" : null,
+   "draft" : null,
+   "description" : " Table of Contents &nbsp;&nbsp;&#149;&nbsp;Unicode - Perl goes&nbsp;&nbsp;&nbsp;&nbsp;international! &nbsp;&nbsp;&#149; Better Building &nbsp;&nbsp;&#149; Improved Compiler &nbsp;&nbsp;&#149; Version Tuples &nbsp;&nbsp;&#149; Lexical Warnings &nbsp;&nbsp;&#149; Lvaluable Subroutines &nbsp;&nbsp;&#149; Weak References &nbsp;&nbsp;&#149; POSIX Character&nbsp;&nbsp;&nbsp;&nbsp;Classes &nbsp;&nbsp;&#149; Miscellaneous Bits `Darn it, who spiked my coffee with water?!'...",
+   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "title" : "What's New in 5.6.0.",
-   "description" : " Table of Contents &nbsp;&nbsp;&#149;&nbsp;Unicode - Perl goes&nbsp;&nbsp;&nbsp;&nbsp;international! &nbsp;&nbsp;&#149; Better Building &nbsp;&nbsp;&#149; Improved Compiler &nbsp;&nbsp;&#149; Version Tuples &nbsp;&nbsp;&#149; Lexical Warnings &nbsp;&nbsp;&#149; Lvaluable Subroutines &nbsp;&nbsp;&#149; Weak References &nbsp;&nbsp;&#149; POSIX Character&nbsp;&nbsp;&nbsp;&nbsp;Classes &nbsp;&nbsp;&#149; Miscellaneous Bits `Darn it, who spiked my coffee with water?!'...",
-   "thumbnail" : null,
-   "categories" : "community",
    "tags" : [
       "unicode"
    ],
+   "title" : "What's New in 5.6.0.",
+   "categories" : "community",
    "date" : "2000-04-18T00:00:00-08:00",
-   "slug" : "/pub/2000/04/whatsnew",
-   "draft" : null
+   "slug" : "/pub/2000/04/whatsnew"
 }
 
 
@@ -25,18 +25,18 @@
 ![](http://www.webreview.com/universal/images/blank.gif){width="0"
 height="3"}
 ![](/universal/images/blank.gif){width="0" height="1"}
-Â Â â¢Â [Unicode - Perl goes](#Unicode_Perl_goes_internationa)\
-Â Â Â Â [international!](#Unicode_Perl_goes_internationa)
+  • [Unicode - Perl goes](#Unicode_Perl_goes_internationa)\
+    [international!](#Unicode_Perl_goes_internationa)
 ![](/universal/images/blank.gif){width="0" height="1"}
-Â Â â¢ [Better Building](#Better_Building)
-Â Â â¢ [Improved Compiler](#Improved_Compiler)
-Â Â â¢ [Version Tuples](#Version_Tuples)
-Â Â â¢ [Lexical Warnings](#Lexical_Warnings)
-Â Â â¢ [Lvaluable Subroutines](#Lvaluable_Subroutines)
-Â Â â¢ [Weak References](#Weak_References)
-Â Â â¢ [POSIX Character](#POSIX_Character_Classes)\
-Â Â Â Â [Classes](#POSIX_Character_Classes)
-Â Â â¢ [Miscellaneous Bits](#Miscellaneous_Bits)
+  • [Better Building](#Better_Building)
+  • [Improved Compiler](#Improved_Compiler)
+  • [Version Tuples](#Version_Tuples)
+  • [Lexical Warnings](#Lexical_Warnings)
+  • [Lvaluable Subroutines](#Lvaluable_Subroutines)
+  • [Weak References](#Weak_References)
+  • [POSIX Character](#POSIX_Character_Classes)\
+    [Classes](#POSIX_Character_Classes)
+  • [Miscellaneous Bits](#Miscellaneous_Bits)
 ![](/universal/images/blank.gif%22){width="1" height="1"}
 
 > *\`Darn it, who spiked my coffee with water?!'* - lwall

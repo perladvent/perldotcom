@@ -1,19 +1,19 @@
 {
-   "slug" : "/pub/1999/08/onion/talk1",
-   "tags" : [
-      "larry-wall",
-      "state-of-the-onion"
-   ],
-   "date" : "1999-08-30T00:00:00-08:00",
    "draft" : null,
+   "thumbnail" : null,
+   "description" : " This talk was delivered by Larry Wall on August 23, 1999 at the Perl Conference 3.0 in Monterey, CA. (Note: most of the pictures this year were images of molecules that I animated using a program called RasMol, along...",
    "image" : null,
    "authors" : [
       "larry-wall"
    ],
-   "thumbnail" : null,
-   "categories" : "community",
-   "description" : " This talk was delivered by Larry Wall on August 23, 1999 at the Perl Conference 3.0 in Monterey, CA. (Note: most of the pictures this year were images of molecules that I animated using a program called RasMol, along...",
-   "title" : "3rd State of the Onion"
+   "title" : "3rd State of the Onion",
+   "tags" : [
+      "larry-wall",
+      "state-of-the-onion"
+   ],
+   "slug" : "/pub/1999/08/onion/talk1",
+   "date" : "1999-08-30T00:00:00-08:00",
+   "categories" : "community"
 }
 
 

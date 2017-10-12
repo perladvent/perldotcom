@@ -1,15 +1,15 @@
 {
-   "tags" : [],
-   "date" : "1999-09-16T00:00:00-08:00",
+   "categories" : "development",
    "slug" : "/pub/1999/09/refererents",
+   "date" : "1999-09-16T00:00:00-08:00",
+   "tags" : [],
+   "title" : "Bless My Referents",
    "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "damian-conway"
    ],
    "image" : null,
-   "title" : "Bless My Referents",
-   "thumbnail" : null,
-   "categories" : "development",
    "description" : " Introduction Damian Conway is the author of the newly released Object Oriented Perl, the first of a new series of Perl books from Manning. Object-oriented programming in Perl is easy. Forget the heavy theory and the sesquipedalian jargon: classes..."
 }
 
@@ -40,7 +40,7 @@ Let's start with a short detour down a dark alley...
 
 ### References and referents
 
-Sometimes it's important to be able to access a variable indirectlyâ to
+Sometimes it's important to be able to access a variable indirectly— to
 be able to use it without specifying its name. There are two obvious
 motivations: the variable you want may not *have* a name (it may be an
 anonymous array or hash), or you may only know which variable you want
@@ -67,21 +67,21 @@ to it.
 In Perl, a reference to any kind of variable can be stored in another
 scalar variable. For example:
 
-    $slr_ref = \$s;Â Â Â Â  # scalar $slr_ref stores a reference to scalar $s
-    $arr_ref = \@a;Â Â Â Â  # scalar $arr_ref stores a reference to array @a
-    $hsh_ref = \%h;Â Â Â Â  # scalar $hsh_ref stores a reference to hash %h
+    $slr_ref = \$s;     # scalar $slr_ref stores a reference to scalar $s
+    $arr_ref = \@a;     # scalar $arr_ref stores a reference to array @a
+    $hsh_ref = \%h;     # scalar $hsh_ref stores a reference to hash %h
 
 Figure 1 shows the relationships produced by those assignments.
 Note that the references are separate entities from the referents at
 which they point. The only time that isn't the case is when a variable
 happens to contain a reference to itself:
 
-    $self_ref = \$self_ref;Â Â Â Â  # $self_ref stores a reference to itself!
+    $self_ref = \$self_ref;     # $self_ref stores a reference to itself!
 
 That (highly unusual) situation produces an arrangement shown in Figure
 2.
 Once you have a reference, you can get back to the original thing it
-refers toâit's referentâsimply by prefixing the variable containing the
+refers to—it's referent—simply by prefixing the variable containing the
 reference (optionally in curly braces) with the appropriate variable
 symbol. Hence to access \$s, you could write \$\$slr\_ref or
 \${\$slr\_ref}. At first glance, that might look like one too many
@@ -112,11 +112,11 @@ Accessing the elements of an array or a hash through a reference can be
 awkward using the syntax shown above. You end up with a confusing tangle
 of dollar signs and brackets:
 
-    ${$arr_ref}[0] = ${$hsh_ref}{"first"};Â  # i.e. $a[0] = $h{"first"}
+    ${$arr_ref}[0] = ${$hsh_ref}{"first"};  # i.e. $a[0] = $h{"first"}
 
 So Perl provides a little extra syntax to make life just a little less
 cluttered:
-    $arr_ref->[0] = $hsh_ref->{"first"};Â Â Â  # i.e. $a[0] = $h{"first"}
+    $arr_ref->[0] = $hsh_ref->{"first"};    # i.e. $a[0] = $h{"first"}
 
 The "arrow" operator (-&gt;) takes a reference on its left and either an
 array index (in square brackets) or a hash key (in curly braces) on its
@@ -223,14 +223,14 @@ objects:
 
     sub print_me
     {
-    Â Â Â Â Â Â  # The code needed to print the Bug goes here
+           # The code needed to print the Bug goes here
     }
 
 Again, that's it. The subroutine print\_me is now associated with the
 package Bug, so whenever Bug is used as a class, Perl automatically
 treats Bug::print\_me as a method.
 Invoking the Bug::print\_me method involves that one extra piece of
-syntax mentioned aboveâan extension to the existing Perl "arrow"
+syntax mentioned above—an extension to the existing Perl "arrow"
 notation. If you have a reference to an object of class Bug, you can
 access any method of that object by using a -&gt; symbol, followed by
 the name of the method.
@@ -243,15 +243,15 @@ object, you could call Bug::print\_me on that object by writing:
 Calling a method through an arrow should be very familiar to any C++
 programmers; for the rest of us, it's at least consistent with other
 Perl usages:
-    $hsh_ref->{"key"};Â Â Â Â Â Â Â Â Â Â  # Access the hash referred to by $hashref
-    $arr_ref->[$index];Â Â Â Â Â Â Â Â Â  # Access the array referred to by $arrayref
-    $sub_ref->(@args);Â Â Â Â Â Â Â Â Â Â  # Access the sub referred to by $subref
-    $obj_ref->method(@args);Â Â Â Â  # Access the object referred to by $objref
+    $hsh_ref->{"key"};           # Access the hash referred to by $hashref
+    $arr_ref->[$index];          # Access the array referred to by $arrayref
+    $sub_ref->(@args);           # Access the sub referred to by $subref
+    $obj_ref->method(@args);     # Access the object referred to by $objref
 
 The only difference with the last case is that the referent (i.e. the
 object) pointed to by \$objref has many ways of being accessed (namely,
 its various methods). So, when you want to access that object, you have
-to specify which particular wayâwhich methodâshould be used. Hence, the
+to specify which particular way—which method—should be used. Hence, the
 method name after the arrow.
 When a method like Bug::print\_me is called, the argument list that it
 receives begins with the reference through which it was called, followed
@@ -275,10 +275,10 @@ start with something equivalent to this:
 
     sub print_me
     {
-    Â Â Â  my ($self) = shift;
-    Â Â Â  # The @_ array now stores the arguments passed to &Bug::print_me
-    Â Â Â  # The rest of &print_me uses the data referred to by $selfÂ 
-    Â Â Â  # and the explicit arguments (still in @_)
+        my ($self) = shift;
+        # The @_ array now stores the arguments passed to &Bug::print_me
+        # The rest of &print_me uses the data referred to by $self 
+        # and the explicit arguments (still in @_)
     }
 
 or, better still:
@@ -286,15 +286,15 @@ or, better still:
 
     sub print_me
     {
-    Â Â Â  my ($self, @args) = @_;
-    Â Â Â  # The @args array now stores the arguments passed to &Bug::print_me
-    Â Â Â  # The rest of &print_me uses the data referred to by $self
-    Â Â Â  # and the explicit arguments (now in @args)
+        my ($self, @args) = @_;
+        # The @args array now stores the arguments passed to &Bug::print_me
+        # The rest of &print_me uses the data referred to by $self
+        # and the explicit arguments (now in @args)
     }
 
 This second version is better because it provides a lexically scoped
 copy of the argument list (@args). Remember that the @\_ array is
-"magical"âchanging any element of it actually changes the *caller's*
+"magical"—changing any element of it actually changes the *caller's*
 version of the corresponding argument. Copying argument values to a
 lexical array like @args prevents nasty surprises of this kind, as well
 as improving the internal documentation of the subroutine (especially if
@@ -306,8 +306,8 @@ in the first place?*
 
 Unlike other object-oriented languages, Perl doesn't require that an
 object be a special kind of record-like data structure. In fact, you can
-use *any* existing type of Perl variableâa scalar, an array, a hash,
-etc.âas an object in Perl.
+use *any* existing type of Perl variable—a scalar, an array, a hash,
+etc.—as an object in Perl.
 
 Hence, the issue isn't how to *create* the object, because you create
 them exactly like any other Perl variable: declare them with a my, or
@@ -326,10 +326,10 @@ For example, suppose that \$nextbug actually stores a reference to an
 anonymous hash:
 
     $nextbug = {
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  idÂ Â Â  => "00001",
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  typeÂ  => "fatal",
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  descr => "application does not compile",
-    Â Â Â Â Â Â Â Â Â Â  };
+                    id    => "00001",
+                    type  => "fatal",
+                    descr => "application does not compile",
+               };
 
 To turn that anonymous hash into an object of class Bug you write:
     bless $nextbug, "Bug";
@@ -373,14 +373,14 @@ this:
     package Bug;
     sub new
     {
-    Â Â Â  my $class = $_[0];
-    Â Â Â  my $objref = {
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  idÂ Â Â  => $_[1],
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  typeÂ  => $_[2],
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  descr => $_[3],
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â  };
-    Â Â Â  bless $objref, $class;
-    Â Â Â  return $objref;
+        my $class = $_[0];
+        my $objref = {
+                         id    => $_[1],
+                         type  => $_[2],
+                         descr => $_[3],
+                     };
+        bless $objref, $class;
+        return $objref;
     }
 
 Note that the middle bits of the subroutine (in bold) look just like the
@@ -394,7 +394,7 @@ could condense the definition of Bug::new to this:
 
     sub Bug::new
     {
-    Â Â Â Â Â Â Â  bless { id => $_[1], type => $_[2], descr => $_[3] }, $_[0];
+            bless { id => $_[1], type => $_[2], descr => $_[3] }, $_[0];
     }
 
 This version has exactly the same effects: slot the data into an
@@ -408,7 +408,7 @@ new Bug object, you can just call:
 That's a little redundant, since you have to type "Bug" twice.
 Fortunately, there's another feature of the "arrow" method-call syntax
 that solves this problem. If the operand to the left of the arrow is the
-name of a class ârather than an object referenceâthen the appropriate
+name of a class —rather than an object reference—then the appropriate
 method of that class is called. More importantly, if the arrow notation
 is used, the first argument passed to the method is a string containing
 the class name. That means that you could rewrite the previous call to
@@ -436,10 +436,10 @@ Bug::print\_me method:
     package Bug;
     sub print_me
     {
-    Â Â Â  my ($self) = @_;
-    Â Â Â  print "ID: $self->{id}\n";
-    Â Â Â  print "$self->{descr}\n";
-    Â Â Â  print "(Note: problem is fatal)\n" if $self->{type} eq "fatal";
+        my ($self) = @_;
+        print "ID: $self->{id}\n";
+        print "$self->{descr}\n";
+        print "(Note: problem is fatal)\n" if $self->{type} eq "fatal";
     }
 
 Now, whenever the print\_me method is called via a reference to any hash
@@ -480,8 +480,8 @@ For example, you could provide a destructor for the Bug class like this:
 
     sub DESTROY
     {
-    Â Â Â Â Â Â Â  my ($self) = @_;
-    Â Â Â Â Â Â Â  print "<< Squashed the bug: $self->{id} >>\n\n";
+            my ($self) = @_;
+            print "<< Squashed the bug: $self->{id} >>\n\n";
     }
 
 Now, every time an object of class Bug is about to cease to exist, that
@@ -494,10 +494,10 @@ print an epitaph for the object. For example, the following code:
 
     while (<BUGDATA>)
     {
-    Â Â Â  my @data = split ',', $_;Â Â Â Â Â Â  # extract comma-separated Bug data
-    Â Â Â  my $bug = Bug->new(@data);Â Â Â Â Â  # create a new Bug object
-    Â Â Â  $bug->print_me();Â Â Â Â Â Â Â Â Â Â Â Â Â Â  # print it out
-    }Â 
+        my @data = split ',', $_;       # extract comma-separated Bug data
+        my $bug = Bug->new(@data);      # create a new Bug object
+        $bug->print_me();               # print it out
+    } 
 
     print "(end of list)\n";
 
@@ -509,11 +509,11 @@ prints out something like this:
 
     ID: SW000214
     Word processor trashing disk after 20 saves.
-    << Squashed the bug SW000214 >>Â 
+    << Squashed the bug SW000214 >> 
 
     ID: OS000633
     Can't change background colour (blue) on blue screen of death.
-    << Squashed the bug OS000633 >>Â 
+    << Squashed the bug OS000633 >> 
 
     (end of list)
 
@@ -536,7 +536,7 @@ encapsulation, operator overloading, tied objects, genericity, and
 persistence.
 
 Perl's standard documentation includes plenty of good
-materialâ*perlref*, *perlreftut*, *perlobj*, *perltoot*, *perltootc*,
+material—*perlref*, *perlreftut*, *perlobj*, *perltoot*, *perltootc*,
 and *perlbot* to get you started. But if you're looking for a
 comprehensive tutorial on everything you need to know, you may also like
 to consider my new book, *[Object Oriented

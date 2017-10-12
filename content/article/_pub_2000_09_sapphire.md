@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "draft" : null,
+   "description" : " Table of Contents Design Principles So, uh, what is it? Where did it get? What else can be done? What can't be done? Structure of a Sapphire The future of Sapphire Reflections through a Sapphire Naming languages after stones...",
    "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "categories" : "Perl Internals",
-   "thumbnail" : null,
-   "description" : " Table of Contents ÂDesign Principles ÂSo, uh, what is it? ÂWhere did it get? ÂWhat else can be done? ÂWhat can't be done? ÂStructure of a Sapphire ÂThe future of Sapphire ÂReflections through a Sapphire Naming languages after stones...",
-   "title" : "Sapphire",
-   "slug" : "/pub/2000/09/sapphire",
    "tags" : [],
+   "title" : "Sapphire",
+   "categories" : "Perl Internals",
    "date" : "2000-09-19T00:00:00-08:00",
-   "draft" : null
+   "slug" : "/pub/2000/09/sapphire"
 }
 
 
@@ -23,14 +23,14 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Design Principles](#design%20principles)\                           |
-| â¢[So, uh, what is it?](#so,%20uh,%20what%20is%20it)\                  |
-| â¢[Where did it get?](#where%20did%20it%20get)\                        |
-| â¢[What else can be done?](#what%20else%20can%20be%20done)\            |
-| â¢[What can't be done?](#what%20can't%20be%20done)\                    |
-| â¢[Structure of a Sapphire](#structure%20of%20a%20sapphire)\           |
-| â¢[The future of Sapphire](#the%20future%20of%20sapphire)\             |
-| â¢[Reflections through a                                               |
+| •[Design Principles](#design%20principles)\                           |
+| •[So, uh, what is it?](#so,%20uh,%20what%20is%20it)\                  |
+| •[Where did it get?](#where%20did%20it%20get)\                        |
+| •[What else can be done?](#what%20else%20can%20be%20done)\            |
+| •[What can't be done?](#what%20can't%20be%20done)\                    |
+| •[Structure of a Sapphire](#structure%20of%20a%20sapphire)\           |
+| •[The future of Sapphire](#the%20future%20of%20sapphire)\             |
+| •[Reflections through a                                               |
 | Sapphire](#reflections%20through%20a%20sapphire)\                     |
 +-----------------------------------------------------------------------+
 

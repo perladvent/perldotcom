@@ -1,19 +1,19 @@
 {
-   "title" : "Microsoft to Fund Perl Development",
-   "categories" : "community",
+   "draft" : null,
    "thumbnail" : null,
    "description" : " If the good news is that the world's largest software company has recognized the value of Perl and they are willing to fund new Perl development, then you know the bad news. Microsoft has entered into a three-year agreement...",
+   "image" : null,
    "authors" : [
       "dale-dougherty"
    ],
-   "image" : null,
-   "draft" : null,
-   "date" : "1999-06-09T00:00:00-08:00",
    "tags" : [
       "activestate",
       "microsoft",
       "windows"
    ],
+   "title" : "Microsoft to Fund Perl Development",
+   "categories" : "community",
+   "date" : "1999-06-09T00:00:00-08:00",
    "slug" : "/pub/1999/06/activestate"
 }
 
@@ -56,13 +56,13 @@ Microsoft has been funding Perl development through ActiveState since
 good one.
 
 According to ActiveState, the new development will applied in the
-following areas: ï¿½
+following areas: �
 
 -   extend Perl's support for Unicode to all system calls so that Perl
     can interface with file names and environment variables as Unicode
     data.
 -   provide a functionally equivalent implementation of fork, a Unix
-    system call which does not exist on NT systems. ï¿½
+    system call which does not exist on NT systems. �
 -   improve the performance of Perlscript by saving the state of a
     compiled script for a subsequent script. This will help Perl match
     VBscript and JavaScript performance in the ASP environment.

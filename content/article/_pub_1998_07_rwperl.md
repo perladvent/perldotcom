@@ -6,17 +6,17 @@
       "perl",
       "programming"
    ],
+   "title" : "How Perl Creates Orders For The Air Force",
+   "categories" : "community",
    "date" : "1998-07-22T00:00:00-08:00",
    "slug" : "/pub/1998/07/rwperl",
+   "thumbnail" : null,
    "draft" : null,
+   "description" : " This article is the first in a series that will provide examples of Perl solving real-world problems, particularly in an organization. If you have your own real-life story to tell, send it to Perl.com Editor. How many times have...",
+   "image" : null,
    "authors" : [
       "brent-michalski"
-   ],
-   "image" : null,
-   "title" : "How Perl Creates Orders For The Air Force",
-   "thumbnail" : null,
-   "categories" : "community",
-   "description" : " This article is the first in a series that will provide examples of Perl solving real-world problems, particularly in an organization. If you have your own real-life story to tell, send it to Perl.com Editor. How many times have..."
+   ]
 }
 
 

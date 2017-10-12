@@ -1,4 +1,11 @@
 {
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_01_13_quality_assurance/111-sure_quality.gif",
+   "description" : " On Being Wrong When I decided to study computer science, I installed Linux on my computer and bought a copy of \"The C Programming Language\" by Kernighan and Ritchie. I have been trying to solve software problems ever since....",
+   "image" : null,
+   "authors" : [
+      "tom-mctighe"
+   ],
    "tags" : [
       "automated-testing",
       "perl-qa",
@@ -8,17 +15,10 @@
       "test-plans",
       "test-specifications"
    ],
+   "title" : "An Introduction to Quality Assurance",
    "date" : "2005-01-13T00:00:00-08:00",
    "slug" : "/pub/2005/01/13/quality_assurance",
-   "draft" : null,
-   "authors" : [
-      "tom-mctighe"
-   ],
-   "image" : null,
-   "title" : "An Introduction to Quality Assurance",
-   "thumbnail" : "/images/_pub_2005_01_13_quality_assurance/111-sure_quality.gif",
-   "categories" : "Debugging",
-   "description" : " On Being Wrong When I decided to study computer science, I installed Linux on my computer and bought a copy of \"The C Programming Language\" by Kernighan and Ritchie. I have been trying to solve software problems ever since...."
+   "categories" : "Debugging"
 }
 
 
@@ -212,8 +212,8 @@ DESCRIPTION\
 Repro (short for reproduction)
 
 1.  &lt;Very descriptive steps showing how to recreate the problem&gt;
-2.  Â 
-3.  Â 
+2.   
+3.   
 
 Result:\
 &lt;Description of exactly what happens after the last repro step&gt;

@@ -1,21 +1,21 @@
 {
-   "image" : null,
-   "authors" : [
-      "vladi-belperchinov-shabanski"
-   ],
-   "description" : " Why Gates? In a perfect world we wouldn't do things we should not. However the world is not like this; people do forbidden things sometimes. This also applies to computer systems used by more than one person. Almost everyone...",
-   "thumbnail" : null,
-   "categories" : "Security",
-   "title" : "Elements of Access Control",
+   "date" : "2008-02-13T00:00:00-08:00",
    "slug" : "/pub/2008/02/13/elements-of-access-control",
+   "categories" : "Security",
    "tags" : [
       "access-control",
       "privacy",
       "security",
       "software-development"
    ],
-   "date" : "2008-02-13T00:00:00-08:00",
-   "draft" : null
+   "title" : "Elements of Access Control",
+   "thumbnail" : null,
+   "draft" : null,
+   "authors" : [
+      "vladi-belperchinov-shabanski"
+   ],
+   "description" : " Why Gates? In a perfect world we wouldn't do things we should not. However the world is not like this; people do forbidden things sometimes. This also applies to computer systems used by more than one person. Almost everyone...",
+   "image" : null
 }
 
 

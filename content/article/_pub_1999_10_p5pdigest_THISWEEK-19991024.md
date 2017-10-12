@@ -1,16 +1,16 @@
 {
    "title" : "This Week on p5p 1999/10/24",
-   "description" : "(18-24 October 1999) -> $^O STOP blocks and the broken compiler Blank lines in POD PERL_HEADER environment variable Out of date modules in Perl distribution Enhanced UNIVERSAL::isa sort improvements glob case-sensitivity reftype function New perlthread man page Win32 and fork()...",
+   "tags" : [],
    "categories" : "community",
-   "thumbnail" : null,
+   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991024",
+   "date" : "1999-10-17T00:00:00-08:00",
+   "description" : "(18-24 October 1999) -> $^O STOP blocks and the broken compiler Blank lines in POD PERL_HEADER environment variable Out of date modules in Perl distribution Enhanced UNIVERSAL::isa sort improvements glob case-sensitivity reftype function New perlthread man page Win32 and fork()...",
+   "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
    "draft" : null,
-   "tags" : [],
-   "date" : "1999-10-17T00:00:00-08:00",
-   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991024"
+   "thumbnail" : null
 }
 
 
@@ -291,7 +291,7 @@ namespace all at once, with aliasing.
 At the tail end of this discussion, several people complained that
 although they thought that they'd followed the documented procedure for
 reserving namespaces in the CPAN module list, nothing ever seemed to
-come of it, and their names never appeared in the list. Andreas KÃ¶nig
+come of it, and their names never appeared in the list. Andreas König
 took responsibility for this problem. He is rewriting the PAUSE software
 to handle the bookkeeping, because the module list owners are too
 overworked to do it all manually.

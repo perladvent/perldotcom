@@ -9,17 +9,17 @@
       "subroutines",
       "synopses"
    ],
-   "date" : "2007-03-01T00:00:00-08:00",
-   "slug" : "/pub/2007/03/01/perl-6-parameter-passing",
-   "draft" : null,
-   "authors" : [
-      "phil-crow"
-   ],
-   "image" : null,
    "title" : "The Beauty of Perl 6 Parameter Passing",
    "categories" : "perl-6",
+   "slug" : "/pub/2007/03/01/perl-6-parameter-passing",
+   "date" : "2007-03-01T00:00:00-08:00",
+   "draft" : null,
    "thumbnail" : null,
-   "description" : " Perl 6 is not finished, but you can already play with it. I hope this article will encourage you to try it. Begin by installing Pugs, a Perl 6 compiler implemented in Haskell. Note that you will also need..."
+   "description" : " Perl 6 is not finished, but you can already play with it. I hope this article will encourage you to try it. Begin by installing Pugs, a Perl 6 compiler implemented in Haskell. Note that you will also need...",
+   "image" : null,
+   "authors" : [
+      "phil-crow"
+   ]
 }
 
 
@@ -320,7 +320,7 @@ If the caller provides the derivative as `fprime`, I use it. Otherwise,
 as in the example, I use `approxfprime`. Whereas a caller-supplied
 `fprime` would take one number and return another, `approxfprime` needs
 a number and a function. The function needed is the one the caller
-passed to `newton`. How do you pass it on? Curryingâthat is, supplying
+passed to `newton`. How do you pass it on? Currying—that is, supplying
 one or more of the parameters of a function once, then using the
 simplified version after that.
 

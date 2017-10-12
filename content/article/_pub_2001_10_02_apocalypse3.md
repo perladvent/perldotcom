@@ -1,16 +1,16 @@
 {
+   "thumbnail" : "/images/_pub_2001_10_02_apocalypse3/111-apocalypse.jpg",
+   "draft" : null,
    "image" : null,
+   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 03 for the latest information. Table of Contents  RFC 025: Operators: Multiway comparisons  RFC 320: Allow grouping of -X file tests...",
    "authors" : [
       "larry-wall"
    ],
-   "categories" : "perl-6",
-   "thumbnail" : "/images/_pub_2001_10_02_apocalypse3/111-apocalypse.jpg",
-   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 03 for the latest information. Table of Contents Â RFC 025: Operators: Multiway comparisons Â RFC 320: Allow grouping of -X file tests...",
    "title" : "Apocalypse 3",
-   "slug" : "/pub/2001/10/02/apocalypse3",
    "tags" : [],
-   "date" : "2001-10-02T00:00:00-08:00",
-   "draft" : null
+   "categories" : "perl-6",
+   "slug" : "/pub/2001/10/02/apocalypse3",
+   "date" : "2001-10-02T00:00:00-08:00"
 }
 
 
@@ -27,106 +27,106 @@ information.*
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 |                                                                       |
-| â¢ [RFC 025: Operators: Multiway                                       |
+| • [RFC 025: Operators: Multiway                                       |
 | comparisons](/pub/a/2001/10/02/apocalypse3.html?page=2#rfc%20025:%20o |
 | perators:%20multiway%20comparisons)\                                  |
 | \                                                                     |
-| â¢ [RFC 320: Allow grouping of -X file tests and add `filetest`        |
+| • [RFC 320: Allow grouping of -X file tests and add `filetest`        |
 | builtin](/pub/a/2001/10/02/apocalypse3.html?page=2#rfc%20320:%20allow |
 | %20grouping%20of%20x%20file%20tests%20and%20add%20filetest%20builtin) |
 | \                                                                     |
 | \                                                                     |
-| â¢ [RFC 290: Better english names for                                  |
+| • [RFC 290: Better english names for                                  |
 | -X](/pub/a/2001/10/02/apocalypse3.html?page=2#rfc%20290:%20better%20e |
 | nglish%20names%20for%20x)\                                            |
 | \                                                                     |
-| â¢ [RFC 283: `tr///` in array context should return a                  |
+| • [RFC 283: `tr///` in array context should return a                  |
 | histogram](/pub/a/2001/10/02/apocalypse3.html?page=3#rfc%20283:%20tr/ |
 | //%20in%20array%20context%20should%20return%20a%20histogram)\         |
 | \                                                                     |
-| â¢ [RFC 084: Replace `=>` (stringifying comma) with `=>` (pair         |
+| • [RFC 084: Replace `=>` (stringifying comma) with `=>` (pair         |
 | constructor)](/pub/a/2001/10/02/apocalypse3.html?page=3#rfc%20084:%20 |
 | replace%20=%3E%20(stringifying%20comma)%20with%20=%3E%20(pair%20const |
 | ructor))\                                                             |
 | \                                                                     |
-| â¢ [RFC 081: Lazily evaluated list generation                          |
+| • [RFC 081: Lazily evaluated list generation                          |
 | functions](/pub/a/2001/10/02/apocalypse3.html?page=3#rfc%20081:%20laz |
 | ily%20evaluated%20list%20generation%20functions)\                     |
 | \                                                                     |
-| â¢ [RFC 285: Lazy Input / Context-sensitive                            |
+| • [RFC 285: Lazy Input / Context-sensitive                            |
 | Input](/pub/a/2001/10/02/apocalypse3.html?page=4#rfc%20285:%20lazy%20 |
 | input%20/%20contextsensitive%20input)\                                |
 | \                                                                     |
-| â¢ [RFC 082: Arrays: Apply operators element-wise in a list            |
+| • [RFC 082: Arrays: Apply operators element-wise in a list            |
 | context](/pub/a/2001/10/02/apocalypse3.html?page=4#rfc%20082:%20array |
 | s:%20apply%20operators%20elementwise%20in%20a%20list%20context)\      |
 | \                                                                     |
-| â¢ [RFC 045: `||` and `&&` should propagate result context to both     |
+| • [RFC 045: `||` and `&&` should propagate result context to both     |
 | sides](/pub/a/2001/10/02/apocalypse3.html?page=4#rfc%20045:%20%7C%7C% |
 | 20and%20&&%20should%20propagate%20result%20context%20to%20both%20side |
 | s)\                                                                   |
 | \                                                                     |
-| â¢ [RFC 054: Operators: Polymorphic                                    |
+| • [RFC 054: Operators: Polymorphic                                    |
 | comparisons](/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20054:%20o |
 | perators:%20polymorphic%20comparisons)\                               |
 | \                                                                     |
-| â¢ [RFC 104:                                                           |
+| • [RFC 104:                                                           |
 | Backtracking](/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20104:%20 |
 | backtracking)\                                                        |
 | \                                                                     |
-| â¢ [RFC 143: Case ignoring `eq` and `cmp`                              |
+| • [RFC 143: Case ignoring `eq` and `cmp`                              |
 | operators](/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20143:%20cas |
 | e%20ignoring%20eq%20and%20cmp%20operators)\                           |
 | \                                                                     |
-| â¢ [RFC 170: Generalize `=~` to a special \`\`apply-to'' assignment    |
+| • [RFC 170: Generalize `=~` to a special \`\`apply-to'' assignment    |
 | operator](/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20170:%20gene |
 | ralize%20=~%20to%20a%20special%20applyto%20assignment%20operator)\    |
 | \                                                                     |
-| â¢ [Non-RFC                                                            |
+| • [Non-RFC                                                            |
 | considerations](/pub/a/2001/10/02/apocalypse3.html?page=6#nonrfc%20co |
 | nsiderations)                                                         |
 |                                                                       |
 |   --- --------------------------------------------------------------- |
 | ------------------------------------                                  |
-|   Â    [ â¢ [Binary `.` (dot)](/pub/a/2001/10/02/apocalypse3.html?page= |
+|       [ • [Binary `.` (dot)](/pub/a/2001/10/02/apocalypse3.html?page= |
 | 6#binary%20.%20(dot))\                                                |
-|       â¢ [Unary `.` (dot)](/pub/a/2001/10/02/apocalypse3.html?page=6#u |
+|       • [Unary `.` (dot)](/pub/a/2001/10/02/apocalypse3.html?page=6#u |
 | nary%20.%20(dot))\                                                    |
-|       â¢ [Binary `_`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
+|       • [Binary `_`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
 | %20_)\                                                                |
-|       â¢ [Unary `_`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
+|       • [Unary `_`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
 | 0_)\                                                                  |
-|       â¢ [Unary `+`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
+|       • [Unary `+`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
 | 0+%20X)\                                                              |
-|       â¢ [Binary `:=`](/pub/a/2001/10/02/apocalypse3.html?page=6#binar |
+|       • [Binary `:=`](/pub/a/2001/10/02/apocalypse3.html?page=6#binar |
 | y%20:=%20Y)\                                                          |
-|       â¢ [Unary `*`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
+|       • [Unary `*`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
 | 0*%20XX)\                                                             |
-|       â¢ [List context](/pub/a/2001/10/02/apocalypse3.html?page=6#list |
+|       • [List context](/pub/a/2001/10/02/apocalypse3.html?page=6#list |
 | %20context)\                                                          |
-|       â¢ [Binary `:`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
+|       • [Binary `:`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
 | %20:%20YY)\                                                           |
-|       â¢ [Trinary `??::`](/pub/a/2001/10/02/apocalypse3.html?page=6#tr |
+|       • [Trinary `??::`](/pub/a/2001/10/02/apocalypse3.html?page=6#tr |
 | inary%20::)\                                                          |
-|       â¢ [Binary `//`](/pub/a/2001/10/02/apocalypse3.html?page=6#binar |
+|       • [Binary `//`](/pub/a/2001/10/02/apocalypse3.html?page=6#binar |
 | y%20//%20YYY)\                                                        |
-|       â¢ [Binary `;`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
+|       • [Binary `;`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
 | %20;%20YYYY)\                                                         |
-|       â¢ [Unary `^`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
+|       • [Unary `^`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
 | 0%5E%20XXX)\                                                          |
-|       â¢ [Unary `?`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
+|       • [Unary `?`](/pub/a/2001/10/02/apocalypse3.html?page=6#unary%2 |
 | 0)\                                                                   |
-|       â¢ [Binary `?`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
+|       • [Binary `?`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
 | %20)\                                                                 |
-|       â¢ [Binary `~`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
+|       • [Binary `~`](/pub/a/2001/10/02/apocalypse3.html?page=6#binary |
 | %20~%20YYYYY)\                                                        |
-|       â¢ [Binary `~~`](/pub/a/2001/10/02/apocalypse3.html?page=6#binar |
+|       • [Binary `~~`](/pub/a/2001/10/02/apocalypse3.html?page=6#binar |
 | y%20~~%20YYYYYY)\                                                     |
-|       â¢ [User defined operators](/pub/a/2001/10/02/apocalypse3.html?p |
+|       • [User defined operators](/pub/a/2001/10/02/apocalypse3.html?p |
 | age=6#user%20defined%20operators)\                                    |
-|       â¢ [Unicode operators](/pub/a/2001/10/02/apocalypse3.html?page=6 |
+|       • [Unicode operators](/pub/a/2001/10/02/apocalypse3.html?page=6 |
 | #unicode%20operators)\                                                |
-|       â¢ [Precedence](/pub/a/2001/10/02/apocalypse3.html?page=6#preced |
+|       • [Precedence](/pub/a/2001/10/02/apocalypse3.html?page=6#preced |
 | ence)\                                                                |
 |       ]{.tiny}                                                        |
 |   --- --------------------------------------------------------------- |
@@ -291,9 +291,9 @@ information.*
 +-----------------------------------------------------------------------+
 | Previous Apocalypses                                                  |
 |                                                                       |
-| â¢ [Apocalypse 1](/pub/a/2001/04/02/wall.html)\                        |
+| • [Apocalypse 1](/pub/a/2001/04/02/wall.html)\                        |
 | \                                                                     |
-| â¢ [Apocalypse 2](/pub/a/2001/05/03/wall.html)\                        |
+| • [Apocalypse 2](/pub/a/2001/05/03/wall.html)\                        |
 | \                                                                     |
 +-----------------------------------------------------------------------+
 |                                                                       |

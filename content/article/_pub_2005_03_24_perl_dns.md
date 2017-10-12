@@ -1,20 +1,20 @@
 {
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_03_24_perl_dns/111-auto_windows.gif",
    "image" : null,
+   "description" : "Driving Windows DNS Server If you happen to manage a DNS server running on Windows 2000 or Windows 2003 with more than just a couple of dozen resource records on it, you've probably already hit the limits of the MMC...",
    "authors" : [
       "thomas-herchenroeder"
    ],
-   "thumbnail" : "/images/_pub_2005_03_24_perl_dns/111-auto_windows.gif",
-   "categories" : "Windows",
-   "description" : "Driving Windows DNS Server If you happen to manage a DNS server running on Windows 2000 or Windows 2003 with more than just a couple of dozen resource records on it, you've probably already hit the limits of the MMC...",
    "title" : "Automating Windows (DNS) with Perl",
-   "slug" : "/pub/2005/03/24/perl_dns",
    "tags" : [
       "dns-updates-with-perl",
       "dnscmd",
       "windows-automation"
    ],
+   "slug" : "/pub/2005/03/24/perl_dns",
    "date" : "2005-03-24T00:00:00-08:00",
-   "draft" : null
+   "categories" : "Windows"
 }
 
 
@@ -65,8 +65,8 @@ looks something like:
 
     dnscmd dnssrv.my.dom.ain /RecordDelete my.dom.ain host1 A 10.20.40.5
 
-This opens the very welcome opportunity to run `dnscmd` remotelyâfrom
-your workstation, for exampleâwhich frees you from the need to log in to
+This opens the very welcome opportunity to run `dnscmd` remotely—from
+your workstation, for example—which frees you from the need to log in to
 your DNS server.
 
 ### [WDNS.PL](/media/_pub_2005_03_24_perl_dns/wdns.pl) (The Script)

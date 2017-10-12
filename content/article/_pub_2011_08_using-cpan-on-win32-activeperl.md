@@ -1,16 +1,16 @@
 {
+   "image" : null,
+   "description" : "Christian Walde demonstrates that even ActivePerl users on Windows can use CPAN-out of the box.",
    "authors" : [
       "chromatic"
    ],
-   "image" : null,
-   "title" : "Using CPAN on Win32 ActivePerl",
+   "draft" : null,
    "thumbnail" : null,
-   "categories" : "Windows",
-   "description" : "Christian Walde demonstrates that even ActivePerl users on Windows can use CPAN-out of the box.",
    "tags" : [],
+   "title" : "Using CPAN on Win32 ActivePerl",
    "date" : "2011-08-03T06:00:01-08:00",
    "slug" : "/pub/2011/08/using-cpan-on-win32-activeperl",
-   "draft" : null
+   "categories" : "Windows"
 }
 
 
@@ -23,7 +23,7 @@ Most of you know [ActivePerl](http://www.activestate.com/activeperl),
 the commercial Perl distribution provided to the community for free by
 [ActiveState](http://www.activestate.com/). In the beginning, ActivePerl
 did not bundle a C compiler. As Windows does not include a compiler,
-much of the CPAN was inaccessible to Windows usersâany dependency on an
+much of the CPAN was inaccessible to Windows users—any dependency on an
 XS module would fail. ActiveState instead provided a repository of
 binary PPM packages so that users could avoid the need to install and
 configure a C compiler.

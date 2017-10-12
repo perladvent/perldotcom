@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "date" : "2000-10-23T00:00:00-08:00",
+   "categories" : "community",
    "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001023",
+   "date" : "2000-10-23T00:00:00-08:00",
+   "tags" : [],
+   "title" : "These Weeks on p5p 2000/10/23",
    "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "simon-cozens"
    ],
    "image" : null,
-   "title" : "These Weeks on p5p 2000/10/23",
-   "description" : " Notes What is our Unicode model? Why not use sfio? More than 256 Files / sysopen What if cc changes? Unicode on EBCDIC AIX Is Confused Unicode split fixed! Fixes to Carp open() might fail Perl 5 is 5!...",
-   "thumbnail" : null,
-   "categories" : "community"
+   "description" : " Notes What is our Unicode model? Why not use sfio? More than 256 Files / sysopen What if cc changes? Unicode on EBCDIC AIX Is Confused Unicode split fixed! Fixes to Carp open() might fail Perl 5 is 5!..."
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2001/08/13/yapc-europe",
-   "tags" : [],
-   "date" : "2001-08-13T00:00:00-08:00",
    "draft" : null,
+   "thumbnail" : "/images/_pub_2001_08_13_yapc-europe/111-yapc-europe.jpg",
+   "description" : " Last year Europe had its first Yet Another Perl Conference. Leon Brocard, Jon Peterson and Greg McCarroll did a marvellous job organizing this grassroots conference - themed \"The Art of Perl\" - from scratch within two months. For the...",
    "image" : null,
    "authors" : [
       "jouke-visser"
    ],
-   "thumbnail" : "/images/_pub_2001_08_13_yapc-europe/111-yapc-europe.jpg",
+   "tags" : [],
+   "title" : "Yet Another Perl Conference Europe 2001",
    "categories" : "Community",
-   "description" : " Last year Europe had its first Yet Another Perl Conference. Leon Brocard, Jon Peterson and Greg McCarroll did a marvellous job organizing this grassroots conference - themed \"The Art of Perl\" - from scratch within two months. For the...",
-   "title" : "Yet Another Perl Conference Europe 2001"
+   "date" : "2001-08-13T00:00:00-08:00",
+   "slug" : "/pub/2001/08/13/yapc-europe"
 }
 
 
@@ -31,9 +31,9 @@ organizing the next YAPC::Europe in Amsterdam.
 +-----------------------------------------------------------------------+
 | Related Articles                                                      |
 |                                                                       |
-| â¢ [The State of the Onion 5](/pub/a/2001/07/25/onion.html)\           |
+| • [The State of the Onion 5](/pub/a/2001/07/25/onion.html)\           |
 | \                                                                     |
-| â¢ [Yet Another YAPC Report:                                           |
+| • [Yet Another YAPC Report:                                           |
 | Montreal](/pub/a/2001/06/21/yapcreport.html)                          |
 +-----------------------------------------------------------------------+
 |                                                                       |

@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "date" : "2000-11-20T00:00:00-08:00",
-   "slug" : "/pub/2000/11/begperl3",
+   "thumbnail" : null,
    "draft" : null,
    "authors" : [
       "doug-sheppard"
    ],
-   "image" : null,
-   "title" : "Beginner's Introduction to Perl - Part 3",
    "description" : "s/// and m// -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's...",
+   "image" : null,
    "categories" : "development",
-   "thumbnail" : null
+   "slug" : "/pub/2000/11/begperl3",
+   "date" : "2000-11-20T00:00:00-08:00",
+   "tags" : [],
+   "title" : "Beginner's Introduction to Perl - Part 3"
 }
 
 
@@ -35,25 +35,25 @@ be interested in the newer versions, available at:*
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢**[Part 1 of this                                                    |
+| •**[Part 1 of this                                                    |
 | series](/media/_pub_2000_11_begperl3/begperl1.html)**\                |
-| â¢**[Part 2 of this                                                    |
+| •**[Part 2 of this                                                    |
 | series](/media/_pub_2000_11_begperl3/begperl2.html)**\                |
-| â¢**[Part 4 of this                                                    |
+| •**[Part 4 of this                                                    |
 | series](/media/_pub_2000_11_begperl3/begperl4.html)**\                |
-| â¢**[Part 5 of this                                                    |
+| •**[Part 5 of this                                                    |
 | series](/media/_pub_2000_11_begperl3/begperl5.html)**\                |
-| â¢**[Part 6 of this                                                    |
+| •**[Part 6 of this                                                    |
 | series](/media/_pub_2000_11_begperl3/begperl6.html)**\                |
 | \                                                                     |
-| â¢[Simple matching](#simple%20matching)\                               |
-| â¢[Metacharacters](#metacharacters)\                                   |
-| â¢[Character classes](#character%20classes)\                           |
-| â¢[Flags](#flags)\                                                     |
-| â¢[Subexpressions](#subexpressions)\                                   |
-| â¢[Watch out!](#watch%0Aout!)\                                         |
-| â¢[Search and replace](#search%20and%20replace)\                       |
-| â¢[Play around!](#play%20around!)                                      |
+| •[Simple matching](#simple%20matching)\                               |
+| •[Metacharacters](#metacharacters)\                                   |
+| •[Character classes](#character%20classes)\                           |
+| •[Flags](#flags)\                                                     |
+| •[Subexpressions](#subexpressions)\                                   |
+| •[Watch out!](#watch%0Aout!)\                                         |
+| •[Search and replace](#search%20and%20replace)\                       |
+| •[Play around!](#play%20around!)                                      |
 +-----------------------------------------------------------------------+
 
 We've covered flow control, math and string operations, and files in the

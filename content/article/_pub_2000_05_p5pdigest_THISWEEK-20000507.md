@@ -1,16 +1,16 @@
 {
-   "tags" : [],
+   "categories" : "community",
    "date" : "2000-05-07T00:00:00-08:00",
    "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000507",
+   "title" : "This Week on p5p 2000/05/07",
+   "tags" : [],
+   "thumbnail" : null,
    "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
    "image" : null,
-   "title" : "This Week on p5p 2000/05/07",
-   "description" : " Notes Moderation is Imminent Simon's Guide to p5p Big Discussion of perldoc and Indexing X&lt;> splitpod Aliases perldoc Wishlist Tom's Plan Editorial Opinion Section Mark Fisher's man Replacement Pod::Parser Output Model roffitall Patches to perlre mktables.PL Needs Work Jarkko...",
-   "categories" : "community",
-   "thumbnail" : null
+   "description" : " Notes Moderation is Imminent Simon's Guide to p5p Big Discussion of perldoc and Indexing X&lt;> splitpod Aliases perldoc Wishlist Tom's Plan Editorial Opinion Section Mark Fisher's man Replacement Pod::Parser Output Model roffitall Patches to perlre mktables.PL Needs Work Jarkko..."
 }
 
 
@@ -281,7 +281,7 @@ large amount of code and running extremely slowly.
 
 > **Ben:** `perldoc` needs anoverhaul.
 >
-> **Tom:** It shall be completely obliterated,replaced by a faÃ§ade.
+> **Tom:** It shall be completely obliterated,replaced by a façade.
 
 #### [Mark Fisher's `man` Replacement]{#Mark_Fishers_man_Replacement}
 

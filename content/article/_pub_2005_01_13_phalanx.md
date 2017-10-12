@@ -1,4 +1,5 @@
 {
+   "title" : "The Phalanx Project",
    "tags" : [
       "cpan-tests",
       "hoplies",
@@ -8,17 +9,16 @@
       "phalanx",
       "ponie"
    ],
-   "date" : "2005-01-20T00:00:00-08:00",
+   "categories" : "community",
    "slug" : "/pub/2005/01/13/phalanx",
+   "date" : "2005-01-20T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2005_01_13_phalanx/111-sure_quality.gif",
    "draft" : null,
+   "description" : "Imagine a city protected by a small army of soldiers. The city's future growth requires a larger force; so a few determined lieutenants go to nearby towns and enlist aid from their police departments. These forces will come to the...",
+   "image" : null,
    "authors" : [
       "andy-lester"
-   ],
-   "image" : null,
-   "title" : "The Phalanx Project",
-   "description" : "Imagine a city protected by a small army of soldiers. The city's future growth requires a larger force; so a few determined lieutenants go to nearby towns and enlist aid from their police departments. These forces will come to the...",
-   "categories" : "community",
-   "thumbnail" : "/images/_pub_2005_01_13_phalanx/111-sure_quality.gif"
+   ]
 }
 
 

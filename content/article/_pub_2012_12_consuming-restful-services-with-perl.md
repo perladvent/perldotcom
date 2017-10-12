@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2012/12/consuming-restful-services-with-perl",
-   "tags" : [],
-   "date" : "2012-12-31T06:00:01-08:00",
-   "draft" : null,
+   "description" : "When JT Smith ported his web game The Lacuna Expanse to a board game, he used Perl to create the board game itself. Here's how he built the web service behind The Game Crafter.",
    "image" : null,
    "authors" : [
       "jt-smith"
    ],
-   "categories" : "Web",
    "thumbnail" : null,
-   "description" : "When JT Smith ported his web game The Lacuna Expanse to a board game, he used Perl to create the board game itself. Here's how he built the web service behind The Game Crafter.",
-   "title" : "Consuming RESTful Services with Perl"
+   "draft" : null,
+   "tags" : [],
+   "title" : "Consuming RESTful Services with Perl",
+   "slug" : "/pub/2012/12/consuming-restful-services-with-perl",
+   "date" : "2012-12-31T06:00:01-08:00",
+   "categories" : "Web"
 }
 
 
@@ -192,7 +192,7 @@ You have probably noticed already how closely this resembles CRUD
 operations, because it does. Behind the scenes, who knows what TGC does
 with this information? (I do, but that's because I wrote it.) It doesn't
 matter to the API, because all of those details are hidden behind a good
-API. *Good APIs expose only the necessary details*âin this case, the
+API. *Good APIs expose only the necessary details*—in this case, the
 relationships between folders and files and between designers and games.
 
 You can also see that the API is as stateless as possible, where the

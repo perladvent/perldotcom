@@ -1,17 +1,17 @@
 {
-   "draft" : null,
+   "slug" : "/pub/2002/07/30/mod_perl",
+   "date" : "2002-07-30T00:00:00-08:00",
+   "categories" : "web",
+   "title" : "Improving mod_perl Sites' Performance: Part 4",
    "tags" : [
       "mod-perl-shared-memory"
    ],
-   "date" : "2002-07-30T00:00:00-08:00",
-   "slug" : "/pub/2002/07/30/mod_perl",
-   "title" : "Improving mod_perl Sites' Performance: Part 4",
-   "description" : " Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the...",
    "thumbnail" : null,
-   "categories" : "web",
+   "draft" : null,
    "authors" : [
       "stas-bekman"
    ],
+   "description" : " Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the...",
    "image" : null
 }
 
@@ -324,7 +324,7 @@ When if I modify the code to use the modified module:
       MyShared2::print_pos();
       MyShared2::dump();
 
-And run it as before (with MaxClientsÂ 2), two dump files will be created
+And run it as before (with MaxClients 2), two dump files will be created
 in the directory */tmp*. In our test these were created as
 */tmp/dump.1224* and */tmp/dump.1225*. When I run diff(1):
 

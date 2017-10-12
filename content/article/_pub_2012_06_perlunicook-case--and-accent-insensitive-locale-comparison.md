@@ -1,30 +1,30 @@
 {
-   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-locale-comparison",
+   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Locale Comparisons",
    "tags" : [],
+   "categories" : "unicode",
    "date" : "2012-06-11T06:00:01-08:00",
+   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-locale-comparison",
+   "thumbnail" : null,
    "draft" : null,
+   "description" : "℞ 40: Case- and accent-insensitive locale comparisons You now know how to compare Unicode strings while ignoring case and accent differences. This approach uses the standard Unicode collation algorithm. To perform a similar comparison while respecting a speciﬁc locale's rules,...",
    "image" : null,
    "authors" : [
       "tom-christiansen"
-   ],
-   "categories" : "unicode",
-   "thumbnail" : null,
-   "description" : "â 40: Case- and accent-insensitive locale comparisons You now know how to compare Unicode strings while ignoring case and accent differences. This approach uses the standard Unicode collation algorithm. To perform a similar comparison while respecting a speciï¬c locale's rules,...",
-   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Locale Comparisons"
+   ]
 }
 
 
 
 
 
-â 40: Case- *and* accent-insensitive locale comparisons {#Case--and-accent-insensitive-locale-comparisons}
+℞ 40: Case- *and* accent-insensitive locale comparisons {#Case--and-accent-insensitive-locale-comparisons}
 -------------------------------------------------------
 
 You now know how to [compare Unicode strings while ignoring case and
 accent
 differences](/media/_pub_2012_06_perlunicook-case--and-accent-insensitive-locale-comparison/perlunicook-case--and-accent-insensitive-comparison.html).
 This approach uses the standard Unicode collation algorithm. To perform
-a similar comparison while respecting a speciï¬c locale's rules, use
+a similar comparison while respecting a speciﬁc locale's rules, use
 [Unicode::Collate::Locale](http://search.cpan.org/perldoc?Unicode::Collate::Locale):
 
      my $de = Unicode::Collate::Locale->new(
@@ -32,15 +32,15 @@ a similar comparison while respecting a speciï¬c locale's rules, use
               );
 
      # now this is true:
-     $de->eq("tschÃ¼Ã", "TSCHUESS");  # notice Ã¼ => UE, Ã => SS
+     $de->eq("tschüß", "TSCHUESS");  # notice ü => UE, ß => SS
 
-Previous: [â 39: Case- and Accent-insensitive
+Previous: [℞ 39: Case- and Accent-insensitive
 Comparison](/media/_pub_2012_06_perlunicook-case--and-accent-insensitive-locale-comparison/perlunicook-case--and-accent-insensitive-comparison.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_06_perlunicook-case--and-accent-insensitive-locale-comparison/perlunicook-standard-preamble.html)
 
-Next: [â 41: Unicode
+Next: [℞ 41: Unicode
 Linebreaking](/media/_pub_2012_06_perlunicook-case--and-accent-insensitive-locale-comparison/perlunicook-unicode-linebreaking.html)
 
 

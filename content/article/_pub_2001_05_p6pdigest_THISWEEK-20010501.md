@@ -1,16 +1,16 @@
 {
-   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org, where YYYYMM is the current year and month. It's been two months since we've...",
-   "thumbnail" : null,
+   "date" : "2001-05-21T00:00:00-08:00",
+   "slug" : "/pub/2001/05/p6pdigest/THISWEEK-20010501",
    "categories" : "community",
+   "tags" : [],
    "title" : "This Month on Perl6 (1 May - 20 May 2001)",
-   "image" : null,
    "authors" : [
       "bryan-warnock"
    ],
+   "image" : null,
+   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org, where YYYYMM is the current year and month. It's been two months since we've...",
    "draft" : null,
-   "slug" : "/pub/2001/05/p6pdigest/THISWEEK-20010501",
-   "tags" : [],
-   "date" : "2001-05-21T00:00:00-08:00"
+   "thumbnail" : null
 }
 
 

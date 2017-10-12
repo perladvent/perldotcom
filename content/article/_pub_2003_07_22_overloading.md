@@ -1,20 +1,20 @@
 {
+   "description" : " Introduction: What is Overloading? All object-oriented programming languages have a feature called overloading, but in most of them this term means something different from what it means in Perl. Take a look at this Java example: public Fraction(int num,...",
    "image" : null,
    "authors" : [
       "dave-cross"
    ],
-   "description" : " Introduction: What is Overloading? All object-oriented programming languages have a feature called overloading, but in most of them this term means something different from what it means in Perl. Take a look at this Java example: public Fraction(int num,...",
    "thumbnail" : "/images/_pub_2003_07_22_overloading/111-overloading.gif",
-   "categories" : "development",
-   "title" : "Overloading",
-   "slug" : "/pub/2003/07/22/overloading",
+   "draft" : null,
    "tags" : [
       "operator-overloading",
       "overload-pm",
       "perl-overloading-mechanism"
    ],
+   "title" : "Overloading",
+   "slug" : "/pub/2003/07/22/overloading",
    "date" : "2003-07-22T00:00:00-08:00",
-   "draft" : null
+   "categories" : "development"
 }
 
 
@@ -48,10 +48,10 @@ In Perl, of course, we are far more flexible about what arguments we can
 pass to a method. Therefore the same method can be used to handle all of
 the three cases from the Java example. (We'll see an example of this in
 a short while.) This means that in Perl we can save the term
-"overloading" for something far more interesting â *operator
+"overloading" for something far more interesting — *operator
 overloading*.
 
-### `Number::Fraction` â The Constructor
+### `Number::Fraction` — The Constructor
 
 Imagine you have a Perl object that represents fractions (or, more
 accurately, rational numbers, but we'll call them fractions as we're not
@@ -166,7 +166,7 @@ our caller. Between these two actions we pause to call the `normalise`
 method, which converts the fraction to its simplest form. For example,
 it will convert `12/16` to `3/4`.
 
-### `Number::Fraction` â Doing Calculations
+### `Number::Fraction` — Doing Calculations
 
 Having now created fraction objects, we will want to start doing
 calculations with them. For that we'll need methods that implement the
@@ -214,7 +214,7 @@ subtle bug. Can you spot it? (Hint: What will be in `$half` after
 running this code?) To tidy up this code we can turn to *operator
 overloading*.
 
-### `Number::Fraction` â Operator Overloading
+### `Number::Fraction` — Operator Overloading
 
 The module `overload.pm` is a standard part of the Perl distribution. It
 allows your objects to define how they will react to a number of Perl's
@@ -267,7 +267,7 @@ We can now happily handle code like:
 
     $three_quarters = $half + '1/4';
 
-Our object will do the right thing â `$three_quarters` will end up as a
+Our object will do the right thing — `$three_quarters` will end up as a
 `Number::Fraction` object that contains the value `3/4`. What will
 happen if we write code like this?
 
@@ -408,7 +408,7 @@ we can now write code like:
     $f = Number::Fraction->new(1, 2) + '1/4';
 
 There are still, however, two places where we need to use the full name
-of the class â when we load the module and when we create a new fraction
+of the class — when we load the module and when we create a new fraction
 object. We can't do much about the first of these, but we *can* remove
 the need for that ugly `new` call by *overloading constants*.
 
@@ -473,7 +473,7 @@ If you don't want the scary constant-refining stuff you can just use:
 
 Also note that we've defined an `unimport` subroutine which removes the
 constant handler. An `unimport` subroutine is called when a program
-calls `no Number::Fraction` â it's the opposite of `use`. If you're
+calls `no Number::Fraction` — it's the opposite of `use`. If you're
 going to make major changes to the way that Perl parses a program then
 it's only polite to undo your changes if the programmer askes you to.
 

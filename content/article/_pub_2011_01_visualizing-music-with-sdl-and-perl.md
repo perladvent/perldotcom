@@ -1,5 +1,12 @@
 {
-   "slug" : "/pub/2011/01/visualizing-music-with-sdl-and-perl",
+   "draft" : null,
+   "thumbnail" : null,
+   "image" : null,
+   "description" : "In this edited excerpt from the SDL Perl manual, lead developer Kartik\nThakore walks through a non-game application of SDL and Perl, building a\nmusic player with visualizations in just a few lines of code.",
+   "authors" : [
+      "kartik-thakore"
+   ],
+   "title" : "Visualizing Music with SDL and Perl",
    "tags" : [
       "graphics",
       "music",
@@ -7,16 +14,9 @@
       "perl-5",
       "sdl"
    ],
+   "slug" : "/pub/2011/01/visualizing-music-with-sdl-and-perl",
    "date" : "2011-01-24T06:00:01-08:00",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "kartik-thakore"
-   ],
-   "description" : "In this edited excerpt from the SDL Perl manual, lead developer Kartik\nThakore walks through a non-game application of SDL and Perl, building a\nmusic player with visualizations in just a few lines of code.",
-   "categories" : "Graphics",
-   "thumbnail" : null,
-   "title" : "Visualizing Music with SDL and Perl"
+   "categories" : "Graphics"
 }
 
 
@@ -36,7 +36,7 @@ cartoon bubbles, however. The recently revitalized [SDL
 Perl](http://sdlperl.ath.cx/projects/SDLPerl/) project has taken up the
 challenge of demonstrating that everyone's favorite system
 administration language is capable of producing powerful multimedia
-programsâincluding, but not limited to, games.
+programs—including, but not limited to, games.
 
 In this edited excerpt from the [SDL Perl
 manual](http://sdlperl.ath.cx/releases/SDL_Manual.html), lead developer
@@ -65,8 +65,8 @@ visualizer:
 **Music Visualizer**
 --------------------
 
-The music visualizer example processes real-time sound dataâdata as it
-playsâand displays the wave form on the screen. It will look something
+The music visualizer example processes real-time sound data—data as it
+plays—and displays the wave form on the screen. It will look something
 like Figure 1.
 
 ![Simple Music

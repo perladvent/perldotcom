@@ -1,13 +1,12 @@
 {
-   "title" : "Siesta Mailing List Manager",
+   "image" : null,
    "description" : " Sometime around July 2002 there was another of the seemingly inevitable and interminable threads about mailing list managers that pop up with regrettable frequency on the London Perl Mongers mailing list. It almost certainly contained references to Reply To...",
-   "categories" : "Email",
-   "thumbnail" : "/images/_pub_2004_02_05_siesta/111-siesta.gif",
    "authors" : [
       "simon-wistow"
    ],
-   "image" : null,
+   "thumbnail" : "/images/_pub_2004_02_05_siesta/111-siesta.gif",
    "draft" : null,
+   "title" : "Siesta Mailing List Manager",
    "tags" : [
       "ezmlm",
       "mailing-list-manager",
@@ -18,6 +17,7 @@
       "perl-mailing-list",
       "siesta"
    ],
+   "categories" : "Email",
    "date" : "2004-02-05T00:00:00-08:00",
    "slug" : "/pub/2004/02/05/siesta"
 }

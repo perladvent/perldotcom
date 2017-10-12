@@ -1,20 +1,20 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2001/03/embperl",
-   "date" : "2001-03-13T00:00:00-08:00",
+   "title" : "Creating Modular Web Pages With EmbPerl",
    "tags" : [
       "embperl",
       "epl",
       "html"
    ],
-   "description" : " Table of Contents ÂGetting Started ÂHello World ÂWeb Site Global Variables ÂModular Files ÂModular File Inheritance ÂSubroutines in EmbperlObject ÂConclusions This tutorial is intended as a complement to the Embperl documentation, not a replacement. We assume a basic familiarity...",
    "categories" : "web",
-   "thumbnail" : null,
-   "title" : "Creating Modular Web Pages With EmbPerl",
+   "slug" : "/pub/2001/03/embperl",
+   "date" : "2001-03-13T00:00:00-08:00",
    "image" : null,
+   "description" : " Table of Contents Getting Started Hello World Web Site Global Variables Modular Files Modular File Inheritance Subroutines in EmbperlObject Conclusions This tutorial is intended as a complement to the Embperl documentation, not a replacement. We assume a basic familiarity...",
    "authors" : [
       "neil-gunton"
-   ]
+   ],
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -26,19 +26,19 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Getting Started](#getting%20started)\                               |
+| •[Getting Started](#getting%20started)\                               |
 | \                                                                     |
-| â¢[Hello World](#Hello%20World)\                                       |
+| •[Hello World](#Hello%20World)\                                       |
 | \                                                                     |
-| â¢[Web Site Global Variables](#websiteglobal%20variables)\             |
+| •[Web Site Global Variables](#websiteglobal%20variables)\             |
 | \                                                                     |
-| â¢[Modular Files](#modular%20files)\                                   |
+| •[Modular Files](#modular%20files)\                                   |
 | \                                                                     |
-| â¢[Modular File Inheritance](#modular%20file%20inheritance)\           |
+| •[Modular File Inheritance](#modular%20file%20inheritance)\           |
 | \                                                                     |
-| â¢[Subroutines in EmbperlObject](#subroutines%20in%20embperlobject)\   |
+| •[Subroutines in EmbperlObject](#subroutines%20in%20embperlobject)\   |
 | \                                                                     |
-| â¢[Conclusions](#conclusions)\                                         |
+| •[Conclusions](#conclusions)\                                         |
 +-----------------------------------------------------------------------+
 
 This tutorial is intended as a complement to the Embperl documentation,

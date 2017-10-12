@@ -1,15 +1,15 @@
 {
-   "image" : null,
+   "date" : "2012-04-24T06:00:01-08:00",
+   "slug" : "/pub/2012/04/perlunicookbook-decode-argv-as-utf8",
+   "categories" : "unicode",
+   "tags" : [],
+   "title" : "Perl Unicode Cookbook: Decode @ARGV as UTF-8",
    "authors" : [
       "tom-christiansen"
    ],
-   "categories" : "unicode",
+   "description" : "℞ 13: Decode program arguments as utf8 While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. The command-line arguments to your programs, available through @ARGV, may...",
+   "image" : null,
    "thumbnail" : null,
-   "description" : "â 13: Decode program arguments as utf8 While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. The command-line arguments to your programs, available through @ARGV, may...",
-   "title" : "Perl Unicode Cookbook: Decode @ARGV as UTF-8",
-   "slug" : "/pub/2012/04/perlunicookbook-decode-argv-as-utf8",
-   "date" : "2012-04-24T06:00:01-08:00",
-   "tags" : [],
    "draft" : null
 }
 
@@ -17,7 +17,7 @@
 
 
 
-â 13: Decode program arguments as utf8 {#Decode-program-arguments-as-utf8}
+℞ 13: Decode program arguments as utf8 {#Decode-program-arguments-as-utf8}
 --------------------------------------
 
 While the [standard Perl Unicode
@@ -51,13 +51,13 @@ the [Encode](http://search.cpan.org/perldoc?Encode) module:
         use Encode qw(decode_utf8);
         @ARGV = map { decode_utf8($_, 1) } @ARGV;
 
-Previous: [â 12: Explicit
+Previous: [℞ 12: Explicit
 encode/decode](/media/_pub_2012_04_perlunicookbook-decode-argv-as-utf8/perlunicook-explicit-encode-decode.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_04_perlunicookbook-decode-argv-as-utf8/perlunicook-standard-preamble.html)
 
-Next: [â 14: Decode @ARGV as Local
+Next: [℞ 14: Decode @ARGV as Local
 Encoding](/media/_pub_2012_04_perlunicookbook-decode-argv-as-utf8/perlunicookbook-decode-argv-as-local-encoding.html)
 
 

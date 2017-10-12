@@ -1,16 +1,16 @@
 {
-   "draft" : null,
    "slug" : "/pub/2003/02/27/review",
-   "tags" : [],
    "date" : "2003-02-27T00:00:00-08:00",
    "categories" : "Science",
-   "thumbnail" : null,
-   "description" : " This is a book I have been looking forward to for a long time. Back when James Tisdall had just finished his Beginning Perl for Bioinformatics, I asked him to write an article about how to get into bioinf...",
    "title" : "Genomic Perl",
-   "image" : null,
+   "tags" : [],
+   "thumbnail" : null,
+   "draft" : null,
    "authors" : [
       "simon-cozens"
-   ]
+   ],
+   "description" : " This is a book I have been looking forward to for a long time. Back when James Tisdall had just finished his Beginning Perl for Bioinformatics, I asked him to write an article about how to get into bioinf...",
+   "image" : null
 }
 
 

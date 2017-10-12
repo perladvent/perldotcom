@@ -1,14 +1,12 @@
 {
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_12_01_3d_engine/111-3d_engine.gif",
+   "description" : " This article is the first in a series aimed at building a full 3D engine. It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design...",
    "image" : null,
    "authors" : [
       "geoff-broadwell"
    ],
-   "description" : " This article is the first in a series aimed at building a full 3D engine. It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design...",
-   "thumbnail" : "/images/_pub_2004_12_01_3d_engine/111-3d_engine.gif",
-   "categories" : "Games",
    "title" : "Building a 3D Engine in Perl",
-   "slug" : "/pub/2004/12/01/3d_engine",
-   "date" : "2004-12-01T00:00:00-08:00",
    "tags" : [
       "geoff-broadwell",
       "opengl-tutorial",
@@ -18,7 +16,9 @@
       "perl-opengl",
       "perl-sdl"
    ],
-   "draft" : null
+   "categories" : "Games",
+   "date" : "2004-12-01T00:00:00-08:00",
+   "slug" : "/pub/2004/12/01/3d_engine"
 }
 
 
@@ -482,7 +482,7 @@ before `end_frame` syncs the screen with the drawing area.
 
 Next, let's try a box. Anyone who's played a First Person Shooter game
 knows that their worlds have a surplus of boxes (a.k.a. "crates,"
-"storage containers," and so on ï¿½- oddly, for *storage* containers, the
+"storage containers," and so on �- oddly, for *storage* containers, the
 larger they are, the less they seem to contain). I'll start with a
 simple cube and add another call for it to the end of `draw_view`:
 

@@ -1,14 +1,12 @@
 {
+   "thumbnail" : null,
+   "draft" : null,
    "image" : null,
+   "description" : "Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap&mdash;though this distinction is too subtle. Much of the documentation and code is crap, too. It's pointless. It's...",
    "authors" : [
       "ricardo-signes"
    ],
-   "thumbnail" : null,
-   "categories" : "Tooling",
-   "description" : "Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap&mdash;though this distinction is too subtle. Much of the documentation and code is crap, too. It's pointless. It's...",
    "title" : "More Code, Less Cruft: Managing Distributions with Dist::Zilla",
-   "slug" : "/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla",
-   "date" : "2010-03-09T16:14:12-08:00",
    "tags" : [
       "cpan",
       "dist-zilla",
@@ -17,7 +15,9 @@
       "perl-5",
       "perl-programming"
    ],
-   "draft" : null
+   "date" : "2010-03-09T16:14:12-08:00",
+   "slug" : "/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla",
+   "categories" : "Tooling"
 }
 
 
@@ -26,7 +26,7 @@
 
 Every software distribution is a bunch of files written and maintained
 by programmers. The files are of three types: code, documentation, and
-crapâthough this distinction is too subtle. Much of the documentation
+crap—though this distinction is too subtle. Much of the documentation
 and code is crap, too. It's pointless. It's boring to write and to
 maintain, but convention dictates that it exist.
 
@@ -121,7 +121,7 @@ Delete that file and replace it with the file *dist.ini*:
       UDCode          = 0
 
 Yes, this file contains *more* lines than the original version, but
-don't worryâthat won't last long.
+don't worry—that won't last long.
 
 Most of this should be self-explanatory, but the cluster of
 square-bracketed names isn't. Each line enables a Dzil plugin, and every
@@ -158,8 +158,8 @@ Because your *dist.ini* knows the details of your license, the
 plugin can generate this file for you.
 
 All three of these plugins are part of the `Dist::Zilla` distribution.
-Thus you can delete three whole filesâ*MANIFEST.SKIP*, *LICENSE*, and
-*README*âat the cost of a couple of extra lines in *dist.ini*:
+Thus you can delete three whole files—*MANIFEST.SKIP*, *LICENSE*, and
+*README*—at the cost of a couple of extra lines in *dist.ini*:
 
       [PruneCruft]
       [License]
@@ -246,7 +246,7 @@ and
 [PodVersion](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::PodVersion)
 plugins to let `Dist::Zilla` take care of setting the version in every
 library file. They find *.pm* files and add a `our $VERSION = ...`
-declaration and a `=head1 VERSION` section to the Podâwhich means you
+declaration and a `=head1 VERSION` section to the Pod—which means you
 can delete all those lines from the code and not worry about keeping
 them up to date anymore.
 

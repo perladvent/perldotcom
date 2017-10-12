@@ -1,16 +1,16 @@
 {
-   "description" : " In the previous hidden treasures article, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core....",
    "thumbnail" : null,
-   "categories" : "Perl Internals",
-   "title" : "Hidden Treasures of the Perl Core, part II",
+   "draft" : null,
    "image" : null,
+   "description" : " In the previous hidden treasures article, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core....",
    "authors" : [
       "casey-west"
    ],
-   "draft" : null,
-   "slug" : "/pub/2003/06/19/treasures",
+   "title" : "Hidden Treasures of the Perl Core, part II",
    "tags" : [],
-   "date" : "2003-06-19T00:00:00-08:00"
+   "categories" : "Perl Internals",
+   "date" : "2003-06-19T00:00:00-08:00",
+   "slug" : "/pub/2003/06/19/treasures"
 }
 
 
@@ -28,7 +28,7 @@ gems in the Perl Core.
 
 The `constant` pragma is not new or unknown, but it is a nice feature
 enhancement. Many people have used constant. Here is a standard example
-of using the constant for Ï.
+of using the constant for π.
 
     use constant PI => 22/7;
 

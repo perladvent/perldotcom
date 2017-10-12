@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "date" : "2012-08-27T06:00:01-08:00",
+   "categories" : "Community",
    "slug" : "/pub/2012/08/embrace-the-reluctant-perl-programmer",
-   "draft" : null,
+   "date" : "2012-08-27T06:00:01-08:00",
+   "title" : "Embrace the Reluctant Perl Programmer",
+   "tags" : [],
    "authors" : [
       "chromatic"
    ],
    "image" : null,
-   "title" : "Embrace the Reluctant Perl Programmer",
-   "thumbnail" : null,
-   "categories" : "Community",
-   "description" : "editor's note: an earlier version of this article appeared at The Reluctant Perl Programmer. Per the suggestion of Ask BjÃ¸rn Hansen, this revision appears on Perl.com. Who We Are We all love Perl for different reasons. Some of us are..."
+   "description" : "editor's note: an earlier version of this article appeared at The Reluctant Perl Programmer. Per the suggestion of Ask Bjørn Hansen, this revision appears on Perl.com. Who We Are We all love Perl for different reasons. Some of us are...",
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -20,7 +20,7 @@
 *editor's note: an earlier version of this article appeared at [The
 Reluctant Perl
 Programmer](http://www.modernperlbooks.com/mt/2012/06/the-reluctant-perl-programmer.html).
-Per the suggestion of [Ask BjÃ¸rn
+Per the suggestion of [Ask Bjørn
 Hansen](http://www.askbjoernhansen.com/), this revision appears on
 Perl.com.*
 
@@ -94,7 +94,7 @@ Where can you learn that the first dozen Perl tutorials easily found
 with a search engine are out of date or even wrong? Where can you learn
 that any of a dozen good text editors or IDEs are available and are
 better than `notepad.exe`? Where can you learn how to install CPAN
-modules on ActivePerl (or that Strawberry Perl exists)âand more
+modules on ActivePerl (or that Strawberry Perl exists)—and more
 importantly, why?
 
 Where can you go from "I need to process this report by the end of the
@@ -128,7 +128,7 @@ from those who merely (as if it were a mere thing!) wish to solve a
 problem. If and when they succeed, they will need guidance to understand
 the new powers they possess, and we can be there.
 
-Yet first, we must accept that their goals are not our goalsânot yet
+Yet first, we must accept that their goals are not our goals—not yet
 anyhow, and perhaps not never. Their goals may be strange to us, but
 they are no less valuable for their peculiarities. In truth, that makes
 them more valuable. These are more problems for us to solve, more ideas

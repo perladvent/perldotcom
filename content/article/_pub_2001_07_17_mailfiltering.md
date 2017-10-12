@@ -1,5 +1,5 @@
 {
-   "draft" : null,
+   "title" : "Mail Filtering with Mail::Audit",
    "tags" : [
       "e-mail",
       "filter",
@@ -7,16 +7,16 @@
       "rule",
       "spam"
    ],
-   "date" : "2001-07-17T00:00:00-08:00",
    "slug" : "/pub/2001/07/17/mailfiltering",
-   "title" : "Mail Filtering with Mail::Audit",
-   "description" : " Let's face it. procmail is horrid. But for most of us, it's the only sensible way to handle mail filtering. I used to tolerate procmail, with its grotesque syntax and its less-than-helpful error messages, because it was the only...",
+   "date" : "2001-07-17T00:00:00-08:00",
    "categories" : "Security",
+   "draft" : null,
    "thumbnail" : "/images/_pub_2001_07_17_mailfiltering/111-mailaudit.jpg",
+   "image" : null,
+   "description" : " Let's face it. procmail is horrid. But for most of us, it's the only sensible way to handle mail filtering. I used to tolerate procmail, with its grotesque syntax and its less-than-helpful error messages, because it was the only...",
    "authors" : [
       "simon-cozens"
-   ],
-   "image" : null
+   ]
 }
 
 
@@ -226,7 +226,7 @@ newsgroups and the addresses they belong to:
 
 So here's the recipe for filtering news to mail and back again:
 
-â¢ Incoming messages
+• Incoming messages
 
 > will be trapped by a rule in your mail filter, and be piped to
 > `listgate` via a line like
@@ -237,7 +237,7 @@ So here's the recipe for filtering news to mail and back again:
 > `listgate` will then post them to your news server, to the group
 > `lists.p5p`.
 
-â¢ Outgoing articles
+• Outgoing articles
 
 > will be sent to the moderator address, `news-outgoing@localhost` for
 > cleanup. The cleanup program will drop unnecessary headers, reformat

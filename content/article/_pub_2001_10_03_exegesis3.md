@@ -1,16 +1,16 @@
 {
-   "thumbnail" : "/images/_pub_2001_10_03_exegesis3/111-exegesis.jpg",
+   "slug" : "/pub/2001/10/03/exegesis3",
+   "date" : "2001-10-03T00:00:00-08:00",
    "categories" : "perl-6",
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 3 for the current design information. Diamond lives (context-aware); Underscore space means concatenate; fat comma means pair; A pre-star will flatten; colon-equals will...",
    "title" : "Exegesis 3",
-   "image" : null,
+   "tags" : [],
    "authors" : [
       "damian-conway"
    ],
-   "draft" : null,
-   "slug" : "/pub/2001/10/03/exegesis3",
-   "tags" : [],
-   "date" : "2001-10-03T00:00:00-08:00"
+   "image" : null,
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 3 for the current design information. Diamond lives (context-aware); Underscore space means concatenate; fat comma means pair; A pre-star will flatten; colon-equals will...",
+   "thumbnail" : "/images/_pub_2001_10_03_exegesis3/111-exegesis.jpg",
+   "draft" : null
 }
 
 
@@ -98,13 +98,13 @@ We could do that with this:
                      map  { amortize($_) => $_ }
                             @costs ^* $inflation;
 
-            my sub operator:â is prec(\&operator:+($)) (*@list : $filter //= undef) {
+            my sub operator:∑ is prec(\&operator:+($)) (*@list : $filter //= undef) {
                    reduce {$^a+$^b}  ($filter ?? grep &$filter, @list :: @list);
             }
 
-            print "Total expenditure: $( â @costs )\n";
-            print "Major expenditure: $( â @costs : {$^_ >= 1000} )\n";
-            print "Minor expenditure: $( â @costs : {$^_ < 1000} )\n";
+            print "Total expenditure: $( ∑ @costs )\n";
+            print "Major expenditure: $( ∑ @costs : {$^_ >= 1000} )\n";
+            print "Minor expenditure: $( ∑ @costs : {$^_ < 1000} )\n";
 
             print "Odd expenditures: @costs[1..Inf:2]\n"; 
         }
@@ -153,13 +153,13 @@ set up default values for subroutine parameters or input data:
 +-----------------------------------------------------------------------+
 | Related Articles                                                      |
 |                                                                       |
-| â¢ [Apocalypse 1](/pub/a/2001/04/02/wall.html)\                        |
+| • [Apocalypse 1](/pub/a/2001/04/02/wall.html)\                        |
 | \                                                                     |
-| â¢ [Apocalypse 2](/pub/a/2001/05/03/wall.html)\                        |
+| • [Apocalypse 2](/pub/a/2001/05/03/wall.html)\                        |
 | \                                                                     |
-| â¢ [Exegesis 2](/pub/a/2001/05/08/exegesis2.html)\                     |
+| • [Exegesis 2](/pub/a/2001/05/08/exegesis2.html)\                     |
 | \                                                                     |
-| â¢ [Apocalypse 3](/pub/a/2001/10/02/apocalypse3.html)\                 |
+| • [Apocalypse 3](/pub/a/2001/10/02/apocalypse3.html)\                 |
 | \                                                                     |
 +-----------------------------------------------------------------------+
 |                                                                       |
@@ -696,8 +696,8 @@ Then we toggle the "is active" status bit (the eighth bit) for each
 file. To flip that single bit without changing any of the other status
 bits, we bitwise-xor the status bitset against the bitstring
 `0000000010000000`. Each bit xor'd against a zero stays as it is
-(0Â xorÂ 0Â --&gt;Â 0; 1Â xorÂ 0Â --&gt;Â 1), while xor'ing the eighth bit
-against 1 complements it (0Â xorÂ 1Â --&gt;Â 1; 1Â xorÂ 1Â --&gt;Â 0).
+(0 xor 0 --&gt; 0; 1 xor 0 --&gt; 1), while xor'ing the eighth bit
+against 1 complements it (0 xor 1 --&gt; 1; 1 xor 1 --&gt; 0).
 But because the caret has been appropriated as the Perl 6
 [hyper-operator
 prefix](/pub/a/2001/10/03/exegesis3.html?page=2#substitute%20our%20vector,%20victor!),
@@ -1002,28 +1002,28 @@ More importantly, because `@costs` is an
 we're actually assigning it back into the appropriate sub-entry of
 `%data`.
 
-### []{#the sum of all our fears}The â of all our fears
+### []{#the sum of all our fears}The ∑ of all our fears
 
 Perl 6 will probably have a built-in `sum` operator, but we might still
 prefer to build our own for a couple of reasons. Firstly `sum` is
 obviously far too long a name for so fundamental an operation; it really
-should be `â`. Secondly, we may want to extend the basic summation
+should be `∑`. Secondly, we may want to extend the basic summation
 functionality somehow. For instance, by allowing the user to specify a
 filter and only summing those arguments that the filter lets through.
 Perl 6 allows us to create our own operators. Their names can be any
 combination of characters from the Unicode set. So it's relatively easy
-to build ourselves a `â` operator:
+to build ourselves a `∑` operator:
 
-        my sub operator:â is prec(\&operator:+($)) (*@list) {
+        my sub operator:∑ is prec(\&operator:+($)) (*@list) {
             reduce {$^a+$^b} @list;
         }
 
-We declare the `â` operator as a lexically scoped subroutine. The
+We declare the `∑` operator as a lexically scoped subroutine. The
 lexical scoping eases the syntactic burden on the parser, the semantic
 burden on other unrelated parts of the code, and the cognitive burden on
 the programmer.
 The operator subroutine's name is always
-`operator:whatever_symbols_we_want`. In this case, that's `operator:â`,
+`operator:whatever_symbols_we_want`. In this case, that's `operator:∑`,
 but it can be any sequence of Unicode characters, including
 alphanumerics:
 
@@ -1031,7 +1031,7 @@ alphanumerics:
                     return "darn $x";
             }
 
-            my sub operator:â  is prec(\&CORE::kill)  (*@tIHoH) {
+            my sub operator:† is prec(\&CORE::kill)  (*@tIHoH) {
                     kill(9, @tIHoH) == @tIHoH or die "batlhHa'";
                     return "Qapla!";
             }
@@ -1068,7 +1068,7 @@ define. We do that with the `is prec` trait of the subroutine. The
 precedence is specified in terms of the precedence of some existing
 operator; in this case, in terms of Perl's built-in unary `+`:
 
-        my sub operator:â is prec( \&operator:+($) )
+        my sub operator:∑ is prec( \&operator:+($) )
 
 To do this, we give the `is prec` trait a reference to teh existing
 operator. Note that, because there are two overloaded forms of
@@ -1081,12 +1081,12 @@ the same kind of disambiguation when enreferenced.
 If the operator had been binary, we might also have had to specify its
 associativity (`left`, `right`, or `non`), using the `is assoc` trait.
 
-Note too that we specified the parameter of `operator:â` with a
+Note too that we specified the parameter of `operator:∑` with a
 flattening asterisk, since we want `@list` to slurp up any series of
 values passed to it, rather than being restricted to accepting only
 actual array variables as arguments.
 
-The implementation of `operator:â` is very simple: we just apply the
+The implementation of `operator:∑` is very simple: we just apply the
 built-in `reduce` function to the list, reducing each successive pair of
 elements by adding them.
 
@@ -1096,12 +1096,12 @@ requires that implicit parameters be specified with a `$^` sigil (or
 `@^` or `%^`, as appropriate) and that the whole expression be enclosed
 in braces.
 
-So now we have a `â` operator:
+So now we have a `∑` operator:
 
-        $result = â $wins, $losses, $ties;
+        $result = ∑ $wins, $losses, $ties;
 
 but it doesn't yet provide a way to filter its values. Normally, that
-would present a difficulty with an operator like `â`, whose `*@list`
+would present a difficulty with an operator like `∑`, whose `*@list`
 argument will gobble up every argument we give it, leaving no way --
 except convention -- to distinguish the filter from the data.
 But Perl 6 allows any subroutine -- not just built-ins like `print` --
@@ -1109,14 +1109,14 @@ to take one or more "adverbs" in addition to its normal arguments. This
 provides a second channel by which to transmit information to a
 subroutine. Typically that information will be used to modify the
 behaviour of the subroutine (hence the name "adverb"). And that's
-exactly what we need in order to pass a filter to `â`.
+exactly what we need in order to pass a filter to `∑`.
 
 A subroutine's adverbs are specified as part of its normal parameter
 list, but separated from its regular parameters by a colon:
 
-        my sub operator:â is prec(\&operator:+($)) ( *@list : $filter //= undef) {...
+        my sub operator:∑ is prec(\&operator:+($)) ( *@list : $filter //= undef) {...
 
-This specifies that `operator:â` can take a single scalar adverb, which
+This specifies that `operator:∑` can take a single scalar adverb, which
 is bound to the parameter `$filter`. When there is no adverb specified
 in the call, `$filter` is default-assigned the value `undef`.
 We then modify the body of the subroutine to pre-filter the list through
@@ -1161,21 +1161,21 @@ design information.*
 
 ### []{#would you like an adverb with that}Would you like an adverb with that?
 
-OK, so now our `â` operator can take a modifying filter. How exactly do
+OK, so now our `∑` operator can take a modifying filter. How exactly do
 we pass that filter to it?
 As described
 [earlier](/pub/a/2001/10/03/exegesis3.html?page=4#it%20is%20written...),
 the colon is used to introduce adverbial arguments into the argument
 list of a subroutine or operator. So to do a normal summation we write:
 
-        $sum = â @costs;
+        $sum = ∑ @costs;
 
 whilst to do a filtered summation we place the filter after a colon at
 the end of the regular argument list:
-        $sum = â @costs : sub {$_ >= 1000};
+        $sum = ∑ @costs : sub {$_ >= 1000};
 
 or, more elegantly, using a higher-order function:
-        $sum = â @costs : {$^_ >= 1000};
+        $sum = ∑ @costs : {$^_ >= 1000};
 
 Any arguments after the colon are bound to the parameters specified by
 the subroutine's adverbial parameter list.
@@ -1183,9 +1183,9 @@ Note that the example also demonstrates that we can interpolate the
 results of the various summations directly into output strings. We do
 this using Perl 6's scalar interpolation mechanism (`$(...)`), like so:
 
-        print "Total expenditure: $( â @costs )\n";
-        print "Major expenditure: $( â @costs : {$^_ >= 1000} )\n";
-        print "Minor expenditure: $( â @costs : {$^_ < 1000} )\n";
+        print "Total expenditure: $( ∑ @costs )\n";
+        print "Major expenditure: $( ∑ @costs : {$^_ >= 1000} )\n";
+        print "Minor expenditure: $( ∑ @costs : {$^_ < 1000} )\n";
 
 ### []{#the odd lazy step}The odd lazy step
 

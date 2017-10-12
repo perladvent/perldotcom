@@ -1,20 +1,20 @@
 {
+   "image" : null,
+   "description" : " Table of Contents  Essential Perl/Tk Programming  A Graphic Authorizing Example  TK Overview  A Pay Calculator Example  Creating A Window  Adding A Menubar  Adding Choices To A Menubar  More Menubar Choices ...",
+   "authors" : [
+      "brett-berry",
+      "lee-minniear"
+   ],
+   "thumbnail" : null,
    "draft" : null,
-   "slug" : "/pub/1999/10/perltk/index",
-   "date" : "1999-10-15T00:00:00-08:00",
+   "title" : "Perl/Tk Tutorial",
    "tags" : [
       "perl",
       "perl-tk"
    ],
-   "description" : " Table of Contents Â Essential Perl/Tk Programming Â A Graphic Authorizing Example Â TK Overview Â A Pay Calculator Example Â Creating A Window Â Adding A Menubar Â Adding Choices To A Menubar Â More Menubar Choices Â...",
-   "thumbnail" : null,
    "categories" : "Tutorials",
-   "title" : "Perl/Tk Tutorial",
-   "image" : null,
-   "authors" : [
-      "brett-berry",
-      "lee-minniear"
-   ]
+   "slug" : "/pub/1999/10/perltk/index",
+   "date" : "1999-10-15T00:00:00-08:00"
 }
 
 
@@ -24,58 +24,58 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢ [Essential Perl/Tk                                                  |
+| • [Essential Perl/Tk                                                  |
 | Programming](/media/_pub_1999_10_perltk_index/sld001.htm)\            |
-| â¢ [A Graphic Authorizing                                              |
+| • [A Graphic Authorizing                                              |
 | Example](/media/_pub_1999_10_perltk_index/sld002.htm)\                |
-| â¢ [TK Overview](/media/_pub_1999_10_perltk_index/sld003.htm)\         |
-| â¢ [A Pay Calculator                                                   |
+| • [TK Overview](/media/_pub_1999_10_perltk_index/sld003.htm)\         |
+| • [A Pay Calculator                                                   |
 | Example](/media/_pub_1999_10_perltk_index/sld004.htm)\                |
-| â¢ [Creating A Window](/media/_pub_1999_10_perltk_index/sld005.htm)\   |
-| â¢ [Adding A Menubar](/media/_pub_1999_10_perltk_index/sld006.htm)\    |
-| â¢ [Adding Choices To A                                                |
+| • [Creating A Window](/media/_pub_1999_10_perltk_index/sld005.htm)\   |
+| • [Adding A Menubar](/media/_pub_1999_10_perltk_index/sld006.htm)\    |
+| • [Adding Choices To A                                                |
 | Menubar](/media/_pub_1999_10_perltk_index/sld007.htm)\                |
-| â¢ [More Menubar                                                       |
+| • [More Menubar                                                       |
 | Choices](/media/_pub_1999_10_perltk_index/sld008.htm)\                |
-| â¢ [Adding Frames To A                                                 |
+| • [Adding Frames To A                                                 |
 | Window](/media/_pub_1999_10_perltk_index/sld009.htm)\                 |
-| â¢ [Adding Labels To A                                                 |
+| • [Adding Labels To A                                                 |
 | Frame](/media/_pub_1999_10_perltk_index/sld010.htm)\                  |
-| â¢ [Labels For Display                                                 |
+| • [Labels For Display                                                 |
 | Purposes](/media/_pub_1999_10_perltk_index/sld011.htm)\               |
-| â¢ [More Display Labels](/media/_pub_1999_10_perltk_index/sld012.htm)\ |
-| â¢ [One More Set](/media/_pub_1999_10_perltk_index/sld013.htm)\        |
-| â¢ [Adding A Widget                                                    |
+| • [More Display Labels](/media/_pub_1999_10_perltk_index/sld012.htm)\ |
+| • [One More Set](/media/_pub_1999_10_perltk_index/sld013.htm)\        |
+| • [Adding A Widget                                                    |
 | Separator](/media/_pub_1999_10_perltk_index/sld014.htm)\              |
-| â¢ [Add Descriptive                                                    |
+| • [Add Descriptive                                                    |
 | Labels](/media/_pub_1999_10_perltk_index/sld015.htm)\                 |
-| â¢ [Adding Text Entry                                                  |
+| • [Adding Text Entry                                                  |
 | Boxes](/media/_pub_1999_10_perltk_index/sld016.htm)\                  |
-| â¢ [Adding Functional                                                  |
+| • [Adding Functional                                                  |
 | Buttons](/media/_pub_1999_10_perltk_index/sld017.htm)\                |
-| â¢ [Adding A Checkbox](/media/_pub_1999_10_perltk_index/sld018.htm)\   |
-| â¢ [Initial Window                                                     |
+| • [Adding A Checkbox](/media/_pub_1999_10_perltk_index/sld018.htm)\   |
+| • [Initial Window                                                     |
 | Placement](/media/_pub_1999_10_perltk_index/sld019.htm)\              |
-| â¢ [Radiobutton Example](/media/_pub_1999_10_perltk_index/sld020.htm)\ |
-| â¢ [Creating A Window](/media/_pub_1999_10_perltk_index/sld021.htm)\   |
-| â¢ [Adding Frames To A                                                 |
+| • [Radiobutton Example](/media/_pub_1999_10_perltk_index/sld020.htm)\ |
+| • [Creating A Window](/media/_pub_1999_10_perltk_index/sld021.htm)\   |
+| • [Adding Frames To A                                                 |
 | Window](/media/_pub_1999_10_perltk_index/sld022.htm)\                 |
-| â¢ [Adding A Status Display                                            |
+| • [Adding A Status Display                                            |
 | Area](/media/_pub_1999_10_perltk_index/sld023.htm)\                   |
-| â¢ [Adding Radiobuttons](/media/_pub_1999_10_perltk_index/sld024.htm)\ |
-| â¢ [Adding An EXIT                                                     |
+| • [Adding Radiobuttons](/media/_pub_1999_10_perltk_index/sld024.htm)\ |
+| • [Adding An EXIT                                                     |
 | Button](/media/_pub_1999_10_perltk_index/sld025.htm)\                 |
-| â¢ [Radiobutton Graphic                                                |
+| • [Radiobutton Graphic                                                |
 | Examples](/media/_pub_1999_10_perltk_index/sld026.htm)\               |
-| â¢ [Increment & Decrement: A Date                                      |
+| • [Increment & Decrement: A Date                                      |
 | Example](/media/_pub_1999_10_perltk_index/sld027.htm)\                |
-| â¢ [Adding A Window And                                                |
+| • [Adding A Window And                                                |
 | Frame](/media/_pub_1999_10_perltk_index/sld028.htm)\                  |
-| â¢ [Adding Buttons And Text                                            |
+| • [Adding Buttons And Text                                            |
 | Label](/media/_pub_1999_10_perltk_index/sld029.htm)\                  |
-| â¢ [Displaying Current                                                 |
+| • [Displaying Current                                                 |
 | Date](/media/_pub_1999_10_perltk_index/sld030.htm)\                   |
-| â¢ [Date Changing Graphic                                              |
+| • [Date Changing Graphic                                              |
 | Examples](/media/_pub_1999_10_perltk_index/sld031.htm)\               |
 +-----------------------------------------------------------------------+
 

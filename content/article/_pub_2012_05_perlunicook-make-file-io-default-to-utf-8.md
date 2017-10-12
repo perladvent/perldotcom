@@ -1,23 +1,23 @@
 {
-   "date" : "2012-05-01T06:00:01-08:00",
+   "title" : "Perl Unicode Cookbook: Make File I/O Default to UTF-8",
    "tags" : [],
    "slug" : "/pub/2012/05/perlunicook-make-file-io-default-to-utf-8",
+   "date" : "2012-05-01T06:00:01-08:00",
+   "categories" : "unicode",
+   "thumbnail" : null,
    "draft" : null,
+   "image" : null,
+   "description" : "℞ 17: Make ﬁle I/O default to utf8 If you've ever had the misfortune of seeing the Unicode warning \"wide character in print\", you may have realized that something forgot to set the appropriate Unicode-capable encoding on a filehandle somewhere...",
    "authors" : [
       "tom-christiansen"
-   ],
-   "image" : null,
-   "title" : "Perl Unicode Cookbook: Make File I/O Default to UTF-8",
-   "description" : "â 17: Make ï¬le I/O default to utf8 If you've ever had the misfortune of seeing the Unicode warning \"wide character in print\", you may have realized that something forgot to set the appropriate Unicode-capable encoding on a filehandle somewhere...",
-   "thumbnail" : null,
-   "categories" : "unicode"
+   ]
 }
 
 
 
 
 
-â 17: Make ï¬le I/O default to utf8 {#Make-ï¬le-I-O-default-to-utf8}
+℞ 17: Make ﬁle I/O default to utf8 {#Make-ﬁle-I-O-default-to-utf8}
 ----------------------------------
 
 If you've ever had the misfortune of seeing the Unicode warning "wide
@@ -53,13 +53,13 @@ default encoding of all filehandle operations in its lexical scope:
 Note that the `open` pragma is currently incompatible with the
 [`autodie`](http://perldoc.perl.org/autodie.html) pragma.
 
-Previous: [â 16: Decode Standard Filehandles as Locale
+Previous: [℞ 16: Decode Standard Filehandles as Locale
 Encoding](/media/_pub_2012_05_perlunicook-make-file-io-default-to-utf-8/perlunicook-decode-standard-filehandles-as-locale-encoding.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_05_perlunicook-make-file-io-default-to-utf-8/perlunicook-standard-preamble.html)
 
-Next: [â 18: Make All I/O Default to
+Next: [℞ 18: Make All I/O Default to
 UTF-8](/media/_pub_2012_05_perlunicook-make-file-io-default-to-utf-8/perlunicook-make-all-io-default-to-utf-8.html)
 
 

@@ -1,18 +1,18 @@
 {
-   "date" : "2002-04-10T00:00:00-08:00",
-   "tags" : [
-      "mod-perl-superuser-root"
-   ],
-   "slug" : "/pub/2002/04/10/mod_perl",
    "draft" : null,
+   "thumbnail" : "/images/_pub_2002_04_10_mod_perl/111-mod_perl.gif",
    "authors" : [
       "stas-bekman"
    ],
+   "description" : " As you have seen from my previous articles, mod_perl enabled Apache consists of two main components: Perl modules and Apache itself. While installing Apache without root privileges is easy, one should know how to install Perl modules in a...",
    "image" : null,
-   "title" : "Installing mod_perl without superuser privileges",
-   "thumbnail" : "/images/_pub_2002_04_10_mod_perl/111-mod_perl.gif",
    "categories" : "web",
-   "description" : " As you have seen from my previous articles, mod_perl enabled Apache consists of two main components: Perl modules and Apache itself. While installing Apache without root privileges is easy, one should know how to install Perl modules in a..."
+   "slug" : "/pub/2002/04/10/mod_perl",
+   "date" : "2002-04-10T00:00:00-08:00",
+   "title" : "Installing mod_perl without superuser privileges",
+   "tags" : [
+      "mod-perl-superuser-root"
+   ]
 }
 
 

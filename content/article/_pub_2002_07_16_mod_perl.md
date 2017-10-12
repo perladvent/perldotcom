@@ -1,18 +1,18 @@
 {
+   "description" : " In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring. Code Profiling Techniques The profiling process helps you to determine...",
+   "image" : null,
    "authors" : [
       "stas-bekman"
    ],
-   "image" : null,
-   "title" : "Improving mod_perl Sites' Performance: Part 3",
-   "description" : " In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring. Code Profiling Techniques The profiling process helps you to determine...",
    "thumbnail" : null,
-   "categories" : "web",
+   "draft" : null,
    "tags" : [
       "mod-perl-benchmarking-test"
    ],
-   "date" : "2002-07-16T00:00:00-08:00",
+   "title" : "Improving mod_perl Sites' Performance: Part 3",
    "slug" : "/pub/2002/07/16/mod_perl",
-   "draft" : null
+   "date" : "2002-07-16T00:00:00-08:00",
+   "categories" : "web"
 }
 
 
@@ -482,7 +482,7 @@ startup imported even if you ask for only one symbol. It seems to me
 like a bug, but probably that's how `CGI.pm` works.
 
 BTW, you can check the number of opcodes in the code by a simple command
-line run. For example comparing 'myÂ %hash' vs. 'myÂ %hashÂ = ()'.
+line run. For example comparing 'my %hash' vs. 'my %hash = ()'.
 
       % perl -MO=Terse -e 'my %hash' | wc -l
       -e syntax OK

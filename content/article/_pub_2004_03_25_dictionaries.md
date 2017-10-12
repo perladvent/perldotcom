@@ -1,21 +1,21 @@
 {
+   "thumbnail" : "/images/_pub_2004_03_25_dictionaries/111-dictionaries.gif",
    "draft" : null,
-   "date" : "2004-03-25T00:00:00-08:00",
+   "image" : null,
+   "description" : " When you woke up this morning, the last thing you are likely to have thought is \"If only I had a dictionary!\" But there are thousands of languages on Earth that many people want to learn, but they can't,...",
+   "authors" : [
+      "sean-m--burke"
+   ],
    "tags" : [
       "dictionaries",
       "languages",
       "linguistics",
       "rtf"
    ],
-   "slug" : "/pub/2004/03/25/dictionaries",
    "title" : "Making Dictionaries with Perl",
-   "thumbnail" : "/images/_pub_2004_03_25_dictionaries/111-dictionaries.gif",
-   "categories" : "Data",
-   "description" : " When you woke up this morning, the last thing you are likely to have thought is \"If only I had a dictionary!\" But there are thousands of languages on Earth that many people want to learn, but they can't,...",
-   "authors" : [
-      "sean-m--burke"
-   ],
-   "image" : null
+   "slug" : "/pub/2004/03/25/dictionaries",
+   "date" : "2004-03-25T00:00:00-08:00",
+   "categories" : "Data"
 }
 
 
@@ -43,11 +43,11 @@ on Post-Its. So they started using database programs, but had no way to
 turn this into anything you could print and call a dictionary. They had
 no way to take this:
 
-      Headword: dagiislÃ¡ng
+      Headword: dagiisláng
       Citation: HSD
       Part of speech: verb
       English: wave a piece of cloth
-      Example:  DÃ¡ayaangwaay hal dagiislÃ¡nggan. | He was waving a flag.
+      Example:  Dáayaangwaay hal dagiislánggan. | He was waving a flag.
 
 And turn it into this:
 
@@ -80,23 +80,23 @@ formats are simple enough. In this case, the input format I'm often
 given is simple enough. It's called Shoebox Standard Format, and it
 looks like this:
 
-      \hw dagiislÃ¡ng
+      \hw dagiisláng
       \cit hsd
       \pos verb
       \engl wave a piece of cloth
-      \ex DÃ¡ayaangwaay hal dagiislÃ¡nggan. | He was waving a flag.
+      \ex Dáayaangwaay hal dagiislánggan. | He was waving a flag.
 
-      \hw anÃ¡a
+      \hw anáa
       \cit hsd; led-285
       \pos adverb
       \engl inside a house; at home
       
-      \hw sÃºut hlgitl'Ã¡a
+      \hw súut hlgitl'áa
       \cit hsd; led-149; led-411
       \engl speak harshly to someone; insult
-      \ex 'LÃ¡a hal sÃºut hlgitl'gÃ¡n. | She said harsh words to her.
+      \ex 'Láa hal súut hlgitl'gán. | She said harsh words to her.
       
-      \hw tlak'alÃ¡ang
+      \hw tlak'aláang
       \cit led-398
       \pos noun
       \engl the shelter of a tree
@@ -122,26 +122,26 @@ And that prints this:
      Lexicon Text::Shoebox::Lexicon=HASH(0x15550f0) contains 4 entries:
      
      Entry Text::Shoebox::Entry=ARRAY(0x1559104) contains:
-       hw = "dagiislÃ¡ng"
+       hw = "dagiisláng"
        cit = "hsd"
        pos = "verb"
        engl = "wave a piece of cloth"
-       ex = "DÃ¡ayaangwaay hal dagiislÃ¡nggan. | He was waving a flag."
+       ex = "Dáayaangwaay hal dagiislánggan. | He was waving a flag."
      
      Entry Text::Shoebox::Entry=ARRAY(0x1559194) contains:
-       hw = "anÃ¡a"
+       hw = "anáa"
        cit = "hsd; led-285"
        pos = "adverb"
        engl = "inside a house; at home"
      
      Entry Text::Shoebox::Entry=ARRAY(0x155920c) contains:
-       hw = "sÃºut hlgitl'Ã¡a"
+       hw = "súut hlgitl'áa"
        cit = "hsd; led-149; led-411"
        engl = "speak harshly to someone; insult"
-       ex = "'LÃ¡a hal sÃºut hlgitl'gÃ¡n. | She said harsh words to her."
+       ex = "'Láa hal súut hlgitl'gán. | She said harsh words to her."
      
      Entry Text::Shoebox::Entry=ARRAY(0x1559284) contains:
-       hw = "tlak'alÃ¡ang"
+       hw = "tlak'aláang"
        cit = "led-398"
        pos = "noun"
        engl = "the shelter of a tree"
@@ -157,30 +157,30 @@ that is ripe for dumping into a Perl hash. So:
 
 And that works perfectly, assuming we never have an entry like this:
 
-      \hw sÃºut hlgitl'Ã¡a
+      \hw súut hlgitl'áa
       \cit hsd; led-149; led-411
       \engl speak harshly to someone
       \engl insult
-      \ex 'LÃ¡a hal sÃºut hlgitl'gÃ¡n. | She said harsh words to her.
+      \ex 'Láa hal súut hlgitl'gán. | She said harsh words to her.
 
 In that case, because there's two "engl" fields, `$entry->as_list` would
 return this:
 
      (
-      'hw'   => "sÃºut hlgitl'Ã¡a",
+      'hw'   => "súut hlgitl'áa",
       'cit'  => "hsd; led-149; led-411",
       'engl' => "speak harshly to someone",
       'engl' => "insult",
-      'ex'   => "'LÃ¡a hal sÃºut hlgitl'gÃ¡n. | She said harsh words to her.",
+      'ex'   => "'Láa hal súut hlgitl'gán. | She said harsh words to her.",
      )
 
 And once we dump that into the hash %e, we would end up with just this:
 
      (
-      'hw'   => "sÃºut hlgitl'Ã¡a",
+      'hw'   => "súut hlgitl'áa",
       'cit'  => "hsd; led-149; led-411",
       'engl' => "insult",
-      'ex'   => "'LÃ¡a hal sÃºut hlgitl'gÃ¡n. | She said harsh words to her.",
+      'ex'   => "'Láa hal súut hlgitl'gán. | She said harsh words to her.",
      )
 
 ...since, of course, hash keys have to be unique in Perl hashes. If you
@@ -294,12 +294,12 @@ lexicon output. We can exercise this with some literal text:
       $rtf->prolog();  # sets up sane defaults
 
       $rtf->paragraph(
-        [ \'\b',    "tlak'alÃ¡ang: " ],
+        [ \'\b',    "tlak'aláang: " ],
         [ \'\b\i',  "n." ],
         " the shelter of a tree"
       );
       $rtf->paragraph(
-        [ \'\b',    "anÃ¡a: " ],
+        [ \'\b',    "anáa: " ],
         [ \'\b\i',  "adv." ],
         " inside a house; at home"
       );
@@ -377,7 +377,7 @@ alphabetical order? A first hack is something like this:
 And that indeed works fine. But suppose one of the linguists comes by
 and adds these three entries into our little database:
 
-      \hw gÃ­i
+      \hw gíi
       \pos auxiliary verb
       \engl already; always; often
       
@@ -385,7 +385,7 @@ and adds these three entries into our little database:
       \pos postposition
       \engl there
       
-      \hw gÃ­i
+      \hw gíi
       \pos verb
       \engl swim away [of fish]
 
@@ -394,19 +394,19 @@ When we run our program, there's trouble with the output:
 ![](/images/_pub_2004_03_25_dictionaries/six_entries_sorted1.gif){width="487"
 height="153"}
 
-First off, the second "gÃ­i" (the verb for fish swimming away) was stored
-as `$headword2entry{'gÃ­i'}` and that overwrote the first "gÃ­i" entry
-(the one that means already, always, or often). And secondly, "gÃ­i" got
+First off, the second "gíi" (the verb for fish swimming away) was stored
+as `$headword2entry{'gíi'}` and that overwrote the first "gíi" entry
+(the one that means already, always, or often). And secondly, "gíi" got
 sorted *after* "gu"!
 
 The first problem can be solved by changing from the current data
 structure, which is like this:
 
-      $headword2entry{ 'gÃ­i' } = ...one_entry...;
+      $headword2entry{ 'gíi' } = ...one_entry...;
 
 over to a new data structure, which is like this:
 
-      $headword2entries{ 'gÃ­i' } =
+      $headword2entries{ 'gíi' } =
         [ ...one_entry... , ...another_entry..., ...maybe_even_another... ];
 
 ...even though in most cases that list will hold just one entry.
@@ -426,14 +426,14 @@ dereferencing gets a bit thick:
         }
       }
 
-And that works just right: both "gÃ­i" entries show up.
+And that works just right: both "gíi" entries show up.
 
-Now how to get `sort keys %headword2entries` to sort "gÃ­i" *before*
+Now how to get `sort keys %headword2entries` to sort "gíi" *before*
 "gu"? The default `sort()` that Perl uses just sorts ASCIIbetically,
-where "Ã­" comes not just after "u", but actually after all the
+where "í" comes not just after "u", but actually after all the
 unaccented letters. We can get Perl to use a smarter `sort()` if we add
 a "use locale;" line and see about changing our current locale to French
-or German or something that'd know that "Ã­" sorts before "u". This
+or German or something that'd know that "í" sorts before "u". This
 approach works in some cases, but suppose that you're dealing with a
 language that uses "dh" as a combined letter that comes after "d". You'd
 be out of luck, since there aren't any existing locales that (as far as
@@ -448,31 +448,31 @@ docs:
       use Sort::ArbBiLex (
         'custom_sort' =>    # that's the function name to define
         "
-         a A Ã  Ã Ã¡ Ã Ã¢ Ã Ã£ Ã Ã¤ Ã Ã¥ Ã Ã¦ Ã
+         a A à À á Á â Â ã Ã ä Ä å Å æ Æ
          b B
-         c C Ã§ Ã
-         d D Ã° Ã
-         e E Ã¨ Ã Ã© Ã Ãª Ã Ã« Ã
+         c C ç Ç
+         d D ð Ð
+         e E è È é É ê Ê ë Ë
          f F
          g G
          h H
-         i I Ã¬ Ã Ã­ Ã Ã® Ã Ã¯ Ã
+         i I ì Ì í Í î Î ï Ï
          j J
          k K
          l L
          m M
-         n N Ã± Ã
-         o O Ã² Ã Ã³ Ã Ã´ Ã Ãµ Ã Ã¶ Ã Ã¸ Ã
+         n N ñ Ñ
+         o O ò Ò ó Ó ô Ô õ Õ ö Ö ø Ø
          p P
          q Q
          r R
-         s S Ã
-         t T Ã¾ Ã
-         u U Ã¹ Ã Ãº Ã Ã» Ã Ã¼ Ã
+         s S ß
+         t T þ Þ
+         u U ù Ù ú Ú û Û ü Ü
          v V
          w W
          x X
-         y Y Ã½ Ã Ã¿
+         y Y ý Ý ÿ
          z Z
         "
       );
@@ -481,27 +481,27 @@ And if we need that "dh" to be a new letter between "d" and "e", it's a
 simple matter of adding a line to the above code:
 
          ...
-         d D Ã° Ã
+         d D ð Ð
          dh Dh
-         e E Ã¨ Ã Ã© Ã Ãª Ã Ã« Ã
+         e E è È é É ê Ê ë Ë
          ...
 
 And if the above sort order isn't right, we can fix this by just moving
 things around. For example, a few Haida words use an x-circumflex
 character for an odd pharyngeal sound, and since that character isn't in
 Latin-1, the folks working on Haida use a special font that replaces the
-Latin-1 Ã¾ character with the x-circumflex. To have that sort as a letter
+Latin-1 þ character with the x-circumflex. To have that sort as a letter
 after x, we'd rearrange the end of the above sort-order to read like
 this:
 
          ...
          t T
-         u U Ã¹ Ã Ãº Ã Ã» Ã Ã¼ Ã
+         u U ù Ù ú Ú û Û ü Ü
          v V
          w W
          x X
-         Ã¾ Ã
-         y Y Ã½ Ã Ã¿
+         þ Þ
+         y Y ý Ý ÿ
          z Z
 
 Once we get the big `use Sort::ArbBiLex (...);` statement set up just
@@ -537,11 +537,11 @@ The reverse lexicon could be just `%english2native` with entries like:
 
       $english2native{'there'} = "gu";
 
-But there could be several words that mean "there" -- like "gyaasdÃ¡an"
+But there could be several words that mean "there" -- like "gyaasdáan"
 -- so we'd have to use an array here, just as we did in
 `%headword2entries`, like this:
 
-      $english2native{'there'} = [ "gu", "gyaasdÃ¡an" ];
+      $english2native{'there'} = [ "gu", "gyaasdáan" ];
 
 We can implement this by changing our initial lexicon-scanning routine
 to add a line to push to `@{$english2native{each_english_bit}}`, like
@@ -566,7 +566,7 @@ the main dictionary:
       }
 
 All we need now is a routine, `reversables()`, that can take the string
-"already; always; often" (from the *gÃ­i* entry) and turn it into the
+"already; always; often" (from the *gíi* entry) and turn it into the
 list ("already," "always," "often"), and to take the string "the shelter
 of a tree" and turn it into the one-item list `("shelter of a tree")`.
 (If we left the "the" on there, we'd have a huge bunch of entries under
@@ -586,7 +586,7 @@ This function is a decent first hack:
         return @english;
       }
 
-However, consider the entry **anÃ¡a:** "inside a house; at home" -- our
+However, consider the entry **anáa:** "inside a house; at home" -- our
 `reversables()` function will return this as the list
 `("inside a house", "at home")`. That seems passable, but if I were
 looking for a word like this in the English end of the dictionary, I'd
@@ -652,7 +652,7 @@ to this:
         }
 
 With that in place (and with a "\\ehw home, at; house, inside a" line in
-the "anÃ¡a" entry just to get the ball rolling), our program runs and
+the "anáa" entry just to get the ball rolling), our program runs and
 spits out an English index after the Haida dictionary:
 
 ![](/images/_pub_2004_03_25_dictionaries/reversed_index.gif){width="347"
@@ -662,7 +662,7 @@ height="318"}
 
 There's two optional parts of the entries that we haven't used yet: the
 citation fields, like "\\cit hsd; led-149; led-411", and the example
-sentences field, like "\\ex 'LÃ¡a hal sÃºut hlgitl'gÃ¡n. | She said harsh
+sentences field, like "\\ex 'Láa hal súut hlgitl'gán. | She said harsh
 words to her.". The citation fields are typically only of importance to
 the editors, who might want to spot-check words against the places in
 the text where they were found. (And typically the editors are the only
@@ -700,7 +700,7 @@ concise way of saying "if this is for the editors and if there's a
 citation in this entry, then print a space and a bracket before it, and
 a bracket after it -- otherwise don't add anything".
 
-Our example sentences ("\\ex 'LÃ¡a hal sÃºut hlgitl'gÃ¡n. | She said harsh
+Our example sentences ("\\ex 'Láa hal súut hlgitl'gán. | She said harsh
 words to her".) should probably end up in any normal dictionary, but of
 course we wouldn't want to try adding the contents of `$e{'ex'}` with
 formatting codes around it if it weren't actually present in this entry.
@@ -876,31 +876,31 @@ We're in a hurry, and so we really appreciate Perl.
       use Sort::ArbBiLex (
         'custom_sort' =>
         "
-         a A Ã  Ã Ã¡ Ã Ã¢ Ã Ã£ Ã Ã¤ Ã Ã¥ Ã Ã¦ Ã
+         a A à À á Á â Â ã Ã ä Ä å Å æ Æ
          b B
-         c C Ã§ Ã
-         d D Ã° Ã
-         e E Ã¨ Ã Ã© Ã Ãª Ã Ã« Ã
+         c C ç Ç
+         d D ð Ð
+         e E è È é É ê Ê ë Ë
          f F
          g G
          h H
-         i I Ã¬ Ã Ã­ Ã Ã® Ã Ã¯ Ã
+         i I ì Ì í Í î Î ï Ï
          j J
          k K
          l L
          m M
-         n N Ã± Ã
-         o O Ã² Ã Ã³ Ã Ã´ Ã Ãµ Ã Ã¶ Ã Ã¸ Ã
+         n N ñ Ñ
+         o O ò Ò ó Ó ô Ô õ Õ ö Ö ø Ø
          p P
          q Q
          r R
-         s S Ã
-         t T Ã¾ Ã
-         u U Ã¹ Ã Ãº Ã Ã» Ã Ã¼ Ã
+         s S ß
+         t T þ Þ
+         u U ù Ù ú Ú û Û ü Ü
          v V
          w W
          x X
-         y Y Ã½ Ã Ã¿
+         y Y ý Ý ÿ
          z Z
         "
       );

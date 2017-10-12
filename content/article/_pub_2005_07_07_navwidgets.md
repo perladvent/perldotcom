@@ -1,14 +1,14 @@
 {
-   "image" : null,
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_07_07_navwidgets/111-menus.gif",
    "authors" : [
       "shlomi-fish"
    ],
    "description" : " Navigation menus are a group of links given at one side of the page that allows users to navigate to different places of a website. Navigation menus allow site visitors to explore other pages of the site and to...",
-   "thumbnail" : "/images/_pub_2005_07_07_navwidgets/111-menus.gif",
-   "categories" : "Web",
-   "title" : "Building Navigation Menus",
-   "slug" : "/pub/2005/07/07/navwidgets",
+   "image" : null,
    "date" : "2005-07-07T00:00:00-08:00",
+   "slug" : "/pub/2005/07/07/navwidgets",
+   "categories" : "Web",
    "tags" : [
       "html-design",
       "html-menus",
@@ -16,7 +16,7 @@
       "html-widgets-navmenu",
       "perl-html-modules"
    ],
-   "draft" : null
+   "title" : "Building Navigation Menus"
 }
 
 
@@ -363,7 +363,7 @@ the
 changes](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/article/examples/embellish-2-fine-grained-delta.diff)
 shows several more additions. Their implications are:
 
-1.  Both English resumÃ©s have a `'skip' => 1,` pair. This caused these
+1.  Both English resumés have a `'skip' => 1,` pair. This caused these
     pages to [appear in the navigation
     menu](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/article/examples/fine-grained-site-flow/dest/me/resumes/),
     but not to be part of the traversal flow. Clicking "next" at that

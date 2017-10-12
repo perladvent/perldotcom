@@ -1,20 +1,20 @@
 {
-   "thumbnail" : "/images/_pub_2004_07_30_lightningtalk/111-talks.gif",
-   "categories" : "Community",
-   "description" : " After the keynotes, the most popular sessions at most Perl conferences tend to be the lightning talks. Each session consists of about 10 to 15 lightning talks &mdash; talks typically lasting individually no more than five minutes &mdash; back...",
-   "title" : "Giving Lightning Talks",
-   "image" : null,
-   "authors" : [
-      "mark-fowler"
-   ],
-   "draft" : null,
-   "slug" : "/pub/2004/07/30/lightningtalk",
    "date" : "2004-07-30T00:00:00-08:00",
+   "slug" : "/pub/2004/07/30/lightningtalk",
+   "categories" : "Community",
    "tags" : [
       "lightning-talk",
       "oscon",
       "yapc"
-   ]
+   ],
+   "title" : "Giving Lightning Talks",
+   "thumbnail" : "/images/_pub_2004_07_30_lightningtalk/111-talks.gif",
+   "draft" : null,
+   "authors" : [
+      "mark-fowler"
+   ],
+   "image" : null,
+   "description" : " After the keynotes, the most popular sessions at most Perl conferences tend to be the lightning talks. Each session consists of about 10 to 15 lightning talks &mdash; talks typically lasting individually no more than five minutes &mdash; back..."
 }
 
 
@@ -23,8 +23,8 @@
 
 After the keynotes, the most popular sessions at most Perl conferences
 tend to be the lightning talks. Each session consists of about 10 to 15
-lightning talks â talks typically lasting individually no more than five
-minutes â back to back. As well as being tremendously interesting and
+lightning talks — talks typically lasting individually no more than five
+minutes — back to back. As well as being tremendously interesting and
 entertaining for attendees, the conference organizers recognize that
 they offer an unequalled opportunity for new speakers to present for the
 first time without going to the lengths required for a longer talk.
@@ -39,7 +39,7 @@ know.
 Lightning talks are a great way to start speaking, but they do come with
 their own potential problems. Even the seasoned presenter makes mistakes
 when presenting and has had lightning talks go horribly, horribly wrong.
-Luckily, Perl audiences are very forgiving when this happens â after
+Luckily, Perl audiences are very forgiving when this happens — after
 all, it's happened to half the audience at sometime too, so it's nothing
 to get too worked up about. However, there are a few things you can
 consider when writing your talk that will prevent you from sabotaging
@@ -57,7 +57,7 @@ They've got a full five minutes, damn it, and they're gonna *use* them.
 
 Here's the secret; No one cares if your lightning talk only lasts four
 minutes. No one cares if it lasts three. I've seen talks that last two
-minutes and the crowd loved it. But *everyone* cares if it lasts six â
+minutes and the crowd loved it. But *everyone* cares if it lasts six —
 especially if the important point you need to make happens at five
 minutes and 10 seconds. At a YAPC or other event with strict time
 keeping you'll be cut off at five, and no one will hear what you were
@@ -75,7 +75,7 @@ Actually, that bit about not explaining much before your first point
 isn't really true. You see, if you're explaining the background to the
 problem, that *itself* has to be your first point. You must carry your
 audience along, keeping them interested until you hit what you consider
-to be the *actual* point of the presentation. You know how to do this â
+to be the *actual* point of the presentation. You know how to do this —
 you know to generalize your problem into the larger problem that
 everyone has and therefore cares about, right?
 
@@ -130,7 +130,7 @@ index cards, each with one word on it to remind him what he was going to
 talk about next,. And each one he'd theatrically throw over his shoulder
 after he was done with it. Remember, the slides are to show things to
 the audience, not to help you remember what you're talking about. Think
-of the lightning talk as a narrative with visual aids â someone once
+of the lightning talk as a narrative with visual aids — someone once
 told me presenting a lightning talk is just like having a conversation
 with the audience where they don't speak for five minutes.
 
@@ -146,7 +146,7 @@ The audience bores easily so it's important that you don't keep them
 waiting before you start speaking. If you have your slides on your
 laptop make sure everything is set up so you can start talking as soon
 as it's plugged in. Set up and load all the apps you're going to use
-first â no one wants to be caught on stage in an awkward silence with
+first — no one wants to be caught on stage in an awkward silence with
 nothing to say while they wait the 20 seconds it takes Mozilla to load.
 While you're at it don't forget to close down instant-messenger clients,
 calendaring apps, and anything else that might randomly pop up dialogs
@@ -165,7 +165,7 @@ laptops is to work out who's talking before you and arrange to use their
 computer. One of the major drawbacks to this is, of course, that you
 might not be familiar with their setup. This means that you should, at
 the very least, run through your presentation. Don't assume that one web
-browser is like any other â they all have slightly different ways of
+browser is like any other — they all have slightly different ways of
 laying out pages and having plugins installed. Try it first to find
 problems while no one is watching, rather than trying to debug your
 presentation setup on stage. Have your own laptop ready in case theirs
@@ -178,7 +178,7 @@ choices of presentation software. Although there isn't one right piece
 of software for everyone, there are definitely wrong choices. That wrong
 choice is anything that requires any thought on your part while you're
 presenting. It's stupidly hard to operate a computer and talk at the
-same time â especially when you're not sitting in front of the machine
+same time — especially when you're not sitting in front of the machine
 but standing at a weird angle that makes it almost impossible to operate
 a mouse or track pad. During a lightning talk it's vital that you keep
 your rapport with the audience, rather than diverting your attention to
@@ -186,14 +186,14 @@ the computer every slide change. Unlike a 40-minute talk, you don't have
 time to take breaks between slides.
 
 For this reason I prefer software that you just hit one key or click the
-mouse to go to the next slide â I follow the rule that anything that
+mouse to go to the next slide — I follow the rule that anything that
 requires you to move the mouse is probably a failure. So if you *must*
 present from a web browser make sure that the links to move between
 places are in the same physical location on the page, preferably in the
 top left corner. And make sure that you don't have to scroll your
 slides. Remember kids, HTML isn't a presentation language so the only
-way to ensure that it doesn't give you unexpected surprises â suddenly
-scrolling, missing graphics, crazy fonts â is to run through the
+way to ensure that it doesn't give you unexpected surprises — suddenly
+scrolling, missing graphics, crazy fonts — is to run through the
 presentation with the web browser you'll use on the machine you want to
 use beforehand. All web browsers do *not* render the same.
 

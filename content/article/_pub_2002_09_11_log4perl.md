@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "tags" : [
-      "log4perl-log4j-logging"
-   ],
-   "date" : "2002-09-11T00:00:00-08:00",
-   "slug" : "/pub/2002/09/11/log4perl",
-   "title" : "Retire your debugger, log smartly with Log::Log4perl!",
-   "description" : "You've rolled out an application and it produces mysterious, sporadic errors? That's pretty common, even if fairly well-tested applications are exposed to real-world data. How can you track down when and where exactly your problem occurs? What kind of user...",
-   "categories" : "Debugging",
    "thumbnail" : "/images/_pub_2002_09_11_log4perl/111-log4perl.gif",
+   "draft" : null,
    "authors" : [
       "michael-schilli"
    ],
-   "image" : null
+   "description" : "You've rolled out an application and it produces mysterious, sporadic errors? That's pretty common, even if fairly well-tested applications are exposed to real-world data. How can you track down when and where exactly your problem occurs? What kind of user...",
+   "image" : null,
+   "categories" : "Debugging",
+   "slug" : "/pub/2002/09/11/log4perl",
+   "date" : "2002-09-11T00:00:00-08:00",
+   "tags" : [
+      "log4perl-log4j-logging"
+   ],
+   "title" : "Retire your debugger, log smartly with Log::Log4perl!"
 }
 
 
@@ -48,7 +48,7 @@ crash.
 `Log::Log4perl` is different. It is a pure Perl port of the widely
 popular Apache/Jakarta `log4j` library \[3\] for Java, a project made
 public in 1999, which has been actively supported and enhanced by a team
-around head honcho *Ceki GÃ¼lcÃ¼* during the years.
+around head honcho *Ceki Gülcü* during the years.
 
 The comforting facts about `log4j` are that it's really well thought
 out, it's the alternative logging standard for Java and it's been in use

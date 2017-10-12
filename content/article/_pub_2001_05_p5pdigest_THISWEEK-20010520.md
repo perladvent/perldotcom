@@ -1,16 +1,16 @@
 {
-   "title" : "This Week on p5p 2001/05/20",
-   "thumbnail" : null,
    "categories" : "community",
-   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters...",
+   "slug" : "/pub/2001/05/p5pdigest/THISWEEK-20010520",
+   "date" : "2001-05-06T00:00:00-08:00",
+   "tags" : [],
+   "title" : "This Week on p5p 2001/05/20",
+   "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "draft" : null,
-   "tags" : [],
-   "date" : "2001-05-06T00:00:00-08:00",
-   "slug" : "/pub/2001/05/p5pdigest/THISWEEK-20010520"
+   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters...",
+   "image" : null
 }
 
 

@@ -1,5 +1,6 @@
 {
-   "draft" : null,
+   "categories" : "perl-6",
+   "date" : "2003-06-25T00:00:00-08:00",
    "slug" : "/pub/2003/06/25/perl6essentials",
    "tags" : [
       "design-principles-in-perl-6",
@@ -7,17 +8,16 @@
       "perl-6",
       "perl-6-essentials"
    ],
-   "date" : "2003-06-25T00:00:00-08:00",
-   "categories" : "perl-6",
-   "thumbnail" : "/images/_pub_2003_06_25_perl6essentials/111-perl_design.gif",
-   "description" : " Editor's note: Perl 6 Essentials is the first book to offer a peek into the next major version of the Perl language. It covers the development of Perl 6 syntax as well as Parrot, the language-independent interpreter developed as...",
    "title" : "Perl 6 Design Philosophy",
-   "image" : null,
+   "thumbnail" : "/images/_pub_2003_06_25_perl6essentials/111-perl_design.gif",
+   "draft" : null,
    "authors" : [
       "allison-randal",
       "dan-sugalski",
-      "leopold-tÃ¶tsch"
-   ]
+      "leopold-tötsch"
+   ],
+   "image" : null,
+   "description" : " Editor's note: Perl 6 Essentials is the first book to offer a peek into the next major version of the Perl language. It covers the development of Perl 6 syntax as well as Parrot, the language-independent interpreter developed as..."
 }
 
 

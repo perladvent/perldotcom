@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2000/09/perl6mail",
-   "tags" : [],
    "date" : "2000-09-05T00:00:00-08:00",
+   "slug" : "/pub/2000/09/perl6mail",
+   "categories" : "perl-6",
+   "tags" : [],
+   "title" : "Guide to the Perl 6 Working Groups",
+   "thumbnail" : null,
    "draft" : null,
-   "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "thumbnail" : null,
-   "categories" : "perl-6",
-   "description" : " Table of Contents &#149;Announcements and Overviews &#149;Internals &#149;Language &nbsp;&nbsp;&#149;perl6-language-data &nbsp;&nbsp;&#149;perl6-language-datetime &nbsp;&nbsp;&#149;perl6-language-errors &nbsp;&nbsp;&#149;perl6-language-flow &nbsp;&nbsp;&#149;perl6-language-io &nbsp;&nbsp;&#149;perl6-language-mlc &nbsp;&nbsp;&#149;perl6-language-objects &nbsp;&nbsp;&#149;perl6-language-regex &nbsp;&nbsp;&#149;perl6-language-strict &nbsp;&nbsp;&#149;perl6-language-subs &nbsp;&nbsp;&#149;perl6-language-unlink &#149;Miscellaneous Larry said at the Perl conference this summer that the old model of Perl development was not working well...",
-   "title" : "Guide to the Perl 6 Working Groups"
+   "image" : null,
+   "description" : " Table of Contents &#149;Announcements and Overviews &#149;Internals &#149;Language &nbsp;&nbsp;&#149;perl6-language-data &nbsp;&nbsp;&#149;perl6-language-datetime &nbsp;&nbsp;&#149;perl6-language-errors &nbsp;&nbsp;&#149;perl6-language-flow &nbsp;&nbsp;&#149;perl6-language-io &nbsp;&nbsp;&#149;perl6-language-mlc &nbsp;&nbsp;&#149;perl6-language-objects &nbsp;&nbsp;&#149;perl6-language-regex &nbsp;&nbsp;&#149;perl6-language-strict &nbsp;&nbsp;&#149;perl6-language-subs &nbsp;&nbsp;&#149;perl6-language-unlink &#149;Miscellaneous Larry said at the Perl conference this summer that the old model of Perl development was not working well..."
 }
 
 
@@ -21,21 +21,21 @@
   -------------------------------------------------------------------
   **Table of Contents**
 
-  â¢[Announcements and Overviews](#announcements%20and%20overviews)\
-  â¢[Internals](#internals)\
-  â¢[Language](#language)\
-  Â Â â¢[perl6-language-data](#perl6languagedata)\
-  Â Â â¢[perl6-language-datetime](#perl6languagedatetime)\
-  Â Â â¢[perl6-language-errors](#perl6languageerrors)\
-  Â Â â¢[perl6-language-flow](#perl6languageflow)\
-  Â Â â¢[perl6-language-io](#perl6languageio)\
-  Â Â â¢[perl6-language-mlc](#perl6languagemlc)\
-  Â Â â¢[perl6-language-objects](#perl6languageobjects)\
-  Â Â â¢[perl6-language-regex](#perl6languageregex)\
-  Â Â â¢[perl6-language-strict](#perl6languagestrict)\
-  Â Â â¢[perl6-language-subs](#perl6languagesubs)\
-  Â Â â¢[perl6-language-unlink](#perl6languageunlink)\
-  â¢[Miscellaneous](#miscellaneous)
+  •[Announcements and Overviews](#announcements%20and%20overviews)\
+  •[Internals](#internals)\
+  •[Language](#language)\
+    •[perl6-language-data](#perl6languagedata)\
+    •[perl6-language-datetime](#perl6languagedatetime)\
+    •[perl6-language-errors](#perl6languageerrors)\
+    •[perl6-language-flow](#perl6languageflow)\
+    •[perl6-language-io](#perl6languageio)\
+    •[perl6-language-mlc](#perl6languagemlc)\
+    •[perl6-language-objects](#perl6languageobjects)\
+    •[perl6-language-regex](#perl6languageregex)\
+    •[perl6-language-strict](#perl6languagestrict)\
+    •[perl6-language-subs](#perl6languagesubs)\
+    •[perl6-language-unlink](#perl6languageunlink)\
+  •[Miscellaneous](#miscellaneous)
   -------------------------------------------------------------------
 
 Larry said at the Perl conference this summer that the old model of Perl

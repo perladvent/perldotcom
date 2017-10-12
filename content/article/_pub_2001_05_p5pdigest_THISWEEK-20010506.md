@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2001/05/p5pdigest/THISWEEK-20010506",
-   "tags" : [],
-   "date" : "2001-05-06T00:00:00-08:00",
-   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters...",
-   "thumbnail" : null,
    "categories" : "community",
+   "slug" : "/pub/2001/05/p5pdigest/THISWEEK-20010506",
+   "date" : "2001-05-06T00:00:00-08:00",
    "title" : "This Week on p5p 2001/05/06",
-   "image" : null,
+   "tags" : [],
    "authors" : [
       "simon-cozens"
-   ]
+   ],
+   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters...",
+   "image" : null,
+   "thumbnail" : null,
+   "draft" : null
 }
 
 
@@ -216,7 +216,7 @@ sufficiently snide about becomes a feature."
 After four years in Perforce version control, Perl has finally seen its
 10,000th registered patch. Jarkko has this to say about it:
 
-> The 10000th patch was courtesy of Andreas KÃ¶aut;nig. Yes, I made itso
+> The 10000th patch was courtesy of Andreas Köaut;nig. Yes, I made itso
 > by selective patch ordering :-) -- but it doesn't diminish the
 > significance of the choice.
 >

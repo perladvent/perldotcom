@@ -1,16 +1,16 @@
 {
-   "title" : "Return of Program Repair Shop and Red Flags",
-   "description" : " Unprogramming Computing the remainder Splitting the Input Into Chunks Assembling the Result Red Flags Eliminate synthetic code Beware of special cases in loops Don't apply string operations to numbers Unprogramming A few weeks ago I got mail from Bruce,...",
+   "slug" : "/pub/2000/06/commify",
+   "date" : "2000-06-17T00:00:00-08:00",
    "categories" : "development",
-   "thumbnail" : null,
+   "tags" : [],
+   "title" : "Return of Program Repair Shop and Red Flags",
    "authors" : [
       "mark-jason-dominus"
    ],
    "image" : null,
+   "description" : " Unprogramming Computing the remainder Splitting the Input Into Chunks Assembling the Result Red Flags Eliminate synthetic code Beware of special cases in loops Don't apply string operations to numbers Unprogramming A few weeks ago I got mail from Bruce,...",
    "draft" : null,
-   "date" : "2000-06-17T00:00:00-08:00",
-   "tags" : [],
-   "slug" : "/pub/2000/06/commify"
+   "thumbnail" : null
 }
 
 

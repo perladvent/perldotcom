@@ -1,16 +1,16 @@
 {
    "title" : "Show off Perl in Plat_Forms 2012",
-   "description" : "Thanks to Torsten Raudssus, who wrote in with this announcement. What is Plat_Forms? Plat_Forms is a contest and competition in which top-class teams of three programmers compete to implement the same requirements for a web-based system within two days, using...",
-   "thumbnail" : null,
-   "categories" : "Community",
-   "authors" : [
-      "chromatic"
-   ],
-   "image" : null,
-   "draft" : null,
    "tags" : [],
    "date" : "2012-08-29T13:21:52-08:00",
-   "slug" : "/pub/2012/08/show-off-perl-in-plat-forms-2012"
+   "slug" : "/pub/2012/08/show-off-perl-in-plat-forms-2012",
+   "categories" : "Community",
+   "thumbnail" : null,
+   "draft" : null,
+   "description" : "Thanks to Torsten Raudssus, who wrote in with this announcement. What is Plat_Forms? Plat_Forms is a contest and competition in which top-class teams of three programmers compete to implement the same requirements for a web-based system within two days, using...",
+   "image" : null,
+   "authors" : [
+      "chromatic"
+   ]
 }
 
 
@@ -47,7 +47,7 @@ The contest will be conducted on October, 9-10, 2012. At the end of the
 2 days, the teams hand over their source code and a turnkey-runnable
 VMware configuration of their system. [2](#fn:footnote2){.footnote}
 
-The event is at the [Freie UniversitÃ¤t Berlin in Berlin,
+The event is at the [Freie Universität Berlin in Berlin,
 Germany](https://maps.google.com/maps?q=Freie+Universit%C3%83%C2%A4t+Berlin,+Berlin,+Germany&hl=en&ie=UTF8&ll=52.456009,13.293457&spn=22.652618,17.995605&sll=52.446685,13.285786&sspn=0.005509,0.004393&oq=Freie+Universit%C3%83%C2%A4t+berlin&t=h&hq=Freie+Universit%C3%83%C2%A4t+Berlin,+Berlin,+Germany&z=6).
 
 Perl and Plat\_Forms
@@ -92,10 +92,10 @@ like to sponsor, please contact him (**ASAP**):
 ------------------------------------------------------------------------
 
 1.  Taken from [Plat\_Forms
-    homepage](https://www.plat-forms.org/)[Â â©](#fnref:footnote1){.reversefootnote}
+    homepage](https://www.plat-forms.org/)[ ↩](#fnref:footnote1){.reversefootnote}
 
 2.  Taken from [Plat\_Forms 2012 rev2
-    homepage](https://www.plat-forms.org/platforms-2012-rev-2-announcement)[Â â©](#fnref:footnote2){.reversefootnote}
+    homepage](https://www.plat-forms.org/platforms-2012-rev-2-announcement)[ ↩](#fnref:footnote2){.reversefootnote}
 
 </div>
 

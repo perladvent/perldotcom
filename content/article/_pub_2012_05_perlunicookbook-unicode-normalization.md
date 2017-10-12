@@ -1,23 +1,23 @@
 {
-   "title" : "Perl Unicode Cookbook: Unicode Normalization",
-   "description" : "â 27: Unicode normalization Prescription one reminded you to always decompose and recompose Unicode data at the boundaries of your application. Unicode::Normalize can do much more for you. It supports multiple Unicode Normalization Forms. Normalization, of course, takes Unicode data...",
-   "categories" : "unicode",
-   "thumbnail" : null,
+   "description" : "℞ 27: Unicode normalization Prescription one reminded you to always decompose and recompose Unicode data at the boundaries of your application. Unicode::Normalize can do much more for you. It supports multiple Unicode Normalization Forms. Normalization, of course, takes Unicode data...",
+   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
+   "thumbnail" : null,
    "draft" : null,
+   "title" : "Perl Unicode Cookbook: Unicode Normalization",
    "tags" : [],
-   "date" : "2012-05-18T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicookbook-unicode-normalization"
+   "categories" : "unicode",
+   "slug" : "/pub/2012/05/perlunicookbook-unicode-normalization",
+   "date" : "2012-05-18T06:00:01-08:00"
 }
 
 
 
 
 
-â 27: Unicode normalization {#Unicode-normalization}
+℞ 27: Unicode normalization {#Unicode-normalization}
 ---------------------------
 
 Prescription one reminded you to [always decompose and recompose Unicode
@@ -52,13 +52,13 @@ according to their canonical combining classes and weeds out singletons.
      my $nfkd = NFKD($orig);
      my $nfkc = NFKC($orig);
 
-Previous: [â 26: Custom Character
+Previous: [℞ 26: Custom Character
 Properties](/media/_pub_2012_05_perlunicookbook-unicode-normalization/perlunicookbook-custom-character-properties.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_05_perlunicookbook-unicode-normalization/perlunicook-standard-preamble.html)
 
-Next: [â 28: Convert non-ASCII Unicode
+Next: [℞ 28: Convert non-ASCII Unicode
 Numerics](/media/_pub_2012_05_perlunicookbook-unicode-normalization/perlunicookbook-convert-non-ascii-unicode-numerics.html)
 
 

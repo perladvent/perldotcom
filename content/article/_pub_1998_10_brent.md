@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/1998/10/brent",
+   "title" : "Perl Rescues a Major Corporation",
    "tags" : [],
+   "categories" : "community",
    "date" : "1998-10-21T00:00:00-08:00",
-   "draft" : null,
+   "slug" : "/pub/1998/10/brent",
+   "description" : null,
    "image" : null,
    "authors" : [
       "brent-michalski"
    ],
-   "thumbnail" : null,
-   "categories" : "community",
-   "description" : null,
-   "title" : "Perl Rescues a Major Corporation"
+   "draft" : null,
+   "thumbnail" : null
 }
 
 

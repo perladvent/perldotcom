@@ -1,20 +1,20 @@
 {
+   "draft" : null,
    "thumbnail" : null,
-   "categories" : "CPAN",
-   "description" : " Adobe's PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document...",
-   "title" : "PDF Processing with Perl",
    "image" : null,
+   "description" : " Adobe's PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document...",
    "authors" : [
       "detlef-groth"
    ],
-   "draft" : null,
-   "slug" : "/pub/2007/09/20/pdf-processing-with-perl",
+   "title" : "PDF Processing with Perl",
    "tags" : [
       "creating-pdfs",
       "pdf",
       "pdf-create",
       "pdf-reuse"
    ],
+   "categories" : "CPAN",
+   "slug" : "/pub/2007/09/20/pdf-processing-with-perl",
    "date" : "2007-09-21T00:00:00-08:00"
 }
 
@@ -412,7 +412,7 @@ related children on those last entries. The root bookmarks get collected
 as an array, and the loop adds the children as a reference to an array,
 and so on for the grand children. The result is a nested complex data
 structure which stores all children in the `kids` attribute of the
-parent's bookmarks hashâan array of hashes containing other arrays of
+parent's bookmarks hash—an array of hashes containing other arrays of
 hashes and so on.
 
 The parsing subroutine for the bookmarks file
@@ -463,7 +463,7 @@ worth it to write a GUI for combining PDF documents. The [Perl/Tk
 toolkit](http://search.cpan.org/dist/Tk/) founded on the old Tix widgets
 for Tcl/Tk is not very modern, although this might change with the
 [Tcl/Tk release 8.5](http://www.tcl.tk/software/tcltk/8.5.html) and the
-Tile widgetsâbut it is very portable. That's why I used it for the GUI
+Tile widgets—but it is very portable. That's why I used it for the GUI
 example. Because I put a layer between the `PDF::Reuse` package and the
 command line application with the `CombinePDFs` package, it was easy to
 reuse those parts in the Tk-application *app-combine-tk-pdfs.pl*.

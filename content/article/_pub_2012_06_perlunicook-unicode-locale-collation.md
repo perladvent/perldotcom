@@ -1,23 +1,23 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2012/06/perlunicook-unicode-locale-collation",
-   "tags" : [],
    "date" : "2012-06-05T06:00:01-08:00",
-   "thumbnail" : null,
+   "slug" : "/pub/2012/06/perlunicook-unicode-locale-collation",
    "categories" : "unicode",
-   "description" : "â 37: Unicode locale collation As you've already seen, Unicode-aware sorting respects Unicode character properties. You can't sort by codepoint and expect to get accurate results, not even if you stick with pure ASCII. The world is a complicated place....",
    "title" : "Perl Unicode Cookbook: Unicode Locale Collation",
-   "image" : null,
+   "tags" : [],
+   "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "tom-christiansen"
-   ]
+   ],
+   "image" : null,
+   "description" : "℞ 37: Unicode locale collation As you've already seen, Unicode-aware sorting respects Unicode character properties. You can't sort by codepoint and expect to get accurate results, not even if you stick with pure ASCII. The world is a complicated place...."
 }
 
 
 
 
 
-â 37: Unicode locale collation {#Unicode-locale-collation}
+℞ 37: Unicode locale collation {#Unicode-locale-collation}
 ------------------------------
 
 As you've already seen, [Unicode-aware
@@ -46,13 +46,13 @@ The *ucsort* program mentioned in [Perl Unicode recipe
 35](/media/_pub_2012_06_perlunicook-unicode-locale-collation/perlunicook-unicode-collation.html)
 accepts a `--locale` parameter.
 
-Previous: [â 36: Case- and Accent-insensitive
+Previous: [℞ 36: Case- and Accent-insensitive
 Sorting](/media/_pub_2012_06_perlunicook-unicode-locale-collation/perlunicook-case--and-accent-insensitive-sorting.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_06_perlunicook-unicode-locale-collation/perlunicook-standard-preamble.html)
 
-Next: [â 38: Make cmp Work on Text instead of
+Next: [℞ 38: Make cmp Work on Text instead of
 Codepoints](/media/_pub_2012_06_perlunicook-unicode-locale-collation/perlunicook-make-cmp-work-on-text-instead-of-codepoints.html)
 
 

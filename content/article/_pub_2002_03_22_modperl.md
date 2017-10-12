@@ -1,18 +1,18 @@
 {
-   "title" : "mod_perl in 30 minutes",
    "thumbnail" : "/images/_pub_2002_03_22_modperl/111-intro_modperl.gif",
-   "categories" : "web",
-   "description" : " Introduction In the previous article, I've shown quite amazing Web performance reports from companies that have deployed mod_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod_perl...",
+   "draft" : null,
    "authors" : [
       "stas-bekman"
    ],
    "image" : null,
-   "draft" : null,
+   "description" : " Introduction In the previous article, I've shown quite amazing Web performance reports from companies that have deployed mod_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod_perl...",
+   "date" : "2002-03-22T00:00:00-08:00",
+   "slug" : "/pub/2002/03/22/modperl",
+   "categories" : "web",
+   "title" : "mod_perl in 30 minutes",
    "tags" : [
       "mod-perl"
-   ],
-   "date" : "2002-03-22T00:00:00-08:00",
-   "slug" : "/pub/2002/03/22/modperl"
+   ]
 }
 
 
@@ -209,7 +209,7 @@ executed. If `make test` fails, then `make install` will not be
 executed.
 
 Finally, change to the Apache source distribution directory, run
-makeÂ install to create the Apache directory tree and install Apache
+make install to create the Apache directory tree and install Apache
 header files (*\*.h*), default configuration files (*\*.conf*), the
 *httpd* executable and a few other programs.
 

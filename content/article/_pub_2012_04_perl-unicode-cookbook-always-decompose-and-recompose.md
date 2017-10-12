@@ -1,15 +1,15 @@
 {
-   "description" : "To handle Unicode effectively, always decompose on the way in, then\nrecompose on the way out.",
-   "thumbnail" : null,
-   "categories" : "unicode",
-   "title" : "Perl Unicode Cookbook: Always Decompose and Recompose",
    "image" : null,
+   "description" : "To handle Unicode effectively, always decompose on the way in, then\nrecompose on the way out.",
    "authors" : [
       "tom-christiansen"
    ],
+   "thumbnail" : null,
    "draft" : null,
-   "slug" : "/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose",
+   "title" : "Perl Unicode Cookbook: Always Decompose and Recompose",
    "tags" : [],
+   "categories" : "unicode",
+   "slug" : "/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose",
    "date" : "2012-04-03T06:00:01-08:00"
 }
 
@@ -17,12 +17,12 @@
 
 
 
-**â 1: Generic Unicode-savvy ï¬lter** {#Generic-Unicode-savvy-filter}
+**℞ 1: Generic Unicode-savvy ﬁlter** {#Generic-Unicode-savvy-filter}
 ------------------------------------
 
 Unicode allows multiple representations of the same characters.
 Comparing such strings for equivalence (sorting, searching, exact
-matching) requires careâincluding a coherent and consistent strategy of
+matching) requires care—including a coherent and consistent strategy of
 normalizing these representations to well-understood forms. Enter
 [Unicode::Normalize](http://search.cpan.org/perldoc?Unicode::Normalize).
 
@@ -44,7 +44,7 @@ FAQ](http://www.unicode.org/faq/normalization.html) for more details.
 Series Index: [The Standard
 Preamble](/media/_pub_2012_04_perl-unicode-cookbook-always-decompose-and-recompose/perlunicook-standard-preamble.html)
 
-Next: [â 2: Fine-Tuning Unicode
+Next: [℞ 2: Fine-Tuning Unicode
 Warnings](/media/_pub_2012_04_perl-unicode-cookbook-always-decompose-and-recompose/perl-unicook-fine-tuning-warnings.html)
 
 

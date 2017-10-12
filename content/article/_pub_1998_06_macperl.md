@@ -1,5 +1,11 @@
 {
+   "thumbnail" : null,
    "draft" : null,
+   "image" : null,
+   "description" : " New MacPerl CD-ROM Available Rich Morin (rdm@cfcl.com) of Prime Time Freeware has produced the MacPerl CD-ROM, a distribution of the Perl for the Macintosh along with other Mac tools and documentation. I asked him about the MacPerl community and...",
+   "authors" : [
+      "perldotcom"
+   ],
    "tags" : [
       "mac",
       "macperl",
@@ -8,16 +14,10 @@
       "resources",
       "rich-morin"
    ],
-   "date" : "1998-06-03T00:00:00-08:00",
-   "slug" : "/pub/1998/06/macperl",
    "title" : "MacPerl Gains Ground",
-   "description" : " New MacPerl CD-ROM Available Rich Morin (rdm@cfcl.com) of Prime Time Freeware has produced the MacPerl CD-ROM, a distribution of the Perl for the Macintosh along with other Mac tools and documentation. I asked him about the MacPerl community and...",
-   "thumbnail" : null,
-   "categories" : "Mac",
-   "authors" : [
-      "perldotcom"
-   ],
-   "image" : null
+   "slug" : "/pub/1998/06/macperl",
+   "date" : "1998-06-03T00:00:00-08:00",
+   "categories" : "Mac"
 }
 
 
@@ -49,14 +49,14 @@ community.
 | ---                                                                   |
 |                                                                       |
 | *Prime Time Freeware*\                                                |
-| Â [MacPerl Page](http://www.ptf.com/macperl/)\                         |
-| Â [MacPerl CD-ROM](http://www.ptf.com/MacPerl/ptf_book/cdrom.html/)    |
+|  [MacPerl Page](http://www.ptf.com/macperl/)\                         |
+|  [MacPerl CD-ROM](http://www.ptf.com/MacPerl/ptf_book/cdrom.html/)    |
 |                                                                       |
 | *Matthias Neeracher*\                                                 |
-| Â [MacPerl Page](http://www.iis.ee.ethz.ch/~neeri/macintosh/perl.html) |
+|  [MacPerl Page](http://www.iis.ee.ethz.ch/~neeri/macintosh/perl.html) |
 |                                                                       |
 | *Perl Reference*\                                                     |
-| Â [Macintosh Links](http://reference.perl.com/query.cgi?mac)           |
+|  [Macintosh Links](http://reference.perl.com/query.cgi?mac)           |
 +-----------------------------------------------------------------------+
 
 *Matthias:* In fact, it's approximately 1000 and remains fairly stable.
@@ -149,7 +149,7 @@ distribution (but will not stop anybody from doing so either), because
 that would enlarge the standard distribution a lot. The numbers that I
 came up with:
 
-Â 
+ 
 Source File Size
 Lines of Code
 Mac specific core files

@@ -1,14 +1,15 @@
 {
-   "thumbnail" : "/images/_pub_2007_01_11_painless-ppm/111-PPM.gif",
-   "categories" : "windows",
-   "description" : " I have recently been working on an installation package for the Microsoft Windows series of operating systems (Windows 2000 and newer). One of the primary components of this installation package is the installation of ActiveState's distribution of Perl, known...",
-   "title" : "Painless Windows Module Installation with PPM",
-   "image" : null,
    "authors" : [
       "josh-stroschein"
    ],
+   "image" : null,
+   "description" : " I have recently been working on an installation package for the Microsoft Windows series of operating systems (Windows 2000 and newer). One of the primary components of this installation package is the installation of ActiveState's distribution of Perl, known...",
+   "thumbnail" : "/images/_pub_2007_01_11_painless-ppm/111-PPM.gif",
    "draft" : null,
+   "date" : "2007-01-11T00:00:00-08:00",
    "slug" : "/pub/2007/01/11/painless-ppm",
+   "categories" : "windows",
+   "title" : "Painless Windows Module Installation with PPM",
    "tags" : [
       "activestate-perl",
       "cpan",
@@ -16,8 +17,7 @@
       "ppm",
       "ppm-installation",
       "ppm-repositories"
-   ],
-   "date" : "2007-01-11T00:00:00-08:00"
+   ]
 }
 
 

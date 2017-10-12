@@ -1,5 +1,13 @@
 {
+   "authors" : [
+      "linda-julien"
+   ],
+   "image" : null,
+   "description" : " HTTP::Recorder is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces WWW::Mechanize scripts by default (see WWW::Mechanize by Andy Lester), but provides functionality to use your own custom logger. Why Use...",
+   "thumbnail" : "/images/_pub_2004_06_04_recorder/111-httprec.gif",
    "draft" : null,
+   "categories" : "Web",
+   "date" : "2004-06-04T00:00:00-08:00",
    "slug" : "/pub/2004/06/04/recorder",
    "tags" : [
       "proxy",
@@ -7,15 +15,7 @@
       "testing",
       "web"
    ],
-   "date" : "2004-06-04T00:00:00-08:00",
-   "description" : " HTTP::Recorder is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces WWW::Mechanize scripts by default (see WWW::Mechanize by Andy Lester), but provides functionality to use your own custom logger. Why Use...",
-   "categories" : "Web",
-   "thumbnail" : "/images/_pub_2004_06_04_recorder/111-httprec.gif",
-   "title" : "Web Testing with HTTP::Recorder",
-   "image" : null,
-   "authors" : [
-      "linda-julien"
-   ]
+   "title" : "Web Testing with HTTP::Recorder"
 }
 
 
@@ -46,7 +46,7 @@ tests that can be run again and again to check for regressions is even
 better. However, writing test scripts by hand can be tedious and prone
 to errors. You're more likely to write tests if it's easy to do so. The
 biggest obstacle to testing shouldn't be the mechanics of getting the
-tests written â it should be figuring out what needs to be tested, and
+tests written — it should be figuring out what needs to be tested, and
 how best to test it.
 
 Part of your test suite should be devoted to testing things the way the

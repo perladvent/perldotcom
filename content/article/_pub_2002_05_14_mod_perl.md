@@ -1,18 +1,18 @@
 {
-   "description" : " Introduction This article is the third in our series talking about the essential Perl basics that you should know before starting to program for mod_perl. Variables Globally, Lexically Scoped and Fully Qualified You will hear a lot about namespaces,...",
-   "categories" : "web",
-   "thumbnail" : null,
-   "title" : "The Perl You Need To Know - Part 3",
-   "image" : null,
    "authors" : [
       "stas-bekman"
    ],
+   "image" : null,
+   "description" : " Introduction This article is the third in our series talking about the essential Perl basics that you should know before starting to program for mod_perl. Variables Globally, Lexically Scoped and Fully Qualified You will hear a lot about namespaces,...",
    "draft" : null,
-   "slug" : "/pub/2002/05/14/mod_perl",
+   "thumbnail" : null,
    "date" : "2002-05-15T00:00:00-08:00",
+   "slug" : "/pub/2002/05/14/mod_perl",
+   "categories" : "web",
    "tags" : [
       "mod-perl-perl-do-require-use-lexical-global"
-   ]
+   ],
+   "title" : "The Perl You Need To Know - Part 3"
 }
 
 

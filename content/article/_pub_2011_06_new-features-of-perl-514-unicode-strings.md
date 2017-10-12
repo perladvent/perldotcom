@@ -1,16 +1,16 @@
 {
    "title" : "New Features of Perl 5.14: unicode_strings",
-   "thumbnail" : null,
+   "tags" : [],
+   "slug" : "/pub/2011/06/new-features-of-perl-514-unicode-strings",
+   "date" : "2011-06-08T11:12:39-08:00",
    "categories" : "development",
    "description" : "Perl 5.14 provides a new feature called unicode_strings to improve Unicode string handling.",
+   "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "image" : null,
-   "draft" : null,
-   "tags" : [],
-   "date" : "2011-06-08T11:12:39-08:00",
-   "slug" : "/pub/2011/06/new-features-of-perl-514-unicode-strings"
+   "thumbnail" : null,
+   "draft" : null
 }
 
 
@@ -39,7 +39,7 @@ For example, what should Perl assume if you read a character with a code
 point between 128 and 255? It's obviously not ASCII text. Is it Latin-1?
 Is it a raw byte? What should happen?
 
-If you intend it as a Latin-1 character (Ã, for example), then the
+If you intend it as a Latin-1 character (Ö, for example), then the
 regular expression metacharacter `\w` should match it, because an O even
 with a diaresis is still a letter. The Perl 5 documentation refers to
 this as "character semantics".

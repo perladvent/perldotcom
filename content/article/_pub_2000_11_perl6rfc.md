@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "date" : "2000-10-31T00:00:00-08:00",
-   "slug" : "/pub/2000/11/perl6rfc",
+   "thumbnail" : null,
    "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
+   "description" : " Table of Contents Problems with Proposals of Major Changes Problems with Proposals of Minor Changes Miscellaneous Problems Overall Problems Bottom Line A Very Brief Summary Discussion of major changes is pointless in the absence of a familiarity with internals...",
    "image" : null,
-   "title" : "Critique of the Perl 6 RFC Process",
-   "description" : " Table of Contents ÂProblems with Proposals of Major Changes ÂProblems with Proposals of Minor Changes ÂMiscellaneous Problems ÂOverall Problems ÂBottom Line A Very Brief Summary Discussion of major changes is pointless in the absence of a familiarity with internals...",
-   "thumbnail" : null,
-   "categories" : "Community"
+   "categories" : "Community",
+   "slug" : "/pub/2000/11/perl6rfc",
+   "date" : "2000-10-31T00:00:00-08:00",
+   "tags" : [],
+   "title" : "Critique of the Perl 6 RFC Process"
 }
 
 
@@ -20,15 +20,15 @@
   ---------------------------------------------------------------------------------------------------
   Table of Contents
 
-  â¢[Problems with Proposals of Major Changes](#problems%20with%20proposals%20of%20major%20changes)\
+  •[Problems with Proposals of Major Changes](#problems%20with%20proposals%20of%20major%20changes)\
   \
-  â¢[Problems with Proposals of Minor Changes](#problems%20with%20proposals%20of%20minor%20changes)\
+  •[Problems with Proposals of Minor Changes](#problems%20with%20proposals%20of%20minor%20changes)\
   \
-  â¢[Miscellaneous Problems](#miscellaneous%20problems)\
+  •[Miscellaneous Problems](#miscellaneous%20problems)\
   \
-  â¢[Overall Problems](#overall%20problems)\
+  •[Overall Problems](#overall%20problems)\
   \
-  â¢[Bottom Line](#bottom%20line)
+  •[Bottom Line](#bottom%20line)
   ---------------------------------------------------------------------------------------------------
 
 ### [A Very Brief Summary]{#a very brief summary}
@@ -336,8 +336,8 @@ character. (This part of the proposal was later withdrawn.)
 #### [Working Group Chairs Useless]{#working group chairs useless}
 
 Maybe 'regex language working group chair' is a good thing to put on
-your rÃ©sumÃ©, but I don't think I'll be doing that soon, because when you
-put something like that on your rÃ©sumÃ©, you always run the risk that an
+your résumé, but I don't think I'll be doing that soon, because when you
+put something like that on your résumé, you always run the risk that an
 interviewer will ask what it actually means, and if that happened to me
 I would have to say that I didn't know. I asked on the `perl6-meta` list
 what the working group chair's duties were, and it turned out that

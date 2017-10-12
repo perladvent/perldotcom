@@ -1,23 +1,23 @@
 {
-   "authors" : [
-      "tom-christiansen"
-   ],
-   "image" : null,
-   "title" : "Perl Unicode Cookbook: Custom Character Properties",
-   "description" : "â 26: Custom character properties Match Unicode Properties in Regex explained that ever Unicode character has one or more properties, specified by the Unicode consortium. You may extend these rule to define your own properties such that Perl can use...",
-   "categories" : "unicode",
-   "thumbnail" : null,
    "tags" : [],
+   "title" : "Perl Unicode Cookbook: Custom Character Properties",
+   "categories" : "unicode",
    "date" : "2012-05-17T06:00:01-08:00",
    "slug" : "/pub/2012/05/perlunicookbook-custom-character-properties",
-   "draft" : null
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : "℞ 26: Custom character properties Match Unicode Properties in Regex explained that ever Unicode character has one or more properties, specified by the Unicode consortium. You may extend these rule to define your own properties such that Perl can use...",
+   "image" : null,
+   "authors" : [
+      "tom-christiansen"
+   ]
 }
 
 
 
 
 
-â 26: Custom character properties {#Custom-character-properties}
+℞ 26: Custom character properties {#Custom-character-properties}
 ---------------------------------
 
 [Match Unicode Properties in
@@ -32,7 +32,7 @@ which returns a string conforming to a special format. The
 perlunicode](http://perldoc.perl.org/perlunicode.html#User-Defined-Character-Properties)
 describes this format in more detail.
 
-To deï¬ne at compile-time your own custom character properties for use in
+To deﬁne at compile-time your own custom character properties for use in
 regexes:
 
      # using private-use characters
@@ -49,13 +49,13 @@ regexes:
 
      if (/\p{Is_GraecoRoman_Title}/ { ... }
 
-Previous: [â 25: Match Unicode Properties in
+Previous: [℞ 25: Match Unicode Properties in
 Regex](/media/_pub_2012_05_perlunicookbook-custom-character-properties/perlunicook-match-unicode-properties-in-regex.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_05_perlunicookbook-custom-character-properties/perlunicook-standard-preamble.html)
 
-Next: [â 27: Unicode
+Next: [℞ 27: Unicode
 Normalization](/media/_pub_2012_05_perlunicookbook-custom-character-properties/perlunicookbook-unicode-normalization.html)
 
 

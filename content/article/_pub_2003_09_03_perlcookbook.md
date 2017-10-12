@@ -1,5 +1,15 @@
 {
+   "thumbnail" : null,
    "draft" : null,
+   "authors" : [
+      "tom-christiansen",
+      "nathan-torkington"
+   ],
+   "image" : null,
+   "description" : " Editor's note: The new edition of Perl Cookbook has released, so this week we continue to highlight recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 14 (\"Database Access\") and Chapter 18 (\"Internet...",
+   "categories" : "development",
+   "date" : "2003-09-03T00:00:00-08:00",
+   "slug" : "/pub/2003/09/03/perlcookbook",
    "tags" : [
       "nathan-torkington",
       "perl",
@@ -8,17 +18,7 @@
       "tom-christiansen",
       "using-sql-without-a-database-server"
    ],
-   "date" : "2003-09-03T00:00:00-08:00",
-   "slug" : "/pub/2003/09/03/perlcookbook",
-   "title" : "Cooking with Perl, Part 2",
-   "categories" : "development",
-   "thumbnail" : null,
-   "description" : " Editor's note: The new edition of Perl Cookbook has released, so this week we continue to highlight recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 14 (\"Database Access\") and Chapter 18 (\"Internet...",
-   "authors" : [
-      "tom-christiansen",
-      "nathan-torkington"
-   ],
-   "image" : null
+   "title" : "Cooking with Perl, Part 2"
 }
 
 
@@ -46,12 +46,12 @@ relational database server.
 Use the DBD::SQLite module from CPAN:
 
     use DBI;
-    Â 
+     
     $dbh = DBI->connect("dbi:SQLite:dbname=/Users/gnat/salaries.sqlt", "", "",
                         { RaiseError => 1, AutoCommit => 1 });
-    Â 
+     
     $dbh->do("UPDATE salaries SET salary = 2 * salary WHERE name = 'Nat'");
-    Â 
+     
     $sth = $dbh->prepare("SELECT id,deductions FROM salaries WHERE name = 'Nat'");
     # ...
 
@@ -161,7 +161,7 @@ Use the MIME::Lite module from CPAN. First, create a MIME::Lite object
 representing the multipart message:
 
     use MIME::Lite;
-    Â 
+     
     $msg = MIME::Lite->new(From    => 'sender@example.com',
                            To      => 'recipient@example.com',
                            Subject => 'My photo for the brochure',
@@ -172,7 +172,7 @@ Then, add content through the `attach` method:
     $msg->attach(Type        => 'image/jpeg',
                  Path        => '/Users/gnat/Photoshopped/nat.jpg',
                  Filename    => 'gnat-face.jpg');
-    Â 
+     
     $msg->attach(Type        => 'TEXT',
                  Data        => 'I hope you can use this!');
 
@@ -206,8 +206,8 @@ a trailing colon. `*` indicates a wildcard, so `Content-*` includes
   `Bcc`         `From`           `References`    `Subject`
   `Cc`          `Keywords`       `Reply-To`      `To`
   `Comments`    `Message-ID`     `Resent-*`      `X-*`
-  `Content-*`   `MIME-Version`   `Return-Path`   Â 
-  `Date`        `Organization`   Â                Â 
+  `Content-*`   `MIME-Version`   `Return-Path`    
+  `Date`        `Organization`                    
   ------------- ---------------- --------------- -----------
 
   : **[Table 18-2:]{#20112}** **MIME::Lite headers**
@@ -218,8 +218,8 @@ The full list of MIME::Lite options is given in [Table 18-3](#21965).
   `Data`          `FH`         `ReadNow`
   `Datestamp`     `Filename`   `Top`
   `Disposition`   `Id`         `Type`
-  `Encoding`      `Length`     Â 
-  `Filename`      `Path`       Â 
+  `Encoding`      `Length`      
+  `Filename`      `Path`        
   --------------- ------------ -----------
 
   : **[Table 18-3:]{#21965}** **MIME::Lite options**
@@ -298,32 +298,32 @@ command line as attachments.
 
     #!/usr/bin/perl -w
     # mail-attachment - send files as attachments
-    Â 
+     
     use MIME::Lite;
     use Getopt::Std;
-    Â 
+     
     my $SMTP_SERVER = 'smtp.example.com';           # CHANGE ME
     my $DEFAULT_SENDER = 'sender@example.com';      # CHANGE ME
     my $DEFAULT_RECIPIENT = 'recipient@example.com';# CHANGE ME  
-    Â 
+     
     MIME::Lite->send('smtp', $SMTP_SERVER, Timeout=>60);
-    Â 
+     
     my (%o, $msg);
-    Â 
+     
     # process options
-    Â 
+     
     getopts('hf:t:s:', \%o);
-    Â 
+     
     $o{f} ||= $DEFAULT_SENDER;
     $o{t} ||= $DEFAULT_RECIPIENT;
     $o{s} ||= 'Your binary file, sir';
-    Â 
+     
     if ($o{h} or !@ARGV) {
         die "usage:\n\t$0 [-h] [-f from] [-t to] [-s subject] file ...\n";
     }
-    Â 
+     
     # construct and send email
-    Â 
+     
     $msg = new MIME::Lite(
         From => $o{f},
         To   => $o{t},
@@ -331,13 +331,13 @@ command line as attachments.
         Data => "Hi",
         Type => "multipart/mixed",
     );
-    Â 
+     
     while (@ARGV) {
       $msg->attach('Type' => 'application/octet-stream',
                    'Encoding' => 'base64',
                    'Path' => shift @ARGV);
     }
-    Â 
+     
     $msg->send(  );
 
 #### See Also

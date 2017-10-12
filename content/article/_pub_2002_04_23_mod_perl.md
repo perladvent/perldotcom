@@ -1,18 +1,18 @@
 {
-   "description" : " Introduction Before I delve into the details of mod_perl programming, it's probably a good idea to review some important Perl basics. You will discover these invaluable when you start coding for mod_perl. I will start with pure Perl notes...",
    "thumbnail" : "/images/_pub_2002_04_23_mod_perl/111-book_reviews.gif",
-   "categories" : "web",
-   "title" : "The Perl You Need To Know",
-   "image" : null,
+   "draft" : null,
    "authors" : [
       "stas-bekman"
    ],
-   "draft" : null,
+   "image" : null,
+   "description" : " Introduction Before I delve into the details of mod_perl programming, it's probably a good idea to review some important Perl basics. You will discover these invaluable when you start coding for mod_perl. I will start with pure Perl notes...",
    "slug" : "/pub/2002/04/23/mod_perl",
+   "date" : "2002-04-23T00:00:00-08:00",
+   "categories" : "web",
    "tags" : [
       "mod-perl-perl-global-variables"
    ],
-   "date" : "2002-04-23T00:00:00-08:00"
+   "title" : "The Perl You Need To Know"
 }
 
 

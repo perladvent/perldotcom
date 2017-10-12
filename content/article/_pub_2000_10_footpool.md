@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
+   "description" : " Everyone who has read the Camel Book knows that the three great virtues of programming are laziness, impatience and hubris. Most of the columns that appear here at www.perl.com have to do, in one way or another, with either...",
    "authors" : [
       "walt-mankowski"
    ],
-   "image" : null,
-   "title" : "How Perl Helped Me Win the Office Football Pool",
-   "description" : " Everyone who has read the Camel Book knows that the three great virtues of programming are laziness, impatience and hubris. Most of the columns that appear here at www.perl.com have to do, in one way or another, with either...",
-   "categories" : "Community",
-   "thumbnail" : null,
    "tags" : [],
+   "title" : "How Perl Helped Me Win the Office Football Pool",
    "date" : "2000-10-02T00:00:00-08:00",
    "slug" : "/pub/2000/10/footpool",
-   "draft" : null
+   "categories" : "Community"
 }
 
 
@@ -30,34 +30,34 @@ relationship between this and a real football pool is completely
 accidental.)
 
   -------------- --- -------- --- ---------------
-  FAVORITE       Â    SPREAD   Â    UNDERDOG
+  FAVORITE           SPREAD       UNDERDOG
                                   
                                   
                                   
   Thursday                        
-  TENNESSEE      Â    3        Â    Indianapolis
+  TENNESSEE          3            Indianapolis
                                   
                                   
                                   
   Sunday                          
-  BUFFALO        Â    7        Â    Washington
-  TAMPA BAY      Â    8        Â    St. Louis
-  PITTSBURGH     Â    5 Â½      Â    Dallas
-  GREEN BAY      Â    4        Â    Cincinnati
-  Miami          Â    10 Â½     Â    SEATTLE
-  Atlanta        Â    1 Â½      Â    KANSAS CITY
-  NEW ENGLAND    Â    9        Â    N. Y. Giants
-  ARIZONA        Â    8        Â    Detroit
-  NEW ORLEANS    Â    3        Â    Baltimore
-  Philadelphia   Â    9 Â½      Â    CAROLINA
-  Cleveland      Â    3        Â    N. Y. JETS
-  SAN DIEGO      Â    1        Â    San Francisco
-  Minnesota      Â    5        Â    OAKLAND
+  BUFFALO            7            Washington
+  TAMPA BAY          8            St. Louis
+  PITTSBURGH         5 ½          Dallas
+  GREEN BAY          4            Cincinnati
+  Miami              10 ½         SEATTLE
+  Atlanta            1 ½          KANSAS CITY
+  NEW ENGLAND        9            N. Y. Giants
+  ARIZONA            8            Detroit
+  NEW ORLEANS        3            Baltimore
+  Philadelphia       9 ½          CAROLINA
+  Cleveland          3            N. Y. JETS
+  SAN DIEGO          1            San Francisco
+  Minnesota          5            OAKLAND
                                   
                                   
                                   
   Monday                          
-  DENVER         Â    9        Â    Chicago
+  DENVER             9            Chicago
   -------------- --- -------- --- ---------------
 
 The home team is printed in capital letters. The pool is traditionally

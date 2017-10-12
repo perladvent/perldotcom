@@ -1,21 +1,21 @@
 {
-   "slug" : "/pub/2010/03/perl5i-makes-more-simple-things-simple",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : "Suppose that you want to load a module dynamically (you have the name in a scalar), then alias a function from that module to a new name in another class. In other words, you want a renaming import. How do...",
+   "image" : null,
+   "authors" : [
+      "michael-schwern"
+   ],
    "tags" : [
       "perl",
       "perl-5",
       "perl-programming",
       "perl5i"
    ],
-   "date" : "2010-03-23T06:00:01-08:00",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "michael-schwern"
-   ],
-   "description" : "Suppose that you want to load a module dynamically (you have the name in a scalar), then alias a function from that module to a new name in another class. In other words, you want a renaming import. How do...",
-   "thumbnail" : null,
+   "title" : "perl5i Makes More Simple Things Simple",
    "categories" : "development",
-   "title" : "perl5i Makes More Simple Things Simple"
+   "date" : "2010-03-23T06:00:01-08:00",
+   "slug" : "/pub/2010/03/perl5i-makes-more-simple-things-simple"
 }
 
 

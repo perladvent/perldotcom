@@ -1,12 +1,6 @@
 {
-   "image" : null,
-   "authors" : [
-      "chromatic"
-   ],
    "categories" : "Community",
-   "thumbnail" : null,
-   "description" : "For Perl's 20th anniversary, several Perl programmers reflect on their experiences with the language.",
-   "title" : "Memories of 20 Years of Perl",
+   "date" : "2007-12-21T00:00:00-08:00",
    "slug" : "/pub/2007/12/21/20-years-of-perl",
    "tags" : [
       "anniversary",
@@ -14,7 +8,13 @@
       "perl",
       "programming-stories"
    ],
-   "date" : "2007-12-21T00:00:00-08:00",
+   "title" : "Memories of 20 Years of Perl",
+   "authors" : [
+      "chromatic"
+   ],
+   "image" : null,
+   "description" : "For Perl's 20th anniversary, several Perl programmers reflect on their experiences with the language.",
+   "thumbnail" : null,
    "draft" : null
 }
 
@@ -176,7 +176,7 @@ got the company's "Just Do It" Award. If it had been C or Java or
 anything but Perl I wouldn't have been able to do it.
 
 If I'd come to anything but Perl, I would not have returned to coding--I
-dabbled in BASIC and Assembly as a kid--and I wouldnï¿½t be a software
+dabbled in BASIC and Assembly as a kid--and I wouldn�t be a software
 developer today.
 
 *Ashley Pond V is a New Mexican writer turned Seattlite software

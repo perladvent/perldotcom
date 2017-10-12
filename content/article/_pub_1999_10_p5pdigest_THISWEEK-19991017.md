@@ -1,15 +1,15 @@
 {
-   "tags" : [],
-   "date" : "1999-10-17T00:00:00-08:00",
    "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991017",
+   "date" : "1999-10-17T00:00:00-08:00",
+   "categories" : "community",
+   "title" : "This Week on p5p 1999/10/17",
+   "tags" : [],
+   "thumbnail" : null,
    "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
    "image" : null,
-   "title" : "This Week on p5p 1999/10/17",
-   "thumbnail" : null,
-   "categories" : "community",
    "description" : "(11-17 October 1999) -> Introduction New Development Release 5.005_62 Unicode Character Classes Module Bundling and the proposed import pragma use fields allows overlapping member names PREPARE functions and my Class $foo declarations goto Out of Conditional Bug Regex Range Bug..."
 }
 
@@ -201,9 +201,9 @@ containing all the characters equivalent to `c`.
 
 How do you decide which characters are considered \`equivalent'? Unicode
 provides a definition that allows you to understand a character like
-`Ã©`; as an `e` with an acute accent; we could have Perl understand this
+`é`; as an `e` with an acute accent; we could have Perl understand this
 to be equivalent to a plain `e`. Then the notation `[=e=]` would match
-any of `e`, `Ã©`, `Ã¨`, `Ã«`, or `Ãª`. This might be useful.
+any of `e`, `é`, `è`, `ë`, or `ê`. This might be useful.
 
 Jarkko also wants people to be able to define their own equivalence
 relations, and he wants the `m//` and `s///` operators to support a new
@@ -212,9 +212,9 @@ marks, again using the Unicode tables to decide what a diacritical mark
 is.
 
 People brought up a number of potential problems; for example, in
-Danish, the character `Ã¥` (U00E5) is considered to be an entirely
+Danish, the character `å` (U00E5) is considered to be an entirely
 different letter from `a` and not equivalent to it at all. But according
-to Unicode, `Ã¥` is indeed an `a` with a diacritical mark. (Jarkko:
+to Unicode, `å` is indeed an `a` with a diacritical mark. (Jarkko:
 \`\`Ha! I am just expecting some Danes . . . to jump up here and wave
 frantically their hands. . . '' )
 
@@ -247,7 +247,7 @@ Michael says that this is like the `import` keyword in Java.
 
 This touched off a number of interesting discussions:
 
-1.  Andreas KÃ¶nig suggested that Perl should support a
+1.  Andreas König suggested that Perl should support a
 
          package "www.foo.org";
 

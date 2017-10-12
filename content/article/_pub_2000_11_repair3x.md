@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2000/11/repair3x",
-   "tags" : [],
-   "date" : "2000-11-28T00:00:00-08:00",
    "description" : "What's Wrong With This Picture? -> Astute readers had a number of comments about last week's Program Repair Shop and Red Flags article. Control Flow Puzzle In the article, I had a section of code that looked like this: $_...",
-   "categories" : "development",
-   "thumbnail" : null,
-   "title" : "Red Flags Return",
    "image" : null,
    "authors" : [
       "mark-jason-dominus"
-   ]
+   ],
+   "thumbnail" : null,
+   "draft" : null,
+   "title" : "Red Flags Return",
+   "tags" : [],
+   "categories" : "development",
+   "slug" : "/pub/2000/11/repair3x",
+   "date" : "2000-11-28T00:00:00-08:00"
 }
 
 
@@ -34,10 +34,10 @@ with it, changing it to
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Control Flow Puzzle](#control%20flow%20puzzle)\                     |
-| â¢[Pattern Matching](#pattern%20matching)\                             |
-| â¢[Synthetic Variables](#synthetic%20variables)\                       |
-| â¢[Send More Code](#send%20more%20code)\                               |
+| •[Control Flow Puzzle](#control%20flow%20puzzle)\                     |
+| •[Pattern Matching](#pattern%20matching)\                             |
+| •[Synthetic Variables](#synthetic%20variables)\                       |
+| •[Send More Code](#send%20more%20code)\                               |
 +-----------------------------------------------------------------------+
 
             while (<INFO>) {

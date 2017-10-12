@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991226",
    "date" : "1999-12-26T00:00:00-08:00",
-   "tags" : [],
-   "description" : " Notes Meta-Information Module Interface and Version Meta-Information SVs by Default Another return of PREPARE More Flushing Problems Array::Virtual #line directives DProf Various Notes Last year I fell behind on reports because I took three business trips in two weeks....",
-   "thumbnail" : null,
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991226",
    "categories" : "community",
    "title" : "This Week on p5p 1999/12/26",
-   "image" : null,
+   "tags" : [],
    "authors" : [
       "mark-jason-dominus"
-   ]
+   ],
+   "image" : null,
+   "description" : " Notes Meta-Information Module Interface and Version Meta-Information SVs by Default Another return of PREPARE More Flushing Problems Array::Virtual #line directives DProf Various Notes Last year I fell behind on reports because I took three business trips in two weeks....",
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -130,7 +130,7 @@ discussion. I do not know if the patch was accepted.
 
 ### [`DProf`]{#DProf}
 
-HÃ¥kon Alstadheim supplied a patch to `Devel::DProf` that allows the user
+Håkon Alstadheim supplied a patch to `Devel::DProf` that allows the user
 to specify the data output file, via an environment variable.
 
 ### [Various]{#Various}

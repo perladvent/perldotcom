@@ -1,16 +1,16 @@
 {
-   "categories" : "web",
-   "thumbnail" : "/images/_pub_2002_09_17_ewispp/111-webservers.gif",
    "description" : " As with most of my previous articles, this one grew out of a project at my $DAY_JOB. The project du-jour involves large dependency graphs, often containing thousands of nodes and edges. Some of the relationships are automatically generated and...",
-   "title" : "Embedding Web Servers",
    "image" : null,
    "authors" : [
       "robert-spier"
    ],
    "draft" : null,
+   "thumbnail" : "/images/_pub_2002_09_17_ewispp/111-webservers.gif",
+   "tags" : [],
+   "title" : "Embedding Web Servers",
+   "categories" : "web",
    "slug" : "/pub/2002/09/17/ewispp",
-   "date" : "2002-09-18T00:00:00-08:00",
-   "tags" : []
+   "date" : "2002-09-18T00:00:00-08:00"
 }
 
 

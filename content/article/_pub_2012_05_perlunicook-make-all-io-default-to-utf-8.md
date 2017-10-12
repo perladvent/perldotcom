@@ -1,23 +1,23 @@
 {
+   "title" : "Perl Unicode Cookbook: Make All I/O Default to UTF-8",
+   "tags" : [],
+   "categories" : "unicode",
+   "slug" : "/pub/2012/05/perlunicook-make-all-io-default-to-utf-8",
+   "date" : "2012-05-03T06:00:01-08:00",
+   "draft" : null,
+   "thumbnail" : null,
    "image" : null,
+   "description" : "℞ 18: Make all I/O and args default to utf8 The core rule of Unicode handling in Perl is \"always encode and decode at the edges of your program\". If you've configured everything such that all incoming and outgoing data...",
    "authors" : [
       "tom-christiansen"
-   ],
-   "description" : "â 18: Make all I/O and args default to utf8 The core rule of Unicode handling in Perl is \"always encode and decode at the edges of your program\". If you've configured everything such that all incoming and outgoing data...",
-   "thumbnail" : null,
-   "categories" : "unicode",
-   "title" : "Perl Unicode Cookbook: Make All I/O Default to UTF-8",
-   "slug" : "/pub/2012/05/perlunicook-make-all-io-default-to-utf-8",
-   "tags" : [],
-   "date" : "2012-05-03T06:00:01-08:00",
-   "draft" : null
+   ]
 }
 
 
 
 
 
-â 18: Make all I/O and args default to utf8 {#Make-all-I-O-and-args-default-to-utf8}
+℞ 18: Make all I/O and args default to utf8 {#Make-all-I-O-and-args-default-to-utf8}
 -------------------------------------------
 
 The core rule of Unicode handling in Perl is "always encode and decode
@@ -46,13 +46,13 @@ elements of `@ARGV`:
          use Encode qw(decode_utf8);
          @ARGV = map { decode_utf8($_, 1) } @ARGV;
 
-Previous: [â 17: Make File I/O Default to
+Previous: [℞ 17: Make File I/O Default to
 UTF-8](/media/_pub_2012_05_perlunicook-make-all-io-default-to-utf-8/perlunicook-make-file-io-default-to-utf-8.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_05_perlunicook-make-all-io-default-to-utf-8/perlunicook-standard-preamble.html)
 
-Next: [â 19: Specify a File's
+Next: [℞ 19: Specify a File's
 Encoding](/media/_pub_2012_05_perlunicook-make-all-io-default-to-utf-8/perlunicook-specify-a-files-encoding.html)
 
 

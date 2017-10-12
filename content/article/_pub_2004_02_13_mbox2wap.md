@@ -1,6 +1,8 @@
 {
-   "draft" : null,
+   "categories" : "Email",
+   "date" : "2004-02-13T00:00:00-08:00",
    "slug" : "/pub/2004/02/13/mbox2wap",
+   "title" : "Mail to WAP Gateways",
    "tags" : [
       "cellphone-email",
       "cellphone-mail",
@@ -9,15 +11,13 @@
       "mobile-mail",
       "wap"
    ],
-   "date" : "2004-02-13T00:00:00-08:00",
-   "description" : "It's coming up to Valentine's day again, and invariably my thoughts turn back to last year's rather memorable weekend-break to Stockholm, in which I learned two things: Stockholm makes a great Valentine's destination. My girlfriend of the time was not...",
-   "thumbnail" : "/images/_pub_2004_02_13_mbox2wap/111-wap_gate.gif",
-   "categories" : "Email",
-   "title" : "Mail to WAP Gateways",
-   "image" : null,
    "authors" : [
       "pete-sergeant"
-   ]
+   ],
+   "image" : null,
+   "description" : "It's coming up to Valentine's day again, and invariably my thoughts turn back to last year's rather memorable weekend-break to Stockholm, in which I learned two things: Stockholm makes a great Valentine's destination. My girlfriend of the time was not...",
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_02_13_mbox2wap/111-wap_gate.gif"
 }
 
 

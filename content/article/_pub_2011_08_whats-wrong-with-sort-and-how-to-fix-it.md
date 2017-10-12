@@ -1,19 +1,19 @@
 {
-   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "categories" : "unicode",
-   "thumbnail" : null,
    "description" : "In this excerpt from Programming Perl 4e, Tom Christiansen demonstrates that, in a Unicode world, sorting correctly can be trickier than you think.",
-   "title" : "What's Wrong with sort and How to Fix It",
+   "image" : null,
+   "draft" : null,
+   "thumbnail" : null,
+   "categories" : "unicode",
    "slug" : "/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it",
+   "date" : "2011-08-31T06:00:01-08:00",
+   "title" : "What's Wrong with sort and How to Fix It",
    "tags" : [
       "sorting",
       "unicode"
-   ],
-   "date" : "2011-08-31T06:00:01-08:00",
-   "draft" : null
+   ]
 }
 
 
@@ -27,21 +27,21 @@ Still think doing things correctly is easy? Tom Christiansen
 demonstrates that even sorting can be trickier than you think.*
 
 **NOTE**: The following is an excerpt from the draft manuscript of
-*Programming Perl*, 4áµÊ° edition
+*Programming Perl*, 4ᵗʰ edition
 
 Calling `sort` without a comparison function is quite often the wrong
 thing to do, even on plain text. That's because if you use a bare sort,
 you can get really strange results. It's not just Perl either: almost
 all programming languages work this way, even the shell command. You
-might be surprised to find that with this sort of nonsense sort, â¹Bâº
-comes before â¹aâº not after it, â¹Ã©âº comes before â¹ï½âº, and â¹ï¬âº comes
-after â¹zzâº. There's no end to such silliness, either; see the default
+might be surprised to find that with this sort of nonsense sort, ‹B›
+comes before ‹a› not after it, ‹é› comes before ‹ｄ›, and ‹ﬀ› comes
+after ‹zz›. There's no end to such silliness, either; see the default
 sort tables at the end of this article to see what I mean.
 
 There are situations when a bare `sort` is appropriate, but fewer than
 you think. One scenario is when every string you're sorting contains
 nothing but the 26 lowercase (or uppercase, but not both) Latin letters
-from â¹a-zâº, without any whitespace or punctuation.
+from ‹a-z›, without any whitespace or punctuation.
 
 Another occasion when a simple, unadorned `sort` is appropriate is when
 you have no other goal but to iterate in an order that is merely
@@ -52,7 +52,7 @@ unmediated `cmp` operator, which has the "predictable garbage"
 characteristics I just mentioned.
 
 The last situation is much less frequent than the first two. It requires
-that the things you're sorting be specialâpurpose, dedicated binary keys
+that the things you're sorting be special‐purpose, dedicated binary keys
 whose bit sequences have with excruciating care been arranged to sort in
 some prescribed fashion. This is also the strategy for any reasonable
 use of the `cmp` operator.
@@ -77,11 +77,11 @@ Because Perl's `cmp` operator does only a bit comparison not an
 alphabetic one, it does nearly as little good to write your record sort
 this way:
 
-    @srecsÂ =Â sortÂ {
-    Â Â Â Â $b->{AGE}Â Â Â Â Â Â <=>Â Â $b->{AGE}
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â ||
-    Â Â Â Â $a->{SURNAME}Â Â cmpÂ Â $b->{SURNAME}
-    }Â @recs;
+    @srecs = sort {
+        $b->{AGE}      <=>  $b->{AGE}
+                       ||
+        $a->{SURNAME}  cmp  $b->{SURNAME}
+    } @recs;
 
 The problem is that that `cmp` for the record's `SURNAME` field is *not*
 an alphabetic comparison. It's merely a code point comparison. That
@@ -110,19 +110,19 @@ Then all you have to get a dictionary sort is write instead:
 
 For structured records, like those with ages and surnames in them, you
 have to be a bit fancier. One way to fix it would be to use the class's
-own `cmp` operator instead of the builtâin one.
+own `cmp` operator instead of the built‐in one.
 
     use Unicode::Collate;
-    myÂ $collatorÂ =Â Unicode::Collate::->new();
-    @srecsÂ =Â sortÂ {
-    Â Â Â Â $b->{AGE}Â Â <=>Â Â $b->{AGE}
-    Â Â Â Â Â Â Â Â Â Â ||
-    Â Â Â Â $collator->cmp( $a->{SURNAME}, $b->{SURNAME} )
-    }Â @recs;
+    my $collator = Unicode::Collate::->new();
+    @srecs = sort {
+        $b->{AGE}  <=>  $b->{AGE}
+              ||
+        $collator->cmp( $a->{SURNAME}, $b->{SURNAME} )
+    } @recs;
 
 However, that makes a fairly expensive method call for every possible
 comparison. Because Perl's adaptive merge sort algorithm usually runs in
-*O(n* Â· log *n)* time given *n* items, and because each comparison
+*O(n* · log *n)* time given *n* items, and because each comparison
 requires two different computed keys, that can be a lot of duplicate
 effort. Our sorting class therefore provide a convenient `getSortKey`
 method that calculates a special binary key which you can cache and
@@ -132,20 +132,20 @@ use `cmp` yet get a truly alphabetic sort out of it for a change.
 Here is a simple but sufficient example of how to do that:
 
     use Unicode::Collate;
-    myÂ $collatorÂ =Â Unicode::Collate::->new();
+    my $collator = Unicode::Collate::->new();
 
     # first calculate the magic sort key for each text field, and cache it
-    forÂ myÂ $recÂ (@recs)Â {
-    Â Â Â Â $rec->{SURNAME_key}Â =Â $collator->getSortKey( $rec->{SURNAME} );
-    }Â 
+    for my $rec (@recs) {
+        $rec->{SURNAME_key} = $collator->getSortKey( $rec->{SURNAME} );
+    } 
 
     # now sort the records as before, but for the surname field,
     # use the cached sort key instead
-    @srecsÂ =Â sortÂ {
-    Â Â Â Â $b->{AGE}Â Â Â Â Â Â Â Â Â Â <=>Â Â $b->{AGE}
-    Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â Â ||
-    Â Â Â Â $a->{SURNAME_key}Â Â cmpÂ Â $b->{SURNAME_key}
-    }Â @recs;
+    @srecs = sort {
+        $b->{AGE}          <=>  $b->{AGE}
+                          ||
+        $a->{SURNAME_key}  cmp  $b->{SURNAME_key}
+    } @recs;
 
 That's what I meant about very carefully preparing a mediated sort key
 that contains the precomputed binary key.
@@ -159,9 +159,9 @@ have their own notions about how a card catalogue or a phonebook ought
 to be sorted.
 
 For example, in the English language, surnames with Scottish patronymics
-starting with â¹Mcâº or â¹Macâº, like *MacKinley* and *McKinley*, not only
+starting with ‹Mc› or ‹Mac›, like *MacKinley* and *McKinley*, not only
 count as completely identical synonyms for sorting purposes, they go
-before any other surname that begins with â¹Mâº, and so precede surnames
+before any other surname that begins with ‹M›, and so precede surnames
 like *Mables* or *Machado*.
 
 Yes, really.
@@ -172,25 +172,25 @@ That means that the following names are sorted correctly -- for English:
     McKinley, Bill
     MacKinley, Ron
     Mables, Martha
-    Machado, JosÃ©
+    Machado, José
     Macon, Bacon
 
-Yes, it's true. Check out your local large Englishâlanguage bookseller
+Yes, it's true. Check out your local large English‐language bookseller
 or library -- presuming you can find one. If you do, best make sure to
 blow the dust off first.
 
 ### **Sorting Spanish Names**
 
 It's a good thing those names follow English rules for sorting names. If
-this were Spanish, we would have to deal with doubleâbarrelled surnames,
+this were Spanish, we would have to deal with double‐barrelled surnames,
 where the patronym sorts before the matronym, which in turn sorts before
-any given names. That means that if SeÃ±or Machado's full name were, like
-the poet's, *Antonio Cipriano JosÃ© MarÃ­a y Francisco de Santa Ana
+any given names. That means that if Señor Machado's full name were, like
+the poet's, *Antonio Cipriano José María y Francisco de Santa Ana
 Machado y Ruiz*, then you would have to sort him with the other
 *Machados* but then consider *Ruiz* before *Antonio* if there were any
-other *Machados*. Similarly, the poet *Federico del Sagrado CorazÃ³n de
-JesÃºs GarcÃ­a Lorca* sorts before the writer *Gabriel JosÃ© de la
-Concordia GarcÃ­a MÃ¡rquez*.
+other *Machados*. Similarly, the poet *Federico del Sagrado Corazón de
+Jesús García Lorca* sorts before the writer *Gabriel José de la
+Concordia García Márquez*.
 
 On the other hand, if your records are not full multifield hashes but
 only simple text that don't happen to be surnames, your task is a lot
@@ -202,15 +202,15 @@ sensibly. That you can do easily enough this way:
 
 ### **Sorting Text, Not Binary**
 
-Imagine you had this list of Germanâlanguage authors:
+Imagine you had this list of German‐language authors:
 
     @germans = qw{
-        BÃ¶ll
+        Böll
         Born
-        BÃ¶hme
+        Böhme
         Bodmer
         Brandis
-        BÃ¶ttcher
+        Böttcher
         Borchert
         Bobrowski
     };
@@ -224,9 +224,9 @@ get this utter nonsense:
     Born
     Brandis
     Brant
-    BÃ¶hme
-    BÃ¶ll
-    BÃ¶ttcher
+    Böhme
+    Böll
+    Böttcher
 
 Or maybe this equally nonsensical answer:
 
@@ -234,11 +234,11 @@ Or maybe this equally nonsensical answer:
     Bodmer
     Borchert
     Born
-    BÃ¶ll
+    Böll
     Brandis
     Brant
-    BÃ¶hme
-    BÃ¶ttcher
+    Böhme
+    Böttcher
 
 Or even this still completely nonsensical answer:
 
@@ -246,27 +246,27 @@ Or even this still completely nonsensical answer:
     Bodmer
     Borchert
     Born
-    BÃ¶hme
-    BÃ¶ll
+    Böhme
+    Böll
     Brandis
     Brant
-    BÃ¶ttcher
+    Böttcher
 
 The crucial point to all that is that *it's text not binary*, so not
 only can you never judge what its bit patterns hold just by eyeballing
 it, more importantly, it has special rules to make it sort
-alphabetically (some might say sanely), an ordering no naÃ¯ve codeâpoint
+alphabetically (some might say sanely), an ordering no naïve code‐point
 sort will never come even close to getting right, especially on Unicode.
 
 The correct ordering is:
 
     Bobrowski
     Bodmer
-    BÃ¶hme
-    BÃ¶ll
+    Böhme
+    Böll
     Borchert
     Born
-    BÃ¶ttcher
+    Böttcher
     Brandis
     Brant
 
@@ -289,17 +289,17 @@ this ordering:
 
     Bobrowski
     Bodmer
-    BÃ¶hme
-    BÃ¶ll
-    BÃ¶ttcher
+    Böhme
+    Böll
+    Böttcher
     Borchert
     Born
     Brandis
     Brant
 
-How come *BÃ¶ttcher* now came before *Borchert*? Because *BÃ¶ttcher* is
+How come *Böttcher* now came before *Borchert*? Because *Böttcher* is
 supposed to be the same as *Boettcher*. In a German phonebook or other
-German list of German names, things like â¹Ã¶âº and â¹oeâº are considered
+German list of German names, things like ‹ö› and ‹oe› are considered
 synonyms, which is not at all how it works in English. To get the German
 phonebook sort, you merely have to modify your constructor this way:
 
@@ -316,33 +316,33 @@ Be glad you're not sorting names. Sorting names is hard.
 
 Here are most of the Latin letters, ordered using the default `sort`:
 
->     AÂ BÂ CÂ DÂ EÂ FÂ GÂ HÂ IÂ JÂ KÂ LÂ MÂ NÂ OÂ PÂ QÂ RÂ SÂ TÂ UÂ VÂ WÂ XÂ YÂ ZÂ aÂ bÂ cÂ dÂ eÂ fÂ gÂ hÂ iÂ jÂ 
->     kÂ lÂ mÂ nÂ oÂ pÂ qÂ rÂ sÂ tÂ uÂ vÂ wÂ xÂ yÂ zÂ ÂªÂ ÂºÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ 
->     ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ ÃÂ Ã Â Ã¡Â Ã¢Â Ã£Â Ã¤Â Ã¥Â Ã¦Â Ã§Â Ã¨Â Ã©Â ÃªÂ Ã«Â Ã¬Â Ã­Â Ã®Â Ã¯Â Ã°Â Ã±Â Ã²Â Ã³Â Ã´Â ÃµÂ Ã¶Â 
->     Ã¸Â Ã¹Â ÃºÂ Ã»Â Ã¼Â Ã½Â Ã¾Â Ã¿Â ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ 
->     ÄÂ ÄÂ ÄÂ ÄÂ Ä Â Ä¡Â Ä¢Â Ä£Â Ä¤Â Ä¥Â Ä¦Â Ä§Â Ä¨Â Ä©Â ÄªÂ Ä«Â Ä¬Â Ä­Â Ä®Â Ä¯Â Ä°Â Ä±Â Ä²Â Ä³Â Ä´Â ÄµÂ Ä¶Â Ä·Â Ä¸Â Ä¹Â ÄºÂ Ä»Â Ä¼Â Ä½Â Ä¾Â Ä¿Â 
->     ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ ÅÂ Å Â Å¡Â Å¢Â Å£Â Å¤Â 
->     Å¥Â Å¦Â Å§Â Å¨Â Å©Â ÅªÂ Å«Â Å¬Â Å­Â Å®Â Å¯Â Å°Â Å±Â Å²Â Å³Â Å´Â ÅµÂ Å¶Â Å·Â Å¸Â Å¹Â ÅºÂ Å»Â Å¼Â Å½Â Å¾Â Å¿Â ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ 
->     ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ ÆÂ Æ¤Â Æ¥Â Æ¦Â Æ«Â Æ¬Â Æ­Â Æ®Â Æ¯Â Æ°Â Æ±Â Æ²Â Æ³Â Æ´Â ÆµÂ Æ¶Â Æ·Â Æ¸Â 
->     Æ¹Â ÆºÂ Æ¾Â Æ¿Â ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ Ç Â Ç¡Â Ç¢Â Ç£Â 
->     Ç¤Â Ç¥Â Ç¦Â Ç§Â Ç¨Â Ç©Â ÇªÂ Ç«Â Ç¬Â Ç­Â Ç®Â Ç¯Â Ç°Â Ç±Â Ç²Â Ç³Â Ç´Â ÇµÂ Ç·Â Ç¸Â Ç¹Â ÇºÂ Ç»Â Ç¼Â Ç½Â Ç¾Â Ç¿Â ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ 
->     ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ ÈÂ È Â È¡Â È¤Â È¥Â È¦Â È§Â È¨Â È©Â ÈªÂ È«Â È¬Â È­Â È®Â 
->     È¯Â È°Â È±Â È²Â È³Â È´Â ÈµÂ È¶Â È·Â ÈºÂ È»Â È¼Â È½Â È¾Â ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ ÉÂ É Â É¡Â É¢Â É£Â É¤Â É¥Â É¦Â 
->     É§Â É¨Â É©Â ÉªÂ É«Â É¬Â É­Â É®Â É¯Â É°Â É±Â É²Â É³Â É´Â É¶Â É¹Â ÉºÂ É»Â É¼Â É½Â É¾Â É¿Â ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ 
->     ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ ÊÂ Ê Â Ê£Â Ê¤Â Ê¥Â Ê¦Â Ê§Â Ê¨Â Ê©Â ÊªÂ Ê«Â Ë¡Â Ë¢Â Ë£Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â 
->     á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´Â á´ Â á´¡Â á´¢Â á´£Â á´¬Â á´­Â á´®Â á´¯Â á´°Â á´±Â á´²Â á´³Â á´´Â á´µÂ á´¶Â á´·Â á´¸Â á´¹Â á´ºÂ 
->     á´»Â á´¼Â á´¾Â á´¿Â áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµÂ áµ¢Â áµ£Â áµ¤Â áµ¥Â áµ«Â áµ¬Â áµ­Â 
->     áµ®Â áµ¯Â áµ°Â áµ±Â áµ²Â áµ³Â áµ´Â áµµÂ áµ¶Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â 
->     á¸Â á¸Â á¸Â á¸Â á¸Â á¸ Â á¸¡Â á¸¢Â á¸£Â á¸¤Â á¸¥Â á¸¦Â á¸§Â á¸¨Â á¸©Â á¸ªÂ á¸«Â á¸¬Â á¸­Â á¸®Â á¸¯Â á¸°Â á¸±Â á¸²Â á¸³Â á¸´Â á¸µÂ á¸¶Â á¸·Â á¸¸Â á¸¹Â á¸ºÂ á¸»Â á¸¼Â á¸½Â á¸¾Â 
->     á¸¿Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹Â á¹ Â á¹¡Â á¹¢Â 
->     á¹£Â á¹¤Â á¹¥Â á¹¦Â á¹§Â á¹¨Â á¹©Â á¹ªÂ á¹«Â á¹¬Â á¹­Â á¹®Â á¹¯Â á¹°Â á¹±Â á¹²Â á¹³Â á¹´Â á¹µÂ á¹¶Â á¹·Â á¹¸Â á¹¹Â á¹ºÂ á¹»Â á¹¼Â á¹½Â á¹¾Â á¹¿Â áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ 
->     áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ áº Â áº¡Â áº¢Â áº£Â áº¤Â áº¥Â áº¦Â áº§Â áº¨Â áº©Â áºªÂ áº«Â áº¬Â 
->     áº­Â áº®Â áº¯Â áº°Â áº±Â áº²Â áº³Â áº´Â áºµÂ áº¶Â áº·Â áº¸Â áº¹Â áººÂ áº»Â áº¼Â áº½Â áº¾Â áº¿Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â 
->     á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á»Â á» Â á»¡Â á»¢Â á»£Â á»¤Â á»¥Â á»¦Â á»§Â á»¨Â á»©Â á»ªÂ á»«Â á»¬Â á»­Â á»®Â á»¯Â á»°Â á»±Â á»²Â á»³Â á»´Â 
->     á»µÂ á»¶Â á»·Â á»¸Â á»¹Â âªÂ â«Â â²Â âÂ â Â â¡Â â¢Â â£Â â¤Â â¥Â â¦Â â§Â â¨Â â©Â âªÂ â«Â â¬Â â­Â â®Â â¯Â â°Â â±Â â²Â â³Â â´Â 
->     âµÂ â¶Â â·Â â¸Â â¹Â âºÂ â»Â â¼Â â½Â â¾Â â¿Â ï¬Â ï¬Â ï¬Â ï¬Â ï¬Â ï¬Â ï¬Â ï¼¡Â ï¼¢Â ï¼£Â ï¼¤Â ï¼¥Â ï¼¦Â ï¼§Â ï¼¨Â ï¼©
->     ï¼ªÂ ï¼«Â ï¼¬Â ï¼­Â ï¼®Â ï¼¯Â ï¼°Â ï¼±Â ï¼²Â ï¼³Â ï¼´Â ï¼µÂ ï¼¶Â ï¼·Â ï¼¸Â ï¼¹Â ï¼ºÂ ï½Â ï½Â ï½Â ï½Â ï½Â ï½Â ï½Â ï½ ï½
->     ï½Â ï½Â ï½Â ï½Â ï½ ï½Â ï½Â ï½Â ï½Â ï½Â ï½Â ï½Â ï½ ï½Â ï½Â ï½Â ï½
+>     A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h i j 
+>     k l m n o p q r s t u v w x y z ª º À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ð Ñ 
+>     Ò Ó Ô Õ Ö Ø Ù Ú Û Ü Ý Þ ß à á â ã ä å æ ç è é ê ë ì í î ï ð ñ ò ó ô õ ö 
+>     ø ù ú û ü ý þ ÿ Ā ā Ă ă Ą ą Ć ć Ĉ ĉ Ċ ċ Č č Ď ď Đ đ Ē ē Ĕ ĕ Ė ė Ę ę Ě ě 
+>     Ĝ ĝ Ğ ğ Ġ ġ Ģ ģ Ĥ ĥ Ħ ħ Ĩ ĩ Ī ī Ĭ ĭ Į į İ ı Ĳ ĳ Ĵ ĵ Ķ ķ ĸ Ĺ ĺ Ļ ļ Ľ ľ Ŀ 
+>     ŀ Ł ł Ń ń Ņ ņ Ň ň Ŋ ŋ Ō ō Ŏ ŏ Ő ő Œ œ Ŕ ŕ Ŗ ŗ Ř ř Ś ś Ŝ ŝ Ş ş Š š Ţ ţ Ť 
+>     ť Ŧ ŧ Ũ ũ Ū ū Ŭ ŭ Ů ů Ű ű Ų ų Ŵ ŵ Ŷ ŷ Ÿ Ź ź Ż ż Ž ž ſ ƀ Ɓ Ƃ ƃ Ƈ ƈ Ɖ Ɗ Ƌ 
+>     ƌ ƍ Ǝ Ə Ɛ Ƒ ƒ Ɠ Ɣ ƕ Ɩ Ɨ Ƙ ƙ ƚ ƛ Ɯ Ɲ ƞ Ƥ ƥ Ʀ ƫ Ƭ ƭ Ʈ Ư ư Ʊ Ʋ Ƴ ƴ Ƶ ƶ Ʒ Ƹ 
+>     ƹ ƺ ƾ ƿ Ǆ ǅ ǆ Ǉ ǈ ǉ Ǌ ǋ ǌ Ǎ ǎ Ǐ ǐ Ǒ ǒ Ǔ ǔ Ǖ ǖ Ǘ ǘ Ǚ ǚ Ǜ ǜ ǝ Ǟ ǟ Ǡ ǡ Ǣ ǣ 
+>     Ǥ ǥ Ǧ ǧ Ǩ ǩ Ǫ ǫ Ǭ ǭ Ǯ ǯ ǰ Ǳ ǲ ǳ Ǵ ǵ Ƿ Ǹ ǹ Ǻ ǻ Ǽ ǽ Ǿ ǿ Ȁ ȁ Ȃ ȃ Ȅ ȅ Ȇ ȇ Ȉ 
+>     ȉ Ȋ ȋ Ȍ ȍ Ȏ ȏ Ȑ ȑ Ȓ ȓ Ȕ ȕ Ȗ ȗ Ș ș Ț ț Ȝ ȝ Ȟ ȟ Ƞ ȡ Ȥ ȥ Ȧ ȧ Ȩ ȩ Ȫ ȫ Ȭ ȭ Ȯ 
+>     ȯ Ȱ ȱ Ȳ ȳ ȴ ȵ ȶ ȷ Ⱥ Ȼ ȼ Ƚ Ⱦ ɐ ɑ ɒ ɓ ɕ ɖ ɗ ɘ ə ɚ ɛ ɜ ɝ ɞ ɟ ɠ ɡ ɢ ɣ ɤ ɥ ɦ 
+>     ɧ ɨ ɩ ɪ ɫ ɬ ɭ ɮ ɯ ɰ ɱ ɲ ɳ ɴ ɶ ɹ ɺ ɻ ɼ ɽ ɾ ɿ ʀ ʁ ʂ ʃ ʄ ʅ ʆ ʇ ʈ ʉ ʊ ʋ ʌ ʍ 
+>     ʎ ʏ ʐ ʑ ʒ ʓ ʙ ʚ ʛ ʜ ʝ ʞ ʟ ʠ ʣ ʤ ʥ ʦ ʧ ʨ ʩ ʪ ʫ ˡ ˢ ˣ ᴀ ᴁ ᴂ ᴃ ᴄ ᴅ ᴆ ᴇ ᴈ ᴉ 
+>     ᴊ ᴋ ᴌ ᴍ ᴎ ᴏ ᴑ ᴓ ᴔ ᴘ ᴙ ᴚ ᴛ ᴜ ᴝ ᴞ ᴟ ᴠ ᴡ ᴢ ᴣ ᴬ ᴭ ᴮ ᴯ ᴰ ᴱ ᴲ ᴳ ᴴ ᴵ ᴶ ᴷ ᴸ ᴹ ᴺ 
+>     ᴻ ᴼ ᴾ ᴿ ᵀ ᵁ ᵂ ᵃ ᵄ ᵅ ᵆ ᵇ ᵈ ᵉ ᵊ ᵋ ᵌ ᵍ ᵎ ᵏ ᵐ ᵑ ᵒ ᵖ ᵗ ᵘ ᵙ ᵚ ᵛ ᵢ ᵣ ᵤ ᵥ ᵫ ᵬ ᵭ 
+>     ᵮ ᵯ ᵰ ᵱ ᵲ ᵳ ᵴ ᵵ ᵶ Ḁ ḁ Ḃ ḃ Ḅ ḅ Ḇ ḇ Ḉ ḉ Ḋ ḋ Ḍ ḍ Ḏ ḏ Ḑ ḑ Ḓ ḓ Ḕ ḕ Ḗ ḗ Ḙ ḙ Ḛ 
+>     ḛ Ḝ ḝ Ḟ ḟ Ḡ ḡ Ḣ ḣ Ḥ ḥ Ḧ ḧ Ḩ ḩ Ḫ ḫ Ḭ ḭ Ḯ ḯ Ḱ ḱ Ḳ ḳ Ḵ ḵ Ḷ ḷ Ḹ ḹ Ḻ ḻ Ḽ ḽ Ḿ 
+>     ḿ Ṁ ṁ Ṃ ṃ Ṅ ṅ Ṇ ṇ Ṉ ṉ Ṋ ṋ Ṍ ṍ Ṏ ṏ Ṑ ṑ Ṓ ṓ Ṕ ṕ Ṗ ṗ Ṙ ṙ Ṛ ṛ Ṝ ṝ Ṟ ṟ Ṡ ṡ Ṣ 
+>     ṣ Ṥ ṥ Ṧ ṧ Ṩ ṩ Ṫ ṫ Ṭ ṭ Ṯ ṯ Ṱ ṱ Ṳ ṳ Ṵ ṵ Ṷ ṷ Ṹ ṹ Ṻ ṻ Ṽ ṽ Ṿ ṿ Ẁ ẁ Ẃ ẃ Ẅ ẅ Ẇ 
+>     ẇ Ẉ ẉ Ẋ ẋ Ẍ ẍ Ẏ ẏ Ẑ ẑ Ẓ ẓ Ẕ ẕ ẖ ẗ ẘ ẙ ẚ ẛ ẞ ẟ Ạ ạ Ả ả Ấ ấ Ầ ầ Ẩ ẩ Ẫ ẫ Ậ 
+>     ậ Ắ ắ Ằ ằ Ẳ ẳ Ẵ ẵ Ặ ặ Ẹ ẹ Ẻ ẻ Ẽ ẽ Ế ế Ề ề Ể ể Ễ ễ Ệ ệ Ỉ ỉ Ị ị Ọ ọ Ỏ ỏ Ố 
+>     ố Ồ ồ Ổ ổ Ỗ ỗ Ộ ộ Ớ ớ Ờ ờ Ở ở Ỡ ỡ Ợ ợ Ụ ụ Ủ ủ Ứ ứ Ừ ừ Ử ử Ữ ữ Ự ự Ỳ ỳ Ỵ 
+>     ỵ Ỷ ỷ Ỹ ỹ K Å Ⅎ ⅎ Ⅰ Ⅱ Ⅲ Ⅳ Ⅴ Ⅵ Ⅶ Ⅷ Ⅸ Ⅹ Ⅺ Ⅻ Ⅼ Ⅽ Ⅾ Ⅿ ⅰ ⅱ ⅲ ⅳ ⅴ 
+>     ⅵ ⅶ ⅷ ⅸ ⅹ ⅺ ⅻ ⅼ ⅽ ⅾ ⅿ ﬀ ﬁ ﬂ ﬃ ﬄ ﬅ ﬆ Ａ Ｂ Ｃ Ｄ Ｅ Ｆ Ｇ Ｈ Ｉ
+>     Ｊ Ｋ Ｌ Ｍ Ｎ Ｏ Ｐ Ｑ Ｒ Ｓ Ｔ Ｕ Ｖ Ｗ Ｘ Ｙ Ｚ ａ ｂ ｃ ｄ ｅ ｆ ｇ ｈ ｉ
+>     ｊ ｋ ｌ ｍ ｎ ｏ ｐ ｑ ｒ ｓ ｔ ｕ ｖ ｗ ｘ ｙ ｚ
 
 As you can see, those letters are scattered all over the place. Sure,
 it's not completely random, but it's not useful either, because it is
@@ -353,55 +353,55 @@ method from the `Unicode::Collate` class, you do get an alphabetic sort.
 Using that method, the Latin letters I just showed you now come out in
 alphabetical order, which is like this:
 
->     aÂ ï½Â AÂ ï¼¡Â ÂªÂ áµÂ á´¬Â Ã¡Â ÃÂ Ã Â ÃÂ ÄÂ ÄÂ áº¯Â áº®Â áº±Â áº°Â áºµÂ áº´Â áº³Â áº²Â Ã¢Â ÃÂ áº¥Â áº¤Â áº§Â áº¦Â áº«Â áºªÂ áº©Â áº¨Â ÇÂ ÇÂ Ã¥Â ÃÂ 
->     â«Â Ç»Â ÇºÂ Ã¤Â ÃÂ ÇÂ ÇÂ Ã£Â ÃÂ È§Â È¦Â Ç¡Â Ç Â ÄÂ ÄÂ ÄÂ ÄÂ áº£Â áº¢Â ÈÂ ÈÂ ÈÂ ÈÂ áº¡Â áº Â áº·Â áº¶Â áº­Â áº¬Â á¸Â á¸Â Ã¦Â ÃÂ á´­Â Ç½Â Ç¼Â 
->     Ç£Â Ç¢Â áºÂ á´Â ÈºÂ á´Â á´Â áµÂ ÉÂ áµÂ ÉÂ áµÂ ÉÂ bÂ ï½Â BÂ ï¼¢Â áµÂ á´®Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â ÊÂ ÆÂ á´¯Â á´Â áµ¬Â ÉÂ ÆÂ ÆÂ ÆÂ cÂ 
->     ï½Â â½Â CÂ ï¼£Â â­Â ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ ÄÂ Ã§Â ÃÂ á¸Â á¸Â á´Â È¼Â È»Â ÆÂ ÆÂ ÉÂ dÂ ï½Â â¾Â DÂ ï¼¤Â â®Â áµÂ á´°Â ÄÂ ÄÂ á¸Â 
->     á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â á¸Â ÄÂ ÄÂ Ã°Â ÃÂ Ç³Â Ê£Â Ç²Â Ç±Â ÇÂ ÇÂ ÇÂ Ê¥Â Ê¤Â á´Â á´Â áµ­Â ÉÂ ÆÂ ÉÂ ÆÂ ÆÂ ÆÂ È¡Â áºÂ eÂ ï½Â EÂ 
->     ï¼¥Â áµÂ á´±Â Ã©Â ÃÂ Ã¨Â ÃÂ ÄÂ ÄÂ ÃªÂ ÃÂ áº¿Â áº¾Â á»Â á»Â á»Â á»Â á»Â á»Â ÄÂ ÄÂ Ã«Â ÃÂ áº½Â áº¼Â ÄÂ ÄÂ È©Â È¨Â á¸Â á¸Â ÄÂ ÄÂ ÄÂ ÄÂ á¸Â 
->     á¸Â á¸Â á¸Â áº»Â áººÂ ÈÂ ÈÂ ÈÂ ÈÂ áº¹Â áº¸Â á»Â á»Â á¸Â á¸Â á¸Â á¸Â á´Â ÇÂ ÆÂ á´²Â ÉÂ ÆÂ áµÂ ÉÂ ÆÂ áµÂ ÉÂ ÉÂ ÉÂ á´Â áµÂ ÉÂ ÉÂ ÊÂ É¤Â 
->     fÂ ï½Â FÂ ï¼¦Â á¸Â á¸Â ï¬Â ï¬Â ï¬Â ï¬Â ï¬Â Ê©Â áµ®Â ÆÂ ÆÂ âÂ â²Â gÂ ï½Â GÂ ï¼§Â áµÂ á´³Â ÇµÂ Ç´Â ÄÂ ÄÂ ÄÂ ÄÂ Ç§Â Ç¦Â Ä¡Â Ä Â Ä£Â 
->     Ä¢Â á¸¡Â á¸ Â É¡Â É¢Â Ç¥Â Ç¤Â É Â ÆÂ ÊÂ É£Â ÆÂ hÂ ï½Â HÂ ï¼¨Â á´´Â Ä¥Â Ä¤Â ÈÂ ÈÂ á¸§Â á¸¦Â á¸£Â á¸¢Â á¸©Â á¸¨Â á¸¥Â á¸¤Â á¸«Â á¸ªÂ áºÂ Ä§Â Ä¦Â ÊÂ 
->     ÆÂ É¦Â É§Â iÂ ï½Â â°Â IÂ ï¼©Â â Â áµ¢Â á´µÂ Ã­Â ÃÂ Ã¬Â ÃÂ Ä­Â Ä¬Â Ã®Â ÃÂ ÇÂ ÇÂ Ã¯Â ÃÂ á¸¯Â á¸®Â Ä©Â Ä¨Â Ä°Â Ä¯Â Ä®Â Ä«Â ÄªÂ á»Â á»Â ÈÂ 
->     ÈÂ ÈÂ ÈÂ á»Â á»Â á¸­Â á¸¬Â â±Â â¡Â â²Â â¢Â Ä³Â Ä²Â â³Â â£Â â¸Â â¨Â Ä±Â ÉªÂ á´Â áµÂ É¨Â ÆÂ É©Â ÆÂ jÂ ï½Â JÂ ï¼ªÂ á´¶Â ÄµÂ Ä´Â Ç°Â È·Â á´Â 
->     ÊÂ ÉÂ ÊÂ kÂ ï½Â KÂ âªÂ ï¼«Â áµÂ á´·Â á¸±Â á¸°Â Ç©Â Ç¨Â Ä·Â Ä¶Â á¸³Â á¸²Â á¸µÂ á¸´Â á´Â ÆÂ ÆÂ ÊÂ lÂ ï½Â â¼Â LÂ ï¼¬Â â¬Â Ë¡Â á´¸Â ÄºÂ Ä¹Â 
->     Ä¾Â Ä½Â Ä¼Â Ä»Â á¸·Â á¸¶Â á¸¹Â á¸¸Â á¸½Â á¸¼Â á¸»Â á¸ºÂ ÅÂ ÅÂ ÅÂ Ä¿Â ÇÂ ÇÂ ÇÂ ÊªÂ Ê«Â ÊÂ á´Â ÆÂ È½Â É«Â É¬Â É­Â È´Â É®Â ÆÂ ÊÂ mÂ ï½Â â¿Â MÂ 
->     ï¼­Â â¯Â áµÂ á´¹Â á¸¿Â á¸¾Â á¹Â á¹Â á¹Â á¹Â á´Â áµ¯Â É±Â nÂ ï½Â NÂ ï¼®Â á´ºÂ ÅÂ ÅÂ Ç¹Â Ç¸Â ÅÂ ÅÂ Ã±Â ÃÂ á¹Â á¹Â ÅÂ ÅÂ á¹Â á¹Â á¹Â á¹Â á¹Â 
->     á¹Â ÇÂ ÇÂ ÇÂ É´Â á´»Â á´Â áµ°Â É²Â ÆÂ ÆÂ È Â É³Â ÈµÂ ÅÂ ÅÂ áµÂ oÂ ï½Â OÂ ï¼¯Â ÂºÂ áµÂ á´¼Â Ã³Â ÃÂ Ã²Â ÃÂ ÅÂ ÅÂ Ã´Â ÃÂ á»Â á»Â á»Â 
->     á»Â á»Â á»Â á»Â á»Â ÇÂ ÇÂ Ã¶Â ÃÂ È«Â ÈªÂ ÅÂ ÅÂ ÃµÂ ÃÂ á¹Â á¹Â á¹Â á¹Â È­Â È¬Â È¯Â È®Â È±Â È°Â Ã¸Â ÃÂ Ç¿Â Ç¾Â Ç«Â ÇªÂ Ç­Â Ç¬Â ÅÂ ÅÂ á¹Â 
->     á¹Â á¹Â á¹Â á»Â á»Â ÈÂ ÈÂ ÈÂ ÈÂ á»Â á»Â á»Â á»Â á»¡Â á» Â á»Â á»Â á»£Â á»¢Â á»Â á»Â á»Â á»Â ÅÂ ÅÂ á´Â á´Â É¶Â á´Â á´Â pÂ ï½Â PÂ ï¼°Â áµÂ 
->     á´¾Â á¹Â á¹Â á¹Â á¹Â á´Â áµ±Â Æ¥Â Æ¤Â qÂ ï½Â QÂ ï¼±Â Ê Â Ä¸Â rÂ ï½Â RÂ ï¼²Â áµ£Â á´¿Â ÅÂ ÅÂ ÅÂ ÅÂ á¹Â á¹Â ÅÂ ÅÂ ÈÂ ÈÂ ÈÂ ÈÂ á¹Â 
->     á¹Â á¹Â á¹Â á¹Â á¹Â ÊÂ Æ¦Â á´Â áµ²Â É¹Â á´Â ÉºÂ É»Â É¼Â É½Â É¾Â áµ³Â É¿Â ÊÂ sÂ ï½Â SÂ ï¼³Â Ë¢Â ÅÂ ÅÂ á¹¥Â á¹¤Â ÅÂ ÅÂ Å¡Â Å Â á¹§Â á¹¦Â á¹¡Â 
->     á¹ Â ÅÂ ÅÂ á¹£Â á¹¢Â á¹©Â á¹¨Â ÈÂ ÈÂ Å¿Â áºÂ ÃÂ áºÂ ï¬Â ï¬Â áµ´Â ÊÂ ÊÂ ÊÂ ÊÂ tÂ ï½Â TÂ ï¼´Â áµÂ áµÂ Å¥Â Å¤Â áºÂ á¹«Â á¹ªÂ Å£Â Å¢Â á¹­Â á¹¬Â 
->     ÈÂ ÈÂ á¹±Â á¹°Â á¹¯Â á¹®Â Ê¨Â Æ¾Â Ê¦Â Ê§Â á´Â Å§Â Å¦Â È¾Â áµµÂ Æ«Â Æ­Â Æ¬Â ÊÂ Æ®Â È¶Â ÊÂ uÂ ï½Â UÂ ï¼µÂ áµÂ áµ¤Â áµÂ ÃºÂ ÃÂ Ã¹Â ÃÂ Å­Â Å¬Â 
->     Ã»Â ÃÂ ÇÂ ÇÂ Å¯Â Å®Â Ã¼Â ÃÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ ÇÂ Å±Â Å°Â Å©Â Å¨Â á¹¹Â á¹¸Â Å³Â Å²Â Å«Â ÅªÂ á¹»Â á¹ºÂ á»§Â á»¦Â ÈÂ ÈÂ ÈÂ ÈÂ Æ°Â Æ¯Â 
->     á»©Â á»¨Â á»«Â á»ªÂ á»¯Â á»®Â á»­Â á»¬Â á»±Â á»°Â á»¥Â á»¤Â á¹³Â á¹²Â á¹·Â á¹¶Â á¹µÂ á¹´Â á´Â á´Â áµÂ á´Â áµ«Â ÊÂ É¥Â É¯Â ÆÂ áµÂ á´Â É°Â ÊÂ Æ±Â vÂ ï½Â â´Â VÂ 
->     ï¼¶Â â¤Â áµÂ áµ¥Â á¹½Â á¹¼Â á¹¿Â á¹¾Â âµÂ â¥Â â¶Â â¦Â â·Â â§Â á´ Â ÊÂ Æ²Â ÊÂ wÂ ï½Â WÂ ï¼·Â áµÂ áºÂ áºÂ áºÂ áºÂ ÅµÂ Å´Â áºÂ áºÂ áºÂ áºÂ áºÂ áºÂ 
->     áºÂ á´¡Â ÊÂ xÂ ï½Â â¹Â XÂ ï¼¸Â â©Â Ë£Â áºÂ áºÂ áºÂ áºÂ âºÂ âªÂ â»Â â«Â yÂ ï½Â YÂ ï¼¹Â Ã½Â ÃÂ á»³Â á»²Â Å·Â Å¶Â áºÂ Ã¿Â Å¸Â á»¹Â á»¸Â áºÂ 
->     áºÂ È³Â È²Â á»·Â á»¶Â á»µÂ á»´Â ÊÂ Æ´Â Æ³Â zÂ ï½Â ZÂ ï¼ºÂ ÅºÂ Å¹Â áºÂ áºÂ Å¾Â Å½Â Å¼Â Å»Â áºÂ áºÂ áºÂ áºÂ ÆÂ á´¢Â Æ¶Â ÆµÂ áµ¶Â È¥Â È¤Â ÊÂ ÊÂ 
->     ÊÂ Æ·Â Ç¯Â Ç®Â á´£Â Æ¹Â Æ¸Â ÆºÂ ÊÂ ÈÂ ÈÂ Ã¾Â ÃÂ Æ¿Â Ç·
+>     a ａ A Ａ ª ᵃ ᴬ á Á à À ă Ă ắ Ắ ằ Ằ ẵ Ẵ ẳ Ẳ â Â ấ Ấ ầ Ầ ẫ Ẫ ẩ Ẩ ǎ Ǎ å Å 
+>     Å ǻ Ǻ ä Ä ǟ Ǟ ã Ã ȧ Ȧ ǡ Ǡ ą Ą ā Ā ả Ả ȁ Ȁ ȃ Ȃ ạ Ạ ặ Ặ ậ Ậ ḁ Ḁ æ Æ ᴭ ǽ Ǽ 
+>     ǣ Ǣ ẚ ᴀ Ⱥ ᴁ ᴂ ᵆ ɐ ᵄ ɑ ᵅ ɒ b ｂ B Ｂ ᵇ ᴮ ḃ Ḃ ḅ Ḅ ḇ Ḇ ʙ ƀ ᴯ ᴃ ᵬ ɓ Ɓ ƃ Ƃ c 
+>     ｃ ⅽ C Ｃ Ⅽ ć Ć ĉ Ĉ č Č ċ Ċ ç Ç ḉ Ḉ ᴄ ȼ Ȼ ƈ Ƈ ɕ d ｄ ⅾ D Ｄ Ⅾ ᵈ ᴰ ď Ď ḋ 
+>     Ḋ ḑ Ḑ ḍ Ḍ ḓ Ḓ ḏ Ḏ đ Đ ð Ð ǳ ʣ ǲ Ǳ ǆ ǅ Ǆ ʥ ʤ ᴅ ᴆ ᵭ ɖ Ɖ ɗ Ɗ ƌ Ƌ ȡ ẟ e ｅ E 
+>     Ｅ ᵉ ᴱ é É è È ĕ Ĕ ê Ê ế Ế ề Ề ễ Ễ ể Ể ě Ě ë Ë ẽ Ẽ ė Ė ȩ Ȩ ḝ Ḝ ę Ę ē Ē ḗ 
+>     Ḗ ḕ Ḕ ẻ Ẻ ȅ Ȅ ȇ Ȇ ẹ Ẹ ệ Ệ ḙ Ḙ ḛ Ḛ ᴇ ǝ Ǝ ᴲ ə Ə ᵊ ɛ Ɛ ᵋ ɘ ɚ ɜ ᴈ ᵌ ɝ ɞ ʚ ɤ 
+>     f ｆ F Ｆ ḟ Ḟ ﬀ ﬃ ﬄ ﬁ ﬂ ʩ ᵮ ƒ Ƒ ⅎ Ⅎ g ｇ G Ｇ ᵍ ᴳ ǵ Ǵ ğ Ğ ĝ Ĝ ǧ Ǧ ġ Ġ ģ 
+>     Ģ ḡ Ḡ ɡ ɢ ǥ Ǥ ɠ Ɠ ʛ ɣ Ɣ h ｈ H Ｈ ᴴ ĥ Ĥ ȟ Ȟ ḧ Ḧ ḣ Ḣ ḩ Ḩ ḥ Ḥ ḫ Ḫ ẖ ħ Ħ ʜ 
+>     ƕ ɦ ɧ i ｉ ⅰ I Ｉ Ⅰ ᵢ ᴵ í Í ì Ì ĭ Ĭ î Î ǐ Ǐ ï Ï ḯ Ḯ ĩ Ĩ İ į Į ī Ī ỉ Ỉ ȉ 
+>     Ȉ ȋ Ȋ ị Ị ḭ Ḭ ⅱ Ⅱ ⅲ Ⅲ ĳ Ĳ ⅳ Ⅳ ⅸ Ⅸ ı ɪ ᴉ ᵎ ɨ Ɨ ɩ Ɩ j ｊ J Ｊ ᴶ ĵ Ĵ ǰ ȷ ᴊ 
+>     ʝ ɟ ʄ k ｋ K K Ｋ ᵏ ᴷ ḱ Ḱ ǩ Ǩ ķ Ķ ḳ Ḳ ḵ Ḵ ᴋ ƙ Ƙ ʞ l ｌ ⅼ L Ｌ Ⅼ ˡ ᴸ ĺ Ĺ 
+>     ľ Ľ ļ Ļ ḷ Ḷ ḹ Ḹ ḽ Ḽ ḻ Ḻ ł Ł ŀ Ŀ ǉ ǈ Ǉ ʪ ʫ ʟ ᴌ ƚ Ƚ ɫ ɬ ɭ ȴ ɮ ƛ ʎ m ｍ ⅿ M 
+>     Ｍ Ⅿ ᵐ ᴹ ḿ Ḿ ṁ Ṁ ṃ Ṃ ᴍ ᵯ ɱ n ｎ N Ｎ ᴺ ń Ń ǹ Ǹ ň Ň ñ Ñ ṅ Ṅ ņ Ņ ṇ Ṇ ṋ Ṋ ṉ 
+>     Ṉ ǌ ǋ Ǌ ɴ ᴻ ᴎ ᵰ ɲ Ɲ ƞ Ƞ ɳ ȵ ŋ Ŋ ᵑ o ｏ O Ｏ º ᵒ ᴼ ó Ó ò Ò ŏ Ŏ ô Ô ố Ố ồ 
+>     Ồ ỗ Ỗ ổ Ổ ǒ Ǒ ö Ö ȫ Ȫ ő Ő õ Õ ṍ Ṍ ṏ Ṏ ȭ Ȭ ȯ Ȯ ȱ Ȱ ø Ø ǿ Ǿ ǫ Ǫ ǭ Ǭ ō Ō ṓ 
+>     Ṓ ṑ Ṑ ỏ Ỏ ȍ Ȍ ȏ Ȏ ớ Ớ ờ Ờ ỡ Ỡ ở Ở ợ Ợ ọ Ọ ộ Ộ œ Œ ᴏ ᴑ ɶ ᴔ ᴓ p ｐ P Ｐ ᵖ 
+>     ᴾ ṕ Ṕ ṗ Ṗ ᴘ ᵱ ƥ Ƥ q ｑ Q Ｑ ʠ ĸ r ｒ R Ｒ ᵣ ᴿ ŕ Ŕ ř Ř ṙ Ṙ ŗ Ŗ ȑ Ȑ ȓ Ȓ ṛ 
+>     Ṛ ṝ Ṝ ṟ Ṟ ʀ Ʀ ᴙ ᵲ ɹ ᴚ ɺ ɻ ɼ ɽ ɾ ᵳ ɿ ʁ s ｓ S Ｓ ˢ ś Ś ṥ Ṥ ŝ Ŝ š Š ṧ Ṧ ṡ 
+>     Ṡ ş Ş ṣ Ṣ ṩ Ṩ ș Ș ſ ẛ ß ẞ ﬆ ﬅ ᵴ ʂ ʃ ʅ ʆ t ｔ T Ｔ ᵗ ᵀ ť Ť ẗ ṫ Ṫ ţ Ţ ṭ Ṭ 
+>     ț Ț ṱ Ṱ ṯ Ṯ ʨ ƾ ʦ ʧ ᴛ ŧ Ŧ Ⱦ ᵵ ƫ ƭ Ƭ ʈ Ʈ ȶ ʇ u ｕ U Ｕ ᵘ ᵤ ᵁ ú Ú ù Ù ŭ Ŭ 
+>     û Û ǔ Ǔ ů Ů ü Ü ǘ Ǘ ǜ Ǜ ǚ Ǚ ǖ Ǖ ű Ű ũ Ũ ṹ Ṹ ų Ų ū Ū ṻ Ṻ ủ Ủ ȕ Ȕ ȗ Ȗ ư Ư 
+>     ứ Ứ ừ Ừ ữ Ữ ử Ử ự Ự ụ Ụ ṳ Ṳ ṷ Ṷ ṵ Ṵ ᴜ ᴝ ᵙ ᴞ ᵫ ʉ ɥ ɯ Ɯ ᵚ ᴟ ɰ ʊ Ʊ v ｖ ⅴ V 
+>     Ｖ Ⅴ ᵛ ᵥ ṽ Ṽ ṿ Ṿ ⅵ Ⅵ ⅶ Ⅶ ⅷ Ⅷ ᴠ ʋ Ʋ ʌ w ｗ W Ｗ ᵂ ẃ Ẃ ẁ Ẁ ŵ Ŵ ẘ ẅ Ẅ ẇ Ẇ ẉ 
+>     Ẉ ᴡ ʍ x ｘ ⅹ X Ｘ Ⅹ ˣ ẍ Ẍ ẋ Ẋ ⅺ Ⅺ ⅻ Ⅻ y ｙ Y Ｙ ý Ý ỳ Ỳ ŷ Ŷ ẙ ÿ Ÿ ỹ Ỹ ẏ 
+>     Ẏ ȳ Ȳ ỷ Ỷ ỵ Ỵ ʏ ƴ Ƴ z ｚ Z Ｚ ź Ź ẑ Ẑ ž Ž ż Ż ẓ Ẓ ẕ Ẕ ƍ ᴢ ƶ Ƶ ᵶ ȥ Ȥ ʐ ʑ 
+>     ʒ Ʒ ǯ Ǯ ᴣ ƹ Ƹ ƺ ʓ ȝ Ȝ þ Þ ƿ Ƿ
 
 Isn't that much nicer?
 
 ### **Romani Ite Domum**
 
-In case you're wondering what that last row of distinctly unâRoman Latin
+In case you're wondering what that last row of distinctly un‐Roman Latin
 letters might possibly be, they're called respectively
-[*ezh*](http://en.wikipedia.org/wiki/Ezh_(letter)) Ê,
-[*yogh*](http://en.wikipedia.org/wiki/Yogh) È,
-[*thorn*](http://en.wikipedia.org/wiki/Thorn_(letter)) Ã¾, and
-[*wynn*](http://en.wikipedia.org/wiki/Wynn) Æ¿. They had to go somewhere,
-so they ended up getting stuck after â¹zâº
+[*ezh*](http://en.wikipedia.org/wiki/Ezh_(letter)) ʒ,
+[*yogh*](http://en.wikipedia.org/wiki/Yogh) ȝ,
+[*thorn*](http://en.wikipedia.org/wiki/Thorn_(letter)) þ, and
+[*wynn*](http://en.wikipedia.org/wiki/Wynn) ƿ. They had to go somewhere,
+so they ended up getting stuck after ‹z›
 
-Some are still used in certain nonâEnglish (but still Latin) alphabets
+Some are still used in certain non‐English (but still Latin) alphabets
 today, such as Icelandic, and even though you probably won't bump into
 them in contemporary English texts, you might see some if you're reading
 the original texts of famous medieval English poems like *Beowulf*, *Sir
 Gawain and the Green Knight*, or *Brut*.
 
-The last of those, *Brut*, was written by a fellow named *LaÈamon*, a
+The last of those, *Brut*, was written by a fellow named *Laȝamon*, a
 name whose third letter is a yogh. Famous though he was, I wouldn't
-suggest changing your name to â¹LaÈamonâº in his honor, as I doubt the
+suggest changing your name to ‹Laȝamon› in his honor, as I doubt the
 phone company would be amused.
 
 

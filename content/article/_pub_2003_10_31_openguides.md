@@ -1,18 +1,18 @@
 {
    "draft" : null,
-   "date" : "2003-10-31T00:00:00-08:00",
-   "tags" : [
-      "wiki-openguides"
-   ],
-   "slug" : "/pub/2003/10/31/openguides",
-   "title" : "Open Guides",
-   "description" : " First, a disclaimer. I'm not a wiki celebrity. I don't look good in StudlyCaps. I'm not part of the wiki culture â I've never contributed to Ward's Wiki, never used TWiki, am baffled by MoinMoin, and every time I...",
    "thumbnail" : "/images/_pub_2003_10_31_openguides/111-openguides.gif",
-   "categories" : "Community",
+   "description" : " First, a disclaimer. I'm not a wiki celebrity. I don't look good in StudlyCaps. I'm not part of the wiki culture — I've never contributed to Ward's Wiki, never used TWiki, am baffled by MoinMoin, and every time I...",
+   "image" : null,
    "authors" : [
       "kake-pugh"
    ],
-   "image" : null
+   "tags" : [
+      "wiki-openguides"
+   ],
+   "title" : "Open Guides",
+   "categories" : "Community",
+   "date" : "2003-10-31T00:00:00-08:00",
+   "slug" : "/pub/2003/10/31/openguides"
 }
 
 
@@ -22,7 +22,7 @@
 First, a disclaimer.
 
 I'm not a wiki celebrity. I don't look good in StudlyCaps. I'm not part
-of the wiki culture â I've never contributed to [Ward's
+of the wiki culture — I've never contributed to [Ward's
 Wiki](http://c2.com/cgi/wiki?WelcomeVisitors), never used
 [TWiki](http://twiki.org/), am baffled by
 [MoinMoin](http://twistedmatrix.com/users/jh.twistd/moin/moin.cgi/FrontPage),
@@ -34,7 +34,7 @@ Having said that, I'm going to spend 2,500 words or so advocating the
 possibilities of Ward Cunningham's simple, potent idea, and explaining
 how I and a couple of other [Perlmongers](http://london.pm.org) have
 applied it to create what I think is one of the most exciting Perl
-applications currently in existence â OpenGuides.
+applications currently in existence — OpenGuides.
 
 ### Beginnings
 
@@ -67,8 +67,8 @@ in particular, spent a lot of time in its guts. I decided in the end
 that writing software should only hurt some of the time, and after
 several beers one night, made a pact with Chris Ball that grubstreet's
 software would be rewritten in Real Perl. Chris held me to it, and a
-CPAN-friendly wiki toolkit â
-[CGI::Wiki](http://search.cpan.org/~kake/CGI-Wiki/) â resulted. Once we
+CPAN-friendly wiki toolkit —
+[CGI::Wiki](http://search.cpan.org/~kake/CGI-Wiki/) — resulted. Once we
 had that to build on, we started on the CGI script that eventually
 turned into [the OpenGuides
 distribution](http://search.cpan.org/~kake/OpenGuides/).
@@ -86,9 +86,9 @@ you to put content into it.
 |                                                                       |
 | There's an opportunity right here for anyone wanting to join the      |
 | project team. Write a set of pages for bundling with new installs of  |
-| the OpenGuides software â how to use the Guide, how to format your    |
+| the OpenGuides software — how to use the Guide, how to format your    |
 | entries, maybe stub pages for things that all cities have in common,  |
-| maybe a category framework for transport pages â you're bound to be   |
+| maybe a category framework for transport pages — you're bound to be   |
 | able to come up with better ideas than those of us who've been using  |
 | the software for ages and are blind to its confusing spots.           |
 |                                                                       |
@@ -108,7 +108,7 @@ call it "The Drapers Arms", "Drapers Arms", "The Drapers Arms
 needs to be unique, so if I expect there to be more than one Drapers
 Arms in my city, I really should add some other kind of identifying
 information. [The Open Guide to London](http://london.openguides.org/)
-has a convention of including the postcode â thus "Drapers Arms, N1
+has a convention of including the postcode — thus "Drapers Arms, N1
 1ER".
 
 OK, so I've done that, and now I'm presented with an editing form with
@@ -128,19 +128,19 @@ it before me.
 Locales and categories are excellent ways to make sure that your newly
 added content doesn't drift off into a decoupled purgatory of unlinked
 pages. Just add the Pubs category and the Islington locale to the
-Drapers Arms page, and anyone doing a search â whether a simple
+Drapers Arms page, and anyone doing a search — whether a simple
 type-into-box or a directed
 [locale](http://london.openguides.org/index.cgi?action=index;index_type=locale;index_value=Islington)
 or
 [category](http://london.openguides.org/index.cgi?action=index;index_type=category;index_value=Pubs)
-search â will find it.
+search — will find it.
 
 Next, we get a set of smaller boxes for entering things like
 more-detailed location information, contact information, and opening
 hours. These boxes may be completely irrelevant to many, most, or all
 pages in your Guide. That's OK. They're optional. But if you *do* fill
 them in, you get to play with what I feel is one of the most innovative,
-yet simple, features of OpenGuides â [find me everything within half a
+yet simple, features of OpenGuides — [find me everything within half a
 kilometre of Piccadilly Circus Tube
 station](http://london.openguides.org/index.cgi?distance_in_metres=500&id=Piccadilly+Circus+Station&action=find_within_distance&Go=Go).
 Please. Because my feet hurt and I could murder a glass of wine.
@@ -153,7 +153,7 @@ Open Guide to London must have this information! There's no obvious way
 to get to it directly, though. I may have to write some code.
 
 Given that I'm one of the admins, I have access to the database on the
-server â so I can call the CGI::Wiki `list_nodes_by_metadata` method
+server — so I can call the CGI::Wiki `list_nodes_by_metadata` method
 directly to find all pages in Category Pubs, Locale Notting Hill, and
 Category Pub Food.
 
@@ -255,7 +255,7 @@ navigate by some other kind of landmark.
 ### You Can Do It, Too
 
 Suppose I'd had the idea for this directed pub search but didn't have
-direct access to any OpenGuides data store? No problem â I can play with
+direct access to any OpenGuides data store? No problem — I can play with
 the RDF interface. Most OpenGuides pages have a link to an RDF version,
 and this includes the auto-generated pages like locale or category
 search results.
@@ -291,7 +291,7 @@ only currently work for guides to cities located in the UK.
 
 -   The biggest and most widely used install is [the original London
     one](http://london.openguides.org/).
--   Oxford has two OpenGuides sites â [The Oxford
+-   Oxford has two OpenGuides sites — [The Oxford
     Guide](http://oxford.openguides.org/) and [The Vegan Guide to
     Oxford](http://the.earth.li/~kake/cgi-bin/openguides/vegan-oxford.cgi)
 -   ... Your city belongs here! ...

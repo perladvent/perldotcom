@@ -1,15 +1,15 @@
 {
-   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001203",
-   "tags" : [],
-   "date" : "2000-12-04T00:00:00-08:00",
+   "thumbnail" : null,
    "draft" : null,
-   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
    "description" : " Notes Tests Charnames Regular Expression Bug xsubpp Perlipc Examples Buggy PerlIO news Dodgy Function Names Lvalue Subs Various Notes You can subscribe to an e-mail version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections...",
-   "thumbnail" : null,
+   "image" : null,
    "categories" : "community",
+   "date" : "2000-12-04T00:00:00-08:00",
+   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001203",
+   "tags" : [],
    "title" : "This Week on p5p 2000/12/03"
 }
 

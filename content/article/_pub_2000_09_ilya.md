@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "categories" : "Community",
-   "description" : null,
    "title" : "Ilya Regularly Expresses",
+   "tags" : [],
+   "categories" : "Community",
+   "date" : "2000-09-20T00:00:00-08:00",
+   "slug" : "/pub/2000/09/ilya",
+   "thumbnail" : null,
+   "draft" : null,
+   "description" : null,
    "image" : null,
    "authors" : [
       "joe-johnston"
-   ],
-   "draft" : null,
-   "slug" : "/pub/2000/09/ilya",
-   "tags" : [],
-   "date" : "2000-09-20T00:00:00-08:00"
+   ]
 }
 
 
@@ -25,7 +25,7 @@ feature, much of the current shape of the regex engine, the OS/2 port,
 and the `FreezeThaw`, `Devel::Peek`, `Math::Pari` and `Term::Readline`
 modules. Dr. Zakharevich also teaches mathematics at Ohio State
 University. Below he shares his thoughts on Perl 6, the U.S. educational
-system, and GÃ¶del's theorem.*
+system, and Gödel's theorem.*
 
 **Many people know your extensive work with Perl's regular expressions.
 What is the most common misunderstanding new programmers have about this
@@ -389,8 +389,8 @@ solve"?**
 
 **IZ**: Taken theoretically, your question is very dear for a lot of
 mathematicians (and very demanding of them). It is the fundamental
-ignoramus-or-ignorabimus dilemma of the life-after-GÃ¶del: Will we ever
-know? What GÃ¶del says is: If the society of mathematicians may be
+ignoramus-or-ignorabimus dilemma of the life-after-Gödel: Will we ever
+know? What Gödel says is: If the society of mathematicians may be
 modeled by a computer, then most of the questions which make sense
 cannot be resolved, even if we have unlimited resources. However, we
 know that in practice this is far from happening. Most working
@@ -406,7 +406,7 @@ appropriate point of view which would clarify many known coincidences at
 once. We, mathematicians, as a class, have a very good record in
 producing new and enlightening points of view. It could take 50 or 100
 years, but typically it comes sooner or later. Maybe such questions may
-not be mapped into the negative spirit of the GÃ¶del program?
+not be mapped into the negative spirit of the Gödel program?
 
 Lastly, the questions on whether humans may be modelled by computers is
 far from having the "Of course, yes!" answer. Remember that there is a

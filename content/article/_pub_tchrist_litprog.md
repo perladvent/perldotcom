@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "tags" : [],
-   "date" : "2000-03-20T00:00:00-08:00",
-   "slug" : "/pub/tchrist/litprog",
-   "title" : "POD is not Literate Programming",
-   "description" : null,
-   "thumbnail" : null,
-   "categories" : "development",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null
+   "description" : null,
+   "image" : null,
+   "draft" : null,
+   "thumbnail" : null,
+   "categories" : "development",
+   "slug" : "/pub/tchrist/litprog",
+   "date" : "2000-03-20T00:00:00-08:00",
+   "tags" : [],
+   "title" : "POD is not Literate Programming"
 }
 
 
@@ -18,12 +18,12 @@
   ----------------------------------------------------------------------------
   Table of Contents
 
-  â¢[POD is Not Literate Programming](#POD_is_Not_Literate_Programming)\
-  â¢[What is Literate Programming?](#What_is_Literate_Programming_)\
-  â¢[How Literate Programming Systems Work](#How_Literate_Programming_Works)\
-  Â Â Â â¢[`tangle`](#C_tangle_)\
-  Â Â Â â¢[`weave`](#C_weave_)\
-  â¢[Summary](#Summary)\
+  •[POD is Not Literate Programming](#POD_is_Not_Literate_Programming)\
+  •[What is Literate Programming?](#What_is_Literate_Programming_)\
+  •[How Literate Programming Systems Work](#How_Literate_Programming_Works)\
+     •[`tangle`](#C_tangle_)\
+     •[`weave`](#C_weave_)\
+  •[Summary](#Summary)\
   ----------------------------------------------------------------------------
 
 I frequently come across assertions that POD, Perl's documentation

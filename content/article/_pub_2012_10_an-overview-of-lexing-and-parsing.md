@@ -1,16 +1,16 @@
 {
-   "title" : "An Overview of Lexing and Parsing",
-   "description" : "Perl programmers spend a lot of time reading, modifying, and writing data. When regular expressions aren't enough, turn to something more powerful: parsing.",
    "thumbnail" : null,
-   "categories" : "development",
+   "draft" : null,
    "authors" : [
       "ron-savage"
    ],
+   "description" : "Perl programmers spend a lot of time reading, modifying, and writing data. When regular expressions aren't enough, turn to something more powerful: parsing.",
    "image" : null,
-   "draft" : null,
-   "tags" : [],
    "date" : "2012-10-01T06:00:01-08:00",
-   "slug" : "/pub/2012/10/an-overview-of-lexing-and-parsing"
+   "slug" : "/pub/2012/10/an-overview-of-lexing-and-parsing",
+   "categories" : "development",
+   "title" : "An Overview of Lexing and Parsing",
+   "tags" : []
 }
 
 
@@ -207,7 +207,7 @@ of software engineering. Why study them indeed!
 Good Solutions and Home-grown Solutions
 =======================================
 
-There's anotherâmore significantâ reason to discuss lexing and parsing:
+There's another—more significant— reason to discuss lexing and parsing:
 to train programmers, without expertise in such matters, to resist the
 understandable urge to opt for using tools they are already familiar
 with, with regexps being the obvious choice.
@@ -398,8 +398,8 @@ and parser approach limits the code you have to write to two things: a
 set of rules for how to construct tokens within a grammar and a set of
 rules for what happens when we construct a valid combination of tokens.
 This limit allows you to focus on the important part of the
-applicationâdetermining what a document which conforms to the grammar
-means (the author's *intention*)âand less on the mechanics of verifying
+application—determining what a document which conforms to the grammar
+means (the author's *intention*)—and less on the mechanics of verifying
 that a document matches the grammar.
 
 In other words, you can focus on *what* you want to do with a document
@@ -426,7 +426,7 @@ thusly. The *Deterministic* part means that given the same input at the
 same stage, you'll always get the same result. The *Finite* part means
 the input stream only contains a limited number of different tokens,
 which simplifies the code. The *Automata* is, essentially, a software
-machineâa program. DFAs are also often called STTs (State Transition
+machine—a program. DFAs are also often called STTs (State Transition
 Tables).
 
 How do you make this all work in Perl? [MetaCPAN](https://metacpan.org/)
@@ -723,7 +723,7 @@ after the `__DATA__` token.
 Such in-line data can be accessed effortlessly by the very neat and very
 fast module
 [Data::Section::Simple](http://metacpan.org/module/Data::Section::Simple).
-Because Perl has already loaded the moduleâand is executing itâthere is
+Because Perl has already loaded the module—and is executing it—there is
 essentially no overhead whatsoever in reading data from within it. Don't
 you just love Perl! And MetaCPAN of course. And a community which
 contributes such wondrous code.
@@ -1099,7 +1099,7 @@ Developing the STT takes many iterations:
 -   The tiny script
 
     Have a tiny script which runs a single test. Giving it a
-    shortâperhaps temporaryâname, makes each test just that little bit
+    short—perhaps temporary—name, makes each test just that little bit
     easier to run. You can give it a meaningful name later, when
     including it in the distro.
 

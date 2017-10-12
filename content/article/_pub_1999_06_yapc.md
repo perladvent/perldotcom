@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "slug" : "/pub/1999/06/yapc",
-   "tags" : [],
-   "date" : "1999-06-30T00:00:00-08:00",
-   "description" : " Yet Another Perl Conference, also known as YAPC, wasn't just another conference, it was incredible. Kevin Lenzo YAPC was thought up and coordinated by Kevin Lenzo of Carnegie Mellon University. The idea was to have a &quot;grass roots&quot; Perl...",
-   "thumbnail" : null,
    "categories" : "community",
+   "slug" : "/pub/1999/06/yapc",
+   "date" : "1999-06-30T00:00:00-08:00",
+   "tags" : [],
    "title" : "Dispatch from YAPC",
-   "image" : null,
+   "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "brent-michalski"
-   ]
+   ],
+   "description" : " Yet Another Perl Conference, also known as YAPC, wasn't just another conference, it was incredible. Kevin Lenzo YAPC was thought up and coordinated by Kevin Lenzo of Carnegie Mellon University. The idea was to have a &quot;grass roots&quot; Perl...",
+   "image" : null
 }
 
 
@@ -27,8 +27,8 @@ conference, it was incredible.
 
 YAPC was thought up and coordinated by Kevin Lenzo of Carnegie Mellon
 University. The idea was to have a "grass roots" Perl conference that
-everyone could afford. Kevin made it so affordableâjust \$60 per
-personâthat nearly 300 people attended.
+everyone could afford. Kevin made it so affordable—just \$60 per
+person—that nearly 300 people attended.
 
 You may be asking, what kind of conference could someone possibly host
 for \$60 a person? Well, Kevin did such a remarkable job that it will be
@@ -80,7 +80,7 @@ history of Perl, Perl and XML, using CGI.pm and infobots.
 Jon Orwant gave a presentation called *Rebuilding Post-Apocalyptic
 Civilization with Perl*. Jon is an excellent speaker and his
 presentation was hilarious. His conclusion: When the apocalypse is over,
-the Perl programmers surviveâof course.
+the Perl programmers survive—of course.
 
   ------------------------------------------------------------------------------------------------
   ![Photo of Dick Hardt ](/images/_pub_1999_06_yapc/dick_hardt_1.jpg){width="191" height="203"}\
@@ -126,7 +126,7 @@ face-to-face. We even went out and took a `#perl` family picture:\
 members](/images/_pub_1999_06_yapc/perl_1.jpg){width="403" height="276"}
 Though the formal conference ended at 5:00 each day, that didn't mean
 the fun had to end. Perl Mongers know how to go out and have a great
-time, and that is just what they didâevery night. I honestly think that
+time, and that is just what they did—every night. I honestly think that
 some of the best ideas in Perl have come when you start mixing alcohol
 and Perl!
 
@@ -152,7 +152,7 @@ Open Source works so well*.
 Sure, there is going to be "Yet Another" YAPC next year, but there is no
 way that YAPC will ever be the same. This year, it was a gathering for
 those who truly love Perl. Word will spread and many others will
-comeâwhich is great and we encourage it, but the true family of YAPC was
+come—which is great and we encourage it, but the true family of YAPC was
 there this year. I can see it now, in 20 years people will be claiming
 that they were at YAPC 99, just like all those who *claim* they were at
 Woodstock.

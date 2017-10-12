@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "draft" : null,
    "image" : null,
+   "description" : "Pod::Parser Notes -> Some of my co-workers noticed the p5p weekly summary discussing (among other things) Pod::Parser. They mentioned it to me, and said they thought it cast me in an unfavorable light. So I'd like to clear up a...",
    "authors" : [
       "brad-appleton"
    ],
-   "thumbnail" : null,
-   "categories" : "development",
-   "description" : "Pod::Parser Notes -> Some of my co-workers noticed the p5p weekly summary discussing (among other things) Pod::Parser. They mentioned it to me, and said they thought it cast me in an unfavorable light. So I'd like to clear up a...",
    "title" : "Pod::Parser Notes",
-   "slug" : "/pub/2000/05/podparser",
    "tags" : [],
+   "slug" : "/pub/2000/05/podparser",
    "date" : "2000-05-20T00:00:00-08:00",
-   "draft" : null
+   "categories" : "development"
 }
 
 

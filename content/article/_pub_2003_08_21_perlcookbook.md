@@ -1,14 +1,8 @@
 {
-   "image" : null,
-   "authors" : [
-      "tom-christiansen",
-      "nathan-torkington"
-   ],
    "categories" : "development",
-   "thumbnail" : null,
-   "description" : " Editor's note: The new edition of Perl Cookbook is about to hit store shelves, so to trumpet its release, we offer some recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 6 (\"Pattern...",
-   "title" : "Cooking with Perl",
    "slug" : "/pub/2003/08/21/perlcookbook",
+   "date" : "2003-08-21T00:00:00-08:00",
+   "title" : "Cooking with Perl",
    "tags" : [
       "cooking-with-perl",
       "file-contents",
@@ -20,7 +14,13 @@
       "pretending-a-string-is-a-file",
       "tom-christiansen"
    ],
-   "date" : "2003-08-21T00:00:00-08:00",
+   "authors" : [
+      "tom-christiansen",
+      "nathan-torkington"
+   ],
+   "image" : null,
+   "description" : " Editor's note: The new edition of Perl Cookbook is about to hit store shelves, so to trumpet its release, we offer some recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 6 (\"Pattern...",
+   "thumbnail" : null,
    "draft" : null
 }
 

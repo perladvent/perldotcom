@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "draft" : null,
+   "description" : " Notes Line Disciplines Continue Ben Tilly Fixes map Gack! Big Bug in 5.6 More pack Options IPC::BashEm perldiag Re-alphabetized Poor Diagnosis of sort Errors glob() function not documented Overloading Assignment POSIX Character Classes First Cite for 'Perl'? Various Notes...",
    "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "description" : " Notes Line Disciplines Continue Ben Tilly Fixes map Gack! Big Bug in 5.6 More pack Options IPC::BashEm perldiag Re-alphabetized Poor Diagnosis of sort Errors glob() function not documented Overloading Assignment POSIX Character Classes First Cite for 'Perl'? Various Notes...",
-   "thumbnail" : null,
-   "categories" : "community",
-   "title" : "This Week on p5p 2000/04/30",
-   "slug" : "/pub/2000/04/p5pdigest/THISWEEK-20000430",
    "tags" : [],
+   "title" : "This Week on p5p 2000/04/30",
    "date" : "2000-04-30T00:00:00-08:00",
-   "draft" : null
+   "slug" : "/pub/2000/04/p5pdigest/THISWEEK-20000430",
+   "categories" : "community"
 }
 
 

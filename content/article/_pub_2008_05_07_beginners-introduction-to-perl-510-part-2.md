@@ -1,22 +1,22 @@
 {
-   "description" : " A Beginner's Introduction to Perl 5.10 talked about the core elements of Perl: variables (scalars, arrays, and hashes), math operators and some basic flow control (the for statement). Now it's time to interact with the world. (A Beginner's Introduction...",
-   "categories" : "Tutorials",
-   "thumbnail" : null,
-   "title" : "Beginner's Introduction to Perl 5.10, Part 2",
-   "image" : null,
-   "authors" : [
-      "chromatic",
-      "doug-sheppard"
-   ],
-   "draft" : null,
+   "date" : "2008-05-07T00:00:00-08:00",
    "slug" : "/pub/2008/05/07/beginners-introduction-to-perl-510-part-2",
+   "categories" : "Tutorials",
+   "title" : "Beginner's Introduction to Perl 5.10, Part 2",
    "tags" : [
       "files",
       "perl-5-10",
       "perl-filehandles",
       "string"
    ],
-   "date" : "2008-05-07T00:00:00-08:00"
+   "authors" : [
+      "chromatic",
+      "doug-sheppard"
+   ],
+   "description" : " A Beginner's Introduction to Perl 5.10 talked about the core elements of Perl: variables (scalars, arrays, and hashes), math operators and some basic flow control (the for statement). Now it's time to interact with the world. (A Beginner's Introduction...",
+   "image" : null,
+   "draft" : null,
+   "thumbnail" : null
 }
 
 

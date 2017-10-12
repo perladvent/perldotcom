@@ -1,19 +1,19 @@
 {
-   "title" : "Beginners Intro to Perl - Part 5",
-   "categories" : "development",
-   "thumbnail" : null,
-   "description" : "Objects and Modules -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's...",
-   "authors" : [
-      "doug-sheppard"
-   ],
-   "image" : null,
-   "draft" : null,
+   "slug" : "/pub/2000/12/begperl5",
    "date" : "2000-12-18T00:00:00-08:00",
+   "categories" : "development",
+   "title" : "Beginners Intro to Perl - Part 5",
    "tags" : [
       "object-oriented-programming",
       "oop"
    ],
-   "slug" : "/pub/2000/12/begperl5"
+   "thumbnail" : null,
+   "draft" : null,
+   "authors" : [
+      "doug-sheppard"
+   ],
+   "image" : null,
+   "description" : "Objects and Modules -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's..."
 }
 
 
@@ -35,23 +35,23 @@ be interested in the newer versions, available at:*
 +-----------------------------------------------------------------------+
 | **Beginners Intro to Perl**                                           |
 +-----------------------------------------------------------------------+
-| â¢**[Part 1 of this                                                    |
+| •**[Part 1 of this                                                    |
 | series](/media/_pub_2000_12_begperl5/begperl1.html)**\                |
-| â¢**[Part 2 of this                                                    |
+| •**[Part 2 of this                                                    |
 | series](/media/_pub_2000_12_begperl5/begperl2.html)**\                |
-| â¢**[Part 3 of this                                                    |
+| •**[Part 3 of this                                                    |
 | series](/media/_pub_2000_12_begperl5/begperl3.html)**\                |
-| â¢**[Part 4 of this                                                    |
+| •**[Part 4 of this                                                    |
 | series](/media/_pub_2000_12_begperl5/begperl4.html)**\                |
-| â¢**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
+| •**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
 | \                                                                     |
-| â¢[What Is an Object?](#what%20is%20an%20object)\                      |
-| â¢[Our Goal](#our%20goal)\                                             |
-| â¢[Starting Off](#starting%20off)\                                     |
-| â¢[What Does Our Object Do?](#what%20does%20our%20object%20do)\        |
-| â¢[Our Goal, Part 2](#our%20goal,%20part%202)\                         |
-| â¢[Encapsulation](#encapsulation)\                                     |
-| â¢[Play Around!](#play%20around!)\                                     |
+| •[What Is an Object?](#what%20is%20an%20object)\                      |
+| •[Our Goal](#our%20goal)\                                             |
+| •[Starting Off](#starting%20off)\                                     |
+| •[What Does Our Object Do?](#what%20does%20our%20object%20do)\        |
+| •[Our Goal, Part 2](#our%20goal,%20part%202)\                         |
+| •[Encapsulation](#encapsulation)\                                     |
+| •[Play Around!](#play%20around!)\                                     |
 +-----------------------------------------------------------------------+
 
 So far, we've mostly stuck to writing everything for our programs

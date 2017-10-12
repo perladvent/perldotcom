@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "date" : "2014-01-01T06:00:01-08:00",
-   "slug" : "/pub/2014/01/the-year-in-perl-2013-retrospective",
-   "draft" : null,
+   "description" : "Perl had a great year in 2013. Here are some highlights.",
+   "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "image" : null,
-   "title" : "The Year in Perl 2013 Retrospective",
-   "categories" : "Community",
+   "draft" : null,
    "thumbnail" : null,
-   "description" : "Perl had a great year in 2013. Here are some highlights."
+   "title" : "The Year in Perl 2013 Retrospective",
+   "tags" : [],
+   "categories" : "Community",
+   "date" : "2014-01-01T06:00:01-08:00",
+   "slug" : "/pub/2014/01/the-year-in-perl-2013-retrospective"
 }
 
 
@@ -226,7 +226,7 @@ Baltimore, Maryland, USA.
 
 ### May 2013
 
-In sad news, CPAN developer AMORETTEâHojung Yoonâpassed away on May 8,
+In sad news, CPAN developer AMORETTE—Hojung Yoon—passed away on May 8,
 2013. South Korea and Perl lost a valued member of the community. [C.H.
 Kang posted a small tribute to Hojung Yoon on
 Twitter](https://twitter.com/aer0/status/333229465293443072).

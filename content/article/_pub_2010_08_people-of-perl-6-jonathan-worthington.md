@@ -1,19 +1,19 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2010/08/people-of-perl-6-jonathan-worthington",
    "date" : "2010-08-11T15:29:27-08:00",
+   "slug" : "/pub/2010/08/people-of-perl-6-jonathan-worthington",
+   "categories" : "perl-6",
+   "title" : "People of Perl 6: Jonathan Worthington",
    "tags" : [
       "interview",
       "perl-6"
    ],
-   "categories" : "perl-6",
-   "thumbnail" : null,
-   "description" : "Jonathan Worthington is one of the lead developers of Rakudo Perl 6.  In this interview he discusses the project, its future, and what to expect from this exciting new language.",
-   "title" : "People of Perl 6: Jonathan Worthington",
-   "image" : null,
    "authors" : [
       "chromatic"
-   ]
+   ],
+   "description" : "Jonathan Worthington is one of the lead developers of Rakudo Perl 6.  In this interview he discusses the project, its future, and what to expect from this exciting new language.",
+   "image" : null,
+   "thumbnail" : null,
+   "draft" : null
 }
 
 
@@ -37,7 +37,7 @@ later, my family got internet access at home, and a couple of years
 later I ran across Perl.
 
 I ended up going off to university to do Computer Science. I questioned
-it a bitâI wasn't certain my childhood hobby would still be interesting
+it a bit—I wasn't certain my childhood hobby would still be interesting
 as a topic of study and a future career. Happily, it deepened my
 curiosity rather than bored me. I took a particular interest in
 languages, compilers and type systems, though the natural language
@@ -46,7 +46,7 @@ processing courses kind of caught my interest too.
 That all came to an end several years back, when I graduated. Since
 then, I've done a few years freelancing and living abroad, and recently
 joined a startup company in Sweden. Amusingly, it makes the third
-country starting with an "S" that I've lived in since graduatingâthe
+country starting with an "S" that I've lived in since graduating—the
 other two were sunny Spain and the lesser-known but lovely Slovakia, a
 place I remain very fond of.
 
@@ -66,7 +66,7 @@ depth on the language design front back then, but then found the
 [Parrot](http://www.parrot.org/) project, which was a little more
 concrete. I wrote a couple of patches to improve Windows support.
 
-I did more bits with Parrot over the following yearsâmostly on the
+I did more bits with Parrot over the following years—mostly on the
 bytecode format and some object orientation bits. I didn't really get
 involved with the Perl 6 compiler itself until 2007. That summer, I went
 to OSCON, drank a few beers and then told Larry Wall, of all people,
@@ -77,9 +77,9 @@ Sadly, autumn of 2007 saw me pretty depressed. I withdrew from hacking
 on just about everything, went to wander around China for a month and
 hurriedly arranged to move abroad, in hope of putting some distance
 between myself and things. With the Spanish sun to improve my mood, and
-noticing that the latest iteration of the Perl 6 compilerâbuilt on the
+noticing that the latest iteration of the Perl 6 compiler—built on the
 [Parrot Compiler
-Toolkit](http://docs.parrot.org/parrot/devel/html/PCT_Tutorial.html)âhad
+Toolkit](http://docs.parrot.org/parrot/devel/html/PCT_Tutorial.html)—had
 landed, it felt like time to try and make good on my junctions remark.
 
 **What have you worked on?**
@@ -93,7 +93,7 @@ doing pretty well on all of those areas now in Rakudo. :-)
 
 **What feature was your moment of epiphany with Perl 6?**
 
-That's a hard one. There are many interesting features in Perl 6âsome of
+That's a hard one. There are many interesting features in Perl 6—some of
 them big things, some of them much smaller. What I've really come to
 admire isn't so much the features themselves, but rather the much
 smaller number of fundamentals that they're all built on top of, and how
@@ -107,7 +107,7 @@ are a game changer. Parsing problems that are beyond traditional regexes
 are now often easily expressible. Additionally, the changes in Perl 6
 seriously try to address the cultural problems; good software
 development practices, such as code re-use, should also apply to
-regexes, and thatâamongst other thingsâis now made easy.
+regexes, and that—amongst other things—is now made easy.
 
 **What has surprised you about the process of design?**
 
@@ -134,7 +134,7 @@ place, and a great place to get questions answered.
 **How do you make a language intended to last for 20 years?**
 
 While 20 years sounds a long time, in many senses if a language gets a
-reasonable level of adoptionâwhich I do hope Perl 6 willâit's easy
+reasonable level of adoption—which I do hope Perl 6 will—it's easy
 enough for legacy code to still be in production 20 years on.
 
 The more interesting challenge is how to make a language that can stay
@@ -169,7 +169,7 @@ serious projects?**
 In a slightly odd sense, I am using Perl 6 for a serious project; big
 chunks of Rakudo are actually written in Perl 6. That aside, though,
 feature wise I think Rakudo is doing pretty well; the things I'm most
-waiting onâand helping us improve onâare issues like performance,
+waiting on—and helping us improve on—are issues like performance,
 stability and having a good range of modules to draw on. If I had to
 identify the next big features we need, though, it's concurrency support
 and native type support.
@@ -180,7 +180,7 @@ The high standards at which it is conducted. For example, we have a lot
 of effort going in to testing, and test coverage is taken seriously and
 highly valued by all all of those working on Rakudo. People often
 code-review each other's patches. Discussion on the channel and on the
-mailing listsâeven in the face of opposing viewsâis just about always
+mailing lists—even in the face of opposing views—is just about always
 polite and friendly. The Perl 6 team is easily the best I've ever had
 the privilege to work with.
 
@@ -199,10 +199,10 @@ success.
 **What comes next after Rakudo Star?**
 
 I often talk about Rakudo development as being like going for a hike up
-a mountain. While the most impressive view will be at that topâwhen we
-have a complete Perl 6 implementationâat some points along the way there
+a mountain. While the most impressive view will be at that top—when we
+have a complete Perl 6 implementation—at some points along the way there
 will be good views, and it's good to pause and enjoy them. Rakudo is one
-of those points on the journeyâin fact, the most significant so far.
+of those points on the journey—in fact, the most significant so far.
 
 Rakudo has caused us to focus for a while on trying to get something
 useful and usable. That has been valuable, however there are still some
@@ -220,13 +220,13 @@ known information about a Perl 6 program that we pretty much just throw
 away today.
 
 We will also be transforming Rakudo from a compiler with one
-backendâParrotâinto a compiler with multiple backends. We've had an
+backend—Parrot—into a compiler with multiple backends. We've had an
 architecture open to such things for some time now, but getting the core
 features in place and actually delivering something of note have been
 far more important goals so far.
 
-However, at this point, I think some thingsâespecially parallelism, an
-area where Parrot is currently weakâwill be much easier to do an initial
+However, at this point, I think some things—especially parallelism, an
+area where Parrot is currently weak—will be much easier to do an initial
 implementation of for another backend. It usually takes at least a first
 cut implementation and some iteration to get the specification
 solidified and refined, and it will be easier to do that on a base that
@@ -237,7 +237,7 @@ backends will help us grow both the user base and the developer base.
 6?**
 
 I'm really looking forward to having good threading and parallel
-programming supportâbut perhaps that's mostly because we'll be done with
+programming support—but perhaps that's mostly because we'll be done with
 the hard work of making it happen!
 
 **Larry wanted the community to rewrite itself just as it redesigned and

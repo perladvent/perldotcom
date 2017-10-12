@@ -1,16 +1,16 @@
 {
    "draft" : null,
-   "tags" : [],
-   "date" : "2000-11-20T00:00:00-08:00",
-   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001120",
-   "title" : "This Week on p5p 2000/11/20",
-   "categories" : "community",
    "thumbnail" : null,
+   "image" : null,
    "description" : "> Notes Fixing the Regexp Engine UTF8 and Charnames PerlIO (again) =head3 (again) New subs.pm Congratulations Various Notes You can subscribe to an e-mail version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions...",
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null
+   "title" : "This Week on p5p 2000/11/20",
+   "tags" : [],
+   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001120",
+   "date" : "2000-11-20T00:00:00-08:00",
+   "categories" : "community"
 }
 
 

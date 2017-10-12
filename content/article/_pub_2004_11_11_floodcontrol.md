@@ -1,21 +1,21 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2004/11/11/floodcontrol",
    "date" : "2004-11-11T00:00:00-08:00",
+   "slug" : "/pub/2004/11/11/floodcontrol",
+   "categories" : "science",
    "tags" : [
       "algorithm-floodcontrol",
       "event-processing",
       "flood-control",
       "vladi-belperchinov-shabanski"
    ],
-   "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular...",
-   "categories" : "science",
-   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
    "title" : "Implementing Flood Control",
-   "image" : null,
+   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
+   "draft" : null,
    "authors" : [
       "vladi-belperchinov-shabanski"
-   ]
+   ],
+   "image" : null,
+   "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular..."
 }
 
 
@@ -329,7 +329,7 @@ as templates for other cases.
 
 Imagine an IRC bot (robot) which can report scores from the local game
 servers. Generally this bot receives requests from someone inside IRC
-channel (a chat room, for those of you who havenï¿½t used IRC) and reports
+channel (a chat room, for those of you who haven�t used IRC) and reports
 current scores back to the channel. If this eventually becomes very
 popular, people will start requesting scores more frequently than it is
 useful just for fun, so there's a clear need for flood control.

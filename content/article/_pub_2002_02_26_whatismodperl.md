@@ -1,18 +1,18 @@
 {
-   "title" : "Why mod_perl?",
-   "categories" : "web",
+   "draft" : null,
    "thumbnail" : "/images/_pub_2002_02_26_whatismodperl/111-modperl.gif",
-   "description" : " In this article, I'll give an initial introduction to mod_perl, make you want to give it a try and present a few examples of the well-known sites that are powered by mod_perl enabled Apache. What Is mod_perl? mod_perl is...",
    "authors" : [
       "stas-bekman"
    ],
+   "description" : " In this article, I'll give an initial introduction to mod_perl, make you want to give it a try and present a few examples of the well-known sites that are powered by mod_perl enabled Apache. What Is mod_perl? mod_perl is...",
    "image" : null,
-   "draft" : null,
+   "slug" : "/pub/2002/02/26/whatismodperl",
+   "date" : "2002-02-26T00:00:00-08:00",
+   "categories" : "web",
    "tags" : [
       "mod-perl"
    ],
-   "date" : "2002-02-26T00:00:00-08:00",
-   "slug" : "/pub/2002/02/26/whatismodperl"
+   "title" : "Why mod_perl?"
 }
 
 

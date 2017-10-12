@@ -1,16 +1,16 @@
 {
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991219",
+   "date" : "1999-12-19T00:00:00-08:00",
+   "categories" : "community",
+   "title" : "This Week on p5p 1999/12/19",
+   "tags" : [],
+   "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
    "image" : null,
-   "title" : "This Week on p5p 1999/12/19",
-   "description" : " Notes Meta-Information More 5.005_63 Results $^H and %^H Perl RPMs Development Continues on Ilya's Patches Change to xsubpp Closed Filhandle in Signal Handler pad_findlex Needs to be Recursive Conversion Specifier Bug The Trivial Test eof() at the Beginning of...",
-   "categories" : "community",
-   "thumbnail" : null,
-   "date" : "1999-12-19T00:00:00-08:00",
-   "tags" : [],
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991219",
-   "draft" : null
+   "description" : " Notes Meta-Information More 5.005_63 Results $^H and %^H Perl RPMs Development Continues on Ilya's Patches Change to xsubpp Closed Filhandle in Signal Handler pad_findlex Needs to be Recursive Conversion Specifier Bug The Trivial Test eof() at the Beginning of..."
 }
 
 
@@ -69,7 +69,7 @@ release, mostly concerning compilation and configuration issues.
 
 ### [`$^H` and `%^H`]{#^H_and_^H}
 
-StÃ©phane Payrard complained that even though `%^H` is mentioned in
+Stéphane Payrard complained that even though `%^H` is mentioned in
 `perldiag`, it is not described in `perlvar`. Ilya protested that you
 cannot get that diagnostic unless you actually use `%^H`, in which case
 he assumes that you understand the diagnostic.
@@ -215,7 +215,7 @@ turned up a number of potential problems.
 Mike McFaden submitted a `perlbug` report with no report; all we have is
 his Perl configuration.
 
-> **FranÃ§ois DÃ©sarmÃ©nien:** Whoa ! This is really the simplest perl
+> **François Désarménien:** Whoa ! This is really the simplest perl
 > program I've ever seen !
 
 But then it turned out to be interesting after all: Hans Mulder pointed
@@ -246,7 +246,7 @@ version was 1.00. Sarathy objected:
 [Simon Cozens reported that CTAN is doing something like
 this.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00494.html)
 
-In the course of this, Ask BjÃ¸rn Hansen mentioned something I thought
+In the course of this, Ask Bjørn Hansen mentioned something I thought
 was very valuable and should be better known: The `CPAN.pm` module has a
 `wh` command. Try it.
 

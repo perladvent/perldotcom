@@ -1,5 +1,8 @@
 {
+   "categories" : "Data",
+   "date" : "2003-10-03T00:00:00-08:00",
    "slug" : "/pub/2003/10/03/musicbrainz",
+   "title" : "Identifying Audio Files with MusicBrainz",
    "tags" : [
       "cddb",
       "freedb",
@@ -7,16 +10,13 @@
       "music",
       "musicbrainz"
    ],
-   "date" : "2003-10-03T00:00:00-08:00",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "paul-mison"
    ],
-   "thumbnail" : "/images/_pub_2003_10_03_musicbrainz/111-musicbrainz.gif",
-   "categories" : "Data",
+   "image" : null,
    "description" : "It's quite possible to end up with digital music files that don't have good information about what they are. Files that don't have ID3 information can rely on paths for album information, for example, and that is lost easily. M3U...",
-   "title" : "Identifying Audio Files with MusicBrainz"
+   "thumbnail" : "/images/_pub_2003_10_03_musicbrainz/111-musicbrainz.gif",
+   "draft" : null
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "thumbnail" : "/images/_pub_2001_12_04_testing/111-perltest.gif",
-   "categories" : "testing",
-   "description" : "Does your code work? How do you know that? Testing software with Perl is easier than you think, and it'll give you confidence that you've done the right thing.",
+   "tags" : [],
    "title" : "An Introduction to Testing",
+   "date" : "2001-12-04T00:00:00-08:00",
+   "slug" : "/pub/2001/12/04/testing",
+   "categories" : "testing",
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2001_12_04_testing/111-perltest.gif",
    "image" : null,
+   "description" : "Does your code work? How do you know that? Testing software with Perl is easier than you think, and it'll give you confidence that you've done the right thing.",
    "authors" : [
       "chromatic"
-   ],
-   "draft" : null,
-   "slug" : "/pub/2001/12/04/testing",
-   "tags" : [],
-   "date" : "2001-12-04T00:00:00-08:00"
+   ]
 }
 
 

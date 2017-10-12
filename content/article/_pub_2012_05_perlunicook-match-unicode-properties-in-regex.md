@@ -1,23 +1,23 @@
 {
-   "tags" : [],
-   "date" : "2012-05-16T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicook-match-unicode-properties-in-regex",
+   "thumbnail" : null,
    "draft" : null,
+   "description" : "℞ 25: Match Unicode properties in regex with \\p, \\P Every Unicode codepoint has one or more properties, indicating the rules which apply to that codepoint. Perl's regex engine is aware of these properties; use the \\p{} metacharacter sequence to...",
+   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
+   "tags" : [],
    "title" : "Perl Unicode Cookbook: Match Unicode Properties in Regex",
-   "description" : "â 25: Match Unicode properties in regex with \\p, \\P Every Unicode codepoint has one or more properties, indicating the rules which apply to that codepoint. Perl's regex engine is aware of these properties; use the \\p{} metacharacter sequence to...",
    "categories" : "unicode",
-   "thumbnail" : null
+   "date" : "2012-05-16T06:00:01-08:00",
+   "slug" : "/pub/2012/05/perlunicook-match-unicode-properties-in-regex"
 }
 
 
 
 
 
-â 25: Match Unicode properties in regex with `\p`, `\P` {#Match-Unicode-properties-in-regex-with-p-P}
+℞ 25: Match Unicode properties in regex with `\p`, `\P` {#Match-Unicode-properties-in-regex-with-p-P}
 -------------------------------------------------------
 
 Every Unicode codepoint has one or more properties, indicating the rules
@@ -44,13 +44,13 @@ Examples of these properties useful in regex include:
      \p{Line_Break=Hyphen}, \p{LB=HY}
      \p{Numeric_Value=4}, \p{NV=4}
 
-Previous: [â 24: Disable Unicode-awareness in Builtin Character
+Previous: [℞ 24: Disable Unicode-awareness in Builtin Character
 Classes](/media/_pub_2012_05_perlunicook-match-unicode-properties-in-regex/perlunicook-disable-unicode-awareness-in-builtin-character-classes.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_05_perlunicook-match-unicode-properties-in-regex/perlunicook-standard-preamble.html)
 
-Next: [â 26: Custom Character
+Next: [℞ 26: Custom Character
 Properties](/media/_pub_2012_05_perlunicook-match-unicode-properties-in-regex/perlunicookbook-custom-character-properties.html)
 
 

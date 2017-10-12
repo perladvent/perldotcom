@@ -1,21 +1,21 @@
 {
    "draft" : null,
+   "thumbnail" : null,
+   "authors" : [
+      "chromatic"
+   ],
+   "image" : null,
+   "description" : "The first Rakudo Star release is out, making Perl 6 available to a wider range of users.  Welcome to the new era of Perl.",
+   "date" : "2010-07-29T06:00:01-08:00",
    "slug" : "/pub/2010/07/welcome-rakudo-star",
+   "categories" : "Perl-6",
+   "title" : "Welcome Rakudo Star",
    "tags" : [
       "announcements",
       "perl",
       "perl-5",
       "perl-6",
       "rakudo"
-   ],
-   "date" : "2010-07-29T06:00:01-08:00",
-   "categories" : "Perl-6",
-   "thumbnail" : null,
-   "description" : "The first Rakudo Star release is out, making Perl 6 available to a wider range of users.  Welcome to the new era of Perl.",
-   "title" : "Welcome Rakudo Star",
-   "image" : null,
-   "authors" : [
-      "chromatic"
    ]
 }
 
@@ -65,7 +65,7 @@ a perfect, static, never-needs-updating specification. (Implementation
 is merely a matter of hiring enough typists, you see.)
 
 That's neither what Perl 6 is nor how it works. What matters now is that
-youâyes, youâcan download and install and play with Perl 6 right now.
+you—yes, you—can download and install and play with Perl 6 right now.
 It's not complete, whatever that means. It's not finished, because
 twenty years from now we'll still release new versions to meet needs
 that we can't possibly predict right now.
@@ -79,7 +79,7 @@ the next and the next?
 
 Set aside your assumptions. Try Perl 6 yourself with Rakudo Star. Perl
 in every form is the work of a community willing to make amazing things
-happen. That task continuesâhelp us make Perl more powerful, more
+happen. That task continues—help us make Perl more powerful, more
 flexible, more useful, and more fun.
 
 

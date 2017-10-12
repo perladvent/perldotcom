@@ -1,6 +1,4 @@
 {
-   "draft" : null,
-   "date" : "2005-10-20T00:00:00-08:00",
    "tags" : [
       "bioinformatics",
       "bioperl",
@@ -10,16 +8,18 @@
       "perl-data-munging",
       "scriptome"
    ],
-   "slug" : "/pub/2005/10/20/scriptome",
    "title" : "Data Munging for Non-Programming Biologists",
-   "description" : " Have you ever renamed 768 files? Merged the content from 96 files into a spreadsheet? Filtered 100 lines out of a 20,000-line file? Have you ever done these things by hand? Disciples of laziness-one of the three Perl programmer's...",
+   "date" : "2005-10-20T00:00:00-08:00",
+   "slug" : "/pub/2005/10/20/scriptome",
    "categories" : "Science",
-   "thumbnail" : "/images/_pub_2005_10_20_scriptome/111-scriptome.gif",
+   "description" : " Have you ever renamed 768 files? Merged the content from 96 files into a spreadsheet? Filtered 100 lines out of a 20,000-line file? Have you ever done these things by hand? Disciples of laziness-one of the three Perl programmer's...",
+   "image" : null,
    "authors" : [
       "amir-karger",
       "eitan-rubin"
    ],
-   "image" : null
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_10_20_scriptome/111-scriptome.gif"
 }
 
 
@@ -57,7 +57,7 @@ a while can do this with your eyes closed (if you can touch type):
     perl -ne 'print substr($_, 200, 200), "\n"' sequences.in >
         primers.out
 
-VoilÃ¡! I gave Neeraj his output file and he went away, happy, to finish
+Voilá! I gave Neeraj his output file and he went away, happy, to finish
 building his clone army to take over the world. (Or was he going to
 genetically modify rice to solve world hunger? I keep forgetting.)
 

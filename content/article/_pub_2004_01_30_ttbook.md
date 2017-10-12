@@ -1,6 +1,15 @@
 {
+   "authors" : [
+      "dave-cross"
+   ],
+   "description" : "There are a number of tools available for writing books. Many people would immediately reach for their favorite word processor, but having written one book using Microsoft Word I'm very unlikely to repeat the experience. Darren Chamberlain, Andy Wardley, and...",
+   "image" : null,
    "draft" : null,
+   "thumbnail" : "/images/_pub_2004_01_30_ttbook/111-ptt.gif",
+   "date" : "2004-01-30T00:00:00-08:00",
    "slug" : "/pub/2004/01/30/ttbook",
+   "categories" : "Tooling",
+   "title" : "How We Wrote the Template Toolkit Book ...",
    "tags" : [
       "andy-wardley",
       "darren-chamberlain",
@@ -9,15 +18,6 @@
       "perl-template-toolkit",
       "template-toolkit",
       "template-toolkit-book"
-   ],
-   "date" : "2004-01-30T00:00:00-08:00",
-   "description" : "There are a number of tools available for writing books. Many people would immediately reach for their favorite word processor, but having written one book using Microsoft Word I'm very unlikely to repeat the experience. Darren Chamberlain, Andy Wardley, and...",
-   "categories" : "Tooling",
-   "thumbnail" : "/images/_pub_2004_01_30_ttbook/111-ptt.gif",
-   "title" : "How We Wrote the Template Toolkit Book ...",
-   "image" : null,
-   "authors" : [
-      "dave-cross"
    ]
 }
 

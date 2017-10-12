@@ -1,16 +1,16 @@
 {
-   "date" : "2004-08-31T00:00:00-08:00",
    "tags" : [],
+   "title" : "Hacking Perl in Nightclubs",
+   "date" : "2004-08-31T00:00:00-08:00",
    "slug" : "/pub/2004/08/31/livecode",
-   "draft" : null,
+   "categories" : "Security",
+   "image" : null,
+   "description" : " I've found the experiences of dancing and programming to have a great deal in common. With both I am immersed in an abstract world of animated structures, building up and breaking down many times before finally reaching a conclusion....",
    "authors" : [
       "alex-mclean"
    ],
-   "image" : null,
-   "title" : "Hacking Perl in Nightclubs",
-   "description" : " I've found the experiences of dancing and programming to have a great deal in common. With both I am immersed in an abstract world of animated structures, building up and breaking down many times before finally reaching a conclusion....",
-   "thumbnail" : "/images/_pub_2004_08_31_livecode/111-generative_music.gif",
-   "categories" : "Security"
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_08_31_livecode/111-generative_music.gif"
 }
 
 

@@ -1,4 +1,11 @@
 {
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_05_05_aggregation/111-massive_data.gif",
+   "description" : " This article is a case study of the use of Perl and XML/RDF technologies to channel disparate sources of data into a semi-structured repository. This repository helped to build structured OLAP warehouses by mining an RDF repository with SAX...",
+   "image" : null,
+   "authors" : [
+      "fred-moyer"
+   ],
    "tags" : [
       "data-aggregation",
       "data-warehousing",
@@ -8,17 +15,10 @@
       "perl-xml",
       "sax-machines"
    ],
-   "date" : "2005-05-05T00:00:00-08:00",
-   "slug" : "/pub/2005/05/05/aggregation",
-   "draft" : null,
-   "authors" : [
-      "fred-moyer"
-   ],
-   "image" : null,
    "title" : "Massive Data Aggregation with Perl",
-   "description" : " This article is a case study of the use of Perl and XML/RDF technologies to channel disparate sources of data into a semi-structured repository. This repository helped to build structured OLAP warehouses by mining an RDF repository with SAX...",
-   "categories" : "data",
-   "thumbnail" : "/images/_pub_2005_05_05_aggregation/111-massive_data.gif"
+   "slug" : "/pub/2005/05/05/aggregation",
+   "date" : "2005-05-05T00:00:00-08:00",
+   "categories" : "data"
 }
 
 

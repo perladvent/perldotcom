@@ -1,13 +1,4 @@
 {
-   "title" : "An Introduction to Test::MockDBI",
-   "categories" : "data",
-   "thumbnail" : "/images/_pub_2005_07_21_test_mockdbi/111-mock_db.gif",
-   "description" : " Prelude How do you test DBI programs: Without having to modify your current program code or environment settings? Without having to set up multiple test databases? Without separating your test data from your test code? With tests for every...",
-   "authors" : [
-      "mark-leighton-fisher"
-   ],
-   "image" : null,
-   "draft" : null,
    "tags" : [
       "database-testing",
       "dbi-testing",
@@ -16,8 +7,17 @@
       "perl-testing",
       "test-mockdbi"
    ],
+   "title" : "An Introduction to Test::MockDBI",
    "date" : "2005-07-21T00:00:00-08:00",
-   "slug" : "/pub/2005/07/21/test_mockdbi"
+   "slug" : "/pub/2005/07/21/test_mockdbi",
+   "categories" : "data",
+   "description" : " Prelude How do you test DBI programs: Without having to modify your current program code or environment settings? Without having to set up multiple test databases? Without separating your test data from your test code? With tests for every...",
+   "image" : null,
+   "authors" : [
+      "mark-leighton-fisher"
+   ],
+   "thumbnail" : "/images/_pub_2005_07_21_test_mockdbi/111-mock_db.gif",
+   "draft" : null
 }
 
 

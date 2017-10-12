@@ -1,22 +1,22 @@
 {
+   "authors" : [
+      "phil-crow"
+   ],
+   "image" : null,
+   "description" : " Having almost achieved the state of perfect laziness, one of my favorite modules is Class::DBI::mysql. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This...",
+   "thumbnail" : "/images/_pub_2005_03_17_symtables/111-syboltbl_trix.gif",
+   "draft" : null,
    "slug" : "/pub/2005/03/17/symtables",
+   "date" : "2005-03-17T00:00:00-08:00",
+   "categories" : "data",
+   "title" : "Symbol Table Manipulation",
    "tags" : [
       "dynamic-variable-names",
       "global-variables",
       "no-strict",
       "symbol-tables",
       "symbolic-references"
-   ],
-   "date" : "2005-03-17T00:00:00-08:00",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "phil-crow"
-   ],
-   "description" : " Having almost achieved the state of perfect laziness, one of my favorite modules is Class::DBI::mysql. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This...",
-   "thumbnail" : "/images/_pub_2005_03_17_symtables/111-syboltbl_trix.gif",
-   "categories" : "data",
-   "title" : "Symbol Table Manipulation"
+   ]
 }
 
 
@@ -64,7 +64,7 @@ Except for the MySQL connection information, no trace of SQL or
 databases remains.
 
 My purpose here is not really to introduce you to this beautiful module.
-Instead, I'll explain how to build faÃ§ades like this. To do so, I'll
+Instead, I'll explain how to build façades like this. To do so, I'll
 work through another, simpler CPAN module called `Class::Colon`. It
 turns colon-delimited files into classes and their lines into objects.
 Here's an example from a checkbook application. This program computes

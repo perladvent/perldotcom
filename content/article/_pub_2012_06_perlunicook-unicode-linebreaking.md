@@ -1,23 +1,23 @@
 {
-   "tags" : [],
-   "date" : "2012-06-12T06:00:01-08:00",
-   "slug" : "/pub/2012/06/perlunicook-unicode-linebreaking",
-   "draft" : null,
+   "image" : null,
+   "description" : "℞ 41: Unicode linebreaking If you've ever tried to fit a large amount of text into a display area too narrow for the full width of the text, you've dealt with the joy of linebreaking (or word wrapping). As you...",
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "title" : "Perl Unicode Cookbook: Unicode Linebreaking",
+   "draft" : null,
    "thumbnail" : null,
-   "categories" : "unicode",
-   "description" : "â 41: Unicode linebreaking If you've ever tried to fit a large amount of text into a display area too narrow for the full width of the text, you've dealt with the joy of linebreaking (or word wrapping). As you..."
+   "title" : "Perl Unicode Cookbook: Unicode Linebreaking",
+   "tags" : [],
+   "slug" : "/pub/2012/06/perlunicook-unicode-linebreaking",
+   "date" : "2012-06-12T06:00:01-08:00",
+   "categories" : "unicode"
 }
 
 
 
 
 
-â 41: Unicode linebreaking {#Unicode-linebreaking}
+℞ 41: Unicode linebreaking {#Unicode-linebreaking}
 --------------------------
 
 If you've ever tried to fit a large amount of text into a display area
@@ -48,13 +48,13 @@ points. (The default maximum number of columns is 76, so this example
 works well for email and console use. See the module's documentation for
 other configuration options.)
 
-Previous: [â 40: Case- and Accent-insensitive Locale
+Previous: [℞ 40: Case- and Accent-insensitive Locale
 Comparisons](/media/_pub_2012_06_perlunicook-unicode-linebreaking/perlunicook-case--and-accent-insensitive-locale-comparison.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_06_perlunicook-unicode-linebreaking/perlunicook-standard-preamble.html)
 
-Next: [â 42: Unicode Text in Stubborn
+Next: [℞ 42: Unicode Text in Stubborn
 Libraries](/media/_pub_2012_06_perlunicook-unicode-linebreaking/perlunicook-unicode-text-in-stubborn-libraries.html)
 
 

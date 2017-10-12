@@ -1,21 +1,21 @@
 {
-   "image" : null,
-   "authors" : [
-      "alptekin-cakircali"
-   ],
-   "thumbnail" : "/images/_pub_2005_05_19_wireless_gw/111-wifi_gate.gif",
    "categories" : "Networking",
-   "description" : " You have set up and configured various wireless access devices, but could not find one that included all of the features you needed. You could wait for a firmware upgrade from your manufacturer, hoping that they will include the...",
-   "title" : "Build a Wireless Gateway with Perl",
    "slug" : "/pub/2005/05/19/wireless_gw",
+   "date" : "2005-05-19T00:00:00-08:00",
+   "title" : "Build a Wireless Gateway with Perl",
    "tags" : [
       "awlp",
       "perl-for-system-administration",
       "slackware",
       "wireless-gateway"
    ],
-   "date" : "2005-05-19T00:00:00-08:00",
-   "draft" : null
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_05_19_wireless_gw/111-wifi_gate.gif",
+   "authors" : [
+      "alptekin-cakircali"
+   ],
+   "image" : null,
+   "description" : " You have set up and configured various wireless access devices, but could not find one that included all of the features you needed. You could wait for a firmware upgrade from your manufacturer, hoping that they will include the..."
 }
 
 

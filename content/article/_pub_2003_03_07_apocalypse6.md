@@ -1,18 +1,18 @@
 {
-   "slug" : "/pub/2003/03/07/apocalypse6",
+   "title" : "Apocalypse 6",
    "tags" : [
       "perl-6-apocalypse-subroutines"
    ],
+   "categories" : "perl-6",
+   "slug" : "/pub/2003/03/07/apocalypse6",
    "date" : "2003-03-07T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2003_03_07_apocalypse6/111-apocalypse6.gif",
    "draft" : null,
+   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 06 for the latest information. This is the Apocalypse on Subroutines. In Perl culture the term &quot;subroutine&quot; conveys the general notion of calling...",
    "image" : null,
    "authors" : [
       "larry-wall"
-   ],
-   "thumbnail" : "/images/_pub_2003_03_07_apocalypse6/111-apocalypse6.gif",
-   "categories" : "perl-6",
-   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 06 for the latest information. This is the Apocalypse on Subroutines. In Perl culture the term &quot;subroutine&quot; conveys the general notion of calling...",
-   "title" : "Apocalypse 6"
+   ]
 }
 
 
@@ -1429,10 +1429,10 @@ If instead we force new parameters to be in named notation, like this:
 
         multi *push (@array, *@list, +$how) {...}
 
-tï¿½en we can say:
+t�en we can say:
 
         push(@foo, how => "rapidly", 1,2,3)</pre~
-    and it's no longer ambiguous.  Since dhow is iï¿½ the named-only zone,
+    and it's no longer ambiguous.  Since dhow is i� the named-only zone,
     it can never be set positionally, and the old calls to:
 
         push(@foo, 1,2,3);
@@ -2019,7 +2019,7 @@ write small, self-contained closures with a small number of parameters
 that you'd probably give single-character alphabetical names to in any
 event. If you want to get fancier than that, you should probably be
 using a fancier kind of declaration. I define "small number" as
-approximately *e* Â± Ï. But as is generally the case in Perl, you get to
+approximately *e* ± π. But as is generally the case in Perl, you get to
 pick your own definition of "small number". (Or at the very least, you
 get to pick whether to work with a company that has already defined
 "small number" for you.)
@@ -2571,7 +2571,7 @@ parameters are assumed to be certain values:
 
 You can even curry built-in operators:
 
-        my &prefix:Â½ ::= &infix:/ .assuming(y => 2);
+        my &prefix:½ ::= &infix:/ .assuming(y => 2);
 
 (assuming here that built-in infix operators always use `$x` and `$y`).
 

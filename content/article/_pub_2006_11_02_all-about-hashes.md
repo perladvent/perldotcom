@@ -1,6 +1,11 @@
 {
    "draft" : null,
-   "slug" : "/pub/2006/11/02/all-about-hashes",
+   "thumbnail" : "/images/_pub_2006_11_02_all-about-hashes/111-hashes.gif",
+   "description" : " When I teach about hashes, I do what most Perl tutors and tutorials do: I introduce the hash as a \"dictionary\": a mapping between one thing and another. The classic example, for instance, is to have a set of...",
+   "image" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
    "tags" : [
       "hash-tables",
       "hashes",
@@ -9,15 +14,10 @@
       "perl-syntax",
       "perl-variables"
    ],
-   "date" : "2006-11-02T00:00:00-08:00",
-   "categories" : "development",
-   "thumbnail" : "/images/_pub_2006_11_02_all-about-hashes/111-hashes.gif",
-   "description" : " When I teach about hashes, I do what most Perl tutors and tutorials do: I introduce the hash as a \"dictionary\": a mapping between one thing and another. The classic example, for instance, is to have a set of...",
    "title" : "Hash Crash Course",
-   "image" : null,
-   "authors" : [
-      "simon-cozens"
-   ]
+   "slug" : "/pub/2006/11/02/all-about-hashes",
+   "date" : "2006-11-02T00:00:00-08:00",
+   "categories" : "development"
 }
 
 
@@ -47,7 +47,7 @@ in Perl code.
 Many of the uses of hashes are to "answer questions about lists." When
 you have an array or list of values and you need to ask about its
 properties, you will often find yourself using a hash. Start simply by
-counting the number of particular elements in a list. Here's the naÃ¯ve
+counting the number of particular elements in a list. Here's the naïve
 approach:
 
         my $count = 0;

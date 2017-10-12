@@ -1,23 +1,23 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2012/05/perlunicook-get-character-categories",
-   "tags" : [],
-   "date" : "2012-05-11T06:00:01-08:00",
-   "description" : "â 23: Get character category Unicode is a set of characters and a list of rules and properties applied to those characters. The Unicode Character Database collects those properties. The core module Unicode::UCD provides access to these properties. These general...",
-   "categories" : "unicode",
    "thumbnail" : null,
-   "title" : "Perl Unicode Cookbook: Get Character Categories",
-   "image" : null,
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
-   ]
+   ],
+   "image" : null,
+   "description" : "℞ 23: Get character category Unicode is a set of characters and a list of rules and properties applied to those characters. The Unicode Character Database collects those properties. The core module Unicode::UCD provides access to these properties. These general...",
+   "categories" : "unicode",
+   "date" : "2012-05-11T06:00:01-08:00",
+   "slug" : "/pub/2012/05/perlunicook-get-character-categories",
+   "title" : "Perl Unicode Cookbook: Get Character Categories",
+   "tags" : []
 }
 
 
 
 
 
-â 23: Get character category {#Get-character-category}
+℞ 23: Get character category {#Get-character-category}
 ----------------------------
 
 Unicode is a set of characters and a list of rules and properties
@@ -46,13 +46,13 @@ To translate this category into something more human friendly:
      my $cat        = charinfo(0x3A3)->{category};  # "Lu"
      my $full_cat   = $categories{ $cat }; # "UppercaseLetter"
 
-Previous: [â 22: Match Unicode Linebreak
+Previous: [℞ 22: Match Unicode Linebreak
 Sequence](/media/_pub_2012_05_perlunicook-get-character-categories/perlunicook-match-unicode-linebreak-sequence.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_05_perlunicook-get-character-categories/perlunicook-standard-preamble.html)
 
-Next: [â 24: Disable Unicode-awareness in Builtin Character
+Next: [℞ 24: Disable Unicode-awareness in Builtin Character
 Classes](/media/_pub_2012_05_perlunicook-get-character-categories/perlunicook-disable-unicode-awareness-in-builtin-character-classes.html)
 
 

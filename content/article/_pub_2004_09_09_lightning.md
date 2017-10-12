@@ -1,19 +1,19 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2004/09/09/lightning",
-   "tags" : [],
-   "date" : "2004-09-09T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2004_09_09_lightning/111-lightning_articles.gif",
-   "categories" : "development",
+   "draft" : null,
    "description" : " Simon Cozens Serendipity - it means those occasions when things come together to give you moments of inspiration. While preparing perl.com one week, I was editing an article on how to give lightning talks by Mark Fowler and at...",
-   "title" : "Lightning Articles",
    "image" : null,
    "authors" : [
       "simon-cozens",
       "mark-fowler",
       "ricardo-signes",
       "aaron-trevena"
-   ]
+   ],
+   "tags" : [],
+   "title" : "Lightning Articles",
+   "categories" : "development",
+   "date" : "2004-09-09T00:00:00-08:00",
+   "slug" : "/pub/2004/09/09/lightning"
 }
 
 
@@ -65,8 +65,8 @@ in our web pages. We often use HTML entities to encode letters that
 aren't ASCII, since this way we then don't have to worry about the text
 encoding we're using.
 
-For example, we want to render the string `Hello LÃ©on`&gt; into our HTML
-document. So, instead of including the Ã© into our document directly we
+For example, we want to render the string `Hello Léon`&gt; into our HTML
+document. So, instead of including the é into our document directly we
 transform it into its entity form, replacing it with `&eacute;`:
 
       <p>Hello L&eacute;on</p>

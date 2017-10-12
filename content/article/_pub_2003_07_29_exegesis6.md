@@ -1,21 +1,21 @@
 {
+   "authors" : [
+      "damian-conway"
+   ],
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. As soon as she walked through my door I knew her type: she was an argument waiting...",
+   "image" : null,
    "draft" : null,
+   "thumbnail" : "/images/_pub_2003_07_29_exegesis6/111-exegesis_6.gif",
+   "categories" : "perl-6",
+   "date" : "2003-07-29T00:00:00-08:00",
    "slug" : "/pub/2003/07/29/exegesis6",
+   "title" : "Exegesis 6",
    "tags" : [
       "apocalypse-6",
       "damian-conway",
       "exegesis-6",
       "perl-6",
       "subroutines"
-   ],
-   "date" : "2003-07-29T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2003_07_29_exegesis6/111-exegesis_6.gif",
-   "categories" : "perl-6",
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. As soon as she walked through my door I knew her type: she was an argument waiting...",
-   "title" : "Exegesis 6",
-   "image" : null,
-   "authors" : [
-      "damian-conway"
    ]
 }
 
@@ -54,7 +54,7 @@ design information.*
 >
 > *It was gonna be another routine investigation.*
 >
-> â Dashiell Hammett, "The Maltese Camel"
+> — Dashiell Hammett, "The Maltese Camel"
 
 This Exegesis explores the new subroutine semantics described in
 Apocalypse 6. Those new semantics greatly increase the power and
@@ -111,8 +111,8 @@ The Perl 6 implementation of `&part` would therefore be:
     }
 
 As in Perl 5, the `sub` keyword declares a subroutine. As in Perl 5, the
-name of the subroutine follows the `sub` and â assuming that name
-doesn't include a package qualifier â the resulting subroutine is
+name of the subroutine follows the `sub` and — assuming that name
+doesn't include a package qualifier — the resulting subroutine is
 installed into the current package.
 
 **Un**like Perl 5, in Perl 6 we are allowed to specify a formal
@@ -171,7 +171,7 @@ in the above example), but it's potentially a very nasty trap too. Many
 programmers, accustomed to the pass-by-copy semantics of other
 languages, will unconsciously fall into the habit of treating the
 contents of `$_[0]` as if they were a copy. Eventually that will lead to
-some subroutine unintentionally changing one of its arguments â a bug
+some subroutine unintentionally changing one of its arguments — a bug
 that is often very hard to diagnose and frequently even harder to track
 down.
 
@@ -181,7 +181,7 @@ they're **constant** aliases by default. That means, unless we
 specifically tell Perl 6 otherwise, it's illegal to change an argument
 by modifying the corresponding parameter within a subroutine.
 
-All of which means that a the naÃ¯ve translation of
+All of which means that a the naïve translation of
 `&Fahrenheit_to_Kelvin` to Perl 6 isn't going to work:
 
     # Perl 6 code...
@@ -254,7 +254,7 @@ In other words, the `*@data` parameter does just what `@_` does in Perl
 5: it grabs all the available arguments and makes its elements aliases
 for those arguments. The only differences are that in Perl 6 we're
 allowed to give that slurpy array a sensible name, and we're allowed to
-specify other individual parameters before it â to give separate
+specify other individual parameters before it — to give separate
 sensible names to one or more of the preliminary arguments to the call.
 
 But why (you're probably wondering) do we need an asterisk for that?
@@ -296,7 +296,7 @@ non-slurpy parameter doesn't flatten or listify. Instead, it insists on
 a single argument of the correct type.
 
 So, if we want `&part` to handle raw lists as data, we need to tell the
-`@data` parameter to take whatever it finds â array or list â and
+`@data` parameter to take whatever it finds — array or list — and
 flatten everything down to a list. That's what the asterisk on `*@data`
 does.
 
@@ -355,7 +355,7 @@ explicitly flattens any argument to which it is applied.
 
 #### I Do Declare
 
-By the way, take another look at those examples above â the ones with
+By the way, take another look at those examples above — the ones with
 the `{...}` where their subroutine bodies should be. Those dots aren't
 just metasyntactic; they're real executable Perl 6 code. A subroutine
 definition with a `{...}` for its body isn't actually a *definition* at
@@ -653,11 +653,11 @@ We could simplify our partitioning to:
     @animals;
 
 Here `$^animal` is a placeholder, so the block immediately surrounding
-it becomes a parameterized block â in this case with exactly one
+it becomes a parameterized block — in this case with exactly one
 parameter.
 
 Better still, any block containing a `$_` is also a parameterized block
-â with a single parameter named `$_`. We could dispense with the
+— with a single parameter named `$_`. We could dispense with the
 explicit placeholder and just write our partitioning statement:
 
     ($cats, $chattels) = part { $_.isa(Animal::Cat) }
@@ -772,7 +772,7 @@ instead of resorting to the horror of nested `grep`s:
     { print "Already seen at least one smaller value." }
 
 What if we wanted to check whether *all* of the new values were greater
-than any of the old ones? For that we use a different kind of junction â
+than any of the old ones? For that we use a different kind of junction —
 one that is equal to all our values at once (rather than just any one of
 them). We can create such a junction with the `all` function:
 
@@ -806,7 +806,7 @@ That last example is the same as:
 `any` junctions are known as *disjunctions*, because they act like
 they're in a boolean OR: "this OR that OR the other". `all` junctions
 are known as *conjunctions*, because they have an implicit AND between
-their values â "this AND that AND the other".
+their values — "this AND that AND the other".
 
 There are two other types of junction available in Perl 6: *abjunctions*
 and *injunctions*. An abjunction is created using the `one` function and
@@ -916,8 +916,8 @@ then evaluate the return value as a boolean. On the other hand, when
 `$is_sheep` is a class, the smart-match will check to see if the object
 in `$_` belongs to the same class or some derived class.
 
-The single `when` statement handles either type of selector â `Code` or
-`Class` â auto-magically. That's why it's known as smart-matching.
+The single `when` statement handles either type of selector — `Code` or
+`Class` — auto-magically. That's why it's known as smart-matching.
 
 Having now allowed class names as selectors, we can take the final step
 and simplify:
@@ -1047,8 +1047,8 @@ then slurp up an arbitrarily long list of arguments, binding them to the
 elements of a parameter called `@_`. That's pretty much what a Perl 5
 subroutine does. The only important difference is that in Perl 6 that
 slurpy `@_` is, like all Perl 6 parameters, constant by default. So, if
-we want the *exact* behaviour of a Perl 5 subroutine â including being
-able to modify elements of `@_` â we need to be explicit:
+we want the *exact* behaviour of a Perl 5 subroutine — including being
+able to modify elements of `@_` — we need to be explicit:
 
     sub part (*@_ is rw) {...}
 
@@ -1206,7 +1206,7 @@ kinds of values it can contain) and the *implementation class* of the
 variable (i.e. how the variable itself is actually implemented).
 
 The `is` keyword indicates what a particular container (variable,
-parameter, etc.) *is* â namely, how it's implemented and how it
+parameter, etc.) *is* — namely, how it's implemented and how it
 operates. Saying:
 
     sub bark(@dogs is Pack) {...}
@@ -1217,7 +1217,7 @@ it's actually implemented by the `Pack` class instead.
 That declaration is **not** specifying that the `@dogs` variable
 *stores* `Pack` objects. In fact, it's not saying anything at all about
 what `@dogs` stores. Since its storage type has been left unspecified,
-`@dogs` inherits the default storage type â `Any` â which allows its
+`@dogs` inherits the default storage type — `Any` — which allows its
 elements to store any kind of scalar value.
 
 If we'd wanted to specify that `@dogs` was a normal array, but that it
@@ -1323,7 +1323,7 @@ referent of some kind.
 ### A Label by Any Other Name
 
 Mandating fixed labels for the two arrays being returned seems a little
-inflexible, so we could add another â optional â parameter via which
+inflexible, so we could add another — optional — parameter via which
 user-selected key names could be passed...
 
     sub part (Selector $is_sheep,
@@ -1344,7 +1344,7 @@ Optional parameters in Perl 6 are prefixed with a `?` marker (just as
 slurpy parameters are prefixed with `*`). Like required parameters,
 optional parameters are passed positionally, so the above example means
 that the second argument is expected to be an array of strings. This has
-important consequences for backwards compatibility â as we'll see
+important consequences for backwards compatibility — as we'll see
 shortly.
 
 As well as declaring it to be optional (using a leading `?`), we also
@@ -1369,7 +1369,7 @@ compatible with the type of the optional parameter.
 
 In the above version of `&part`, for the sake of backwards compatibility
 we make the optional `@labels` default to the list of two strings
-`<<sheepÂ goats>>`Â  (using the new Perl 6 list-of-strings syntax).
+`<<sheep goats>>`  (using the new Perl 6 list-of-strings syntax).
 
 Thus if we provide an array of two strings explicitly, the two strings
 we provide will be used as keys for the two pairs returned. If we don't
@@ -1527,7 +1527,7 @@ be modified (by having a pipeline inserted). That will almost certainly
 be too painful.
 
 Our new optional labels would be much more useful if their existence
-itself were also optional â if we could somehow add a single statement
+itself were also optional — if we could somehow add a single statement
 to the start of any legacy code file and thereby cause `&part` to work
 like it used to in the good old days before labels. In other words, what
 we really want is an impostor `&part` subroutine that pretends that it
@@ -1575,7 +1575,7 @@ Now, if we only knew what the `.assuming` method did...
 What the `.assuming(...)` method does is place an anonymous wrapper
 around an existing `Code` object and then return a reference to (what
 appears to be) an entirely separate `Code` object. That new `Code`
-object works exactly like the original â except that the new one is
+object works exactly like the original — except that the new one is
 missing one or more of the original's parameters.
 
 Specifically, the parameter list of the wrapper subroutine doesn't have
@@ -1594,17 +1594,17 @@ returns a reference to a new subroutine that acts like this:
         return part($is_sheep, labels=><<sheep goats>>, *@data)
     }
 
-That is, because we passed a `labelsÂ =>Â <<sheepÂ goats>>`Â  argument to
+That is, because we passed a `labels => <<sheep goats>>`  argument to
 `.assuming`, we get back a subroutine *without* a `labels` parameter,
 but which then just calls `part` and inserts the value
-`<<sheepÂ goats>>`Â  for the missing parameter.
+`<<sheep goats>>`  for the missing parameter.
 
 Or, as the code itself suggests:
 
     &List::Part::part.assuming(labels => <<sheep goats>>)
 
 gives us what `&List::Part::part` would become under the assumption that
-the value of `@labels` is always `<<sheepÂ goats>>`Â .
+the value of `@labels` is always `<<sheep goats>>` .
 
 How does that help with our source code backwards compatibility problem?
 It completely solves it. All we have to do is to make Perl 6 use that
@@ -1713,7 +1713,7 @@ design information.*
 ### An Argument in Name Only
 
 It's pretty cool that Perl 6 automatically lets us specify positional
-arguments â and even return values â by name rather than position.
+arguments — and even return values — by name rather than position.
 
 But what if we'd prefer that some of our arguments could *only* be
 specified by name. After all, the `@labels` parameter isn't really in
@@ -1785,7 +1785,7 @@ this:
 
     %parts = part Animal::Cat, <<cat chattel>>, @animals;     # Oops!
 
-When `@labels` was positional-or-named, the `<<catÂ chattel>>`Â  argument
+When `@labels` was positional-or-named, the `<<cat chattel>>`  argument
 could only be interpreted as being intended for `@labels`. But now,
 there's no way it can be for `@labels` (because it isn't named), so Perl
 6 assumes that the list is just part of the slurped data. The
@@ -1959,7 +1959,7 @@ unrelated behaviours out into separate subroutines. And it would be more
 efficient if we could select between those two subroutines by testing
 the type of the selector only once.
 
-Of course, in Perl 6 we can do just that â with a *multisub*.
+Of course, in Perl 6 we can do just that — with a *multisub*.
 
 What's a multisub? It's a collection of related subroutines (known as
 "variants"), all of which have the same name but different parameter
@@ -2077,7 +2077,7 @@ with that variant's first parameter.
 
 Suppose we wanted more control over the default labels that `&part` uses
 for its return values. For example, suppose we wanted to be able to
-prompt the user for the appropriate defaults â before the program runs.
+prompt the user for the appropriate defaults — before the program runs.
 
 The default value for an optional parameter can be any valid Perl
 expression whose result is compatible with the type of the parameter. We
@@ -2288,7 +2288,7 @@ with the specified arguments (`2` and `"default labels"`).
 Whenever a macro like `&request` is invoked, the parser itself
 intercepts the macro's return value and integrates it somehow back into
 the parse tree it is in the middle of building. If the macro returns a
-block â as `&request` does in the above example â the parser extracts
+block — as `&request` does in the above example — the parser extracts
 the the contents of that block and inserts the parse tree of those
 contents into the program's parse tree. In other words, if a macro
 returns a block, a precompiled version of whatever is inside the block
@@ -2344,7 +2344,7 @@ replacement for `wantarray`. `want` returns a scalar value that
 simultaneously represents any the contexts in which the current
 subroutine was called. In other words, it returns a disjunction of
 various classes. We then compare that context information against the
-three possibilities â `List`, `Scalar`, and (by elimination) `Void`.
+three possibilities — `List`, `Scalar`, and (by elimination) `Void`.
 
 If `MY_BEGIN` was called in a list context, we evaluate its
 block/closure argument in a list context, capture the results in an
@@ -2360,7 +2360,7 @@ to be replaced by a parse tree, specifically, the parse tree
 representing the values that resulted from executing the original block
 passed to `MY_BEGIN`.
 
-In the final case â a void context â the compiler isn't expecting to
+In the final case — a void context — the compiler isn't expecting to
 replace the macro call with anything, so it doesn't matter what we
 return, just as long as we evaluate the block. The macro call itself is
 simply eliminated from the final parse-tree.
@@ -2426,7 +2426,7 @@ captured "everything else" becomes the second argument (and is bound to
 
 Normally, of course, we don't need to specify the `is parsed` trait when
 setting up a macro. Since a macro is a kind of subroutine, by default
-its argument list is parsed the same as any other subroutine's â as a
+its argument list is parsed the same as any other subroutine's — as a
 comma-separated list of Perl 6 expressions.
 
 *Editor's note: this document is out of date and remains here for
@@ -2549,26 +2549,26 @@ parenthesis, which can only appear if it's the first character of the
 symbol). So instead of `~|_|~` we could equally well have named our
 partitioning operator any of:
 
-    infix:Â¥
-    infix:Â¦
+    infix:¥
+    infix:¦
     infix:^%#$!
     infix:<->
-    infix:â
+    infix:∇
 
 The `infix:` keyword tells the compiler that the operator is placed
 between its operands (as binary operators always are). If we're
 declaring a unary operator, there are three other keywords that can be
 used instead: `prefix:`, `postfix:`, or `circumfix:`. For example:
 
-    sub prefix:Â±       (Num $n) is equiv(&infix:+)    { return +$n|-$n }
+    sub prefix:±       (Num $n) is equiv(&infix:+)    { return +$n|-$n }
 
-    sub postfix:Â²      (Num $n) is tighter(&infix:**) { return $n**2 }
+    sub postfix:²      (Num $n) is tighter(&infix:**) { return $n**2 }
 
-    sub circumfix:â...â (Num $n) { return POSIX::floor($n) }
+    sub circumfix:⌊...⌋ (Num $n) { return POSIX::floor($n) }
 
     # and later...
 
-    $error = Â±â$xÂ²â;
+    $error = ±⌊$x²⌋;
 
 The `is tighter`, `is looser`, and `is equiv` traits tell the parser
 what the precedence of the new operator will be, relative to existing

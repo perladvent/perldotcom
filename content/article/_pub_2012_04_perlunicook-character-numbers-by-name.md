@@ -1,23 +1,23 @@
 {
+   "description" : "℞ 7: Get character number by name Unicode allows you to refer to characters by number or by name. Computers don't care, but humans do. When you have a character name, you can translate it to its number with the...",
+   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "title" : "Perl Unicode Cookbook: Get Character Number by Name",
-   "categories" : "unicode",
+   "draft" : null,
    "thumbnail" : null,
-   "description" : "â 7: Get character number by name Unicode allows you to refer to characters by number or by name. Computers don't care, but humans do. When you have a character name, you can translate it to its number with the...",
-   "date" : "2012-04-13T06:00:01-08:00",
+   "title" : "Perl Unicode Cookbook: Get Character Number by Name",
    "tags" : [],
+   "date" : "2012-04-13T06:00:01-08:00",
    "slug" : "/pub/2012/04/perlunicook-character-numbers-by-name",
-   "draft" : null
+   "categories" : "unicode"
 }
 
 
 
 
 
-â 7: Get character number by name {#Get-character-number-by-name}
+℞ 7: Get character number by name {#Get-character-number-by-name}
 ---------------------------------
 
 Unicode allows you to refer to characters by number or by name.
@@ -35,13 +35,13 @@ See [Characters and Their
 Numbers](/media/_pub_2012_04_perlunicook-character-numbers-by-name/perlunicook-chars-and-their-nums.html)
 to translate from this number to the appropriate character.
 
-Previous: [â 6: Get Character Names by
+Previous: [℞ 6: Get Character Names by
 Number](/media/_pub_2012_04_perlunicook-character-numbers-by-name/perlunicook-character-names-by-number.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_04_perlunicook-character-numbers-by-name/perlunicook-standard-preamble.html)
 
-Next: [â 8: Unicode Named
+Next: [℞ 8: Unicode Named
 Characters](/media/_pub_2012_04_perlunicook-character-numbers-by-name/perlunicook-unicode-named-characters.html)
 
 

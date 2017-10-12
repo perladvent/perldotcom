@@ -1,16 +1,16 @@
 {
    "title" : "The Culture of Perl",
-   "description" : null,
-   "thumbnail" : null,
+   "tags" : [],
+   "date" : "1997-08-20T00:00:00-08:00",
+   "slug" : "/pub/1997/wall/keynote",
    "categories" : "community",
+   "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
+   "description" : null,
    "authors" : [
       "larry-wall"
-   ],
-   "image" : null,
-   "draft" : null,
-   "date" : "1997-08-20T00:00:00-08:00",
-   "tags" : [],
-   "slug" : "/pub/1997/wall/keynote"
+   ]
 }
 
 

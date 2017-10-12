@@ -1,15 +1,15 @@
 {
-   "slug" : "/pub/2001/11/15/creatingrss",
-   "tags" : [],
-   "date" : "2001-11-15T00:00:00-08:00",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "chris-ball"
    ],
-   "categories" : "web",
-   "thumbnail" : "/images/_pub_2001_11_15_creatingrss/111-perlrss2.gif",
+   "image" : null,
    "description" : " Even if you haven't heard of the RSS acronym before, you're likely to have used RSS in the past. Whether through the slashboxes at slashdot or our own news summary at use.perl.org, the premise remains the same - RSS,...",
+   "thumbnail" : "/images/_pub_2001_11_15_creatingrss/111-perlrss2.gif",
+   "draft" : null,
+   "slug" : "/pub/2001/11/15/creatingrss",
+   "date" : "2001-11-15T00:00:00-08:00",
+   "categories" : "web",
+   "tags" : [],
    "title" : "Create RSS channels from HTML news sites"
 }
 

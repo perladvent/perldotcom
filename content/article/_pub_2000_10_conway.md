@@ -1,16 +1,16 @@
 {
-   "draft" : null,
    "tags" : [],
+   "title" : "Last Chance to Support Damian Conway",
+   "categories" : "Community",
    "date" : "2000-10-26T00:00:00-08:00",
    "slug" : "/pub/2000/10/conway",
-   "title" : "Last Chance to Support Damian Conway",
-   "description" : " $16,500 pledged, another $11,000 needed to liberate Damian Conway. As reported earlier, the Yet Another Society (YAS) is putting together a grant to Monash University, Australia. The grant will fund Damian Conway's full-time work on Perl for a year....",
+   "draft" : null,
    "thumbnail" : null,
-   "categories" : "Community",
+   "description" : " $16,500 pledged, another $11,000 needed to liberate Damian Conway. As reported earlier, the Yet Another Society (YAS) is putting together a grant to Monash University, Australia. The grant will fund Damian Conway's full-time work on Perl for a year....",
+   "image" : null,
    "authors" : [
       "nathan-torkington"
-   ],
-   "image" : null
+   ]
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "tags" : [],
+   "categories" : "community",
    "date" : "2001-01-30T00:00:00-08:00",
    "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010128",
+   "title" : "This Week on p5p 2001/01/28",
+   "tags" : [],
+   "thumbnail" : null,
    "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "title" : "This Week on p5p 2001/01/28",
-   "thumbnail" : null,
-   "categories" : "community",
-   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. There were 317 messages this week,..."
+   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. There were 317 messages this week,...",
+   "image" : null
 }
 
 

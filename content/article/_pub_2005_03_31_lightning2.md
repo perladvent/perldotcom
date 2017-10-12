@@ -1,16 +1,5 @@
 {
-   "image" : null,
-   "authors" : [
-      "chromatic",
-      "bob-ducharme",
-      "shlomi-fish",
-      "mark-leighton-fisher"
-   ],
-   "description" : "Customize Emacs with Perl, debug your programs with line tracing, mock the DBI for testing, and manage buffering effectively-four short articles for Perl programmers.",
-   "thumbnail" : null,
-   "categories" : "development",
    "title" : "More Lightning Articles",
-   "slug" : "/pub/2005/03/31/lightning2",
    "tags" : [
       "devel-linetrace",
       "emacs-and-perl",
@@ -23,7 +12,18 @@
       "test-mockdbi"
    ],
    "date" : "2005-03-31T00:00:00-08:00",
-   "draft" : null
+   "slug" : "/pub/2005/03/31/lightning2",
+   "categories" : "development",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : "Customize Emacs with Perl, debug your programs with line tracing, mock the DBI for testing, and manage buffering effectively-four short articles for Perl programmers.",
+   "image" : null,
+   "authors" : [
+      "chromatic",
+      "bob-ducharme",
+      "shlomi-fish",
+      "mark-leighton-fisher"
+   ]
 }
 
 
@@ -294,7 +294,7 @@ statements out of your programs. Happy LineTracing!
 by Mark Leighton Fisher
 
 What if you could test your program's use of the DBI just by creating a
-set of rules to guide the DBI's behaviorâwithout touching a database
+set of rules to guide the DBI's behavior—without touching a database
 (unless you want to)? That is the promise of
 [Test::MockDBI](http://search.cpan.org/perldoc?Test::MockDBI), which by
 mocking-up the entire DBI API gives you unprecedented control over every
@@ -305,7 +305,7 @@ aspect of the DBI's interface with your program.
 to mock all of the DBI transparently. The rest of the program knows
 nothing about using `Test::MockDBI`, making `Test::MockDBI` ideal for
 testing programs that you are taking over, because you only need to add
-the `Test::MockDBI` invocation codeâ you do not have to modify any of
+the `Test::MockDBI` invocation code— you do not have to modify any of
 the other program code. (I have found this very handy as a consultant,
 as I often work on other people's code.)
 

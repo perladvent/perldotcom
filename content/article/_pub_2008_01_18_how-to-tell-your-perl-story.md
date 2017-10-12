@@ -1,12 +1,12 @@
 {
-   "image" : null,
+   "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "brian-d-foy"
    ],
    "description" : "brian d foy is the author of Mastering Perl, now available in its second edition, as well as several other Perl books. As the founder of Perl mongers, he's been active in the Perl community for almost 20 years. Ever...",
+   "image" : null,
    "categories" : "Community",
-   "thumbnail" : null,
-   "title" : "How to Tell Your Perl Story (at OSCON)",
    "slug" : "/pub/2008/01/18/how-to-tell-your-perl-story",
    "date" : "2008-01-18T00:00:00-08:00",
    "tags" : [
@@ -17,7 +17,7 @@
       "oscon",
       "perl-conference"
    ],
-   "draft" : null
+   "title" : "How to Tell Your Perl Story (at OSCON)"
 }
 
 
@@ -163,7 +163,7 @@ these categories:
 #### Lightning Talks and Birds of a Feather
 
 Maybe you aren't up to full 45 minute talk just yet. You can also
-present a lightning talkâa five minute mini-presentation. You may not
+present a lightning talk—a five minute mini-presentation. You may not
 think that you have much to say, but five minutes goes pretty quickly.
 It's a gentle way to start a career as a speaker. You don't need to
 develop a long talk; prepare a larger slide deck, and if you're

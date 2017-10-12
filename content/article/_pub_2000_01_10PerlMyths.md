@@ -1,16 +1,16 @@
 {
-   "title" : "Ten Perl Myths",
-   "description" : " Beginning Perl : Ten Perl Myths -> Introduction Table of Contents ÂPerl is hard ÂPerl looks like line noise ÂPerl is hard because it has regexps ÂPerl is hard because it has references ÂPerl is just for Unix ÂPerl...",
-   "thumbnail" : null,
    "categories" : "community",
+   "date" : "2000-02-23T00:00:00-08:00",
+   "slug" : "/pub/2000/01/10PerlMyths",
+   "tags" : [],
+   "title" : "Ten Perl Myths",
+   "thumbnail" : null,
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
    "image" : null,
-   "draft" : null,
-   "tags" : [],
-   "date" : "2000-02-23T00:00:00-08:00",
-   "slug" : "/pub/2000/01/10PerlMyths"
+   "description" : " Beginning Perl : Ten Perl Myths -> Introduction Table of Contents Perl is hard Perl looks like line noise Perl is hard because it has regexps Perl is hard because it has references Perl is just for Unix Perl..."
 }
 
 
@@ -23,21 +23,21 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Perl is hard](#Perl_is_hard)\                                       |
-| â¢[Perl looks like line noise](#Perl_looks_like_line_noise)\           |
-| â¢[Perl is hard because it has                                         |
+| •[Perl is hard](#Perl_is_hard)\                                       |
+| •[Perl looks like line noise](#Perl_looks_like_line_noise)\           |
+| •[Perl is hard because it has                                         |
 | regexps](#Perl_is_hard_because_it_has_rege)\                          |
-| â¢[Perl is hard because it has                                         |
+| •[Perl is hard because it has                                         |
 | references](#Perl_is_hard_because_it_has_refe)\                       |
-| â¢[Perl is just for Unix](#Perl_is_just_for_Unix)\                     |
-| â¢[Perl is just for one-liners - can't build \`real' programs with     |
+| •[Perl is just for Unix](#Perl_is_just_for_Unix)\                     |
+| •[Perl is just for one-liners - can't build \`real' programs with     |
 | it.](#Perl_is_just_for_one_liners_ca)\                                |
-| â¢[Perl is just for CGI](#Perl_is_just_for_CGI)\                       |
-| â¢[Perl is too slow](#Perl_is_too_slow)\                               |
-| â¢[Perl is insecure](#Perl_is_insecure)\                               |
-| â¢[Perl is not commercial, so it can't be any                          |
+| •[Perl is just for CGI](#Perl_is_just_for_CGI)\                       |
+| •[Perl is too slow](#Perl_is_too_slow)\                               |
+| •[Perl is insecure](#Perl_is_insecure)\                               |
+| •[Perl is not commercial, so it can't be any                          |
 | good](#Perl_is_not_commercial_so_it_ca)\                              |
-| â¢[Conclusion](#Conclusion)\                                           |
+| •[Conclusion](#Conclusion)\                                           |
 +-----------------------------------------------------------------------+
 
 One of the things you might not realize when you're thinking about Perl

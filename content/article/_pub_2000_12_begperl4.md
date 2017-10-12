@@ -1,21 +1,21 @@
 {
-   "authors" : [
-      "doug-sheppard"
-   ],
-   "image" : null,
-   "title" : "Beginners Intro to Perl - Part 4",
-   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
-   "thumbnail" : null,
+   "date" : "2000-12-06T00:00:00-08:00",
+   "slug" : "/pub/2000/12/begperl4",
    "categories" : "development",
+   "title" : "Beginners Intro to Perl - Part 4",
    "tags" : [
       "cgi",
       "scriptingg",
       "security",
       "web"
    ],
-   "date" : "2000-12-06T00:00:00-08:00",
-   "slug" : "/pub/2000/12/begperl4",
-   "draft" : null
+   "draft" : null,
+   "thumbnail" : null,
+   "authors" : [
+      "doug-sheppard"
+   ],
+   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
+   "image" : null
 }
 
 
@@ -39,23 +39,23 @@ be interested in the newer versions, available at:*
 +-----------------------------------------------------------------------+
 | **Beginners Intro to Perl**                                           |
 +-----------------------------------------------------------------------+
-| â¢**[Part 1 of this                                                    |
+| •**[Part 1 of this                                                    |
 | series](/media/_pub_2000_12_begperl4/begperl1.html)**\                |
-| â¢**[Part 2 of this                                                    |
+| •**[Part 2 of this                                                    |
 | series](/media/_pub_2000_12_begperl4/begperl2.html)**\                |
-| â¢**[Part 3 of this                                                    |
+| •**[Part 3 of this                                                    |
 | series](/media/_pub_2000_12_begperl4/begperl3.html)**\                |
-| â¢**[Part 5 of this                                                    |
+| •**[Part 5 of this                                                    |
 | series](/media/_pub_2000_12_begperl4/begperl5.html)**\                |
-| â¢**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
+| •**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
 | \                                                                     |
-| â¢[What is CGI?](#cgi)\                                                |
-| â¢[A Real CGI Program](#cgi_program)\                                  |
-| â¢[Uh-Oh!](#uhoh)\                                                     |
-| â¢[Our Second Script](#second_script)\                                 |
-| â¢[Sorting](#sorting)\                                                 |
-| â¢[Trust No One](#trust)\                                              |
-| â¢[Play Around!](#play_around)                                         |
+| •[What is CGI?](#cgi)\                                                |
+| •[A Real CGI Program](#cgi_program)\                                  |
+| •[Uh-Oh!](#uhoh)\                                                     |
+| •[Our Second Script](#second_script)\                                 |
+| •[Sorting](#sorting)\                                                 |
+| •[Trust No One](#trust)\                                              |
+| •[Play Around!](#play_around)                                         |
 +-----------------------------------------------------------------------+
 
 So far, we've talked about Perl as a language for mangling numbers,

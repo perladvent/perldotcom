@@ -1,18 +1,18 @@
 {
-   "image" : null,
-   "authors" : [
-      "damian-conway"
-   ],
-   "categories" : "perl-6",
-   "thumbnail" : null,
-   "description" : "Exegesis 2 -> Editor's note: this document is out of date and remains here for historic interest. See Synopsis 2 for the current design information. exegesis: n. an interpretation and explanation of a text, esp. Holy Writ This is the...",
    "title" : "Exegesis 2",
-   "slug" : "/pub/2001/05/08/exegesis2",
    "tags" : [
       "perl-6"
    ],
    "date" : "2001-05-15T00:00:00-08:00",
-   "draft" : null
+   "slug" : "/pub/2001/05/08/exegesis2",
+   "categories" : "perl-6",
+   "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
+   "description" : "Exegesis 2 -> Editor's note: this document is out of date and remains here for historic interest. See Synopsis 2 for the current design information. exegesis: n. an interpretation and explanation of a text, esp. Holy Writ This is the...",
+   "authors" : [
+      "damian-conway"
+   ]
 }
 
 
@@ -161,7 +161,7 @@ compared to:
 and thereby replacing nearly a million chunky scalars with svelte raw
 integers.
 
-### [La propriÃ©tÃ© c'est le vol]{#la proprit c'est le vol}
+### [La propriété c'est le vol]{#la proprit c'est le vol}
 
 The `is constant` and `is dim` bits of the above declarations are
 compile-time property specifications. These particular properties are

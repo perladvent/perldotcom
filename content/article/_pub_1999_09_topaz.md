@@ -1,19 +1,19 @@
 {
+   "thumbnail" : null,
    "draft" : null,
+   "authors" : [
+      "chip-salzenberg"
+   ],
+   "description" : " Introduction One of the more interesting talks at the O'Reilly 1999 Open Source Convention was by Chip Salzenberg, one of the core developers of Perl. He described his work on Topaz, a new effort to completely re-write the internals...",
+   "image" : null,
+   "categories" : "community",
    "slug" : "/pub/1999/09/topaz",
+   "date" : "1999-09-28T00:00:00-08:00",
+   "title" : "Topaz: Perl for the 22nd Century",
    "tags" : [
       "c",
       "internals",
       "systems-programming-languages"
-   ],
-   "date" : "1999-09-28T00:00:00-08:00",
-   "categories" : "community",
-   "thumbnail" : null,
-   "description" : " Introduction One of the more interesting talks at the O'Reilly 1999 Open Source Convention was by Chip Salzenberg, one of the core developers of Perl. He described his work on Topaz, a new effort to completely re-write the internals...",
-   "title" : "Topaz: Perl for the 22nd Century",
-   "image" : null,
-   "authors" : [
-      "chip-salzenberg"
    ]
 }
 
@@ -82,11 +82,11 @@ brace," and the rest is automatic. So that is the reason why Objective C
 fell out of the running.
 
 **Eiffel** actually was a serious contender for a long time. That is,
-until I realized that to get decent performance, Eiffel compilersâor I
+until I realized that to get decent performance, Eiffel compilers—or I
 should say the free Eiffel compiler, because there are multiple
-implementationsâneeded to do analysis at link-time as to all the classes
+implementations—needed to do analysis at link-time as to all the classes
 that were actually in the program. Eiffel has no equivalent of declaring
-member functionsâI'm using the C++ terminologyâdeclaring them to be
+member functions—I'm using the C++ terminology—declaring them to be
 virtual or nonvirtual. It intuits this by figuring out the equivalent of
 the Java characteristic final, i.e., I have no derived classes, at
 link-time. And so it says, well, if there are no derived classes, then
@@ -104,7 +104,7 @@ enforce the things you told it. However, the only free implementation of
 Ada, at least the only one I'm aware of, GNAT, is written in Ada. This
 is an interesting design decision and it obviously helped them. They
 obviously like Ada so they use it, right? The problem is that if Perl 6
-were written in Adaâit would require people to bootstrap GNAT before
+were written in Ada—it would require people to bootstrap GNAT before
 they could even get to Perl. That's too much of a burden to put on
 anybody.
 
@@ -123,7 +123,7 @@ whatever you learn, it will be considered enough," and so then he's okay
 with it. Well, that's kind of how I feel about Visual C++. Whatever
 Visual C++ implements, we shall call that "enough," because I really
 don't think that we can ignore Windows as a target market. If nothing
-else, we need the checklist itemâworks on Windows. Otherwise the people
+else, we need the checklist item—works on Windows. Otherwise the people
 who don't understand what's going on will refuse to Perl in situations
 where they really need to.
 
@@ -158,14 +158,14 @@ pancreas and lungs and little sharp pointy things and the occasional
 exploding kidney." It really is hard to maintain Perl 5. Considering how
 many people have had their hands in it; it's not surprising that this is
 the situation. And you really need indoctrination in all the mysteries
-and magic structures and so onâbefore you can really hope to make
+and magic structures and so on—before you can really hope to make
 significant changes to the Perl core without breaking more things than
 you're adding.
 
 Some design decisions have made certain bugs really hard to get rid of.
 For example, the fact that things on the stack do not have the reference
 counts incremented has made it necessary to fake the reference counting
-in some circumstances, ï¿½ la the mortality concept, for those of you who
+in some circumstances, � la the mortality concept, for those of you who
 have been in there.
 
 Really, when you think about it, the number of people who can do that
@@ -181,8 +181,8 @@ like that.
 
 The secondary reason actually is new features. There are some features
 there where people say, "Yeah, I want that just cuz it's cool." First of
-all, dynamic loading of basic typesâand I'll give an example of that
-laterâthe basic concept is if you want to invent a new thing like a
+all, dynamic loading of basic types—and I'll give an example of that
+later—the basic concept is if you want to invent a new thing like a
 B-tree hash, you shouldn't have to modify the Perl core for that. You
 should just be able to create an add-on that's dynamically loaded and
 inserts itself and then you'd be able to use it.
@@ -202,7 +202,7 @@ later. So, separation of representing the OP-tree statically versus what
 you use dynamically is an important part of that part the internals.
 
 Also, something that could be done currently but nobody's gotten around
-to itâMicro Perl. Now if you built Perl, you've noticed that there's a
+to it—Micro Perl. Now if you built Perl, you've noticed that there's a
 main Perl, and then there's Mini Perl, which you always to expect to
 have a little price tag hanging off of, and then there's the concept of
 Micro Perl, which is even smaller than Mini Perl. The idea here is: What
@@ -244,7 +244,7 @@ Those are systems programming languages. Perl is an application
 language, and in fact one of the things that I really felt uncomfortable
 about Eiffel was that it also is really an applications programming
 language. The whole concept of pointers and pointer arithmetic and
-memory managementâif you read Meyer's new book, the chapter on memory
+memory management—if you read Meyer's new book, the chapter on memory
 management begins with "Ideally, we would like to completely forget
 about memory management." And I thought to myself, well that's great if
 you're doing applications, but for systems programming, that's nuts.
@@ -272,14 +272,14 @@ discussion we had recently on the Perl 5 Porters mailing list. Was the
 syntax appropriate for declaring variables to give appropriate hints to
 a hypothetical compiler? That is to say MY INT \$X or MY STR \$Y -- and
 I thought that the INT and the STR and the NUM should be suffixes,
-something like MY \$X:NUMâand, in fact, that suffix syntax is something
+something like MY \$X:NUM—and, in fact, that suffix syntax is something
 that Larry officially has blessed, but just not for this purpose. That's
 the instinct of the language designer coming to the fore saying that
 something that is a string or a number should not be so hard to type. It
 should read better.
 
 Meanwhile, if you want to declare something as being a reference to a
-class - MY DOG SPOTâthat's going to work. You can say that \$SPOT when
+class - MY DOG SPOT—that's going to work. You can say that \$SPOT when
 it has a defined value will be a reference to an object of type DOG or
 at least of a type that is compatible with DOG, and the syntax is
 already permitted in the Perl parser; it doesn't do very much yet but
@@ -291,12 +291,12 @@ taking suggestions.
 ### Getting into the Internals
 
 Now I'd like to ask how many of you do not know anything about C++?
-Okay, a fair number, so I'm going to have to explainâeveryone else is
+Okay, a fair number, so I'm going to have to explain—everyone else is
 lying. Two kinds of people: people who say that they know C++ and the
 truthful. Okay. C++ is complicated, definitely. Actually that reminds
 me, I'm doing this in C++ and I use EMACS. Tom Christiansen asked me,
 "Chip, is there anything that you like that isn't big and complicated?"
-C++, EMACS, Perl, Unix, Englishâno, I guess not.
+C++, EMACS, Perl, Unix, English—no, I guess not.
 
 *At this point, Chip begins to dive rather deep into a discussion of the
 internals. You can

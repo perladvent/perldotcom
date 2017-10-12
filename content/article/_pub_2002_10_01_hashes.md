@@ -1,18 +1,18 @@
 {
-   "slug" : "/pub/2002/10/01/hashes",
-   "date" : "2002-10-01T00:00:00-08:00",
+   "title" : "How Hashes Really Work",
    "tags" : [
       "hashes-hash"
    ],
+   "categories" : "development",
+   "slug" : "/pub/2002/10/01/hashes",
+   "date" : "2002-10-01T00:00:00-08:00",
    "draft" : null,
+   "thumbnail" : "/images/_pub_2002_10_01_hashes/111-hashes.gif",
    "image" : null,
+   "description" : " It's easy to take hashes for granted in Perl. They are simple, fast, and they usually &quot;just work,&quot; so people never need to know or care about how they are implemented. Sometimes, though, it's interesting and rewarding to look...",
    "authors" : [
       "abhijit-menon-sen"
-   ],
-   "categories" : "development",
-   "thumbnail" : "/images/_pub_2002_10_01_hashes/111-hashes.gif",
-   "description" : " It's easy to take hashes for granted in Perl. They are simple, fast, and they usually &quot;just work,&quot; so people never need to know or care about how they are implemented. Sometimes, though, it's interesting and rewarding to look...",
-   "title" : "How Hashes Really Work"
+   ]
 }
 
 
@@ -485,7 +485,7 @@ use the term "hash" only in obvious, Perl-specific contexts.
 :   Chapter 12 of this excellent book discusses hash tables in detail.
 
 **[The Art of Computer Programming (Donald E. Knuth)]{#item_programming}**\
-:   Volume 3 ("Sorting and Searching") devotes a section (ï¿½6.4) to an
+:   Volume 3 ("Sorting and Searching") devotes a section (�6.4) to an
     exhaustive description, analysis, and a historical perspective on
     various hashing techniques.
 

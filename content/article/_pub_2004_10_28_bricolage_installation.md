@@ -1,13 +1,7 @@
 {
-   "title" : "Installing Bricolage",
-   "thumbnail" : null,
    "categories" : "Web",
-   "description" : " Now that Content Management with Bricolage has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several...",
-   "authors" : [
-      "david-wheeler"
-   ],
-   "image" : null,
-   "draft" : null,
+   "slug" : "/pub/2004/10/28/bricolage_installation",
+   "date" : "2004-10-28T00:00:00-08:00",
    "tags" : [
       "bricolage",
       "cms",
@@ -15,8 +9,14 @@
       "cpan-installation",
       "mod-perl-installation"
    ],
-   "date" : "2004-10-28T00:00:00-08:00",
-   "slug" : "/pub/2004/10/28/bricolage_installation"
+   "title" : "Installing Bricolage",
+   "thumbnail" : null,
+   "draft" : null,
+   "authors" : [
+      "david-wheeler"
+   ],
+   "image" : null,
+   "description" : " Now that Content Management with Bricolage has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several..."
 }
 
 
@@ -176,7 +176,7 @@ PostgreSQL
     in Bricolage, but I recommend using it for security purposes.
     Bricolage can use SSL for all requests or just for authentication
     and password changing requests. Tune in for the next article in this
-    series, âBricolage Runtime Configurationâ, for information on
+    series, “Bricolage Runtime Configuration”, for information on
     configuring SSL support.
 
 Expat
@@ -326,7 +326,7 @@ are missing, the installer makes a note of it. If any optional modules
 are missing, it will prompt you to find out if you want to install them.
 Respond as appropriate.
 
-    â¦
+    …
     Looking for HTML::Template...found.
     Looking for HTML::Template::Expr...found.
     Looking for Template...found.
@@ -438,7 +438,7 @@ Text::Levenshtein
 
 :   This module is an optional alternative to the required Text::Soundex
     module. Bricolage uses it to analyze field names and suggest
-    alternatives for misspellings in the âSuper Bulk Editâ interface.
+    alternatives for misspellings in the “Super Bulk Edit” interface.
     Either of these modules is fine, although many people consider
     Text::Levenshtein to have a superior algorithm. I'll show an example
     of how this works in the Super Bulk Edit interface in a later
@@ -452,7 +452,7 @@ Crypt::SSLeay
 Imager
 
 :   This module is necessary if you plan to enable thumbnail images in
-    Bricolage â why wouldn't you want that? You'll need to make sure
+    Bricolage — why wouldn't you want that? You'll need to make sure
     that you first have all of the supporting libraries you need
     installed, such as *libpng*, *libtiff*, and *libgif* (or *giflib*).
     I'll discuss enabling thumbnail support in the next article.
@@ -545,7 +545,7 @@ Bricolage installer moves on to gathering PostgreSQL information:
 
 In order to create the Bricolage database and populate it with default
 data, the installer needs access to the database server as the
-PostgreSQL administrative or âRootâ user, usually âpostgresâ. Then it
+PostgreSQL administrative or “Root” user, usually “postgres”. Then it
 will ask you to pick names for the Bricolage database and PostgreSQL
 user, which it will create:
 
@@ -557,20 +557,20 @@ user, which it will create:
     Are you sure you want to use 'password'? [yes] [Return]
     Bricolage Database Name [bric] [Return]
 
-Here I've accepted the default value for the âPostgres Root Usernameâ. I
+Here I've accepted the default value for the “Postgres Root Username”. I
 left the password empty because by default PostgreSQL allows local users
 to access the server without a username. Instances of PostgreSQL
 installed from a package may have other authentication rules; consult
 the documentation for your installation of PostgreSQL for details. The
-âPostgres System Usernameâ is necessary only if you're running
+“Postgres System Username” is necessary only if you're running
 PostgreSQL on the same box as Bricolage. If so, then you'll need to type
 in the Unix username under which PostgreSQL runs (also usually
-âpostgresâ). If PostgreSQL is running on another box, enter ârootâ or
+“postgres”). If PostgreSQL is running on another box, enter “root” or
 some other real local username for this option.
 
 You can give your Bricolage database and PostgreSQL user any names you
 like, but the defaults are typical. You must provide a password for the
-Bricolage PostgreSQL username (here I've entered âpasswordâ). Next, the
+Bricolage PostgreSQL username (here I've entered “password”). Next, the
 Bricolage installer will prompt for the location of your PostgreSQL
 server:
 
@@ -614,13 +614,13 @@ parts:
     Your choice? [s] 
 
 There are essentially two ways to install Bricolage: The first,
-âsingleâ, assumes that you will only ever have a single instance of
+“single”, assumes that you will only ever have a single instance of
 Bricolage installed on your server. In such a case, it will install all
 of the Perl modules into the appropriate Perl `@INC` directory like any
 other Perl module and the executables into the same *bin* directory as
 your instance of Perl (such as */usr/local/bin*).
 
-The second way to install Bricolage is with the âmultiâ option. This
+The second way to install Bricolage is with the “multi” option. This
 option allows you to have multiple versions of Bricolage installed on a
 single server. Even if you never intend to do this, I generally
 recommend taking this approach, because the upshot is that *all* of your
@@ -649,7 +649,7 @@ prefer to keep everything in one place.
     Mason Component Directory [/usr/local/bricolage/comp] [Return]
     Mason Data Directory [/usr/local/bricolage/data] [Return]
 
-If you elected for the âsingleâ installation option, then your choices
+If you elected for the “single” installation option, then your choices
 would look more like:
 
     Bricolage Root Directory [/usr/local/bricolage] [Return]
@@ -775,8 +775,8 @@ that already exists, the installer will warn you about it:
     Database named "bric" already exists.  Drop database? [no] 
 
 Now you have a choice. If you elect to dropt the database, the Bricolage
-installer will drop it and then create a new copy â but it must have
-âRootâ user access to the PostgreSQL server. In other situations you
+installer will drop it and then create a new copy — but it must have
+“Root” user access to the PostgreSQL server. In other situations you
 might want to continue with the installed database, as in the case when
 your ISP has created the database for you ahead of time. You will also
 receive a prompt if the PostgreSQL user for the Bricolage database
@@ -849,7 +849,7 @@ environment variable, first. For example, using Bash or Zsh, do:
     bric_apachectl start: httpd started
 
 Once Bricolage successfully starts, point your browser to the
-appropriate URL and login as the âadminâ user and change the password!
+appropriate URL and login as the “admin” user and change the password!
 
 ### [Up Next: Bricolage Runtime Configuration]{#upnext}
 
@@ -861,7 +861,7 @@ ask any questions and to learn from the brave souls who have gone before
 you.
 
 If you're interested in tuning your Bricolage installation, be sure to
-catch my next article, âBricolage Runtime Configurationâ, in which I'll
+catch my next article, “Bricolage Runtime Configuration”, in which I'll
 cover all of the options when configuring Bricolage for added
 functionality and features.
 

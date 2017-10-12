@@ -1,15 +1,15 @@
 {
-   "tags" : [],
-   "date" : "2001-03-21T00:00:00-08:00",
-   "slug" : "/pub/2001/03/p6pdigest/THISMONTH-20010320.htm",
    "draft" : null,
+   "thumbnail" : null,
+   "description" : null,
+   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
    "title" : "This Month on Perl6 (25 Feb--20 Mar 2001)",
-   "description" : null,
-   "thumbnail" : null,
+   "tags" : [],
+   "date" : "2001-03-21T00:00:00-08:00",
+   "slug" : "/pub/2001/03/p6pdigest/THISMONTH-20010320.htm",
    "categories" : "community"
 }
 

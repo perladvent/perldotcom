@@ -1,20 +1,20 @@
 {
-   "image" : null,
+   "thumbnail" : null,
+   "draft" : null,
    "authors" : [
       "jouke-visser"
    ],
+   "image" : null,
    "description" : " Last year Perl.com published an article about pVoice. You learned what pVoice is, why it was built, and where it was supposed to go. Maybe you wanted to do something for disabled people yourself, by writing something like a...",
-   "categories" : "Graphics",
-   "thumbnail" : null,
-   "title" : "Accessible Software",
+   "date" : "2004-07-15T00:00:00-08:00",
    "slug" : "/pub/2004/07/14/accessibility",
+   "categories" : "Graphics",
    "tags" : [
       "accessible",
       "disabled",
       "pvoice"
    ],
-   "date" : "2004-07-15T00:00:00-08:00",
-   "draft" : null
+   "title" : "Accessible Software"
 }
 
 

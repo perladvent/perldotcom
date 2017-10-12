@@ -1,19 +1,19 @@
 {
-   "slug" : "/pub/2001/03/dbiokay",
+   "title" : "DBI is OK",
    "tags" : [
       "dbi",
       "dbix-recordset"
    ],
+   "categories" : "data",
    "date" : "2001-03-20T00:00:00-08:00",
-   "draft" : null,
+   "slug" : "/pub/2001/03/dbiokay",
    "image" : null,
+   "description" : "Many database projects use ORMs and other helpers, but using Perl's DBI by itself is easier and faster than you might think.",
    "authors" : [
       "chromatic"
    ],
-   "description" : "Many database projects use ORMs and other helpers, but using Perl's DBI by itself is easier and faster than you might think.",
-   "categories" : "data",
-   "thumbnail" : null,
-   "title" : "DBI is OK"
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -28,16 +28,16 @@ DBI is OK
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Is Table Mutation a Big                                             |
+| •[Is Table Mutation a Big                                             |
 | Problem?](#is%20table%20mutation%20a%20big%20problem)\                |
 | \                                                                     |
-| â¢[Making Queries Easier](#making%20queries%20easier)\                 |
+| •[Making Queries Easier](#making%20queries%20easier)\                 |
 | \                                                                     |
-| â¢[Placeholders](#placeholders)\                                       |
+| •[Placeholders](#placeholders)\                                       |
 | \                                                                     |
-| â¢[Binding Columns](#binding%20columns)\                               |
+| •[Binding Columns](#binding%20columns)\                               |
 | \                                                                     |
-| â¢[Modules Built on DBI](#modules%20built%20on%20dbi)\                 |
+| •[Modules Built on DBI](#modules%20built%20on%20dbi)\                 |
 +-----------------------------------------------------------------------+
 
 A [recent article](/media/_pub_2001_03_dbiokay/dbix.html) on Perl.com

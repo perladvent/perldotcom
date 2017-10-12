@@ -1,14 +1,11 @@
 {
+   "description" : "In the first of a series on writing Facebook applications with Perl, JT Smith demonstrates how to register an application and authenticate users with Facebook::Graph.",
    "image" : null,
    "authors" : [
       "jt-smith"
    ],
-   "categories" : "Web",
    "thumbnail" : null,
-   "description" : "In the first of a series on writing Facebook applications with Perl, JT Smith demonstrates how to register an application and authenticate users with Facebook::Graph.",
-   "title" : "Facebook Authentication with Perl and Facebook::Graph",
-   "slug" : "/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph",
-   "date" : "2011-03-15T10:17:51-08:00",
+   "draft" : null,
    "tags" : [
       "cpan",
       "dancer",
@@ -16,7 +13,10 @@
       "facebook-graph",
       "web-development"
    ],
-   "draft" : null
+   "title" : "Facebook Authentication with Perl and Facebook::Graph",
+   "categories" : "Web",
+   "date" : "2011-03-15T10:17:51-08:00",
+   "slug" : "/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph"
 }
 
 
@@ -120,7 +120,7 @@ postback. With Facebook ready to post to a URL, it's time to create it:
 NOTE: I know it's called a postback, but for whatever reason Facebook
 does the `POST` as a `GET`.
 
-Facebook's postback passes an authorization codeâa sort of temporary
+Facebook's postback passes an authorization code—a sort of temporary
 password. Use that code to ask Facebook for an access token (like a
 session id). An access token allows you to request information from
 Facebook *on behalf of the user*, so all of those steps are,

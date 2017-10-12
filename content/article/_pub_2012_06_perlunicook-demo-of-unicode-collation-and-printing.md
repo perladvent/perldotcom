@@ -1,23 +1,23 @@
 {
    "draft" : null,
-   "slug" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing",
-   "tags" : [],
-   "date" : "2012-06-22T06:00:01-08:00",
-   "description" : "â 44: PROGRAM: Demo of Unicode collation and printing The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more...",
-   "categories" : "unicode",
    "thumbnail" : null,
-   "title" : "Perl Unicode Cookbook: Demo of Unicode Collation and Printing",
-   "image" : null,
    "authors" : [
       "tom-christiansen"
-   ]
+   ],
+   "description" : "℞ 44: PROGRAM: Demo of Unicode collation and printing The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more...",
+   "image" : null,
+   "categories" : "unicode",
+   "slug" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing",
+   "date" : "2012-06-22T06:00:01-08:00",
+   "title" : "Perl Unicode Cookbook: Demo of Unicode Collation and Printing",
+   "tags" : []
 }
 
 
 
 
 
-â 44: PROGRAM: Demo of Unicode collation and printing {#PROGRAM:-Demo-of-Unicode-collation-and-printing}
+℞ 44: PROGRAM: Demo of Unicode collation and printing {#PROGRAM:-Demo-of-Unicode-collation-and-printing}
 -----------------------------------------------------
 
 The past several weeks of Unicode recipes have explained how Unicode
@@ -33,25 +33,25 @@ When run, the following program produces this nicely aligned output
 (though the quality of the alignment depends on the quality of your
 Unicode font, of course):
 
-        CrÃ¨me BrÃ»lÃ©e....... â¬2.00
-        Ãclair............. â¬1.60
-        FideuÃ ............. â¬4.20
-        Hamburger.......... â¬6.00
-        JamÃ³n Serrano...... â¬4.45
-        LinguiÃ§a........... â¬7.00
-        PÃ¢tÃ©............... â¬4.15
-        Pears.............. â¬2.00
-        PÃªches............. â¬2.25
-        SmÃ¸rbrÃ¸d........... â¬5.75
-        SpÃ¤tzle............ â¬5.50
-        XoriÃ§o............. â¬3.00
-        ÎÏÏÎ¿Ï.............. â¬6.50
-        ë§ê±¸ë¦¬............. â¬4.00
-        ããã¡............. â¬2.65
-        ãå¥½ã¿ç¼ã......... â¬8.00
-        ã·ã¥ã¼ã¯ãªã¼ã ..... â¬1.85
-        å¯¿å¸............... â¬9.99
-        åå­............... â¬7.50
+        Crème Brûlée....... €2.00
+        Éclair............. €1.60
+        Fideuà............. €4.20
+        Hamburger.......... €6.00
+        Jamón Serrano...... €4.45
+        Linguiça........... €7.00
+        Pâté............... €4.15
+        Pears.............. €2.00
+        Pêches............. €2.25
+        Smørbrød........... €5.75
+        Spätzle............ €5.50
+        Xoriço............. €3.00
+        Γύρος.............. €6.50
+        막걸리............. €4.00
+        おもち............. €2.65
+        お好み焼き......... €8.00
+        シュークリーム..... €1.85
+        寿司............... €9.99
+        包子............... €7.50
 
 Here's that program; tested on v5.14.
 
@@ -82,25 +82,25 @@ Here's that program; tested on v5.14.
      sub entitle(_);
 
      my %price = (
-         "Î³ÏÏÎ¿Ï"             => 6.50, # gyros, Greek
+         "γύρος"             => 6.50, # gyros, Greek
          "pears"             => 2.00, # like um, pears
-         "linguiÃ§a"          => 7.00, # spicy sausage, Portuguese
-         "xoriÃ§o"            => 3.00, # chorizo sausage, Catalan
+         "linguiça"          => 7.00, # spicy sausage, Portuguese
+         "xoriço"            => 3.00, # chorizo sausage, Catalan
          "hamburger"         => 6.00, # burgermeister meisterburger
-         "Ã©clair"            => 1.60, # dessert, French
-         "smÃ¸rbrÃ¸d"          => 5.75, # sandwiches, Norwegian
-         "spÃ¤tzle"           => 5.50, # Bayerisch noodles, little sparrows
-         "åå­"              => 7.50, # bao1 zi5, steamed pork buns, Mandarin
-         "jamÃ³n serrano"     => 4.45, # country ham, Spanish
-         "pÃªches"            => 2.25, # peaches, French
-         "ã·ã¥ã¼ã¯ãªã¼ã "    => 1.85, # cream-filled pastry like Ã©clair, Japanese
-         "ë§ê±¸ë¦¬"            => 4.00, # makgeolli, Korean rice wine
-         "å¯¿å¸"              => 9.99, # sushi, Japanese
-         "ããã¡"            => 2.65, # omochi, rice cakes, Japanese
-         "crÃ¨me brÃ»lÃ©e"      => 2.00, # tasty broiled cream, French
-         "fideuÃ "            => 4.20, # more noodles, Valencian (Catalan=fideuada)
-         "pÃ¢tÃ©"              => 4.15, # gooseliver paste, French
-         "ãå¥½ã¿ç¼ã"        => 8.00, # okonomiyaki, Japanese
+         "éclair"            => 1.60, # dessert, French
+         "smørbrød"          => 5.75, # sandwiches, Norwegian
+         "spätzle"           => 5.50, # Bayerisch noodles, little sparrows
+         "包子"              => 7.50, # bao1 zi5, steamed pork buns, Mandarin
+         "jamón serrano"     => 4.45, # country ham, Spanish
+         "pêches"            => 2.25, # peaches, French
+         "シュークリーム"    => 1.85, # cream-filled pastry like éclair, Japanese
+         "막걸리"            => 4.00, # makgeolli, Korean rice wine
+         "寿司"              => 9.99, # sushi, Japanese
+         "おもち"            => 2.65, # omochi, rice cakes, Japanese
+         "crème brûlée"      => 2.00, # tasty broiled cream, French
+         "fideuà"            => 4.20, # more noodles, Valencian (Catalan=fideuada)
+         "pâté"              => 4.15, # gooseliver paste, French
+         "お好み焼き"        => 8.00, # okonomiyaki, Japanese
      );
 
      # find the widest allowed width for the name column
@@ -113,7 +113,7 @@ Here's that program; tested on v5.14.
 
      for my $item ($coll->sort(keys %price)) {
          print pad(entitle($item), $width, ".");
-         printf " â¬%.2f\n", $price{$item};
+         printf " €%.2f\n", $price{$item};
      }
 
      sub pad($$$) {
@@ -135,13 +135,13 @@ Here's that program; tested on v5.14.
 
 Simple enough, isn't it? Put together, everything just works nicely.
 
-Previous: [â 43: Unicode Text in DBM Files (the easy
+Previous: [℞ 43: Unicode Text in DBM Files (the easy
 way)](/media/_pub_2012_06_perlunicook-demo-of-unicode-collation-and-printing/perlunicook-unicode-text-in-dbm-files-the-easy-way.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_06_perlunicook-demo-of-unicode-collation-and-printing/perlunicook-standard-preamble.html)
 
-Next: [â 45: Further
+Next: [℞ 45: Further
 Resources](/media/_pub_2012_06_perlunicook-demo-of-unicode-collation-and-printing/perlunicook-further-resources.html)
 
 

@@ -1,16 +1,16 @@
 {
-   "image" : null,
-   "authors" : [
-      "adam-turoff"
-   ],
-   "description" : "Adventures on Perl Whirl 2000 -> Can a tech conference on a luxury cruise boat possibly be legitimate? Sure it is, and then some. This past Memorial Day, I joined about 200 attendees on Perl Whirl 2000, the inaugural Geek...",
-   "thumbnail" : null,
-   "categories" : "Community",
+   "tags" : [],
    "title" : "Adventures on Perl Whirl 2000",
    "slug" : "/pub/2000/06/perlwhirl",
-   "tags" : [],
    "date" : "2000-06-13T00:00:00-08:00",
-   "draft" : null
+   "categories" : "Community",
+   "draft" : null,
+   "thumbnail" : null,
+   "image" : null,
+   "description" : "Adventures on Perl Whirl 2000 -> Can a tech conference on a luxury cruise boat possibly be legitimate? Sure it is, and then some. This past Memorial Day, I joined about 200 attendees on Perl Whirl 2000, the inaugural Geek...",
+   "authors" : [
+      "adam-turoff"
+   ]
 }
 
 

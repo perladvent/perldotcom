@@ -1,16 +1,16 @@
 {
    "title" : "Perl Meets COBOL",
-   "description" : " A few weeks ago I went to do a four-day beginning Perltraining at a local utility company. It was quite different from other training classes I'd given. Typically, my students have some Unix and C experience. These students, however,...",
-   "thumbnail" : null,
+   "tags" : [],
    "categories" : "community",
+   "slug" : "/pub/2000/05/cobol",
+   "date" : "2000-05-15T00:00:00-08:00",
+   "description" : " A few weeks ago I went to do a four-day beginning Perltraining at a local utility company. It was quite different from other training classes I'd given. Typically, my students have some Unix and C experience. These students, however,...",
+   "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
-   "draft" : null,
-   "tags" : [],
-   "date" : "2000-05-15T00:00:00-08:00",
-   "slug" : "/pub/2000/05/cobol"
+   "thumbnail" : null,
+   "draft" : null
 }
 
 

@@ -1,14 +1,11 @@
 {
+   "draft" : null,
+   "thumbnail" : null,
    "image" : null,
+   "description" : "Pathologically Polluting Perl Table of Contents Inline in Action - Simple examples in C Hello, world Just Another ____ Hacker What about XS and SWIG? One-Liners Supported Platforms for C The Inline Syntax Fine Dining - A Glimpse at the...",
    "authors" : [
       "brian-ingerson"
    ],
-   "description" : "Pathologically Polluting Perl Table of Contents ÂInline in Action - Simple examples in C ÂHello, world ÂJust Another ____ Hacker ÂWhat about XS and SWIG? ÂOne-Liners ÂSupported Platforms for C ÂThe Inline Syntax ÂFine Dining - A Glimpse at the...",
-   "thumbnail" : null,
-   "categories" : "Perl Internals",
-   "title" : "Pathologically Polluting Perl",
-   "slug" : "/pub/2001/02/inline",
-   "date" : "2001-02-06T00:00:00-08:00",
    "tags" : [
       "c",
       "c",
@@ -17,7 +14,10 @@
       "python",
       "xs"
    ],
-   "draft" : null
+   "title" : "Pathologically Polluting Perl",
+   "categories" : "Perl Internals",
+   "slug" : "/pub/2001/02/inline",
+   "date" : "2001-02-06T00:00:00-08:00"
 }
 
 
@@ -31,23 +31,23 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Inline in Action - Simple examples in                               |
+| •[Inline in Action - Simple examples in                               |
 | C](#inline%20in%20action%20%20simple%20examples%20in%20c)\            |
-| â¢[Hello, world](#hello,%20world)\                                     |
-| â¢[Just Another \_\_\_\_ Hacker](#just%20another%20____%20hacker)\     |
-| â¢[What about XS and SWIG?](#what%20about%20xs%20and%20swig)\          |
-| â¢[One-Liners](#oneliners)\                                            |
-| â¢[Supported Platforms for C](#supported%20platforms%20for%20c)\       |
-| â¢[The Inline Syntax](#the%20inline%20syntax)\                         |
-| â¢[Fine Dining - A Glimpse at the C                                    |
+| •[Hello, world](#hello,%20world)\                                     |
+| •[Just Another \_\_\_\_ Hacker](#just%20another%20____%20hacker)\     |
+| •[What about XS and SWIG?](#what%20about%20xs%20and%20swig)\          |
+| •[One-Liners](#oneliners)\                                            |
+| •[Supported Platforms for C](#supported%20platforms%20for%20c)\       |
+| •[The Inline Syntax](#the%20inline%20syntax)\                         |
+| •[Fine Dining - A Glimpse at the C                                    |
 | Cookbook](#fine%20dining%20%20a%20glimpse%20at%20the%20c%20cookbook)\ |
-| â¢[External Libraries](#external%20libraries)\                         |
-| â¢[It Takes All Types](#it%20takes%20all%20types)\                     |
-| â¢[Some Ware Beyond the C](#some%20ware%20beyond%20the%20c)\           |
-| â¢[See Perl Run. Run, Perl,                                            |
+| •[External Libraries](#external%20libraries)\                         |
+| •[It Takes All Types](#it%20takes%20all%20types)\                     |
+| •[Some Ware Beyond the C](#some%20ware%20beyond%20the%20c)\           |
+| •[See Perl Run. Run, Perl,                                            |
 | Run!](#see%20perl%20run.%20run%20perl,%20run!)\                       |
-| â¢[The Future of Inline](#the%20future%20of%20inline)\                 |
-| â¢[Conclusion](#conclusion)\                                           |
+| •[The Future of Inline](#the%20future%20of%20inline)\                 |
+| •[Conclusion](#conclusion)\                                           |
 +-----------------------------------------------------------------------+
 
 No programming language is Perfect. Perl comes very close. **P**! **e**!

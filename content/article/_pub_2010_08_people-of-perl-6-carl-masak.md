@@ -1,28 +1,28 @@
 {
+   "categories" : "perl-6",
+   "slug" : "/pub/2010/08/people-of-perl-6-carl-masak",
+   "date" : "2010-08-31T06:00:01-08:00",
+   "title" : "People of Perl 6: Carl Mäsak",
    "tags" : [
       "interview",
       "perl",
       "perl-6",
       "rakudo"
    ],
-   "date" : "2010-08-31T06:00:01-08:00",
-   "slug" : "/pub/2010/08/people-of-perl-6-carl-masak",
+   "thumbnail" : null,
    "draft" : null,
    "authors" : [
       "chromatic"
    ],
    "image" : null,
-   "title" : "People of Perl 6: Carl MÃ¤sak",
-   "categories" : "perl-6",
-   "thumbnail" : null,
-   "description" : "Carl MÃ¤sak is a developer of <a href=\"http://www.rakudo.org/\">Rakudo Perl\n6</a> and arguably the most dedicated bug wrangler.  He's contributed to\nmore bug reports than anyone else.  If you find that Rakudo does not do as you\nexpect, you'll likely talk to him on #perl6 for help triaging and categorizing\nyour bug.\n\nIn his own words, here's how he's helped make Perl 6 real."
+   "description" : "Carl Mäsak is a developer of <a href=\"http://www.rakudo.org/\">Rakudo Perl\n6</a> and arguably the most dedicated bug wrangler.  He's contributed to\nmore bug reports than anyone else.  If you find that Rakudo does not do as you\nexpect, you'll likely talk to him on #perl6 for help triaging and categorizing\nyour bug.\n\nIn his own words, here's how he's helped make Perl 6 real."
 }
 
 
 
 
 
-Carl MÃ¤sak is a developer of [Rakudo Perl 6](http://www.rakudo.org/) and
+Carl Mäsak is a developer of [Rakudo Perl 6](http://www.rakudo.org/) and
 arguably the most dedicated bug wrangler. He's contributed to more bug
 reports than anyone else. If you find that Rakudo does not do as you
 expect, you'll likely talk to him on \#perl6 for help triaging and
@@ -145,9 +145,9 @@ presented.
 
 As for actual features, I'm excited that [Synopsis
 9](http://perlcabal.org/syn/S09.html) might be mostly implemented this
-yearâit contains a lot of exciting syntactic sugar.
+year—it contains a lot of exciting syntactic sugar.
 
-Also very much looking forward to playing with macrosâI've been waiting
+Also very much looking forward to playing with macros—I've been waiting
 five years for them now! :-)
 
 **What has surprised you about the process of development?**
@@ -165,8 +165,8 @@ company, not only on IRC but away from the keyboard as well.
 
 **What does Rakudo need for wider deployment?**
 
-In the time before it gets the obvious the-more-the-better featuresâ
-stability and speedâwhat Rakudo needs most is people who are brave
+In the time before it gets the obvious the-more-the-better features—
+stability and speed—what Rakudo needs most is people who are brave
 enough to deploy it in new and interesting situations. It is still the
 case that when we try new things with Rakudo, we discover new bugs and
 corner cases, and as a result the whole development process benefits. So

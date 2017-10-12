@@ -1,5 +1,14 @@
 {
+   "authors" : [
+      "curtis-poe"
+   ],
+   "description" : " s/(?&lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g Most of us have tried at one time or another to use regular expressions to do things we shouldn't: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term \"showing off\"...",
+   "image" : null,
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2006_01_05_parsing/111-lexing.gif",
+   "date" : "2006-01-05T00:00:00-08:00",
    "slug" : "/pub/2006/01/05/parsing",
+   "categories" : "Regular Expressions",
    "tags" : [
       "building-parsers",
       "grammars",
@@ -7,15 +16,6 @@
       "parsing",
       "regular-expressions"
    ],
-   "date" : "2006-01-05T00:00:00-08:00",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "curtis-poe"
-   ],
-   "categories" : "Regular Expressions",
-   "thumbnail" : "/images/_pub_2006_01_05_parsing/111-lexing.gif",
-   "description" : " s/(?&lt;!SHOOTING YOURSELF IN THE )FOOT/HEAD/g Most of us have tried at one time or another to use regular expressions to do things we shouldn't: parsing HTML, obfuscating code, washing dishes, etc. This is what the technical term \"showing off\"...",
    "title" : "Lexing Your Data"
 }
 

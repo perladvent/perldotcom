@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991107",
-   "tags" : [],
-   "date" : "1999-11-07T00:00:00-08:00",
-   "description" : " Notes glob case-sensitivity D'oh::Year and Y2K warnings Threading and Regexes Change to xsubpp utf8 Needs a New Pumpking STOP blocks map and grep in void context Data::Dumper and Regexp objects sort improvements IPv6 and Socket.pm New quotation characters system...",
-   "categories" : "community",
    "thumbnail" : null,
-   "title" : "This Week on p5p 1999/11/07",
+   "draft" : null,
+   "description" : " Notes glob case-sensitivity D'oh::Year and Y2K warnings Threading and Regexes Change to xsubpp utf8 Needs a New Pumpking STOP blocks map and grep in void context Data::Dumper and Regexp objects sort improvements IPv6 and Socket.pm New quotation characters system...",
    "image" : null,
    "authors" : [
       "mark-jason-dominus"
-   ]
+   ],
+   "title" : "This Week on p5p 1999/11/07",
+   "tags" : [],
+   "categories" : "community",
+   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991107",
+   "date" : "1999-11-07T00:00:00-08:00"
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "tags" : [],
-   "date" : "1998-08-18T00:00:00-08:00",
-   "slug" : "/pub/1998/08/show/day1",
-   "title" : "Day 1 Highlights: Lincoln's Cool Tricks and Regexp",
-   "description" : null,
-   "categories" : "community",
    "thumbnail" : null,
+   "draft" : null,
+   "description" : null,
+   "image" : null,
    "authors" : [
       "brent-michalski"
    ],
-   "image" : null
+   "tags" : [],
+   "title" : "Day 1 Highlights: Lincoln's Cool Tricks and Regexp",
+   "slug" : "/pub/1998/08/show/day1",
+   "date" : "1998-08-18T00:00:00-08:00",
+   "categories" : "community"
 }
 
 

@@ -1,19 +1,19 @@
 {
+   "thumbnail" : "/images/_pub_2002_01_09_perltk/111-tkwidgets.gif",
    "draft" : null,
+   "authors" : [
+      "steve-lidie"
+   ],
+   "description" : " In this Perl/Tk article, I'll discuss balloon help, photos and widget subclassing. Help balloons can be attached to widgets, menu items, and, as we'll see here, individual canvas items. Subclassing a Perl/Tk widget is also known as creating a...",
+   "image" : null,
+   "date" : "2002-01-09T00:00:00-08:00",
    "slug" : "/pub/2002/01/09/perltk",
+   "categories" : "development",
+   "title" : "Creating Custom Widgets",
    "tags" : [
       "perl",
       "perl-tk",
       "widgets"
-   ],
-   "date" : "2002-01-09T00:00:00-08:00",
-   "description" : " In this Perl/Tk article, I'll discuss balloon help, photos and widget subclassing. Help balloons can be attached to widgets, menu items, and, as we'll see here, individual canvas items. Subclassing a Perl/Tk widget is also known as creating a...",
-   "categories" : "development",
-   "thumbnail" : "/images/_pub_2002_01_09_perltk/111-tkwidgets.gif",
-   "title" : "Creating Custom Widgets",
-   "image" : null,
-   "authors" : [
-      "steve-lidie"
    ]
 }
 
@@ -78,7 +78,7 @@ Here's an example, which creates the window seen in Figure 1:
         }
 
 +-----------------------+-----------------------+-----------------------+
-| Â                      | ![Figure 1. -- Box of | Â                      |
+|                       | ![Figure 1. -- Box of |                       |
 |                       | Crayons](/images/_pub |                       |
 |                       | _2002_01_09_perltk/fi |                       |
 |                       | g1.jpg){width="450"   |                       |
@@ -294,7 +294,7 @@ tips become visible, as shown in Figure 2.
       
 
 +-----------------------+-----------------------+-----------------------+
-| Â                      | ![Figure 2. --        | Â                      |
+|                       | ![Figure 2. --        |                       |
 |                       | Crayons with Yellow   |                       |
 |                       | Tips](/images/_pub_20 |                       |
 |                       | 02_01_09_perltk/fig2. |                       |

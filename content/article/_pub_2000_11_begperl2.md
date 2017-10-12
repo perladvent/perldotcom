@@ -1,15 +1,15 @@
 {
-   "tags" : [],
-   "date" : "2000-11-07T00:00:00-08:00",
-   "slug" : "/pub/2000/11/begperl2",
+   "thumbnail" : null,
    "draft" : null,
+   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
+   "image" : null,
    "authors" : [
       "doug-sheppard"
    ],
-   "image" : null,
+   "tags" : [],
    "title" : "Beginner's Introduction to Perl - Part 2",
-   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
-   "thumbnail" : null,
+   "slug" : "/pub/2000/11/begperl2",
+   "date" : "2000-11-07T00:00:00-08:00",
    "categories" : "development"
 }
 
@@ -35,26 +35,26 @@ be interested in the newer versions, available at:*
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢**[Part 1 of this                                                    |
+| •**[Part 1 of this                                                    |
 | series](/media/_pub_2000_11_begperl2/begperl1.html)**\                |
-| â¢**[Part 3 of this                                                    |
+| •**[Part 3 of this                                                    |
 | series](/media/_pub_2000_11_begperl2/begperl3.html)**\                |
-| â¢**[Part 4 of this                                                    |
+| •**[Part 4 of this                                                    |
 | series](/media/_pub_2000_11_begperl2/begperl4.html)**\                |
-| â¢**[Part 5 of this                                                    |
+| •**[Part 5 of this                                                    |
 | series](/media/_pub_2000_11_begperl2/begperl5.html)**\                |
-| â¢**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
+| •**[Part 6 of this series](/pub/a/2001/01/begperl6.html)**\           |
 | \                                                                     |
-| â¢[Comparison operators](#comparison%20operators)\                     |
-| â¢[`while` and `until`](#while%20and%20until)\                         |
-| â¢[String comparisons](#string%20comparisons)\                         |
-| â¢[More fun with strings](#more%20fun%20with%20strings)\               |
-| â¢[Filehandles](#filehandles)\                                         |
-| â¢[Writing files](#writing%20files)\                                   |
-| â¢[Live free or die!](#live%20free%20or%20die!)\                       |
-| â¢[Subs](#subs)\                                                       |
-| â¢[Putting it all together](#putting%20it%20all%20together)\           |
-| â¢[Play around!](#play%20around!)\                                     |
+| •[Comparison operators](#comparison%20operators)\                     |
+| •[`while` and `until`](#while%20and%20until)\                         |
+| •[String comparisons](#string%20comparisons)\                         |
+| •[More fun with strings](#more%20fun%20with%20strings)\               |
+| •[Filehandles](#filehandles)\                                         |
+| •[Writing files](#writing%20files)\                                   |
+| •[Live free or die!](#live%20free%20or%20die!)\                       |
+| •[Subs](#subs)\                                                       |
+| •[Putting it all together](#putting%20it%20all%20together)\           |
+| •[Play around!](#play%20around!)\                                     |
 +-----------------------------------------------------------------------+
 
 In our last article, we talked about the core elements of Perl:

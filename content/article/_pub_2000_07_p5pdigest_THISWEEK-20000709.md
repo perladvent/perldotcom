@@ -1,16 +1,16 @@
 {
+   "description" : " Notes NEW! RDF Available Bug Database buildtoc use namespace Unicode Input Solution tr/a-z-0// Mutual use sprintf tests Complex Expressions in Formats Threading Failure Test Case What does changing PL_sh_path do? UNTIE Method Sarathy Fixes a Bug that Nobody Knew...",
    "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "description" : " Notes NEW! RDF Available Bug Database buildtoc use namespace Unicode Input Solution tr/a-z-0// Mutual use sprintf tests Complex Expressions in Formats Threading Failure Test Case What does changing PL_sh_path do? UNTIE Method Sarathy Fixes a Bug that Nobody Knew...",
    "thumbnail" : null,
-   "categories" : "community",
-   "title" : "This Week on p5p 2000/07/09",
-   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000709",
-   "date" : "2000-07-09T00:00:00-08:00",
+   "draft" : null,
    "tags" : [],
-   "draft" : null
+   "title" : "This Week on p5p 2000/07/09",
+   "categories" : "community",
+   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000709",
+   "date" : "2000-07-09T00:00:00-08:00"
 }
 
 
@@ -135,7 +135,7 @@ thread.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00108
 Jarkko did some work on `pod/buildtoc`, which is the program that
 constructs the `perltoc` man page. He made a long list of pods that had
 been added but which were not in `buildtoc`'s list of files to include.
-JesÃºs Quiroga sent his list of pods that are in the 5.6.0
+Jesús Quiroga sent his list of pods that are in the 5.6.0
 distribution---there are 326 of them. There was some discussion about
 what to do with the many miscellaneous and platform-specific items, but
 no clear conclusion.

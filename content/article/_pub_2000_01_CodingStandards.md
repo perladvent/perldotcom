@@ -1,18 +1,18 @@
 {
-   "image" : null,
    "authors" : [
       "kirrily---skud---robert"
    ],
+   "image" : null,
    "description" : " How to Create Coding Standards that Work One of the things that we love most about Perl is its flexibility, itssimilarity to natural language, and the fact that There's More Than One Way To Do It. Of course, when...",
    "thumbnail" : null,
+   "draft" : null,
    "categories" : "development",
-   "title" : "In Defense of Coding Standards",
    "slug" : "/pub/2000/01/CodingStandards",
+   "date" : "2000-01-12T00:00:00-08:00",
+   "title" : "In Defense of Coding Standards",
    "tags" : [
       "standards"
-   ],
-   "date" : "2000-01-12T00:00:00-08:00",
-   "draft" : null
+   ]
 }
 
 

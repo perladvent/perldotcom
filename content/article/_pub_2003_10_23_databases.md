@@ -1,21 +1,21 @@
 {
-   "draft" : null,
+   "title" : "Database Programming with Perl",
    "tags" : [
       "databases",
       "dbi",
       "rdbms",
       "relational-databases"
    ],
-   "date" : "2003-10-23T00:00:00-08:00",
    "slug" : "/pub/2003/10/23/databases",
-   "title" : "Database Programming with Perl",
-   "description" : " An Embarrassing Confession I'd like to think that I'm a reasonably decent Perl programmer now. I'd like to think that I have a good grasp of how to solve relatively common problems in Perl. But, you know, it hasn't...",
+   "date" : "2003-10-23T00:00:00-08:00",
    "categories" : "data",
-   "thumbnail" : "/images/_pub_2003_10_23_databases/111-db_programming.gif",
+   "image" : null,
+   "description" : " An Embarrassing Confession I'd like to think that I'm a reasonably decent Perl programmer now. I'd like to think that I have a good grasp of how to solve relatively common problems in Perl. But, you know, it hasn't...",
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null
+   "thumbnail" : "/images/_pub_2003_10_23_databases/111-db_programming.gif",
+   "draft" : null
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991212",
    "tags" : [],
+   "title" : "This Week on p5p 1999/12/12",
+   "categories" : "community",
    "date" : "1999-12-12T00:00:00-08:00",
-   "draft" : null,
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991212",
    "image" : null,
+   "description" : " Notes Meta-Information 5.005_63 Released Development Continues on Ilya's Patches Regex Optimizations PREPARE XSLoader Change to xsubpp Path Location New Improved File::Find DB_File Locking Technique use Parameters in XS Module Initializations next in XS-invoked Perl subroutines -Dp improvement Log::Agent Getopt::Long...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "thumbnail" : null,
-   "categories" : "community",
-   "description" : " Notes Meta-Information 5.005_63 Released Development Continues on Ilya's Patches Regex Optimizations PREPARE XSLoader Change to xsubpp Path Location New Improved File::Find DB_File Locking Technique use Parameters in XS Module Initializations next in XS-invoked Perl subroutines -Dp improvement Log::Agent Getopt::Long...",
-   "title" : "This Week on p5p 1999/12/12"
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -213,7 +213,7 @@ tokenizing. It is extremely verbose, so you would like to use
         END  { $^D &=  ~1 }
 
 to enable `-Dp` just for the code of interest. Formerly, this worked for
-tokenizing but not for parsing; StÃ©phane Payrard submitted a patch to
+tokenizing but not for parsing; Stéphane Payrard submitted a patch to
 make it work for parsing also.
 
 ### [`Log::Agent`]{#Log::Agent}

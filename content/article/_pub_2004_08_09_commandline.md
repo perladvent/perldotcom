@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "tags" : [],
-   "date" : "2004-08-10T00:00:00-08:00",
-   "slug" : "/pub/2004/08/09/commandline",
-   "title" : "Perl Command-Line Options",
-   "description" : " Perl has a large number of command-line options that can help to make your programs more concise and open up many new possibilities for one-off command-line scripts using Perl. In this article we'll look at some of the most...",
-   "thumbnail" : "/images/_pub_2004_08_09_commandline/111-cli_options.gif",
    "categories" : "Tooling",
+   "slug" : "/pub/2004/08/09/commandline",
+   "date" : "2004-08-10T00:00:00-08:00",
+   "tags" : [],
+   "title" : "Perl Command-Line Options",
+   "thumbnail" : "/images/_pub_2004_08_09_commandline/111-cli_options.gif",
+   "draft" : null,
    "authors" : [
       "dave-cross"
    ],
-   "image" : null
+   "image" : null,
+   "description" : " Perl has a large number of command-line options that can help to make your programs more concise and open up many new possibilities for one-off command-line scripts using Perl. In this article we'll look at some of the most..."
 }
 
 

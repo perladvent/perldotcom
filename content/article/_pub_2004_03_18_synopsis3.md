@@ -1,20 +1,20 @@
 {
    "title" : "Synopsis 3",
-   "thumbnail" : "/images/_pub_2004_03_18_synopsis3/111-synopsis3.gif",
-   "categories" : "perl-6",
-   "description" : "Operator Renaming Several operators have been given new names to increase clarity and better Huffman-code the language: -> becomes ., like the rest of the world uses. The string concatenation . becomes ~. Think of it as \"stitching\" the two...",
-   "authors" : [
-      "luke-palmer"
-   ],
-   "image" : null,
-   "draft" : null,
    "tags" : [
       "operators",
       "perl-6",
       "synopsis"
    ],
+   "categories" : "perl-6",
+   "slug" : "/pub/2004/03/18/synopsis3",
    "date" : "2004-03-18T00:00:00-08:00",
-   "slug" : "/pub/2004/03/18/synopsis3"
+   "image" : null,
+   "description" : "Operator Renaming Several operators have been given new names to increase clarity and better Huffman-code the language: -> becomes ., like the rest of the world uses. The string concatenation . becomes ~. Think of it as \"stitching\" the two...",
+   "authors" : [
+      "luke-palmer"
+   ],
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_03_18_synopsis3/111-synopsis3.gif"
 }
 
 
@@ -46,7 +46,7 @@ better Huffman-code the language:
     of a string to produce a single string), and `xx` (which creates a
     list of repetitions of a list or scalar).
 -   Trinary `? :` becomes `?? ::`.
--   `qw{ ... }` gets a synonym: ` Â« ... Â» `. For those still living
+-   `qw{ ... }` gets a synonym: ` « ... » `. For those still living
     without the blessings of Unicode, that can also be written:
     `<< ... >>`.
 -   The scalar comma `,` now constructs a list reference of its
@@ -75,13 +75,13 @@ better Huffman-code the language:
 
 ### [Hyperoperators]{#Hyperoperators}
 
-The Unicode characters `Â»` (`\x[BB]`) and `Â«` (`\x[AB]`) and their ASCII
-digraphs `>>` and `<<` are used to denote "hyperoperations" â "list" or
+The Unicode characters `»` (`\x[BB]`) and `«` (`\x[AB]`) and their ASCII
+digraphs `>>` and `<<` are used to denote "hyperoperations" – "list" or
 "vector" or "SIMD" operations that are applied pairwise between
 corresponding elements of two lists (or arrays) and which return a list
 (or array) of the results. For example:
 
-         (1,1,2,3,5) Â»+Â« (1,2,3,5,8);  # 
+         (1,1,2,3,5) »+« (1,2,3,5,8);  # 
     (2,3,5,8,13)
 
 If one argument is insufficiently dimensioned, Perl "upgrades" it:
@@ -91,16 +91,16 @@ If one argument is insufficiently dimensioned, Perl "upgrades" it:
 
 This can even be done with method calls:
 
-         ("f","oo","bar")Â».Â«length; 
+         ("f","oo","bar")».«length; 
        # (1,2,3)
 
 When using a unary operator, only put it on the operand's side:
 
-         @negatives = -Â« @positives;
+         @negatives = -« @positives;
 
-          @positionsÂ»++;            # Increment all positions
+          @positions»++;            # Increment all positions
 
-          @objectsÂ».run();
+          @objects».run();
 
 ### [Junctive Operators]{#Junctive_operators}
 
@@ -216,7 +216,7 @@ a `zip` function that interleaves the elements of two or more arrays.
             print "Name: $name;   Zip code: $zip\n";
         }
 
-`zip` has an infix synonym, the Unicode operator `Â¦`.
+`zip` has an infix synonym, the Unicode operator `¦`.
 
 ### [Minimal Whitespace DWIMmery]{#Minimal_whitespace_DWIMmery}
 

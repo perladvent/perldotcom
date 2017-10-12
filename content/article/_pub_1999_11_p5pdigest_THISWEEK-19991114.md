@@ -1,16 +1,16 @@
 {
-   "image" : null,
+   "draft" : null,
+   "thumbnail" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
    "description" : " Notes Lexical variables and eval More About Line Disciplines link on WinNT Regex Optimization Threads on Solaris Regex Engine Reentrancy Big Files Continue Regexp Objects again Unicode Support on EBCDIC Machines Marshalling Modules Got Perl? localtime() has Another Bug!...",
-   "thumbnail" : null,
+   "image" : null,
    "categories" : "community",
-   "title" : "This Week on p5p 1999/11/14",
    "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991114",
-   "tags" : [],
    "date" : "1999-11-14T00:00:00-08:00",
-   "draft" : null
+   "tags" : [],
+   "title" : "This Week on p5p 1999/11/14"
 }
 
 
@@ -132,7 +132,7 @@ report.
 [Regex Engine Reentrancy]{#Regex_Engine_Reentrancy}
 ---------------------------------------------------
 
-StÃ©phane Payrard reported that Perl dumps core if you try to do a regex
+Stéphane Payrard reported that Perl dumps core if you try to do a regex
 match inside of a `(?{...})` expression. This did not come as a big
 surprise seeing as the regex engine is not reentrant. (It uses several
 global variables.)
@@ -142,7 +142,7 @@ global variables.)
 > **Jarkko Hietaniemi:** This is a bit like saying, "Stopping the wars
 > should bring the world peace."
 
-StÃ©phane suggested making it a fatal error in the meantime, but no patch
+Stéphane suggested making it a fatal error in the meantime, but no patch
 was offered.
 
 Somewhere in the discussion, Jesus Quiroga mentioned that he was working

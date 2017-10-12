@@ -1,16 +1,16 @@
 {
-   "draft" : null,
+   "title" : "Hold the Sackcloth and Ashes",
+   "tags" : [],
    "slug" : "/pub/2000/11/jarkko",
    "date" : "2000-11-03T00:00:00-08:00",
-   "tags" : [],
    "categories" : "Community",
-   "thumbnail" : null,
    "description" : " (This is a slightly edited and expanded version of the reply I sent to perl6-meta@perl.org spurred by Mark-Jason Dominus sending the URL to his critique on the Perl 6 RFC process.) I agree partly on Mark-Jason Dominus' critique, but...",
-   "title" : "Hold the Sackcloth and Ashes",
    "image" : null,
    "authors" : [
       "jarkko-hietaniemi"
-   ]
+   ],
+   "draft" : null,
+   "thumbnail" : null
 }
 
 

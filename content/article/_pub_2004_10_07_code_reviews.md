@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2004/10/07/code_reviews",
+   "title" : "Why Review Code?",
    "tags" : [
       "code-reviews",
       "good-perl-code",
@@ -7,16 +7,16 @@
       "math-complex",
       "reading-code"
    ],
+   "categories" : "development",
+   "slug" : "/pub/2004/10/07/code_reviews",
    "date" : "2004-10-07T00:00:00-08:00",
-   "draft" : null,
    "image" : null,
+   "description" : "Richard Gabriel of Sun Microsystems suggests that beginning programmers should study the source code for great works of software as part of a Master of Fine Arts course in software. Prominent Extreme Programmers talk about finding the Quality Without a...",
    "authors" : [
       "luke-schubert"
    ],
-   "description" : "Richard Gabriel of Sun Microsystems suggests that beginning programmers should study the source code for great works of software as part of a Master of Fine Arts course in software. Prominent Extreme Programmers talk about finding the Quality Without a...",
    "thumbnail" : "/images/_pub_2004_10_07_code_reviews/111-good_code.gif",
-   "categories" : "development",
-   "title" : "Why Review Code?"
+   "draft" : null
 }
 
 
@@ -41,7 +41,7 @@ it and what you can learn from it.
 ### Code and Communication
 
 Reviewing (even reading) source code is not always easy. Most software
-doesn't have human readability as a primary goal â just compilers or
+doesn't have human readability as a primary goal — just compilers or
 interpreters. The exception is software written as examples or to help
 others learn. This code is primarily of interest in itself and not for
 what it does. As far as a computer cares, software would have the same

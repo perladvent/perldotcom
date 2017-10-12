@@ -1,23 +1,23 @@
 {
-   "title" : "Perl Unicode Cookbook: Custom Named Characters",
-   "description" : "â 10: Custom named characters As several other recipes demonstrate, the charnames pragma offers considerable power to use and manipulate Unicode characters by their names. Its :alias option allows you to give your own lexically scoped nicknames to existing characters,...",
    "categories" : "unicode",
-   "thumbnail" : null,
+   "date" : "2012-04-19T06:00:01-08:00",
+   "slug" : "/pub/2012/04/perlunicook-custom-named-characters",
+   "title" : "Perl Unicode Cookbook: Custom Named Characters",
+   "tags" : [],
    "authors" : [
       "tom-christiansen"
    ],
    "image" : null,
-   "draft" : null,
-   "tags" : [],
-   "date" : "2012-04-19T06:00:01-08:00",
-   "slug" : "/pub/2012/04/perlunicook-custom-named-characters"
+   "description" : "℞ 10: Custom named characters As several other recipes demonstrate, the charnames pragma offers considerable power to use and manipulate Unicode characters by their names. Its :alias option allows you to give your own lexically scoped nicknames to existing characters,...",
+   "thumbnail" : null,
+   "draft" : null
 }
 
 
 
 
 
-â 10: Custom named characters {#Custom-named-characters}
+℞ 10: Custom named characters {#Custom-named-characters}
 -----------------------------
 
 As several other recipes demonstrate, the
@@ -46,13 +46,13 @@ exist to give a character sequence an alias.
 As always, the documentation of the `charnames` pragma offers more
 details.
 
-Previous: [â 9: Unicode Named Character
+Previous: [℞ 9: Unicode Named Character
 Sequences](/media/_pub_2012_04_perlunicook-custom-named-characters/perlunicook-unicode-named-character-sequences.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_04_perlunicook-custom-named-characters/perlunicook-standard-preamble.html)
 
-Next: [â 11: Names of CJK
+Next: [℞ 11: Names of CJK
 Codepoints](/media/_pub_2012_04_perlunicook-custom-named-characters/perlunicook-names-of-cjk-codepoints.html)
 
 

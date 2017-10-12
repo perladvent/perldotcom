@@ -1,15 +1,15 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2001/09/04/tiedhash",
+   "title" : "Changing Hash Behaviour with tie",
    "tags" : [
       "tied-hash-behaviour"
    ],
+   "slug" : "/pub/2001/09/04/tiedhash",
    "date" : "2001-09-04T00:00:00-08:00",
-   "description" : " Introduction In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl Objects have...",
    "categories" : "data",
    "thumbnail" : "/images/_pub_2001_09_04_tiedhash/111-hashtie.jpg",
-   "title" : "Changing Hash Behaviour with tie",
+   "draft" : null,
    "image" : null,
+   "description" : " Introduction In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl Objects have...",
    "authors" : [
       "dave-cross"
    ]
@@ -502,7 +502,7 @@ on Tie::StdHash and, as a result, contains a lot more code than
 Tie::Hash::Regex.
 
 Another recent addition to CPAN is Tie::Hash::Approx, which was written
-by Briac Pilprï¿½. This addresses a similar problem, but instead of using
+by Briac Pilpr�. This addresses a similar problem, but instead of using
 regex matching, it uses Jarkko Hietaniemi's String::Approx module.
 
 ### [Conclusion: Tie::Hash::Cannabinol]{#conclusion: tie::hash::cannabinol}

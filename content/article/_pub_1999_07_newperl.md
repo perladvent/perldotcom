@@ -1,20 +1,20 @@
 {
-   "title" : "A New Edition of www.perl.com",
-   "thumbnail" : null,
-   "categories" : "Community",
-   "description" : " I'd like to welcome you to this new edition of www.perl.com and tell you about some of the changes we made to the site. Easier Navigation We simplified the navigation menu so that it's easy to find the site's...",
-   "authors" : [
-      "dale-dougherty"
-   ],
-   "image" : null,
-   "draft" : null,
+   "slug" : "/pub/1999/07/newperl",
    "date" : "1999-07-15T00:00:00-08:00",
+   "categories" : "Community",
    "tags" : [
       "edition",
       "new",
       "redesign"
    ],
-   "slug" : "/pub/1999/07/newperl"
+   "title" : "A New Edition of www.perl.com",
+   "draft" : null,
+   "thumbnail" : null,
+   "authors" : [
+      "dale-dougherty"
+   ],
+   "description" : " I'd like to welcome you to this new edition of www.perl.com and tell you about some of the changes we made to the site. Easier Navigation We simplified the navigation menu so that it's easy to find the site's...",
+   "image" : null
 }
 
 

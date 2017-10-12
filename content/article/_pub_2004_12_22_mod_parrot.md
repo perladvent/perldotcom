@@ -1,5 +1,8 @@
 {
-   "draft" : null,
+   "date" : "2004-12-22T00:00:00-08:00",
+   "slug" : "/pub/2004/12/22/mod_parrot",
+   "categories" : "Perl-6",
+   "title" : "Introducing mod_parrot",
    "tags" : [
       "apache-modules",
       "mod-parrot",
@@ -7,15 +10,12 @@
       "parrot",
       "perl-6"
    ],
-   "date" : "2004-12-22T00:00:00-08:00",
-   "slug" : "/pub/2004/12/22/mod_parrot",
-   "title" : "Introducing mod_parrot",
+   "draft" : null,
    "thumbnail" : "/images/_pub_2004_12_22_mod_parrot/111-mod_parrot.gif",
-   "categories" : "Perl-6",
-   "description" : " It's been almost nine years since the first release of mod_perl, and it remains a very powerful tool for writing web applications and extending the capabilities of the Apache web server. However, lurking around the corner is Perl 6,...",
    "authors" : [
       "jeff-horwitz"
    ],
+   "description" : " It's been almost nine years since the first release of mod_perl, and it remains a very powerful tool for writing web applications and extending the capabilities of the Apache web server. However, lurking around the corner is Perl 6,...",
    "image" : null
 }
 
@@ -71,7 +71,7 @@ background for understanding the code in this article.
 ### Why mod\_parrot?
 
 Before discussing the details, you should know a little about
-mod\_parrot's history. Ask BjÃ¶rn Hansen and Robert Spier originally
+mod\_parrot's history. Ask Björn Hansen and Robert Spier originally
 wrote mod\_parrot in 2002, later turning it over to Kevin Falcone. This
 version of mod\_parrot targeted Apache 1.3 and had very limited
 functionality due to Parrot's immaturity at the time. In August 2004,

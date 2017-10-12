@@ -1,12 +1,13 @@
 {
-   "image" : null,
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2006_10_19_cgi_application/111-cgiapps.gif",
    "authors" : [
       "mark-stosberg"
    ],
+   "image" : null,
    "description" : " This article provides an update on the popular and mature CGI::Application framework for web applications. It assumes a basic understanding of the system, so reviewing the previous Perl.com article about CGI::Application may be helpful background reading. CGI::Application and Catalyst...",
-   "thumbnail" : "/images/_pub_2006_10_19_cgi_application/111-cgiapps.gif",
    "categories" : "web",
-   "title" : "Rapid Website Development with CGI::Application",
+   "date" : "2006-10-19T00:00:00-08:00",
    "slug" : "/pub/2006/10/19/cgi_application",
    "tags" : [
       "cgi-application",
@@ -14,8 +15,7 @@
       "perl-web-applications",
       "web-development"
    ],
-   "date" : "2006-10-19T00:00:00-08:00",
-   "draft" : null
+   "title" : "Rapid Website Development with CGI::Application"
 }
 
 

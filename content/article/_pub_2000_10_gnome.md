@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "date" : "2000-10-16T00:00:00-08:00",
-   "tags" : [],
-   "slug" : "/pub/2000/10/gnome",
-   "title" : "Programming GNOME Applications with Perl",
-   "description" : " -> Table of Contents ÂArchitecture Introduction ÂHello, World ÂAdding a Menu Bar ÂAdding an About Box ÂAdding More Chrome ÂFinal Program GNOME is the Unix desktop. It's a framework for writing graphical applications with Unix, providing drag-and-drop, interapplication communication,...",
-   "categories" : "apps",
-   "thumbnail" : null,
+   "image" : null,
+   "description" : " -> Table of Contents Architecture Introduction Hello, World Adding a Menu Bar Adding an About Box Adding More Chrome Final Program GNOME is the Unix desktop. It's a framework for writing graphical applications with Unix, providing drag-and-drop, interapplication communication,...",
    "authors" : [
       "perldotcom"
    ],
-   "image" : null
+   "thumbnail" : null,
+   "draft" : null,
+   "tags" : [],
+   "title" : "Programming GNOME Applications with Perl",
+   "slug" : "/pub/2000/10/gnome",
+   "date" : "2000-10-16T00:00:00-08:00",
+   "categories" : "apps"
 }
 
 
@@ -20,12 +20,12 @@
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢[Architecture Introduction](#architecture%20introduction)\           |
-| â¢[Hello, World](#hello,%20world)\                                     |
-| â¢[Adding a Menu Bar](#adding%20a%20menu%20bar)\                       |
-| â¢[Adding an About Box](#adding%20an%20about%20box)\                   |
-| â¢[Adding More Chrome](#adding%20more%20chrome)\                       |
-| â¢[Final Program](#final%20program)\                                   |
+| •[Architecture Introduction](#architecture%20introduction)\           |
+| •[Hello, World](#hello,%20world)\                                     |
+| •[Adding a Menu Bar](#adding%20a%20menu%20bar)\                       |
+| •[Adding an About Box](#adding%20an%20about%20box)\                   |
+| •[Adding More Chrome](#adding%20more%20chrome)\                       |
+| •[Final Program](#final%20program)\                                   |
 +-----------------------------------------------------------------------+
 
 GNOME is the Unix desktop. It's a framework for writing graphical

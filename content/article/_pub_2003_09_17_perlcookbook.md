@@ -1,6 +1,7 @@
 {
-   "draft" : null,
    "slug" : "/pub/2003/09/17/perlcookbook",
+   "date" : "2003-09-17T00:00:00-08:00",
+   "categories" : "development",
    "tags" : [
       "extracting-table-data",
       "making-simple-changes-to-elements-or-text",
@@ -10,15 +11,14 @@
       "templating-with-html-mason",
       "tom-christiansen"
    ],
-   "date" : "2003-09-17T00:00:00-08:00",
-   "description" : " Editor's note: In this third and final batch of recipes excerpted from Perl Cookbook, you'll find solutions and code examples for extracting HTML table data, templating with HTML::Mason, and making simple changes to elements or text. Sample Recipe: Extracting...",
-   "categories" : "development",
-   "thumbnail" : null,
    "title" : "Cooking with Perl, Part 3",
-   "image" : null,
    "authors" : [
       "perldotcom"
-   ]
+   ],
+   "image" : null,
+   "description" : " Editor's note: In this third and final batch of recipes excerpted from Perl Cookbook, you'll find solutions and code examples for extracting HTML table data, templating with HTML::Mason, and making simple changes to elements or text. Sample Recipe: Extracting...",
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -45,15 +45,15 @@ author's CPAN module list.
 Use the HTML::TableContentParser module from CPAN:
 
     use HTML::TableContentParser;
-    Â 
+     
     $tcp = HTML::TableContentParser->new;
     $tables = $tcp->parse($HTML);
-    Â 
+     
     foreach $table (@$tables) {
       @headers = map { $_->{data} } @{ $table->{headers} };
       # attributes of table tag available as keys in hash
       $table_width = $table->{width};
-    Â 
+     
       foreach $row (@{ $tables->{rows} }) {
         # attributes of tr tag available as keys in hash
         foreach $col (@{ $row->{cols} }) {
@@ -142,8 +142,8 @@ or Removing HTML Tags."
 |                                                                       |
 | #### Previous Articles in this Series                                 |
 |                                                                       |
-| â¢ [Cooking with Perl](/pub/a/2003/08/21/perlcookbook.html)\           |
-| â¢ [Cooking with Perl, Part 2](/pub/a/2003/09/03/perlcookbook.html)    |
+| • [Cooking with Perl](/pub/a/2003/08/21/perlcookbook.html)\           |
+| • [Cooking with Perl, Part 2](/pub/a/2003/09/03/perlcookbook.html)    |
 |                                                                       |
 | </div>                                                                |
 +-----------------------------------------------------------------------+
@@ -451,12 +451,12 @@ XML document, or you want to change `<book  id="1">` to
 Use the XML::SAX::Machines module from CPAN:
 
     #!/usr/bin/perl -w
-    Â 
+     
     use MySAXFilter1;
     use MySAXFilter2;
     use XML::SAX::ParserFactory;
     use XML::SAX::Machines qw(Pipeline);
-    Â 
+     
     my $machine = Pipeline(MySAXFilter1 => MySAXFilter2); # or more
     $machine->parse_uri($FILENAME);
 
@@ -499,25 +499,25 @@ XML document in Example 22-1 into a new `id` element. For example,
 
     package RewriteIDs;
     # RewriteIDs.pm -- turns "id" attributes into elements
-    Â 
+     
     use base qw(XML::SAX::Base);
-    Â 
+     
     my $ID_ATTRIB = "{  }id";   # the attribute hash entry we're interested in
-    Â 
+     
     sub start_element {
         my ($self, $data) = @_;
-    Â 
+     
         if ($data->{Name} eq 'book') {
             my $id = $data->{Attributes}{$ID_ATTRIB}{Value};
             delete $data->{Attributes}{$ID_ATTRIB};
             $self->SUPER::start_element($data);
-    Â 
+     
             # make new element parameter data structure for the <id> tag
             my $id_node = {  };
             %$id_node = %$self;
             $id_node->{Name} = 'id';     # more complex if namespaces involved
             $id_node->{Attributes} = {  };
-    Â 
+     
             # build the <id>$id</id>
             $self->SUPER::start_element($id_node);
             $self->SUPER::characters({ Data => $id });
@@ -526,7 +526,7 @@ XML document in Example 22-1 into a new `id` element. For example,
             $self->SUPER::start_element($data);
         }
     }
-    Â 
+     
     1;
 
 [Example
@@ -538,10 +538,10 @@ processing *books.xml* and print the altered XML.
 
     #!/usr/bin/perl -w
     # rewrite-ids -- call RewriteIDs SAX filter to turn id attrs into elements
-    Â 
+     
     use RewriteIDs;
     use XML::SAX::Machines qw(:all);
-    Â 
+     
     my $machine = Pipeline(RewriteIDs => *STDOUT);
     $machine->parse_uri("books.xml");
 
@@ -560,11 +560,11 @@ To save the XML to the file *new-books.xml*, use the XML::SAX::Writer
 module:
 
     #!/usr/bin/perl -w
-    Â 
+     
     use RewriteIDs;
     use XML::SAX::Machines qw(:all);
     use XML::SAX::Writer;
-    Â 
+     
     my $writer = XML::SAX::Writer->new(Output => "new-books.xml");
     my $machine = Pipeline(RewriteIDs => $writer);
     $machine->parse_uri("books.xml");

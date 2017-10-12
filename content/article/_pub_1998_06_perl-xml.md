@@ -1,21 +1,21 @@
 {
-   "title" : "Perl Support for XML Developing",
-   "description" : " How to Make Perl The Language of Choice for XML Perl has been the language of choice for anyone doing serious text processing. Now efforts are underway to make Perl the language of choice for those doing \"structured\" text...",
-   "thumbnail" : null,
-   "categories" : "data",
-   "authors" : [
-      "dale-dougherty"
-   ],
-   "image" : null,
-   "draft" : null,
    "tags" : [
       "languages",
       "perl",
       "xml",
       "xml"
    ],
+   "title" : "Perl Support for XML Developing",
+   "categories" : "data",
    "date" : "1998-03-10T00:00:00-08:00",
-   "slug" : "/pub/1998/06/perl-xml"
+   "slug" : "/pub/1998/06/perl-xml",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : " How to Make Perl The Language of Choice for XML Perl has been the language of choice for anyone doing serious text processing. Now efforts are underway to make Perl the language of choice for those doing \"structured\" text...",
+   "image" : null,
+   "authors" : [
+      "dale-dougherty"
+   ]
 }
 
 

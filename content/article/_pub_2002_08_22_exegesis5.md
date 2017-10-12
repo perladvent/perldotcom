@@ -1,17 +1,17 @@
 {
    "draft" : null,
-   "slug" : "/pub/2002/08/22/exegesis5",
-   "date" : "2002-08-22T00:00:00-08:00",
-   "tags" : [
-      "apocalypse-exegesis-regular-expressions"
-   ],
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. Exegesis 5 What's the diff? Starting gently Lay it out for me Interpolate ye not ... The...",
    "thumbnail" : "/images/_pub_2002_08_22_exegesis5/111-exegesis5.gif",
-   "categories" : "perl-6",
-   "title" : "Exegesis 5",
-   "image" : null,
    "authors" : [
       "damian-conway"
+   ],
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. Exegesis 5 What's the diff? Starting gently Lay it out for me Interpolate ye not ... The...",
+   "image" : null,
+   "slug" : "/pub/2002/08/22/exegesis5",
+   "date" : "2002-08-22T00:00:00-08:00",
+   "categories" : "perl-6",
+   "title" : "Exegesis 5",
+   "tags" : [
+      "apocalypse-exegesis-regular-expressions"
    ]
 }
 
@@ -128,9 +128,9 @@ Parse::RecDescent reflects the community's widespread need for more
 sophisticated parsing mechanisms. Mechanisms that should be native to
 Perl.
 
-As Piers Cawley has so eloquently misquoted: *âIt is a truth universally
+As Piers Cawley has so eloquently misquoted: *“It is a truth universally
 acknowledged that any language in possession of a rich syntax must be in
-want of a rewrite.â* Perl regexes are such a language. And Apocalypse 5
+want of a rewrite.”* Perl regexes are such a language. And Apocalypse 5
 is precisely that rewrite.
 
 ------------------------------------------------------------------------
@@ -143,7 +143,7 @@ recognizing and manipulating data in the Unix
 *[diff](http://www.gnu.org/manual/diffutils-2.8.1/html_node/Detailed-Normal.html)*
 
 A classic diff consists of zero-or-more text transformations, each of
-which is known as a âhunkâ. A hunk consists of a modification specifier,
+which is known as a “hunk”. A hunk consists of a modification specifier,
 followed by one or more lines of context. Each hunk is either an append,
 a delete, or a change, and the type of hunk is specified by a single
 letter (`'a'`, `'d'`, or `'c'`). Each of these single-letter specifiers
@@ -206,9 +206,9 @@ starting with:
         $file = rx/ ^  <$hunk>*  $ /;
 
 This statement creates a pattern object. Or, as it's known in Perl 6, a
-âruleâ. People will probably still call them âregular expressionsâ or
-âregexesâ too (and the keyword `rx` reflects that), but Perl patterns
-long ago ceased being anything like âregularâ, so we'll try and avoid
+“rule”. People will probably still call them “regular expressions” or
+“regexes” too (and the keyword `rx` reflects that), but Perl patterns
+long ago ceased being anything like “regular”, so we'll try and avoid
 those terms.
 
 In any case, the `rx` constructor builds a new rule, which is then
@@ -226,7 +226,7 @@ for a `qq` or a `qx`. That's why we can embed the `$hunk` variable
 before it's actually initialized.
 
 In Perl 6, an embedded variable becomes part of the rule's
-implementation rather than part of its âsource codeâ. As we'll see
+implementation rather than part of its “source code”. As we'll see
 shortly, the pattern itself can determine how the variable is treated
 (i.e., whether to interpolate it literally, treat it as a subpattern or
 use it as a container).
@@ -291,7 +291,7 @@ the pattern matching mechanism actually needs to match against them,
 `(??{...})` construct in Perl 5 regexes.
 
 The angle brackets themselves are a much more general mechanism in Perl
-6 rules. They are the âmetasyntactic markersâ and replace the Perl 5
+6 rules. They are the “metasyntactic markers” and replace the Perl 5
 `(?...)` syntax. They are used to specify numerous other features of
 Perl 6 rules, many of which we will explore below.
 
@@ -305,7 +305,7 @@ pattern was parsed. Once again, the pattern would grab the contents of
 the variable when it reached that point in its match. But, this time,
 without the angle brackets around `$hunk`, the pattern would try to
 match the contents of the variable as an atomic literal string (rather
-than as a subpattern). âAtomicâ means that the `*` repetition quantifier
+than as a subpattern). “Atomic” means that the `*` repetition quantifier
 applies to everything that's in `$hunk`, *not* just to the last
 character (as it does in Perl 5).
 
@@ -386,9 +386,9 @@ take (almost) any delimiters we choose. The `$hunk` pattern uses
         rx/pattern/     # Standard
         rx[pattern]     # Alternative bracket-delimiter style
         rx<pattern>     # Alternative bracket-delimiter style
-        rxÂ«formeÂ»       # DÃ©limiteurs trÃ¨s chic
+        rx«forme»       # Délimiteurs très chic
         rx>pattern<     # Inverted bracketing is allowed too (!)
-        rxÂ»MusterÂ«      # Begrenzungen im korrekten Auftrag
+        rx»Muster«      # Begrenzungen im korrekten Auftrag
         rx!pattern!     # Excited
         rx=pattern=     # Unusual
         rx?pattern?     # No special meaning in Perl 6
@@ -418,10 +418,10 @@ The other rule modifiers available in Perl 6 are:
 
 :   This is the replacement for Perl 5's `/g` modifier. It causes a
     match (or substitution) to be attempted as many times as possible.
-    The name was changed because âeachâ is shorter and clearer in intent
-    than âgloballyâ. And because the `:each` modifier can be combined
+    The name was changed because “each” is shorter and clearer in intent
+    than “globally”. And because the `:each` modifier can be combined
     with other modifiers (see below) in such a way that it's no longer
-    âglobalâ in its effect.
+    “global” in its effect.
 
 **[`:x($count)`]{#item_x}**\
 
@@ -475,7 +475,7 @@ The other rule modifiers available in Perl 6 are:
 
             $foo =~ s:3rd/ (f\w+) /bar/;       # $foo now contains: "fee fi bar fum"
 
-    By the way, Perl isn't going to be pedantic about these âordinalâ
+    By the way, Perl isn't going to be pedantic about these “ordinal”
     versions of repetition specifiers. If you're not a native English
     speaker, and you find `:1th`, `:2th`, `:3th`, `:4th`, etc., easier
     to remember, then that's perfectly OK.
@@ -549,10 +549,10 @@ The other rule modifiers available in Perl 6 are:
     metacharacter against Unicode data. If `:u0` is specified, then dot
     matches a single byte; if `:u1` is specified, then dot matches a
     single codepoint (i.e. one or more bytes representing a single
-    Unicode âcharacterâ). If `:u2` is specified, then dot matches a
+    Unicode “character”). If `:u2` is specified, then dot matches a
     single grapheme (i.e. a base codepoint followed by zero or more
     modifier codepoints, such as accents). If `:u3` is specified, then
-    dot matches an appropriate âsomethingâ in a language-dependent
+    dot matches an appropriate “something” in a language-dependent
     manner.
 
     It's OK to ignore this modifier if you're not using Unicode (and
@@ -563,8 +563,8 @@ The other rule modifiers available in Perl 6 are:
 Note that the `/s`, `/m`, and `/e` modifiers are no longer available.
 This is because they're no longer needed. The `/s` isn't needed because
 the `.` (dot) metacharacter now matches newlines as well. When we want
-to match âanything except a newlineâ, we now use the new `\N` metatoken
-(i.e. âopposite of `\n`â).
+to match “anything except a newline”, we now use the new `\N` metatoken
+(i.e. “opposite of `\n`”).
 
 The `/m` modifier isn't required, because `^` and `$` always mean start
 and end of string, respectively. To match the start and end of a line,
@@ -621,7 +621,7 @@ becomes in Perl 6:
 
 The external minus sign is used (instead of an internal caret), because
 Perl 6 allows proper set operations on character classes, and the minus
-sign is the âdifferenceâ operator. So we could also create:
+sign is the “difference” operator. So we could also create:
 
         # Perl 6
         / < <alpha> - [A-Za-z] >+ /   # All alphabetics except A-Z or a-z
@@ -630,8 +630,8 @@ sign is the âdifferenceâ operator. So we could also create:
 Explicit character classes were deliberately made a little less
 convenient in Perl 6, because they're generally a bad idea in a Unicode
 world. For example, the `[A-Za-z]` character class in the above examples
-won't even match standard alphabetic Latin-1 characters like `'Ã'`,
-`'Ã©'`, `'Ã¸'`, let alone alphabetic characters from code-sets such as
+won't even match standard alphabetic Latin-1 characters like `'Ã'`,
+`'é'`, `'ø'`, let alone alphabetic characters from code-sets such as
 Cyrillic, Hiragana, Ogham, Cherokee, or Klingon.
 
 ------------------------------------------------------------------------
@@ -674,12 +674,12 @@ even trying either of the other two alternatives in the same group.
 Because we found an `'a'`, there's no chance we could match a `'d'` or a
 `'c'` instead.
 
-So, in general, a double-colon means: âAt this point I'm committed to
+So, in general, a double-colon means: “At this point I'm committed to
 this alternative within the current group -- don't bother with the
-others if this one fails after this pointâ.
+others if this one fails after this point”.
 
 There are other control directives like this, too. A single colon means:
-âDon't bother backtracking into the previous elementâ. That's useful in
+“Don't bother backtracking into the previous element”. That's useful in
 a pattern like:
 
         rx:w/ $keyword [-full|-quick|-keep]+ : end /
@@ -691,8 +691,8 @@ option, and *still* failing to find an `'end'`. And then backtracking
 *another* option, and failing again, etc. By using the colon after the
 repetition, we tell the matcher to give up after the first attempt.
 
-However, the single colon isn't just a âGreed is Goodâ operator. It's
-much more like a âResistance is Futileâ operator. That is, if the
+However, the single colon isn't just a “Greed is Good” operator. It's
+much more like a “Resistance is Futile” operator. That is, if the
 preceding repetition had been non-greedy instead:
 
         rx:w/ $keyword [-full|-quick|-keep]+? : end /
@@ -710,8 +710,8 @@ no point trying any other match on the preceding repetition, because
 retrying (whether more or fewer repetitions) would just waste time and
 would still fail.
 
-There's also a three-colon directive. Three colons means: âIf we have to
-backtrack past here, cause the entire rule to failâ (i.e. not just this
+There's also a three-colon directive. Three colons means: “If we have to
+backtrack past here, cause the entire rule to fail” (i.e. not just this
 group). If the double-colon in `$hunk` had been triple:
 
         <$linenum> a ::: <$linerange>
@@ -722,16 +722,16 @@ then matching a line number and an `'a'` and subsequently failing would
 cause the entire `$hunk` rule to fail immediately (though the `$file`
 rule that invoked it might still match successfully in some other way).
 
-So, in general, a triple-colon specifies: âAt this point I'm committed
+So, in general, a triple-colon specifies: “At this point I'm committed
 to this way of matching the current rule -- give up on the rule
-completely if the matching process fails at this pointâ.
+completely if the matching process fails at this point”.
 
 Four colons ... would just be silly. So, instead, there's a special
 named directive: `<commit>`. Backtracking through a `<commit>` causes
 the entire match to immediately fail. And if the current rule is being
 matched as part of a larger rule, that larger rule will fail as well. In
-other words, it's the âBlow up this Entire Planet and Possibly One or
-Two Others We Noticed on our Way Out Hereâ operator.
+other words, it's the “Blow up this Entire Planet and Possibly One or
+Two Others We Noticed on our Way Out Here” operator.
 
 If the double-colon in `$hunk` had been a `<commit>` instead:
 
@@ -743,9 +743,9 @@ then matching a line number and an `'a'` and subsequently failing would
 cause the entire `$hunk` rule to fail immediately, *and* would also
 cause the `$file` rule that invoked it to fail immediately.
 
-So, in general, a `<commit>` means: âAt this point I'm committed to this
+So, in general, a `<commit>` means: “At this point I'm committed to this
 way of completing the current match -- give up all attempts at matching
-anything if the matching process fails at this pointâ.
+anything if the matching process fails at this point”.
 
 ------------------------------------------------------------------------
 
@@ -765,8 +765,8 @@ the alternative outside the brackets is tried:
 
         |  (\N*) ::: { fail "Invalid diff hunk: $1" }
 
-This captures a sequence of non-newline characters (`\N` means ânot
-`\n`â, in the same way `\S` means ânot `\s`â or `\W` means ânot `\w`â).
+This captures a sequence of non-newline characters (`\N` means “not
+`\n`”, in the same way `\S` means “not `\s`” or `\W` means “not `\w`”).
 Then it invokes a block of Perl code inside the pattern. The call to
 `fail` causes the match to fail at that point, and sets an associated
 error message that would subsequently appear in the `$!` error variable
@@ -823,8 +823,8 @@ entire line.
 
 The first character on that line must be either a `'<'` or a `'>'`. Note
 that we have to escape these characters since angle brackets are
-metacharacters in Perl 6. An alternative would be to use the âliteral
-stringâ metasyntax:
+metacharacters in Perl 6. An alternative would be to use the “literal
+string” metasyntax:
 
         $deleteline = rx/^^ <'<'> <sp> (\N* \n) /
         $appendline = rx/^^ <'>'> <sp> (\N* \n) /
@@ -859,8 +859,8 @@ bracket is, of course, a matter of personal taste.
 ### [The final frontier]{#the_final_frontier}
 
 After the leading angle, a single literal space is expected. Again, we
-could have specified that by escapology (`\Â `) or literalness (`<'Â '>`)
-or quotemetaphysics (`\Q[Â ]`) or character classification (`<[Â ]>`), or
+could have specified that by escapology (`\ `) or literalness (`<' '>`)
+or quotemetaphysics (`\Q[ ]`) or character classification (`<[ ]>`), or
 deterministic nomimalism (`\c[SPACE]`), but Perl 6 also gives us a
 simple *name* for the space character: `<sp>`. This is the preferred
 option, since it reduces line-noise and makes the significant space much
@@ -1246,7 +1246,7 @@ would we need?
 None.
 
 That's right. Whenever Perl 6 matches a pattern, it *automatically*
-builds a âresult objectâ representing the various components of the
+builds a “result object” representing the various components of the
 match.
 
 That result object is named `$0` (the program's name is now `$*PROG`)
@@ -1308,7 +1308,7 @@ alternative matches, then the result object from the second match of
 `<linenum>` will overwrite the entry for the first `<linenum>` match.
 
 The solution to this is a new Perl 6 pattern matching feature known as
-âhypothetical variablesâ. A hypothetical variable is a variable that is
+“hypothetical variables”. A hypothetical variable is a variable that is
 declared and bound within a pattern match (i.e. inside a closure within
 a rule). The variable is declared, not with a `my`, `our`, or `temp`,
 but with the new keyword `let`, which was chosen because it's what
@@ -1465,7 +1465,7 @@ Likewise, in the next higher rule:
         };
 
 the match on `<linerange>` will return *its* `$0` object. So, within the
-`hunk` rule, we could access the âfromâ digits of the line range of the
+`hunk` rule, we could access the “from” digits of the line range of the
 hunk as: `$0{linerange}{from}`.
 
 Likewise, at the highest level:
@@ -1477,7 +1477,7 @@ we are matching a series of hunks, so the hypothetical `$hunk` variable
 attribute contains the series of result objects returned by each
 individual `<hunk>` match.
 
-So, for example, we could access the âfromâ digits of the line range of
+So, for example, we could access the “from” digits of the line range of
 the third hunk as: `$0{hunk}[2]{linerange}{from}`.
 
 ------------------------------------------------------------------------
@@ -1485,8 +1485,8 @@ the third hunk as: `$0{hunk}[2]{linerange}{from}`.
 ### [Extracting the insertions]{#extracting_the_insertions}
 
 More usefully, we could locate and print every line in the diff that was
-being inserted, regardless of whether it was inserted by an âappendâ or
-a âchangeâ hunk. Like so:
+being inserted, regardless of whether it was inserted by an “append” or
+a “change” hunk. Like so:
 
         my $text is from($*ARGS);
 
@@ -1514,12 +1514,12 @@ it's parsing. That's often a useful technique because it allows us to
 manipulate the various parts of a hierarchical representation locally
 (within the rules that recognize them).
 
-For example, suppose we wanted to âreverseâ the diff file. That is,
+For example, suppose we wanted to “reverse” the diff file. That is,
 suppose we had a diff that specified the changes required to transform
 file A to file B, but we needed the back-transformation instead: from
 file B to file A. That's relatively easy to create. We just turn every
-âappendâ into a âdeleteâ, every âdeleteâ into an âappendâ, and reverse
-every âchangeâ.
+“append” into a “delete”, every “delete” into an “append”, and reverse
+every “change”.
 
 The following code does exactly that:
 
@@ -1592,7 +1592,7 @@ returns.
 
 ### [Smarter alternatives]{#smarter_alternatives}
 
-In the first alternative (which matches âappendâ hunks), we match as
+In the first alternative (which matches “append” hunks), we match as
 before:
 
         <linenum> a :: <linerange> \n
@@ -1605,20 +1605,20 @@ But then we execute an embedded closure:
                   _ join "", @$appendline;
         }
 
-The first line reverses the âmarkerâ arrows on each line of data that
+The first line reverses the “marker” arrows on each line of data that
 was previously being appended, using the smart-match operator to apply
 the transformation to each line. Note too, that we reuse the `in_marker`
 rule within the substitution.
 
 Then we bind the result object (i.e. the hypothetical variable `$0`) to
-a string representing the âreversedâ append hunk. That is, we reverse
+a string representing the “reversed” append hunk. That is, we reverse
 the order of the line range and line number components, put a `'d'` (for
-âdeleteâ) between them, and then follow that with all the reversed data:
+“delete”) between them, and then follow that with all the reversed data:
 
         let $0 := "${linerange}d${linenum}\n"
                 _ join "", @$appendline;
 
-The changes to the âdeleteâ alternative are exactly symmetrical. Capture
+The changes to the “delete” alternative are exactly symmetrical. Capture
 the components as before, reverse the marker arrows, reverse the
 `$linerange` and `$linenum`, change the `'d'` to an `'a'`, and append
 the reversed data lines.
@@ -1837,8 +1837,8 @@ the `hunk` rule, and the job's done.
 Grammatical inheritance isn't only useful for tweaking the behaviour of
 a grammar's rules. It's also handy when two or more related grammars
 share some characteristics, but differ in some particulars. For example,
-suppose we wanted to support the âunifiedâ diff format, as well as the
-âclassicâ.
+suppose we wanted to support the “unified” diff format, as well as the
+“classic”.
 
 A unified diff consists of two lines of header information, followed by
 a series of hunks. The header information indicates the name and
@@ -1847,9 +1847,9 @@ signs), and then the name and modification date of the new file
 (prefixing that line with three plus signs). Each hunk consists of an
 offset line, followed by one or more lines representing either shared
 context, or a line to be inserted, or a line to be deleted. Offset lines
-start with two âatâ signs, then consist of a minus sign followed by the
+start with two “at” signs, then consist of a minus sign followed by the
 old line offset and line-count, and then a plus sign followed by the nes
-line offset and line-count, and then two more âatâ signs. Context lines
+line offset and line-count, and then two more “at” signs. Context lines
 are prefixed with two spaces. Insertion lines are prefixed with a plus
 sign and a space. Deletion lines are prefixed with a minus sign and a
 space.
@@ -1961,7 +1961,7 @@ power right away. You can ignore grammars and embedded closures and
 assertions and the other sophisticated bits until you actually need
 them.
 
-The new rule syntax also cleans up much of the âline-noiseâ of Perl 5
+The new rule syntax also cleans up much of the “line-noise” of Perl 5
 regexes. But the fundamentals don't change that much. Many Perl 5
 patterns will translate very simply and naturally to Perl 6.
 

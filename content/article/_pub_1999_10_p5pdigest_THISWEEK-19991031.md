@@ -1,16 +1,16 @@
 {
-   "title" : "This Week on p5p 1999/10/31",
-   "description" : " Notes glob case-sensitivity Perl under UNICOS New perlthread man page Threading and explicit unlocking Threading and Regexes pack t Template Happy Birthday CPAN! Local Address in LWP Return of ref prototype $^O sort improvements Shell.pm enhancements. Time Zone Output...",
    "thumbnail" : null,
-   "categories" : "community",
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
+   "description" : " Notes glob case-sensitivity Perl under UNICOS New perlthread man page Threading and explicit unlocking Threading and Regexes pack t Template Happy Birthday CPAN! Local Address in LWP Return of ref prototype $^O sort improvements Shell.pm enhancements. Time Zone Output...",
    "image" : null,
-   "draft" : null,
-   "tags" : [],
+   "categories" : "community",
    "date" : "1999-11-03T00:00:00-08:00",
-   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991031"
+   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991031",
+   "title" : "This Week on p5p 1999/10/31",
+   "tags" : []
 }
 
 

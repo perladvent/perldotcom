@@ -1,23 +1,23 @@
 {
    "draft" : null,
-   "tags" : [],
-   "date" : "2012-05-24T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex",
-   "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (regex)",
-   "categories" : "unicode",
    "thumbnail" : null,
-   "description" : "â 30: Extract by grapheme instead of by codepoint (regex) Remember that Unicode defines a grapheme as \"what a user thinks of as a character\". A codepoint is an integer value in the Unicode codespace. While ASCII conflates the two,...",
+   "description" : "℞ 30: Extract by grapheme instead of by codepoint (regex) Remember that Unicode defines a grapheme as \"what a user thinks of as a character\". A codepoint is an integer value in the Unicode codespace. While ASCII conflates the two,...",
+   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null
+   "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (regex)",
+   "tags" : [],
+   "categories" : "unicode",
+   "slug" : "/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex",
+   "date" : "2012-05-24T06:00:01-08:00"
 }
 
 
 
 
 
-â 30: Extract by grapheme instead of by codepoint (regex) {#Extract-by-grapheme-instead-of-by-codepoint-regex-}
+℞ 30: Extract by grapheme instead of by codepoint (regex) {#Extract-by-grapheme-instead-of-by-codepoint-regex-}
 ---------------------------------------------------------
 
 Remember that Unicode defines a *grapheme* as "what a user thinks of as
@@ -31,13 +31,13 @@ a string instead of codepoints:
      # match and grab five first graphemes
      my ($first_five) = $str =~ /^ ( \X{5} ) /x;
 
-Previous: [â 29: Match Unicode Grapheme Cluster in
+Previous: [℞ 29: Match Unicode Grapheme Cluster in
 Regex](/media/_pub_2012_05_perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex/perlunicook-match-unicode-grapheme-cluster-in-regex.html)
 
 Series Index: [The Standard
 Preamble](/media/_pub_2012_05_perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex/perlunicook-standard-preamble.html)
 
-Next: [â 31: Extract by Grapheme Instead of Codepoint
+Next: [℞ 31: Extract by Grapheme Instead of Codepoint
 (substr)](/media/_pub_2012_05_perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex/perlunicook-extract-by-grapheme-instead-of-codepoint-substr.html)
 
 

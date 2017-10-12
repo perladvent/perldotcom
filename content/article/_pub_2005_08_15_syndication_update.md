@@ -1,15 +1,15 @@
 {
-   "title" : "Important Notice for Perl.com Readers About O'Reilly RSS and Atom Feeds",
-   "categories" : "Perldotcom",
-   "thumbnail" : null,
+   "image" : null,
    "description" : "O'Reilly Media, Inc. is rolling out a new syndication mechanism that provides greater control over the content we publish online. You'll notice some improvements immediately, such as better standards compliance, graphical tiles accompanying article descriptions, and enclosure support for podcatching...",
    "authors" : [
       "perldotcom"
    ],
-   "image" : null,
+   "thumbnail" : null,
    "draft" : null,
-   "date" : "2005-08-15T00:00:00-08:00",
    "tags" : [],
+   "title" : "Important Notice for Perl.com Readers About O'Reilly RSS and Atom Feeds",
+   "categories" : "Perldotcom",
+   "date" : "2005-08-15T00:00:00-08:00",
    "slug" : "/pub/2005/08/15/syndication_update"
 }
 

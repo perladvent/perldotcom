@@ -1,21 +1,21 @@
 {
    "draft" : null,
+   "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif",
+   "authors" : [
+      "damian-conway"
+   ],
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 7 for the current design information. What a piece of work is Perl 6! How noble in reason! How infinite in faculty! In...",
+   "image" : null,
+   "categories" : "perl-6",
    "date" : "2004-02-27T00:00:00-08:00",
+   "slug" : "/pub/2004/02/27/exegesis7",
+   "title" : "Exegesis 7",
    "tags" : [
       "damian-conway",
       "exegesis",
       "formats",
       "perl-6"
-   ],
-   "slug" : "/pub/2004/02/27/exegesis7",
-   "title" : "Exegesis 7",
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 7 for the current design information. What a piece of work is Perl 6! How noble in reason! How infinite in faculty! In...",
-   "categories" : "perl-6",
-   "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif",
-   "authors" : [
-      "damian-conway"
-   ],
-   "image" : null
+   ]
 }
 
 
@@ -32,13 +32,13 @@ How noble in reason!\
 How infinite in faculty!\
 In `form` how express and admirable!*
 
-> **[â W. Shakespeare, "Hamlet" (Perl 6
+> **[– W. Shakespeare, "Hamlet" (Perl 6
 > revision)]{#item__w%2e_shakespeare%2c_%22hamlet%22_%28perl_6_revisi}**\
 
 Formats are Perl 5's mechanism for creating text templates with
 fixed-width fields. Those fields are then filled in using values from
 prespecified package variables. They're a useful tool for generating
-many types of plaintext reports â the *r* in *Perl*, if you will.
+many types of plaintext reports – the *r* in *Perl*, if you will.
 
 Unlike Perl 5, Perl 6 doesn't have a `format` keyword. Or the associated
 built-in formatting mechanism. Instead it has a Form.pm module. And a
@@ -85,7 +85,7 @@ it has the same basic structure as a Perl 5 `format`:
 But the Perl 6 version is implemented as a vanilla Perl 6 subroutine,
 rather than hard-coded into the language with a special keyword and
 declaration syntax. In this respect it's rather like Perl 5's
-little-known `formline` function â only much, much better.
+little-known `formline` function – only much, much better.
 
 So, whereas in Perl 5 we might write:
 
@@ -146,7 +146,7 @@ And both of them would print something like:
          ===================================
 
 At first glance the Perl 6 version may seem like something of a
-backwards step â all those extra quotation marks and commas that the
+backwards step – all those extra quotation marks and commas that the
 Perl 5 format didn't require. But the new formatting interface does have
 several distinct advantages:
 
@@ -174,7 +174,7 @@ several distinct advantages:
 -   it doesn't rely on package variables, typeglobs, or a global
     accumulator;
 -   it doesn't require a (frequently cryptic) call to the mysterious
-    `write` function â and hence frees up `write` to be used as the true
+    `write` function – and hence frees up `write` to be used as the true
     opposite of `read`, should Larry so desire.
 
 Of course, this is Perl, not Puritanism. So those folks who happen to
@@ -241,7 +241,7 @@ technical jargon we'll be using as we talk about formatting:
 
 **[Block field]{#item_block_field}**\
 :   A field that interpolates all of its corresponding data value, over
-    a series of text lines â as many as necessary â producing a *text
+    a series of text lines – as many as necessary – producing a *text
     block*.
 
 **[Text block]{#item_text_block}**\
@@ -362,7 +362,7 @@ That may still seem like quite a lot to remember, but the rules have
 been chosen so that the resulting fields are visually mnemonic. In other
 words, they're supposed to look like what they do. The intention is that
 we simply draw a (stylized) picture of how we want the finished text to
-look, using fields that look something like the finished product â left
+look, using fields that look something like the finished product – left
 or right brackets brackets showing horizontal alignments, a middlish `=`
 or bottomed-out `_` indicate middled or bottom vertical alignment, etc.,
 etc. Then `form` fits our data into the fields so it looks right.
@@ -521,9 +521,9 @@ design information.*
 
 ### [And mark what way I make...]{#and_mark_what_way_i_make...}
 
-Obviously, as a call to `form` builds up each line of its output â
+Obviously, as a call to `form` builds up each line of its output –
 extracting data from one or more data arguments and formatting it into
-the corresponding fields â it needs to keep track of where it's up to in
+the corresponding fields – it needs to keep track of where it's up to in
 each datum. It does this by progressively updating the `.pos` of each
 datum, in exactly the same way as a pattern match does.
 
@@ -541,13 +541,13 @@ information in our data.
 
 But, if we want to apply a series of `form` calls to the same data we
 also need to be able to tell `form` to *respect* the `.pos` information
-of that data â to start extracting from the previously preserved `.pos`
+of that data – to start extracting from the previously preserved `.pos`
 position, rather than from the start of the string.
 
 To achieve both those goals, we use a *follow-on field*. That is we use
 an ordinary field but mark it as `.pos`-sensitive with a special
 notation: Unicode ellipses or ASCII colons at either end. So instead of
-`{<<<<>>>>}`, we'd write `{â¦<<<>>>â¦}` or `{:<<<>>>:}`.
+`{<<<<>>>>}`, we'd write `{…<<<>>>…}` or `{:<<<>>>:}`.
 
 Note that each ellipsis is a single, one-column wide Unicode HORIZONTAL
 ELLIPSIS character (`\c[2026]`), *not* three separate dots. The
@@ -557,14 +557,14 @@ come..."*. And the colons are the ASCII symbol most like a single
 character ellipsis (try tilting your head and squinting).
 
 Follow-on fields are most useful when we want to split a formatting task
-into distinct stages â or iterations â but still allow the contents of
+into distinct stages – or iterations – but still allow the contents of
 the follow-on field to flow uninterrupted from line to line. For
 example:
 
         print "The best Shakespearean roles are:\n\n";
 
         for @roles -> $role {
-            print form "   * {<<<<<<<<<<<<<<<<<<<<<<<<<<<<}   *{â¦<<<<<<<>>>>>>>â¦}*",
+            print form "   * {<<<<<<<<<<<<<<<<<<<<<<<<<<<<}   *{…<<<<<<<>>>>>>>…}*",
                              $role,                            $disclaimer;
         }
 
@@ -622,7 +622,7 @@ The upshot is that, instead of:
         print "The best Shakespearean roles are:\n\n";
 
         for @roles -> $role {
-            print form "   * {<<<<<<<<<<<<<<<<<<<<<<<<<<<<}   *{â¦<<<<<<<>>>>>>>â¦}*",
+            print form "   * {<<<<<<<<<<<<<<<<<<<<<<<<<<<<}   *{…<<<<<<<>>>>>>>…}*",
                              $role,                            $disclaimer;
         }
 
@@ -689,7 +689,7 @@ the specified width. For example:
             'Name             Score   Time  | Normalized',   
             '-------------------------------------------',   
             '{[[[[[[[[[[[[}   {III}   {II}  |  {]]].[[} ',
-             @name,           @score, @time,   [@score Â»/Â« @time];
+             @name,           @score, @time,   [@score »/« @time];
 
 is a very easy way to produce the table:
 
@@ -700,7 +700,7 @@ is a very easy way to produce the table:
         Richard Scroop    54      13   |     4.154
         Harry Percy       99      18   |     5.5
 
-Note the use of the Perl6-ish listwise division (`Â»/Â«`) to produce the
+Note the use of the Perl6-ish listwise division (`»/«`) to produce the
 array of data for the "Normalized" column.
 
 ------------------------------------------------------------------------
@@ -721,7 +721,7 @@ data as possible, and then pad both sides of it with (near) equal
 numbers of spaces. If the amount of padding required is not evenly
 divisible by 2, the one extra space is added *after* the data.
 
-There is a second syntax for centred fields â a tip-o'-the-hat to Perl 5
+There is a second syntax for centred fields – a tip-o'-the-hat to Perl 5
 formats: `{|||||||||}` and `{IIIIIIII}`. This variant also makes it
 easier to specify centering fields that are only three columns wide:
 `{|}` and `{I}`.
@@ -858,19 +858,19 @@ with question-marks:
         Thy score be:     6.0  
         Thy score be: ?????.???
 
-Note that strings per se aren't a problem â `form` will happily convert
+Note that strings per se aren't a problem – `form` will happily convert
 strings that contain valid numbers, such as `"6"` in the above example.
 But it does reject strings that contain anything else besides a number
-(even when Perl itself would successfully convert the number â as it
+(even when Perl itself would successfully convert the number – as it
 would for `"7-Up"` above).
 
 Those who'd prefer Perl's usual, more laissez-faire attitude to
 numerical conversion can just pre-numerify the values themselves using
-the unary numerification operator (shown here in its list form â `+Â«` â
+the unary numerification operator (shown here in its list form – `+«` –
 since we have an array of values to be numerified):
 
         print form 'Thy score be: {]]]].[[}',
-                                  +Â« @mixed_data;
+                                  +« @mixed_data;
 
 This version would print:
 
@@ -1190,7 +1190,7 @@ bracket (and hence some other kind of value). The full list of
 
         :key[ 1, 2, 3, 4 ]     key => [ 1, 2, 3, 4 ]
 
-        :keyÂ«eat at Joe'sÂ»     key => ["eat", "at", "Joe's"]
+        :key«eat at Joe's»     key => ["eat", "at", "Joe's"]
 
 Despite the deliberate differences in conciseness and flexibility, we
 can use "options" and "fat arrows" interchangeably in almost every
@@ -1208,9 +1208,9 @@ Meanwhile, back in the fields...
 ### [Some tender money to me...]{#some_tender_money_to_me...}
 
 Formatting numbers gets even trickier when those numbers represent
-money. But `form` simply lets us specify how the local currency looks â
+money. But `form` simply lets us specify how the local currency looks –
 including leading, trailing, or infix currency markers; leading,
-trailing, or circumfix negation markers; thousands separators; etc. â
+trailing, or circumfix negation markers; thousands separators; etc. –
 and then it formats it that way. For example:
 
         my @amounts = (0, 1, 1.2345, 1234.56, -1234.56, 1234567.89);
@@ -1306,7 +1306,7 @@ Nice, eh?
 ### [Able verbatim to rehearse...]{#able_verbatim_to_rehearse...}
 
 But sometimes *too* nice. Sometimes all we want is an existing block of
-data laid out into columns â without any fancy reformatting or
+data laid out into columns – without any fancy reformatting or
 rejustification. For example, suppose we have an interesting string like
 this:
 
@@ -1354,7 +1354,7 @@ Because that would squash our lovely helix:
 
 Nor would right-, full-, centre- or numeric- justification help in this
 instance. What we really need is "leave-it-the-hell-alone" justification
-â a field specifier that lays out the data exactly as it is, leading
+– a field specifier that lays out the data exactly as it is, leading
 whitespace included.
 
 And that's the purpose of a *verbatim field*. A verbatim single-line
@@ -1536,31 +1536,31 @@ single format and just build the method column up piecemeal, like so:
                                           $recipe,
             '                                                                  ',
             'Preparation time:               Method:                           ',
-            '   {<<<<<<<<<<<<<<<<<<<<}          {<<<<<<<<<<<<<<<<<<<<<<<<<<<â¦} ',
+            '   {<<<<<<<<<<<<<<<<<<<<}          {<<<<<<<<<<<<<<<<<<<<<<<<<<<…} ',
                 $prep_time,                     $method,
-            '                                   {â¦<<<<<<<<<<<<<<<<<<<<<<<<<<â¦} ',
+            '                                   {…<<<<<<<<<<<<<<<<<<<<<<<<<<…} ',
                                                 $method,
-            'Serves:                            {â¦<<<<<<<<<<<<<<<<<<<<<<<<<<â¦} ',
+            'Serves:                            {…<<<<<<<<<<<<<<<<<<<<<<<<<<…} ',
                                                 $method,
-            '   {<<<<<<<<<<<<<<<<<<<<}          {â¦<<<<<<<<<<<<<<<<<<<<<<<<<<â¦} ',
+            '   {<<<<<<<<<<<<<<<<<<<<}          {…<<<<<<<<<<<<<<<<<<<<<<<<<<…} ',
                 $serves,                        $method,
-            '                                   {â¦<<<<<<<<<<<<<<<<<<<<<<<<<<â¦} ',
+            '                                   {…<<<<<<<<<<<<<<<<<<<<<<<<<<…} ',
                                                 $method,
-            'Ingredients:                       {â¦<<<<<<<<<<<<<<<<<<<<<<<<<<â¦} ',
+            'Ingredients:                       {…<<<<<<<<<<<<<<<<<<<<<<<<<<…} ',
                                                 $method,
-            '   {[[[[[[[[[[[[[[[[[[[[}          {â¦[[[[[[[[[[[[[[[[[[[[[[[[[[[} ',
+            '   {[[[[[[[[[[[[[[[[[[[[}          {…[[[[[[[[[[[[[[[[[[[[[[[[[[[} ',
                 $ingredients,                   $method;
 
 That produces exactly the same result as the previous versions, because
-each follow-on `{â¦<<<<<<<â¦}` field in the "Method" column grabs one
-extra line from `$method`, and then the final follow-on `{â¦[[[[[[â¦}`
+each follow-on `{…<<<<<<<…}` field in the "Method" column grabs one
+extra line from `$method`, and then the final follow-on `{…[[[[[[…}`
 field grabs as many more as are required to lay out the rest of the
 contents of the variable. The only down-side is that the resulting code
 is still downright ugly. With all those tedious repetitions of the same
 variable, there's far too much `$method` in our madness.
 
-Having a series of follow-on fields like this â vertically continuing a
-single column across subsequent format lines â is so common that `form`
+Having a series of follow-on fields like this – vertically continuing a
+single column across subsequent format lines – is so common that `form`
 provides a special shortcut: the `{VVVVVVVVV}` *overflow field*.
 
 An overflow field automagically duplicates the field specification
@@ -1597,14 +1597,14 @@ otherwise](/pub/a/2004/02/27/exegesis7.html?page=10#i_have_got_strength_of_limit
 all types of block fields will consume their entire data source. For
 example, if we wrote:
 
-        print form :layoutÂ«acrossÂ»,
-             '{<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>â¦}',
+        print form :layout«across»,
+             '{<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>…}',
                                       $speech,
-             '{â¦<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>â¦}',
+             '{…<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>…}',
                                       $speech,
-             '{â¦[[[[[]]]]]â¦}   {="""""""""""""""""""=}   {â¦[[[[[]]]]]]â¦}',
+             '{…[[[[[]]]]]…}   {="""""""""""""""""""=}   {…[[[[[]]]]]]…}',
                  $speech,             $advert,              $speech,
-             '{â¦[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}',
+             '{…[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}',
                                       $speech;
 
 we'd get:
@@ -1629,7 +1629,7 @@ we'd get:
         adversaries, /                             He       capers
         nimbly  in   a                             lady's chamber.
 
-That's because the two `{â¦[[[[[]]]]]â¦}` block fields on either side of
+That's because the two `{…[[[[[]]]]]…}` block fields on either side of
 the verbatim advertisement field will eat all the data in `$speech`,
 leaving nothing for the final format. Then the advertisement will be
 centred on the two resulting columns of text.
@@ -1638,7 +1638,7 @@ But, block overflow fields are different. They only take as many lines
 as are required to fill the lines generated by the non-overflow fields
 in their format. So, if we changed our code to use overflows:
 
-        print form :layoutÂ«acrossÂ»
+        print form :layout«across»
              '{<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>}', $speech,
              '{VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}',
              '{VVVVVVVVVVVV}   {="""""""""""""""""""=}   {VVVVVVVVVVVVV}', $advert,
@@ -1665,9 +1665,9 @@ Notice that, in the third format line of the previous example, the two
 overflow fields on either side of the advertisement are each overflowing
 from the single field that's above both of them. This kind of multiple
 overflow is fine, but it does require that we specify *how* the various
-fields overflow (i.e. as two separate columns of text, or â as in this
-case â as a single, broken column across the page). That's the purpose
-of the `:layoutÂ«acrossÂ»` option on the first line. This option is
+fields overflow (i.e. as two separate columns of text, or – as in this
+case – as a single, broken column across the page). That's the purpose
+of the `:layout«across»` option on the first line. This option is
 explained in detail
 [below](/pub/a/2004/02/27/exegesis7.html?page=8#lay_out._lay_out.).
 
@@ -1725,8 +1725,8 @@ result is something like:
                             ever known and has always been the 
                             world's most popular author.
 
-If `{VVVVVVVVVVV}` fields ate their entire data â the way `{[[[[[[[[[}`
-or `{IIIIIIIIII}` fields do â then the output would be much less
+If `{VVVVVVVVVVV}` fields ate their entire data – the way `{[[[[[[[[[}`
+or `{IIIIIIIIII}` fields do – then the output would be much less
 satisfactory. The first block overflow field for `$bio` would have to
 consume the entire biography, before the comments field was even
 reached. So our output would be something like:
@@ -2012,7 +2012,7 @@ Sometimes, however, the data to be interpolated doesn't come neatly
 pre-packaged in separate variables that are easy to intersperse between
 the formats. For example, the data might be a list returned by a
 subroutine call (`get_info`) or might be stored in a hash
-(Â `%person{Â«Â nameÂ biogÂ statÂ commÂ Â»}`Â ). In such cases it's a nuisance to
+( `%person{« name biog stat comm »}` ). In such cases it's a nuisance to
 have to tease that data out into separate variables (or hash accesses)
 and then sprinkle them through the formats:
 
@@ -2043,7 +2043,7 @@ multi-line string in Perl:
                Comments:           {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}
                  {[[[[[[[[[[[}     {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}
                EOFORMAT
-             %person{Â« name biog stat comm Â»}
+             %person{« name biog stat comm »}
 
 When `:interleave` is in effect, `form` grabs the first string argument
 it's passed and breaks that argument up into individual lines. It treats
@@ -2142,7 +2142,7 @@ fields](/pub/a/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_
 are all fed by the same data source. For example:
 
         print form
-            "{[[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[[]]]]]]]]]]}",
+            "{[[[[[[[[]]]]]]]]]]…}   {…[[[[[[[]]]]]]]]]]…}   {…[[[[[[[[]]]]]]]]]]}",
                  $soliloquy,             $soliloquy,              $soliloquy;
 
 In fact, that kind of format is particularly useful for creating
@@ -2202,7 +2202,7 @@ text (as we did for [Mrs
 Miggins](/pub/a/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_their_banks.)).
 The third approach (i.e. lay out the data downwards but balance the
 columns) is best for presenting a single list of data in multiple
-columns â like `ls` does.
+columns – like `ls` does.
 
 So we need an option with which to tell `form` which of these useful
 alternatives we want for a particular format. That option is named
@@ -2210,20 +2210,20 @@ alternatives we want for a particular format. That option is named
 or `"balanced"`. So, for example, to produce three versions of Richard
 III's famous monologue in the order shown above, we'd use:
 
-        print form :layoutÂ«downÂ»,
-            "{[[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[[]]]]]]]]]]}",
+        print form :layout«down»,
+            "{[[[[[[[[]]]]]]]]]]…}   {…[[[[[[[]]]]]]]]]]…}   {…[[[[[[[[]]]]]]]]]]}",
                  $soliloquy,             $soliloquy,              $soliloquy;
 
 then:
 
-        print form :layoutÂ«acrossÂ»,
-            "{[[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[[]]]]]]]]]]}",
+        print form :layout«across»,
+            "{[[[[[[[[]]]]]]]]]]…}   {…[[[[[[[]]]]]]]]]]…}   {…[[[[[[[[]]]]]]]]]]}",
                  $soliloquy,             $soliloquy,              $soliloquy;
 
 then:
 
-        print form :layoutÂ«balancedÂ»,
-            "{[[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[]]]]]]]]]]â¦}   {â¦[[[[[[[[]]]]]]]]]]}",
+        print form :layout«balanced»,
+            "{[[[[[[[[]]]]]]]]]]…}   {…[[[[[[[]]]]]]]]]]…}   {…[[[[[[[[]]]]]]]]]]}",
                  $soliloquy,             $soliloquy,              $soliloquy;
 
 By the way, the default value for the `:layout` option is `"balanced"`
@@ -2312,7 +2312,7 @@ ought to remain vertically aligned. To achieve this, we simply tell
 `form` that the data in the various columns should be laid out like a
 table:
 
-        print form :layoutÂ«tabularÂ»,
+        print form :layout«tabular»,
              "Character       Appears in  ",
              "____________    ____________",
              "{[[[[[[[[[[}    {[[[[[[[[[[}",
@@ -2354,7 +2354,7 @@ from a printable 60 to a screenable 24.
 Normally in Perl 6, if we wanted to preset a particular optional
 argument we'd simply make an assumption:
 
-        my &down_form := &form.assuming(:layoutÂ«downÂ»);
+        my &down_form := &form.assuming(:layout«down»);
 
 But, of course, `form` collects all of its arguments in [a single slurpy
 array](/pub/a/2004/02/27/exegesis7.html?page=2#why,_how_now,_ho!_from_whence_ariseth_this),
@@ -2368,7 +2368,7 @@ above is equivalent to:
 
         my &down_form :=
             sub (FormArgs *@args is context(Scalar)) returns Str {
-                return form( :layoutÂ«downÂ», *@args );
+                return form( :layout«down», *@args );
             };
 
 #### [This was your default...]{#this_was_your_default...}
@@ -2376,7 +2376,7 @@ above is equivalent to:
 `form` provides one other mechanism by which options can be prebound. To
 use it, we (re-)load the Form module with an explicit argument list:
 
-        use Form :layoutÂ«downÂ», :locale, :interleave;
+        use Form :layout«down», :locale, :interleave;
 
 This causes the module to export a modified version of `form` in which
 the specified options are prebound. That modified version of `form` is
@@ -2386,7 +2386,7 @@ for the scope in which the `use Form` statement appears.
 These default options are handy if we have a series of calls to `form`
 that all need some consistent non-standard behaviour. For example:
 
-        use Form :layoutÂ«acrossÂ»,
+        use Form :layout«across»,
                  :interleave,
                  :page{ :header("Draft $(localtime)\n\n") };
 
@@ -2423,7 +2423,7 @@ design information.*
 ### [And welcome to the wide fields...]{#and_welcome_to_the_wide_fields...}
 
 All the fields we've seen so far have been exactly as wide as their
-specifications. That's the whole point of having fields â they allow us
+specifications. That's the whole point of having fields – they allow us
 to lay out formats "by eye".
 
 But `form` also allows us to specify field widths in other ways. And
@@ -2556,7 +2556,7 @@ entire format to fill the current page width of the format (by default,
             '{]]]]]]]]]]]]]]} {]]].[[}  {[[{*}[[}  ',
              @names,          @scores,  @comments;
 
-The width of the starred comment field in this case is 49 columns â the
+The width of the starred comment field in this case is 49 columns – the
 default page width of 78 columns minus the 29 columns consumed by the
 fixed-width portions of the format (including the other two fields).
 
@@ -2674,8 +2674,8 @@ In other words, field widths in a `printf` represent *minimal* spacing
 `form` represent *guaranteed* spacing (even if that truncates some of
 the data).
 
-Of course, in a situation like this â where we knew that the data might
-not fit and we didn't want it truncated â we could use a block field
+Of course, in a situation like this – where we knew that the data might
+not fit and we didn't want it truncated – we could use a block field
 instead:
 
         for @procs {
@@ -2694,10 +2694,10 @@ in which case we'd get:
          2581  dig -short grave       0:01.04    0.0%
 
 That preserves the data, but the results are still ugly, and it also
-requires some fancy footwork â making the percentage sign part of the
+requires some fancy footwork – making the percentage sign part of the
 field specification, as if it were [a currency
 marker](/pub/a/2004/02/27/exegesis7.html?page=5#some_tender_money_to_me...)
-â to make the last field work correctly. In other words: it's a kludge.
+– to make the last field work correctly. In other words: it's a kludge.
 The sad truth is that sometimes variable-width fields are a better
 solution.
 
@@ -2984,8 +2984,8 @@ Note that the `:lfill` and `:rfill` options are specified *after* the
 format string and, more particularly, before the data for the second
 field. This means that those options only take effect for that
 particular field and the previous fill behaviour is then reasserted for
-subsequent fields. Many other `form` options â for example `:ws`,
-`:height`, or `:break` â can be specified in this way, so as to apply
+subsequent fields. Many other `form` options – for example `:ws`,
+`:height`, or `:break` – can be specified in this way, so as to apply
 them only to a particular field.
 
 There is also a general `:fill` option that sets the default sequence
@@ -3019,8 +3019,8 @@ prints:
 Formatted text blocks are also filled vertically. Empty lines at the end
 of the block are normally filled with spaces (so as to preserve the
 alignment of any other fields on the same line). However, this too can
-be controlled, with the `:vfill` option. Alternatively â as with
-horizontal filling â separate fill sequences can be specified for above
+be controlled, with the `:vfill` option. Alternatively – as with
+horizontal filling – separate fill sequences can be specified for above
 and below the text using the `:tfill` and `:bfill` ("top" and "bottom"
 fill) options.
 
@@ -3238,7 +3238,7 @@ until your entire `$biography` string is gone.
 
 What we really need here, is a kinder, gentler block field; a block
 field that formats minimally, like an overflow field. And we get that
-with yet another `:height` option: `:heightÂ«minimalÂ»`. Like so:
+with yet another `:height` option: `:height«minimal»`. Like so:
 
         print form
             :interleave, <<EOFORMAT,
@@ -3252,7 +3252,7 @@ with yet another `:height` option: `:heightÂ«minimalÂ»`. Like so:
                   {[[[[[[[[[[[}     {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}
                 EOFORMAT
              $name,
-             :heightÂ«minimalÂ», $biography,
+             :height«minimal», $biography,
              $status,
              $comments;
 
@@ -3346,12 +3346,12 @@ might produce something like:
            Defy                                              
            Duel                                              
            Defeat                                            
-           Dispatch                                         Â 
+           Dispatch                                          
 
 That looks fine but, because each line is produced by the large
 left-justified field that is automatically filled with whitespace, the
 output contains several hundred more space characters than are strictly
-necessary (you probably didn't notice them, but they're all there â
+necessary (you probably didn't notice them, but they're all there –
 hanging off the right sides of the individual To-Do items).
 
 Fortunately, however, `form` is smarter than that. Extraneous trailing
@@ -3368,7 +3368,7 @@ trimmed. So the above example actually produces:
            Dispatch
 
 Of course, if you really do need those "invisible" trailing whitespaces
-for some reason, `form` provides a way to keep them â the `:untrimmed`
+for some reason, `form` provides a way to keep them – the `:untrimmed`
 option:
 
         print form :untrimmed,
@@ -3611,7 +3611,7 @@ which prints:
         ^L
 
 Note, in particular, the nested calls to `form` within some of the
-subroutines â to center or right-justify a particular header or footer.
+subroutines – to center or right-justify a particular header or footer.
 Permitting just this kind of "recursive" formatting is one of the main
 reasons Perl 5's built-in `format` has become the (reentrant) `form`
 subroutine in Perl 6.
@@ -3740,7 +3740,7 @@ which produces:
                        
                        
                        
-                       Â 
+                        
 
 *Editor's note: this document is out of date and remains here for
 historic interest. See [Synopsis
@@ -3772,7 +3772,7 @@ appropriate filter:
 We could then apply that subroutine to the data of any field that needed
 bowdlerization:
 
-        my &censor := expurgate Â«villain plot libel treacherous murderer false deadly 'G'Â»;
+        my &censor := expurgate «villain plot libel treacherous murderer false deadly 'G'»;
 
         print form
             "[Ye following tranfcript hath been cenfored by Order of ye King]\n\n",
@@ -3872,7 +3872,7 @@ create a module that encapsulates the new formatting functionality:
         module Ministry::Of::Truth {
 
             # Internal mechanism (as above)...
-            my @proscribed = Â«villain plot libel treacherous murderer false deadly 'G'Â»;
+            my @proscribed = «villain plot libel treacherous murderer false deadly 'G'»;
             sub break_and_censor (&original_breaker) {...}
             sub censor_field ($field_spec, %opts) {...}
 
@@ -3908,7 +3908,7 @@ spacing of a format). For example:
                     '_' => '{<_II{1}II_}',   # 1-char-wide, bottom-justified block
                   },
             '~~~~~~~~~',
-            '^ _ = _ ^',   *Â«like round and orient perlsÂ»,
+            '^ _ = _ ^',   *«like round and orient perls»,
             '~~~~~~~~~';
 
 prints:
@@ -3923,8 +3923,8 @@ prints:
         ~~~~~~~~~
 
 Note that we needed to use a unary `*` to flatten the
-`Â«likeÂ roundÂ andÂ orientÂ perlsÂ»` data list. That's because every argument
-of `form` is evaluated in scalar context, and an unflattened `Â«...Â»`
+`«like round and orient perls»` data list. That's because every argument
+of `form` is evaluated in scalar context, and an unflattened `«...»`
 list in scalar context becomes an array reference, rather than the five
 separate strings we needed to fill our five single-character fields.
 
@@ -3933,7 +3933,7 @@ a graph:
 
         use Form :field[ '=' => '{<=II{1}II=}' ];
 
-        @vert_label = Â«Villain's fortunesÂ»
+        @vert_label = «Villain's fortunes»
         $hor_label  = "Time";
 
         print form 
@@ -4124,7 +4124,7 @@ them in a single format. For example:
 
         print form
             :bullet('+'),
-            "+ {[[[[[[[[[[[[[[[[[[[â¦}       + {â¦[[[[[[[[[[[[[[[[[[[}",
+            "+ {[[[[[[[[[[[[[[[[[[[…}       + {…[[[[[[[[[[[[[[[[[[[}",
                 @items,                         @items;
 
 would print:

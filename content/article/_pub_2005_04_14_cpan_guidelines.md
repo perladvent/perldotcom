@@ -1,4 +1,8 @@
 {
+   "categories" : "CPAN",
+   "date" : "2005-04-14T00:00:00-08:00",
+   "slug" : "/pub/2005/04/14/cpan_guidelines",
+   "title" : "Building Good CPAN Modules",
    "tags" : [
       "compatibility",
       "cpan",
@@ -8,16 +12,12 @@
       "perl-porting",
       "writing-open-source-perl-code"
    ],
-   "date" : "2005-04-14T00:00:00-08:00",
-   "slug" : "/pub/2005/04/14/cpan_guidelines",
+   "thumbnail" : "/images/_pub_2005_04_14_cpan_guidelines/111-good_mods.gif",
    "draft" : null,
    "authors" : [
       "rob-kinyon"
    ],
    "image" : null,
-   "title" : "Building Good CPAN Modules",
-   "categories" : "CPAN",
-   "thumbnail" : "/images/_pub_2005_04_14_cpan_guidelines/111-good_mods.gif",
    "description" : " When you are planning to release a module to CPAN, one of your first tasks is figure out what OS, Perl version(s), and other environments you will and will not support. Often, the answers will come from what you..."
 }
 

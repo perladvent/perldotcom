@@ -1,13 +1,8 @@
 {
-   "title" : "Don't Be Afraid to Drop the SOAP",
    "categories" : "Web",
-   "thumbnail" : "/images/_pub_2004_09_30_drop_the_soap/111-drop_soap.gif",
-   "description" : "SOAP has great hype; portable, simple, efficient, flexible, and open, SOAP has it all. According to many intelligent people, writing a web service with SOAP should be a snap, and the results will speak for themselves. So they do, although...",
-   "authors" : [
-      "sam-tregar"
-   ],
-   "image" : null,
-   "draft" : null,
+   "date" : "2004-09-30T00:00:00-08:00",
+   "slug" : "/pub/2004/09/30/drop_the_soap",
+   "title" : "Don't Be Afraid to Drop the SOAP",
    "tags" : [
       "bricolage",
       "krang",
@@ -18,8 +13,13 @@
       "soap",
       "web-services"
    ],
-   "date" : "2004-09-30T00:00:00-08:00",
-   "slug" : "/pub/2004/09/30/drop_the_soap"
+   "thumbnail" : "/images/_pub_2004_09_30_drop_the_soap/111-drop_soap.gif",
+   "draft" : null,
+   "authors" : [
+      "sam-tregar"
+   ],
+   "image" : null,
+   "description" : "SOAP has great hype; portable, simple, efficient, flexible, and open, SOAP has it all. According to many intelligent people, writing a web service with SOAP should be a snap, and the results will speak for themselves. So they do, although..."
 }
 
 
@@ -133,14 +133,14 @@ templates and elements between systems.
     run a complete import inside a transaction.
 -   SOAP, like all network services, requires authentication to be safe
     against remote attack. This means that each call to `bric_soap`
-    required at least two SOAP requests â one to login and receive a
+    required at least two SOAP requests — one to login and receive a
     cookie and the second to call the requested method. Since the
     overhead of a SOAP request is sizable, this further slowed things
     down. Later we added a way to save the cookie between requests,
     which helped considerably.
 -   Network problems affected operations that needed to access multiple
     machines, such as the program responsible for moving templates and
-    elements â `bric_dev_sync`. Requests would frequently timeout in the
+    elements — `bric_dev_sync`. Requests would frequently timeout in the
     middle, sometimes leaving the target system in an inconsistent
     state.
 -   At the time, there was no good Perl solution for validating object

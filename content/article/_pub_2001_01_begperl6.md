@@ -1,21 +1,21 @@
 {
-   "slug" : "/pub/2001/01/begperl6",
+   "description" : "Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular Expressions...",
+   "image" : null,
+   "authors" : [
+      "doug-sheppard"
+   ],
+   "draft" : null,
+   "thumbnail" : null,
    "tags" : [
       "debugging",
       "security",
       "tainting",
       "warnings"
    ],
-   "date" : "2001-01-09T00:00:00-08:00",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "doug-sheppard"
-   ],
-   "description" : "Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular Expressions...",
+   "title" : "Beginners Intro to Perl - Part 6",
    "categories" : "development",
-   "thumbnail" : null,
-   "title" : "Beginners Intro to Perl - Part 6"
+   "slug" : "/pub/2001/01/begperl6",
+   "date" : "2001-01-09T00:00:00-08:00"
 }
 
 
@@ -37,30 +37,30 @@ be interested in the newer versions, available at:*
 +-----------------------------------------------------------------------+
 | Table of Contents                                                     |
 +-----------------------------------------------------------------------+
-| â¢**[Part 1 of this                                                    |
+| •**[Part 1 of this                                                    |
 | series](/media/_pub_2001_01_begperl6/begperl1.html)**\                |
-| â¢**[Part 2 of this                                                    |
+| •**[Part 2 of this                                                    |
 | series](/media/_pub_2001_01_begperl6/begperl2.html)**\                |
-| â¢**[Part 3 of this                                                    |
+| •**[Part 3 of this                                                    |
 | series](/media/_pub_2001_01_begperl6/begperl3.html)**\                |
-| â¢**[Part 4 of this                                                    |
+| •**[Part 4 of this                                                    |
 | series](/media/_pub_2001_01_begperl6/begperl4.html)**\                |
-| â¢**[Part 5 of this                                                    |
+| •**[Part 5 of this                                                    |
 | series](/media/_pub_2001_01_begperl6/begperl5.html)**\                |
 | \                                                                     |
-| â¢[Doing It Right the First                                            |
+| •[Doing It Right the First                                            |
 | Time](#doing%20it%20right%20the%20first%20time)\                      |
-| â¢[Comments](#comments)\                                               |
-| â¢[Warnings](#warnings)\                                               |
-| â¢[Taint](#taint)\                                                     |
-| â¢[Stuff Taint Doesn't Catch](#stuff%20taint%20doesn't%20catch)\       |
-| â¢[`use strict`](#use%20strict)\                                       |
-| Â Â â¢[Strict vars](#strict%20vars)\                                     |
-| Â Â â¢[Strict subs](#strict%20subs)\                                     |
-| Â Â â¢[Want a Sub, Get a String](#want%20a%20sub,%20get%20a%20string)\   |
-| Â Â â¢[The One Exception](#the%20one%20exception)\                       |
-| â¢[Is This Overkill?](#is%20this%20overkill)\                          |
-| â¢[Play Around!](#play%20around!)\                                     |
+| •[Comments](#comments)\                                               |
+| •[Warnings](#warnings)\                                               |
+| •[Taint](#taint)\                                                     |
+| •[Stuff Taint Doesn't Catch](#stuff%20taint%20doesn't%20catch)\       |
+| •[`use strict`](#use%20strict)\                                       |
+|   •[Strict vars](#strict%20vars)\                                     |
+|   •[Strict subs](#strict%20subs)\                                     |
+|   •[Want a Sub, Get a String](#want%20a%20sub,%20get%20a%20string)\   |
+|   •[The One Exception](#the%20one%20exception)\                       |
+| •[Is This Overkill?](#is%20this%20overkill)\                          |
+| •[Play Around!](#play%20around!)\                                     |
 +-----------------------------------------------------------------------+
 
 [Doing It Right the First Time]{#doing it right the first time}

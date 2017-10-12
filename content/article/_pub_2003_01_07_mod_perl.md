@@ -1,15 +1,15 @@
 {
-   "categories" : "web",
+   "draft" : null,
    "thumbnail" : null,
-   "description" : " It's desirable to avoid forking under mod_perl, as when you do, you are forking the entire Apache server - lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is mod_ssl, mod_rewrite,...",
-   "title" : "Improving mod_perl Sites' Performance: Part 6",
-   "image" : null,
    "authors" : [
       "stas-bekman"
    ],
-   "draft" : null,
-   "slug" : "/pub/2003/01/07/mod_perl",
+   "description" : " It's desirable to avoid forking under mod_perl, as when you do, you are forking the entire Apache server - lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is mod_ssl, mod_rewrite,...",
+   "image" : null,
    "date" : "2003-01-07T00:00:00-08:00",
+   "slug" : "/pub/2003/01/07/mod_perl",
+   "categories" : "web",
+   "title" : "Improving mod_perl Sites' Performance: Part 6",
    "tags" : [
       "mod-perl-fork"
    ]
@@ -268,7 +268,7 @@ So now the code would look like this:
           CORE::exit(0);
       }
 
-Note that `waitpid()` call is gone. The \$SIG{CHLD}Â =Â 'IGNORE';
+Note that `waitpid()` call is gone. The \$SIG{CHLD} = 'IGNORE';
 statement protects us from zombies, as explained above.
 
 Another, more portable but slightly more expensive solution, is to use a
@@ -582,7 +582,7 @@ Perl's `system()` is **not** the `system(3)` call (from the C-library).
 This is how the arguments to `system()` get interpreted. When there is a
 single argument to system(), it'll be checked for having shell
 metacharacters first (like `*`,`?`), and if there are any--Perl
-interpreter invokes a real shell program (/bin/shÂ -c on Unix platforms).
+interpreter invokes a real shell program (/bin/sh -c on Unix platforms).
 If you pass a list of arguments to system(), then they will be not
 checked for metacharacters, but split into words if required and passed
 directly to the C-level `execvp()` system call, which is more efficient.

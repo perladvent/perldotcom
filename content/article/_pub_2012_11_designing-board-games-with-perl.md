@@ -1,16 +1,16 @@
 {
    "title" : "Designing Board Games With Perl",
-   "thumbnail" : null,
+   "tags" : [],
    "categories" : "Games",
+   "slug" : "/pub/2012/11/designing-board-games-with-perl",
+   "date" : "2012-11-30T06:00:01-08:00",
+   "thumbnail" : null,
+   "draft" : null,
    "description" : "When JT Smith ported his web game The Lacuna Expanse to a board game, he used Perl to automate things. Here's how he did it.",
+   "image" : null,
    "authors" : [
       "jt-smith"
-   ],
-   "image" : null,
-   "draft" : null,
-   "date" : "2012-11-30T06:00:01-08:00",
-   "tags" : [],
-   "slug" : "/pub/2012/11/designing-board-games-with-perl"
+   ]
 }
 
 
@@ -260,7 +260,7 @@ web interface to do this, but you're a Perl programmer. Why do something
 manually if you can automate it?
 
 Besides that, it's a real-world example of interacting with a web
-service written completely in Perlâon both sides. Who wouldn't be
+service written completely in Perl—on both sides. Who wouldn't be
 interested in that?
 
 For The Impatient

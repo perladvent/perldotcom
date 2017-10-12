@@ -1,15 +1,15 @@
 {
-   "draft" : null,
-   "tags" : [],
-   "date" : "1998-08-27T00:00:00-08:00",
    "slug" : "/pub/1998/08/show/perl-photos",
+   "date" : "1998-08-27T00:00:00-08:00",
+   "categories" : "Community",
+   "tags" : [],
    "title" : "A Photographic Journal",
    "thumbnail" : null,
-   "categories" : "Community",
-   "description" : null,
+   "draft" : null,
    "authors" : [
       "joseph-f--ryan"
    ],
+   "description" : null,
    "image" : null
 }
 

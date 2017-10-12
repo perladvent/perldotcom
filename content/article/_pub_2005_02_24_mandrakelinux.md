@@ -1,6 +1,7 @@
 {
-   "draft" : null,
+   "categories" : "Linux",
    "slug" : "/pub/2005/02/24/mandrakelinux",
+   "date" : "2005-02-24T00:00:00-08:00",
    "tags" : [
       "mandrake",
       "mandrakelinux",
@@ -10,15 +11,14 @@
       "perl-pumpking",
       "rafael-garcia-suarez"
    ],
-   "date" : "2005-02-24T00:00:00-08:00",
-   "description" : " Perl programmers have a special reason for choosing Mandrakelinux as their desktop operating system. Mandrakelinux uses Perl for dozens of the graphical \"value added\" utilities included with the distribution, including much of the Mandrakelinux Control Center. I asked Mandrakelinux...",
-   "thumbnail" : "/images/_pub_2005_02_24_mandrakelinux/111-mandrakes_gui.gif",
-   "categories" : "Linux",
    "title" : "Perl and Mandrakelinux",
-   "image" : null,
    "authors" : [
       "mark-stosberg"
-   ]
+   ],
+   "image" : null,
+   "description" : " Perl programmers have a special reason for choosing Mandrakelinux as their desktop operating system. Mandrakelinux uses Perl for dozens of the graphical \"value added\" utilities included with the distribution, including much of the Mandrakelinux Control Center. I asked Mandrakelinux...",
+   "thumbnail" : "/images/_pub_2005_02_24_mandrakelinux/111-mandrakes_gui.gif",
+   "draft" : null
 }
 
 

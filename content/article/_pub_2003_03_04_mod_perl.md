@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2003/03/04/mod_perl",
+   "title" : "Improving mod_perl Sites' Performance: Part 8",
    "tags" : [
       "mod-perl-apache-performance"
    ],
-   "date" : "2003-03-04T00:00:00-08:00",
    "categories" : "web",
-   "thumbnail" : null,
+   "date" : "2003-03-04T00:00:00-08:00",
+   "slug" : "/pub/2003/03/04/mod_perl",
    "description" : " In this article we continue talking about how to optimize your site for performance without touching code, buying new hardware or telling casts. A few simple httpd.conf configuration changes can improve the performance tremendously. Choosing MinSpareServers, MaxSpareServers and StartServers...",
-   "title" : "Improving mod_perl Sites' Performance: Part 8",
    "image" : null,
    "authors" : [
       "stas-bekman"
-   ]
+   ],
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -425,7 +425,7 @@ This is a typical generated trace.
       stat("/home/httpd/docs", 
             {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
 
-Now we modify the `<Directory>` entry and add AllowOverrideÂ None, which
+Now we modify the `<Directory>` entry and add AllowOverride None, which
 among other things disables *.htaccess* files and will not try to open
 them.
 

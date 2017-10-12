@@ -1,19 +1,19 @@
 {
-   "draft" : null,
-   "date" : "1998-11-17T00:00:00-08:00",
+   "title" : "A Zero Cost Solution",
    "tags" : [
       "task-management-system",
       "win32"
    ],
    "slug" : "/pub/1998/11/article",
-   "title" : "A Zero Cost Solution",
+   "date" : "1998-11-17T00:00:00-08:00",
    "categories" : "Windows",
    "thumbnail" : null,
+   "draft" : null,
    "description" : " Creating a Task Tracking System For $0 in Licensing Fees, Hardware, and Software Costs CONEXANT (formerly Rockwell Semiconductor Systems) Supply Chain Management Planning and Execution Systems needed a way to keep track of in-house tasks. When associate departments requested...",
+   "image" : null,
    "authors" : [
       "sam-schulte"
-   ],
-   "image" : null
+   ]
 }
 
 

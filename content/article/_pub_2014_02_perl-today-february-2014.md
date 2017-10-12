@@ -1,16 +1,16 @@
 {
-   "draft" : null,
    "date" : "2014-02-10T06:00:00-08:00",
-   "tags" : [],
    "slug" : "/pub/2014/02/perl-today-february-2014",
-   "title" : "Perl Today (February 2014)",
-   "thumbnail" : null,
    "categories" : "Community",
-   "description" : "brian d foy explores the state of Perl in 2014 by soliciting opinions from various respected Perl programmers.",
+   "tags" : [],
+   "title" : "Perl Today (February 2014)",
    "authors" : [
       "brian-d-foy"
    ],
-   "image" : null
+   "description" : "brian d foy explores the state of Perl in 2014 by soliciting opinions from various respected Perl programmers.",
+   "image" : null,
+   "draft" : null,
+   "thumbnail" : null
 }
 
 
@@ -219,25 +219,25 @@ object system for Perl 5. He's working on adding this to the Perl core
 language.*
 
 Perl has had object oriented capabilities since the first release of
-Perl 5 almost 20 years ago. Since then, bestÂ practices have come and
+Perl 5 almost 20 years ago. Since then, best practices have come and
 gone, along with a sea of modules on the CPAN to help programmers
-implement those bestÂ practices. Although many OO styles still abound,
+implement those best practices. Although many OO styles still abound,
 the current [Modern
 Perl](http://www.onyxneon.com/books/modern_perl/index.html) movement has
-come to settle around theÂ style of OO implemented by the
+come to settle around the style of OO implemented by the
 [Moose](http://moose.perl.org/) module.
 
 Moose itself is based heavily on the OO features that have been designed
-for [Perl 6](http://perl6.org), along with input from severalÂ other
+for [Perl 6](http://perl6.org), along with input from several other
 languages including LISP, Ruby, Smalltalk and others. Moose brings not
-only support for basic class based OOÂ programming, but it also brings
+only support for basic class based OO programming, but it also brings
 deep meta programming capabilities, and the idea of "Roles" to Perl OO
-programming.Â Roles - which were originally derived from the Smalltalk
-community where they were called "Traits" - provide aÂ means of code
+programming. Roles - which were originally derived from the Smalltalk
+community where they were called "Traits" - provide a means of code
 re-use similar to mix-ins but with an added degree of compositional
-safety through the use ofÂ conflict detection. Moose was originally
+safety through the use of conflict detection. Moose was originally
 released in 2006 and in the past 7 years more 2,100 CPAN modules have
-beenÂ released which depend upon it.
+been released which depend upon it.
 
 ------------------------------------------------------------------------
 
@@ -320,18 +320,18 @@ be able to flush all the bad stuff and be re-born.
 *\[from brian: since Andrew is active in the Russian Perl community, I
 wanted to publish his response in Russian too.\]*
 
-Ð¡ÐµÐ³Ð¾Ð´Ð½Ñ Ð¿ÐµÑÐ» Ð½Ð°ÑÐ¾Ð´Ð¸ÑÑÑ Ð² ÑÐ°ÐºÐ¾Ð¼ ÑÐ¾ÑÑÐ¾ÑÐ½Ð¸Ð¸, ÐºÐ¾Ð³Ð´Ð° Ð¾Ð½ ÑÐ¶Ðµ Ð½Ðµ ÐµÐ´Ð¸Ð½ÑÑÐ²ÐµÐ½Ð½ÑÐ¹
-ÑÐ·ÑÐº Ð²Ð¾ ÐÑÐµÐ»ÐµÐ½Ð½Ð¾Ð¹, Ð¿Ð¾ÑÑÐ¾Ð¼Ñ ÐµÐ¼Ñ Ð¼Ð¾Ð¶ÐµÑ ÐºÐ°Ð·Ð°ÑÑÑÑ, ÑÑÐ¾ ÑÐ°Ð·ÑÐ°Ð±Ð¾ÑÑÐ¸ÐºÐ¸ Ð±Ð¾Ð»ÑÑÐµ
-Ð½Ðµ Ð²ÑÐ±Ð¸ÑÐ°ÑÑ ÐµÐ³Ð¾. Ð­ÑÐ¾, Ñ Ð¾Ð´Ð½Ð¾Ð¹ ÑÑÐ¾ÑÐ¾Ð½Ñ, Ð¾ÑÐµÐ½Ñ Ð¿ÑÐ¸ÑÑÐ½Ð¾Ðµ Ð²ÑÐµÐ¼Ñ Ð´Ð»Ñ ÑÐ°Ð·Ð²Ð¸ÑÐ¸Ñ
-ÑÐ·ÑÐºÐ°, Ð½Ð¾, Ñ Ð´ÑÑÐ³Ð¾Ð¹ ÑÑÐ¾ÑÐ¾Ð½Ñ, Ð¿ÐµÑÐ» ÑÑÑÐ°Ð´Ð°ÐµÑ Ð¾Ñ ÑÐ¾Ð³Ð¾ ÑÐ°ÐºÑÐ°, ÑÑÐ¾
-ÑÐ°Ð·ÑÐ°Ð±Ð¾ÑÑÐ¸ÐºÐ¸ ÑÐ·ÑÐºÐ° Ð½Ðµ Ð¾ÑÑÑÐ°ÑÑ Ð¾ÑÐ²ÐµÑÑÑÐ²ÐµÐ½Ð½Ð¾ÑÑÐ¸ Ð·Ð° Ð¿Ð¾Ð´Ð´ÐµÑÐ¶Ð°Ð½Ð¸Ðµ ÑÐ²Ð¾ÐµÐ³Ð¾
-Ð¿ÑÐ¾Ð´ÑÐºÑÐ° ÐºÐ°ÑÐµÑÑÐ²ÐµÐ½Ð½ÑÐ¼, ÑÐ¾Ð²Ð¼ÐµÑÑÐ¸Ð¼ÑÐ¼ Ð¸ Ð¾ÑÐ²ÐµÑÐ°ÑÑÐ¸Ð¼ Ð½ÑÐ¶Ð´Ð°Ð¼ ÑÐ¾Ð²ÑÐµÐ¼ÐµÐ½Ð½Ð¾Ð³Ð¾
-Ð¿ÑÐ¾Ð³ÑÐ°Ð¼Ð¼Ð¸ÑÐ¾Ð²Ð°Ð½Ð¸Ñ. ÐÐµÑÐ» ÑÑÐ¾Ð»ÐºÐ½ÑÐ»ÑÑ Ñ Ð¾Ð¿Ð°ÑÐ½Ð¾ÑÑÑÑ, Ð¸ÑÑÐ¾Ð´ÑÑÐµÐ¹ Ð¸Ð· ÑÐ°Ð¼Ð¾Ð³Ð¾
-ÑÐµÐ±Ñ: Ð¼Ñ Ð²Ð¸Ð´ÐµÐ»Ð¸ Ð¼Ð½Ð¾Ð³Ð¾ ÑÐ°Ð·Ð´ÑÐ°Ð¶Ð°ÑÑÐ¸Ñ Ð½ÐµÑÐ¾Ð²Ð¼ÐµÑÑÐ¸Ð¼Ð¾ÑÑÐµÐ¹, Ð²Ð²ÐµÐ´ÐµÐ½Ð½ÑÑ Ð²
-Ð¿Ð¾ÑÐ»ÐµÐ´Ð½Ð¸Ñ ÑÐµÐ»Ð¸Ð·Ð°Ñ, Ð½Ðµ ÑÑÐ¸ÑÐ°Ñ Ð·Ð°Ð´ÐµÑÐ¶ÐºÑ Ñ Perl 6, ÐºÐ¾ÑÐ¾ÑÐ°Ñ ÑÐ´ÐµÐ»Ð°Ð»Ð° Ð¿ÐµÑÐ»
-Ð¼ÐµÐ½ÐµÐµ ÐºÐ¾Ð½ÐºÑÑÐµÐ½ÑÐ½Ð¾ÑÐ¿Ð¾ÑÐ¾Ð±Ð½ÑÐ¼. Ð¢Ð°Ðº Ð¸Ð»Ð¸ Ð¸Ð½Ð°ÑÐµ, ÑÐµÐ¹ÑÐ°Ñ Ð¿ÐµÑÐ» Ð½Ð°ÑÐ¾Ð´Ð¸ÑÑÑ Ð² Ð¾ÑÐµÐ½Ñ
-ÑÐ´Ð¾Ð±Ð½Ð¾Ð¼ Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ð¸ Ð¸ ÑÐ¿Ð¾ÑÐ¾Ð±ÐµÐ½ ÑÐ±ÑÐ¾ÑÐ¸ÑÑ Ð²ÑÐµ Ð¿Ð»Ð¾ÑÐ¾Ðµ Ð¸ Ð¿ÐµÑÐµÑÐ¾Ð´Ð¸ÑÑÑÑ. ÐÑ
-Ð´Ð¾Ð»Ð¶Ð½Ñ Ð²Ð¾ÑÐ¿Ð¾Ð»ÑÐ·Ð¾Ð²Ð°ÑÑÑÑ ÑÑÐ¸Ð¼ ÑÐ°Ð½ÑÐ¾Ð¼.
+Сегодня перл находится в таком состоянии, когда он уже не единственный
+язык во Вселенной, поэтому ему может казаться, что разработчики больше
+не выбирают его. Это, с одной стороны, очень приятное время для развития
+языка, но, с другой стороны, перл страдает от того факта, что
+разработчики языка не ощущают ответственности за поддержание своего
+продукта качественным, совместимым и отвечающим нуждам современного
+программирования. Перл столкнулся с опасностью, исходящей из самого
+себя: мы видели много раздражающих несовместимостей, введенных в
+последних релизах, не считая задержку с Perl 6, которая сделала перл
+менее конкурентноспособным. Так или иначе, сейчас перл находится в очень
+удобном положении и способен сбросить все плохое и переродиться. Мы
+должны воспользоваться этим шансом.
 
 ------------------------------------------------------------------------
 

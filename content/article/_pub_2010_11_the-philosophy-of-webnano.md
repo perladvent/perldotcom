@@ -1,16 +1,16 @@
 {
    "title" : "The Philosophy of WebNano",
-   "thumbnail" : null,
+   "tags" : [],
+   "date" : "2010-11-23T19:31:41-08:00",
+   "slug" : "/pub/2010/11/the-philosophy-of-webnano",
    "categories" : "Web",
+   "image" : null,
    "description" : "Why do so many web applications have the same components, yet so few actually share those components as libraries?  Perhaps the philosophy of building web frameworks is the culprit.  Zbigniew Lukasiak's WebNano is an attempt to solve that problem.",
    "authors" : [
       "zbigniew-lukasiak"
    ],
-   "image" : null,
    "draft" : null,
-   "tags" : [],
-   "date" : "2010-11-23T19:31:41-08:00",
-   "slug" : "/pub/2010/11/the-philosophy-of-webnano"
+   "thumbnail" : null
 }
 
 
@@ -37,7 +37,7 @@ that.
 
 Probably the most popular Perl web framework is
 [Catalyst](http://catalystframework.org/). It is also the web framework
-I know the bestâthis is why I chose it as the point of reference for my
+I know the best—this is why I chose it as the point of reference for my
 analysis.
 
 **Controllers in request scope**
@@ -220,7 +220,7 @@ I was very tempted to use Moose in WebNano. Moose generates some
 significant startup overhead, though for web applications running in
 persistent environments this does not matter much because that overhead
 amortizes over many requests. If you run your application as CGI, this
-startup time becomes important. Even if CGI is perceived as passÃ© now,
+startup time becomes important. Even if CGI is perceived as passé now,
 it is still the easiest way to deploy web applications and (especially
 with the most widespread support from hosting companies). Fortunately,
 using
@@ -246,7 +246,7 @@ similar product
 [Catalyst::Example::Controller::InstantCRUD](http://search.cpan.org/~wreis/Catalyst-Example-InstantCRUD-0.037/lib/Catalyst/Example/Controller/InstantCRUD.pm),
 there aren't many differences. As you might predict, the methods have
 one less parameter (`$c`). Inheritable templates are also nice for
-deploymentâyou don't need to write your own templates to see it working,
+deployment—you don't need to write your own templates to see it working,
 and later you can easily override the defaults. There is a bit more
 dispatching code, but thanks to that, the code retrieves the result
 object in only one place. In Catalyst this is possible with chained
@@ -260,7 +260,7 @@ how little I missed the rich Catalyst features, even though WebNano has
 still so little code. I think it is a promising start.
 
 Recently I discovered echoes of many of my design choices in the
-publications by the Google testing guru [MiÅ¡ko
+publications by the Google testing guru [Miško
 Hevery](http://misko.hevery.com/). My point of departure for the
 considerations above were general rules such as decoupling and
 encapsulation, where his concern is testability. The resulting [design

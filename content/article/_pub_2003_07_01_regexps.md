@@ -1,18 +1,18 @@
 {
-   "image" : null,
-   "authors" : [
-      "simon-cozens"
-   ],
-   "categories" : "Regular Expressions",
-   "thumbnail" : null,
-   "description" : " In the previous article, we looked at some of the more intermediate features of regular expressions, including multiline matching, quoting, and interpolation. This time, we're going to look at more-advanced features. We'll also look at some modules that can...",
-   "title" : "Power Regexps, Part II",
    "slug" : "/pub/2003/07/01/regexps",
+   "date" : "2003-07-01T00:00:00-08:00",
+   "categories" : "Regular Expressions",
    "tags" : [
       "regexps-regular-expressions"
    ],
-   "date" : "2003-07-01T00:00:00-08:00",
-   "draft" : null
+   "title" : "Power Regexps, Part II",
+   "thumbnail" : null,
+   "draft" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
+   "description" : " In the previous article, we looked at some of the more intermediate features of regular expressions, including multiline matching, quoting, and interpolation. This time, we're going to look at more-advanced features. We'll also look at some modules that can...",
+   "image" : null
 }
 
 

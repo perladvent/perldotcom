@@ -1,20 +1,20 @@
 {
-   "title" : "Content Management with Bricolage",
-   "categories" : "web",
-   "thumbnail" : "/images/_pub_2004_08_27_bricolage/111-bricolage.gif",
-   "description" : " If you've ever had to manage a web site with tens of thousands of pages of content where many people need to be able to update that content, you've no doubt recognized the need for a content management system...",
    "authors" : [
       "david-wheeler"
    ],
    "image" : null,
+   "description" : " If you've ever had to manage a web site with tens of thousands of pages of content where many people need to be able to update that content, you've no doubt recognized the need for a content management system...",
+   "thumbnail" : "/images/_pub_2004_08_27_bricolage/111-bricolage.gif",
    "draft" : null,
+   "date" : "2004-08-27T00:00:00-08:00",
+   "slug" : "/pub/2004/08/27/bricolage",
+   "categories" : "web",
+   "title" : "Content Management with Bricolage",
    "tags" : [
       "bricolage",
       "cms",
       "content-management"
-   ],
-   "date" : "2004-08-27T00:00:00-08:00",
-   "slug" : "/pub/2004/08/27/bricolage"
+   ]
 }
 
 
@@ -287,7 +287,7 @@ categories in which to file documents.*
 #### Meaningful URLs
 
 In addition to categories, Bricolage document URLs can include the year,
-month, day of the month, and/or a slug â which is a short string
+month, day of the month, and/or a slug — which is a short string
 describing the document, such as "bricolage-intro." Combined, these
 pieces of metadata generate meaningful URLs, such as
 `/features/perl/2004/17/26/bricolage-intro` for a Perl feature
@@ -328,8 +328,8 @@ standard editorial processes.*
 
 You can create as many workflows as your organization requires, each
 with as many desks as you require. Desks can be shared across workflows
-â if you need certain parties to assume similar responsibilities in
-different workflows â and you can set up permissions such that certain
+— if you need certain parties to assume similar responsibilities in
+different workflows — and you can set up permissions such that certain
 users have access only to the documents in specific workflows and on
 specific desks. In short, you have a lot of flexibility to closely model
 the actual workflow in your organization, so that working with Bricolage
@@ -476,8 +476,8 @@ the SOAP server, of course. At the access level, Bricolage provides a
 comprehensive permissions system to ensure that users get access only to
 the content and administrative objects relevant to getting their work
 done. And because Bricolage does not serve content to your final
-audience â it generally runs as a back-office application and often
-behind a secure firewall â your content library remains safe in
+audience — it generally runs as a back-office application and often
+behind a secure firewall — your content library remains safe in
 Bricolage even if the security of your front-end servers becomes
 compromised.
 
@@ -518,7 +518,7 @@ Bricolage"). So who uses it?
     -   [Macworld Magazine](http://www.macworld.com/)
     -   [2: The Magazine for Couples](http://www.2magazine.com/)
     -   [PIRT](http://www.thepirtgroup.com/)
-    -   [Jornal de NotÃ­cias](http://jn.sapo.pt/)
+    -   [Jornal de Notícias](http://jn.sapo.pt/)
     -   [POTS](http://www.pots.com.tw/)
 -   Web Publishing
     -   [Salon.com](http://www.salon.com/)

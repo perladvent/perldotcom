@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
+   "description" : " Notes Meta-Information Brief Update Module Warnings POD Changes Race conditions in statndard Perl utilities open Calls not checked in perldoc Big Flame Wars Chip and Jarkko Quit Templates in pack and unpack use strict in the core modules Various...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
    "title" : "This Week on p5p 2000/03/05",
-   "categories" : "community",
-   "thumbnail" : null,
-   "description" : " Notes Meta-Information Brief Update Module Warnings POD Changes Race conditions in statndard Perl utilities open Calls not checked in perldoc Big Flame Wars Chip and Jarkko Quit Templates in pack and unpack use strict in the core modules Various...",
-   "date" : "2000-03-05T00:00:00-08:00",
    "tags" : [],
-   "slug" : "/pub/2000/03/p5pdigest/THISWEEK-20000305",
-   "draft" : null
+   "categories" : "community",
+   "date" : "2000-03-05T00:00:00-08:00",
+   "slug" : "/pub/2000/03/p5pdigest/THISWEEK-20000305"
 }
 
 

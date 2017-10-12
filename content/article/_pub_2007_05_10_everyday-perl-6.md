@@ -1,21 +1,21 @@
 {
-   "description" : " Perl 6 will soon be here. How will programming in Perl 6 be different from programming in Perl 5 for your average Perl programmer? The answer is: very different yet very much the same. A Perl 6 program viewed...",
-   "categories" : "perl-6",
-   "thumbnail" : null,
-   "title" : "Everyday Perl 6",
    "image" : null,
+   "description" : " Perl 6 will soon be here. How will programming in Perl 6 be different from programming in Perl 5 for your average Perl programmer? The answer is: very different yet very much the same. A Perl 6 program viewed...",
    "authors" : [
       "jonathan-scott-duff"
    ],
    "draft" : null,
-   "slug" : "/pub/2007/05/10/everyday-perl-6",
+   "thumbnail" : null,
+   "title" : "Everyday Perl 6",
    "tags" : [
       "parrot",
       "perl-5",
       "perl-6",
       "pugs"
    ],
-   "date" : "2007-05-10T00:00:00-08:00"
+   "categories" : "perl-6",
+   "date" : "2007-05-10T00:00:00-08:00",
+   "slug" : "/pub/2007/05/10/everyday-perl-6"
 }
 
 

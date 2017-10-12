@@ -1,13 +1,5 @@
 {
-   "image" : null,
-   "authors" : [
-      "geoffrey-young"
-   ],
-   "description" : " Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time...",
-   "thumbnail" : "/images/_pub_2003_07_08_mod_perl/111-modperl_auth.gif",
-   "categories" : "web",
    "title" : "Integrating mod_perl with Apache 2.1 Authentication",
-   "slug" : "/pub/2003/07/08/mod_perl",
    "tags" : [
       "apache-2",
       "apache-authhandler",
@@ -15,8 +7,16 @@
       "geoffrey-young",
       "mod-perl-2"
    ],
+   "categories" : "web",
+   "slug" : "/pub/2003/07/08/mod_perl",
    "date" : "2003-07-08T00:00:00-08:00",
-   "draft" : null
+   "thumbnail" : "/images/_pub_2003_07_08_mod_perl/111-modperl_auth.gif",
+   "draft" : null,
+   "description" : " Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time...",
+   "image" : null,
+   "authors" : [
+      "geoffrey-young"
+   ]
 }
 
 
@@ -29,7 +29,7 @@ Some time ago I became intrigued with [Digest
 authentication](ftp://ftp.isi.edu/in-notes/rfc2617.txt), which uses the
 same general mechanism as the familiar Basic authentication scheme but
 offers significantly more password security without requiring an SSL
-connection. At the time it was really just an academic interestâwhile
+connection. At the time it was really just an academic interest—while
 some browsers supported Digest authentication, many of the more popular
 ones did not. Furthermore, even though the standard Apache distribution
 came with modules to support both Basic and Digest authentication,
@@ -45,7 +45,7 @@ Digest authentication, and my interest spawned what is now
 a module that gives mod\_perl 1.0 developers an API for Digest
 authentication that is very similar to the Basic API that mod\_perl
 natively supports. The one lingering problem is probably not
-surprisingâMicrosoft Internet Explorer. As it turns out, using the
+surprising—Microsoft Internet Explorer. As it turns out, using the
 Digest scheme with MSIE requires a fully RFC-compliant Digest
 implementation, and Apache::AuthDigest was patterned after Apache 1.3's
 `mod_digest.c`, which is sufficient for most browsers but not MSIE.
@@ -79,7 +79,7 @@ CVS. Instructions for obtaining the sources for both can be found
 [here](http://perl.apache.org/docs/2.0/user/install/install.html#Getting_Bleeding_Edge_CVS_Sources).
 When compiling Apache, keep in mind that the code presented here only
 works under the [prefork MPM](http://httpd.apache.org/docs-2.0/mpm.html)
-â making it thread-safe is the next step in the adventure.
+— making it thread-safe is the next step in the adventure.
 
 ### Authentication Basics
 
@@ -169,9 +169,9 @@ authentication providers.
 ### Authentication Providers in Apache 2.1
 
 While in Apache 2.0 module writers were responsible for a large portion
-of the authentication logicâcalling routines to parse and set
+of the authentication logic—calling routines to parse and set
 authentication headers, digging out the user from the request record,
-and so on â the new authentication mechanism in Apache 2.1 delegates all
+and so on — the new authentication mechanism in Apache 2.1 delegates all
 HTTP and RFC logic out to two standard modules. `mod_auth_basic` handles
 Basic authentication and is enabled in the default Apache build. The
 standard `mod_auth_digest`, not enabled by default, handles the very
@@ -259,7 +259,7 @@ in the development tree. Unfortunately, until the provider mechanism is
 backported to Apache 2.0, or an official Apache 2.2 release, it is
 unlikely that authentication providers will be supported by core
 mod\_perl 2.0. However, this does not mean that mod\_perl developers are
-out of luckâby coupling mod\_perl's native directive handler API with a
+out of luck—by coupling mod\_perl's native directive handler API with a
 bit of XS, we can open up the new Apache provider API to Perl with ease.
 The
 [Apache::AuthenHook](http://search.cpan.org/search?query=Apache::AuthenHook)
@@ -277,7 +277,7 @@ call to the official Apache API function `ap_register_provider`.
 
 Usually, mod\_perl provides direct access to the Apache C API for us.
 For instance, a Perl call to `$r->get_basic_auth_pw()` is proxied off to
-`ap_get_basic_auth_pw`âbut in this case `ap_register_provider` only
+`ap_get_basic_auth_pw`—but in this case `ap_register_provider` only
 exists in Apache 2.1 and, thus, is not supported by mod\_perl 2.0.
 Therefore, part of what Apache::AuthenHook needs to do is open up this
 API to Perl. One of the great things about mod\_perl is the ease at
@@ -323,7 +323,7 @@ Our module opens with `AuthenHook.xs`, which is used to expose
 Let's start at the top. Any XS module you write will include the first
 three header files, while any mod\_perl XS extension will require at
 least `#include "mod_perl.h"`. The remaining two included header files
-are specific to what we are trying to accomplishâ`ap_provider.h` defines
+are specific to what we are trying to accomplish—`ap_provider.h` defines
 the `ap_register_provider` function, while `mod_auth.h` defines the
 `AUTHN_PROVIDER_GROUP` constant we will be using, as well as the
 `authn_provider` struct that holds our callbacks.
@@ -390,7 +390,7 @@ My::BasicProvider, followed by the default file provider if
 My::BasicProvider declines the request.
 
 A nice side effect to this is that through our implementation we will be
-giving mod\_perl developers a feature they have never had beforeâthe
+giving mod\_perl developers a feature they have never had before—the
 ability to interlace Perl handlers and C handlers within the same phase.
 
     AuthDigestProvider My::DigestProvider file My::OtherDigestProvider
@@ -670,7 +670,7 @@ than `check_password`.
     }
 
 How does this translate into a Perl API? It is surprisingly simple. As
-it turns out, the name `check_password` is significantâfor Basic
+it turns out, the name `check_password` is significant—for Basic
 authentication, the provider is expected to take steps to see if the
 incoming username and password match the username and password stored on
 the server back-end. For Digest authentication, as the name
@@ -714,10 +714,10 @@ then sent back to the server via the `Authorization` header.
 
 The server, of course, needs to have its own copy of the user
 credentials around for comparison. Now, because the client and server
-have had (at various points in time) access to the same datasetâthe
+have had (at various points in time) access to the same dataset—the
 user-supplied username and password, as well as the request URI,
 authentication realm, and other information shared in the HTTP
-headersâboth ought to be able to generate the same MD5 hash. If the hash
+headers—both ought to be able to generate the same MD5 hash. If the hash
 generated by the server does not match the one sent by the client in the
 `Authorization` header, the difference can be attributed to the one
 piece of information not mutually agreed upon through the HTTP request:
@@ -824,7 +824,7 @@ snippet from one of the tests.
     ok $response->code == 200;
 
 When we plan the tests, we first check for the existence of
-`mod_auth_digest`âboth `mod_auth_basic` and `mod_auth_digest` can be
+`mod_auth_digest`—both `mod_auth_basic` and `mod_auth_digest` can be
 enabled or disabled for any given installation, so we need to check for
 them where appropriate. Passing the username and password credentials is
 pretty straightforward, using the `username` and `password` keys after
@@ -848,7 +848,7 @@ One final note about our tests will apply to anyone writing a mod\_perl
 XS extension. Instead of using `extra.conf.in` to configure Apache, we
 used `extra.last.conf.in`. The difference between the two is that
 `extra.last.conf.in` is guaranteed to be loaded the last in the
-configuration orderâif our `PerlLoadModule` directive is processed
+configuration order—if our `PerlLoadModule` directive is processed
 before mod\_perl gets the chance to add the proper `blib` entries,
 nothing will work, so ensuring our configuration is loaded after
 everything else is in place is important.
@@ -906,7 +906,7 @@ deserves a place on your bookshelf.
 
 Many thanks to Stas Bekman and Philippe Chiasson for their feedback and
 review of the several patches to mod\_perl core that were required for
-the code in this article, as well as to JÃ¶rg Walter, who was kind enough
+the code in this article, as well as to Jörg Walter, who was kind enough
 to take the time to review this article and give valuable feedback.
 
 

@@ -4,19 +4,19 @@
       "doug-sheppard"
    ],
    "image" : null,
-   "title" : "A Beginner's Introduction to Perl 5.10",
    "description" : "First, a Little Sales Pitch Editor's note: this series is based on Doug Sheppard's Beginner's Introduction to Perl. A Beginner's Introduction to Files and Strings with Perl 5.10 explains how to use files and strings, and A Beginner's Introduction to...",
-   "categories" : "Tutorials",
    "thumbnail" : null,
+   "draft" : null,
+   "categories" : "Tutorials",
+   "slug" : "/pub/2008/04/23/a-beginners-introduction-to-perl-510",
+   "date" : "2008-04-23T00:00:00-08:00",
    "tags" : [
       "novice-programmers",
       "perl-5-10",
       "perl-for-beginners",
       "perl-tutorial"
    ],
-   "date" : "2008-04-23T00:00:00-08:00",
-   "slug" : "/pub/2008/04/23/a-beginners-introduction-to-perl-510",
-   "draft" : null
+   "title" : "A Beginner's Introduction to Perl 5.10"
 }
 
 

@@ -1,14 +1,8 @@
 {
-   "description" : " In my previous article, I provided a guided tour of the Bricolage installation process. If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as Mr. Popeil used to...",
-   "categories" : "Web",
-   "thumbnail" : null,
-   "title" : "Bricolage Configuration Directives",
-   "image" : null,
-   "authors" : [
-      "david-wheeler"
-   ],
-   "draft" : null,
    "slug" : "/pub/2005/01/06/bricolage_configuration",
+   "date" : "2005-01-06T00:00:00-08:00",
+   "categories" : "Web",
+   "title" : "Bricolage Configuration Directives",
    "tags" : [
       "bricolage",
       "bricolage-configuration",
@@ -18,7 +12,13 @@
       "cpan-installation",
       "mod-perl-installation"
    ],
-   "date" : "2005-01-06T00:00:00-08:00"
+   "draft" : null,
+   "thumbnail" : null,
+   "authors" : [
+      "david-wheeler"
+   ],
+   "image" : null,
+   "description" : " In my previous article, I provided a guided tour of the Bricolage installation process. If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as Mr. Popeil used to..."
 }
 
 
@@ -46,11 +46,11 @@ Bricolage.
 
 ### [Configuration Format]{#configurationformat}
 
-The format of *bricolage.conf*, derived from the [âPerl
-Cookbookâ](http://www.oreilly.com/catalog/cookbook/ "Perl Cookbook in the
+The format of *bricolage.conf*, derived from the [“Perl
+Cookbook”](http://www.oreilly.com/catalog/cookbook/ "Perl Cookbook in the
 O'Reilly Catalog"), is quite simple. A directive appears on a single
 line, followed by a space, an equal sign, and then the value. Anything
-after a pound sign (â\#â) is a comment. Typical entries look like this:
+after a pound sign (“\#”) is a comment. Typical entries look like this:
 
     APACHE_BIN   = /usr/local/apache/bin/httpd
     APACHE_CONF  = /usr/local/bricolage/conf/httpd.conf
@@ -61,8 +61,8 @@ after a pound sign (â\#â) is a comment. Typical entries look like this
 Most *bricolage.conf* configuration options are one of two types:
 Boolean values or strings. A Boolean configuration directive can be
 either enabled or disabled, but you have several ways in which to do so.
-To enable a Boolean directive, simply set its value to âYesâ, âOnâ, or
-â1â (the number one). To disable it, set it to âNoâ, âOffâ, or â0â
+To enable a Boolean directive, simply set its value to “Yes”, “On”, or
+“1” (the number one). To disable it, set it to “No”, “Off”, or “0”
 (zero). String values follow the equal sign. They can be as long as
 necessary, but cannot break across lines.
 
@@ -111,8 +111,8 @@ it's worth it to have a look to see if you need to tweak any of them:
 :   This directive turns on SSL support. You must have either `mod_ssl`
     or Apache-SSL installed and properly configured in your Apache
     server. Not quite a Boolean configuration directive, the possible
-    values for `SSL_ENABEL` are âNoâ (or âOffâ or â0â \[zero\]),
-    âmod\_sslâ, or âapache-sslâ. SSL is a useful feature for keeping
+    values for `SSL_ENABEL` are “No” (or “Off” or “0” \[zero\]),
+    “mod\_ssl”, or “apache-ssl”. SSL is a useful feature for keeping
     communications encrypted between the server and users' browsers.
 
 [`ALWAYS_USE_SSL`]{#alwaysusessl}
@@ -120,7 +120,7 @@ it's worth it to have a look to see if you need to tweak any of them:
 :   By default, an SSL-enabled Bricolage installation uses SSL only for
     logging in to Bricolage and in the user profile (where users can
     change their passwords). Users can elect to encrypt all
-    communications by checking the âAlways use SSLâ checkbox when
+    communications by checking the “Always use SSL” checkbox when
     logging in, but some security policies may require the encryption of
     *all* communications. In such cases, enable this Boolean directive
     to force the encryption of *all* communications between the
@@ -147,7 +147,7 @@ it's worth it to have a look to see if you need to tweak any of them:
     `NameVirtualHost` directive. Set it to the IP address on which the
     Bricolage Apache server will listen for requests. If you have only
     one IP address on your server, the simplest thing to do is to leave
-    this directive set to â\*â, which applies to all IP addresses.
+    this directive set to “\*”, which applies to all IP addresses.
     Again, Bricolage uses this directive in its dynamic configuration of
     Apache.
 
@@ -156,7 +156,7 @@ it's worth it to have a look to see if you need to tweak any of them:
 :   This is the virtual host name under which to run Bricolage.
     Bricolage requires a full host or virtual host to run and will use
     this directive to configure the virtual host dynamically. Leave it
-    set to â\_default\_â to use the default host name set in your
+    set to “\_default\_” to use the default host name set in your
     *httpd.conf* file.
 
 [`MANUAL_APACHE`]{#manualapache}
@@ -195,7 +195,7 @@ it's worth it to have a look to see if you need to tweak any of them:
 
 :   These directives configure the system user and group used by
     Bricolage. They should contain the same value as the `User` and
-    `Group` *httpd.conf* directives, usually ânobodyâ or âwwwâ. Any
+    `Group` *httpd.conf* directives, usually “nobody” or “www”. Any
     files written to the file system by Bricolage will be owned by this
     user and group.
 
@@ -211,10 +211,10 @@ change down the line.
 [`DB_NAME`]{#dbname}
 
 :   The name of the database that stores Bricolage's data. The installer
-    will set this for you. The default value, âbricâ, works well in most
+    will set this for you. The default value, “bric”, works well in most
     situations, but it might be set to a different name if you entered
     one during installation, perhaps because you already had another
-    database named âbricâ; Why would you want to do that? Perhaps you
+    database named “bric”; Why would you want to do that? Perhaps you
     have multiple Bricolage installations on the same host. Another
     reason it might be different is that your ISP provides you with a
     single database that they name according to their own naming
@@ -248,7 +248,7 @@ change down the line.
 
 :   This is the host name of your PostgreSQL server. If it's on the same
     host as your Bricolage server, it will likely be commented out,
-    thereby letting Bricolage default to âlocalhostâ. Otherwise, it will
+    thereby letting Bricolage default to “localhost”. Otherwise, it will
     be a different host name or IP address. Change this setting if ever
     your PostgreSQL server moves to a different host or has its host
     name or IP address changed.
@@ -277,7 +277,7 @@ Bricolage continues to operate correctly.
 [`TEMP_DIR`]{#tempdir}
 
 :   Bricolage creates several temporary files as it runs, for its cache,
-    user sessions, and the like. If you selected the âmultiâ option when
+    user sessions, and the like. If you selected the “multi” option when
     installing Bricolage, this directive will point to a directory named
     *tmp* under your Bricolage root. Otherwise, it will point to your
     system's global *tmp* directory.
@@ -386,7 +386,7 @@ directives and even to review their settings periodically.
 
 :   This directive specifies a minimum user name length. Each user must
     have a user name of at least this number of characters. The default,
-    â5â, is generally adequate, and allows the default âadminâ user name
+    “5”, is generally adequate, and allows the default “admin” user name
     to work properly.
 
 [`PASSWD_LENGTH`]{#passwdlength}
@@ -394,7 +394,7 @@ directives and even to review their settings periodically.
 :   This directive corresponds to the `LOGIN_LENGTH` directive, but
     applies to passwords. The password length in Bricolage is unlimited,
     but it's generally a good idea to ensure that they all contain a
-    minimum number of characters. The default is â5â.
+    minimum number of characters. The default is “5”.
 
 ### [Distribution Configuration]{#distributionconfiguration}
 
@@ -419,7 +419,7 @@ distribution server.
 [`DIST_ATTEMPTS`]{#distattempts}
 
 :   Bricolage distributes files via file system copy, FTP, SFTP, or
-    WebDAVâdepending on your destination configuration. We all know that
+    WebDAV—depending on your destination configuration. We all know that
     failures can occasionally occur. Bricolage will attempt to
     distribute a file after a failed distribution and will do it
     multiple times. Set the `DIST_ATTEMPTS` directive to the number of
@@ -446,8 +446,8 @@ distribution server.
 [`DEF_MEDIA_TYPE`]{#defmediatype}
 
 :   This string directive identifies the default media type (also called
-    a âMIME typeâ) of files for which Bricolage cannot determine the
-    media type. The default value, âtext/htmlâ, covers a lot of typical
+    a “MIME type”) of files for which Bricolage cannot determine the
+    media type. The default value, “text/html”, covers a lot of typical
     files in a Web content management environment, such as *.php* or
     *.jsp* files. To add new types for Bricolage to recognize, use the
     media type manager in the UI.
@@ -532,7 +532,7 @@ few things before it can send the alerts.
 [`SMTP_SERVER`]{#smtpserver}
 
 :   Bricolage uses an SMTP server to send alert email messages. The
-    default value for this directive, âlocalhostâ, is fine if you use a
+    default value for this directive, “localhost”, is fine if you use a
     Unix system with sendmail (or some other SMTP server) running
     locally. If your organization has a dedicated SMTP server or if your
     Bricolage host has none of its own, change the value of this
@@ -541,8 +541,8 @@ few things before it can send the alerts.
 [`ALERT_FROM`]{#alertfrom}
 
 :   Set this directive to an email address that you want to appear in
-    the âFromâ header of alert emails. I typically set it to something
-    like âBricolage Admin &lt;www@example.com&gt;â, but use whatever is
+    the “From” header of alert emails. I typically set it to something
+    like “Bricolage Admin &lt;www@example.com&gt;”, but use whatever is
     appropriate for your organization. If your users are inclined to
     reply to alert emails, you may want to set up a special `ALERT_FROM`
     email address that has an auto-responder to let the user know that
@@ -551,8 +551,8 @@ few things before it can send the alerts.
 [`ALERT_TO_METH`]{#alerttometh}
 
 :   This string directive indicates which header to use for specifying
-    alert recipients in email alerts. The possible values are âToâ and
-    âBccâ.
+    alert recipients in email alerts. The possible values are “To” and
+    “Bcc”.
 
 ### [User Interface Configuration]{#userinterfaceconfiguration}
 
@@ -568,11 +568,11 @@ more according to your own notions of correctness.
 :   By default, when you search for objects in the Bricolage admin
     interfaces, or for stories, media, or templates in the asset
     library, the Bricolage UI appends a wildcard character to the end of
-    your search string. Thus if you search for âfooâ, the search will
-    return results for all records that *start with âfooâ*. If, however,
+    your search string. Thus if you search for “foo”, the search will
+    return results for all records that *start with “foo”*. If, however,
     you set the `FULL_SEARCH` Boolean directive to a true value, all
     searches in the Bricolage UI will become substring searches. So a
-    search for âfooâ will return all records where âfooâ appears
+    search for “foo” will return all records where “foo” appears
     anywhere in a record.
 
     The downside to this approach is that it prevents PostgreSQL from
@@ -582,7 +582,7 @@ more according to your own notions of correctness.
     would be noticeably slower with `FULL_SEARCH` enabled than with it
     disabled. Leave it disabled if you expect to manage a lot of
     documents. Your users can always manually prepend the wildcard
-    character (â%â) to the front of search queries if they want a
+    character (“%”) to the front of search queries if they want a
     substring search.
 
 [`ALLOW_WORKFLOW_TRANSFER`]{#allowworkflowtransfer}
@@ -604,11 +604,11 @@ more according to your own notions of correctness.
 [`ALLOW_ALL_SITES_CX`]{#allowallsitescx}
 
 :   When managing multiple sites in Bricolage, the user interface will
-    display a âsite contextâ select list. Only the workflows for the
+    display a “site context” select list. Only the workflows for the
     selected site will be displayed. If you want to allow users to see
     all of the workflows for all of the sites that they have permission
-    to access, set this Boolean directive to a true value to add an âAll
-    Sitesâ option to the âSite contextâ select list. But beware! If you
+    to access, set this Boolean directive to a true value to add an “All
+    Sites” option to the “Site context” select list. But beware! If you
     have access to a lot of sites, you'll have access to a bewildering
     number of workflows when you select this option!
 
@@ -617,13 +617,13 @@ more according to your own notions of correctness.
 
 :   For the input of dates in Bricolage, the user interface offers
     select lists for the day, month, and year. By default, the years
-    available in the âYearâ select list have a limit of the ten years
+    available in the “Year” select list have a limit of the ten years
     before and after the value for the year or the current year. If you
     need more years in your select list, set these directives to the
     number of years before and after the current value or current year.
     For example, if you manage a site of historical photographs with
     Bricolage, you might need to select years that range back over 100
-    years. In such a case, set `YEAR_SPAN_BEFORE` to â100â. A science
+    years. In such a case, set `YEAR_SPAN_BEFORE` to “100”. A science
     fiction book review site, on the other hand, might need years much
     farther in the future. For such a case, set `YEAR_SPAN_AFTER` to the
     appropriately high number.
@@ -634,10 +634,10 @@ more according to your own notions of correctness.
 :   The file names generated for story documents are set on a per-output
     channel basis. The user interface offers default values for these
     settings in the output channel profile. The default file name is
-    âindexâ, and the default file name suffix is âhtmlâ. If, say, you
+    “index”, and the default file name suffix is “html”. If, say, you
     were outputing content to an IIS server, you might want to set the
-    `DEFAULT_FILENAME` directive to âdefaultâ and the `DEFAULT_FILE_EXT`
-    directive to âhtmâ, instead. It's not a big deal either way, though,
+    `DEFAULT_FILENAME` directive to “default” and the `DEFAULT_FILE_EXT`
+    directive to “htm”, instead. It's not a big deal either way, though,
     because you can actually set the values you need for each output in
     the user interface. These are just the displayed defaults, settable
     as directives for the ultimate in laziness.
@@ -648,8 +648,8 @@ more according to your own notions of correctness.
     When you create a new document based on a model, it will
     automatically have the output channel associations defined by the
     model. If you'd like users to be able to change the
-    associationsâsay, to assign output channels defined by the model to
-    be optionally associated with documents based on that modelâset this
+    associations—say, to assign output channels defined by the model to
+    be optionally associated with documents based on that model—set this
     directive to a true value. If, however, the added complexity of
     output channel associations will only confuse your users, set this
     directive to a false value to remove the user interface for changing
@@ -685,7 +685,7 @@ These directives relate to how Bricolage manages documents.
 [`PUBLISH_RELATED_ASSETS`]{#publishrelatedassets}
 
 :   Bricolage allows you to create relationships between documents.
-    These can point to ârelated storiesâ or add images to a document,
+    These can point to “related stories” or add images to a document,
     among other things. By default, when you publish a document,
     Bricolage will also try to publish any related documents. This will
     help to prevent 404s or broken image problems. In some cases, you
@@ -699,20 +699,20 @@ These directives relate to how Bricolage manages documents.
     its cover date and its slug (a one-word description of a story).
     They do not, however, consist of the file name. This is in keeping
     with W3C
-    [suggestions](http://www.w3.org/Provider/Style/URI.html "âCool URIs don't
-    changeâ, by Tim Berners-Lee"). The idea is that the story has a
+    [suggestions](http://www.w3.org/Provider/Style/URI.html "“Cool URIs don't
+    change“, by Tim Berners-Lee"). The idea is that the story has a
     directory URI, and there may be several forms of the story with
-    different file names in that directory, such as âindex.htmlâ for
-    HTML, ârdf.xmlâ for RDF, and âindex.pdfâ for PDFs.
+    different file names in that directory, such as “index.html” for
+    HTML, “rdf.xml” for RDF, and “index.pdf” for PDFs.
 
     However, some organizations have Website policies that demand the
     inclusion of file names in the URI. This is so that different
     documents can be in the same directory. A common example might be a
-    âAbout Usâ directory with separate â/about/index.htmlâ,
-    â/about/contact.htmlâ, and â/about/copyright.htmlâ documents. Such
+    “About Us” directory with separate “/about/index.html”,
+    “/about/contact.html”, and “/about/copyright.html” documents. Such
     URIs are not possible by default in Bricolage, which requires that
     all stories have unique URIs, because each of these stories would
-    have the same URI, namely â/aboutâ. To get around this issue, set
+    have the same URI, namely “/about”. To get around this issue, set
     the `STORY_URI_WITH_FILENAME` Boolean directive to a true value.
     From then on, all stories will include their file names in their
     URIs. Be careful, though! Existing stories will not have their URIs
@@ -729,9 +729,9 @@ These directives relate to how Bricolage manages documents.
     flag set to indicate whether documents based on the model will use
     the fixed for non-fixed URI patterns. The result is that, for
     non-fixed stories, you might have URIs like
-    â/reviews/books/2004/12/23/princess\_brideâ. Here the URI format
+    “/reviews/books/2004/12/23/princess\_bride”. Here the URI format
     includes the slug, a one-word summary of the contents of a story
-    (the âprincess\_brideâ part of this example). However, slugs are
+    (the “princess\_bride” part of this example). However, slugs are
     optional in stories, even non-fixed stories. If you want to force
     all non-fixed stories to include the slug in order to guarantee the
     creation of more meaningful URIs, set this Boolean directive to a
@@ -744,7 +744,7 @@ These directives relate to how Bricolage manages documents.
     when a user neglects to type one in, set `AUTOGENERATE_SLUG` to a
     true value. This will cause Bricolage to generate a simple slug
     based on the title of the story. For example, a story with the title
-    âEssential Perl 6â would have the slug âessential\_perl\_6â
+    “Essential Perl 6” would have the slug “essential\_perl\_6”
     generated for it.
 
 ### [Apache::SizeLimit Configuration]{#apache::sizelimitconfiguration}
@@ -782,16 +782,16 @@ quickly enable and configure.
 [`CHECK_FREQUENCY`]{#checkfrequency}
 
 :   This directive determines how often Apache::SizeLimit will check the
-    size of your `mod_perl` processes. If you set it to â5â, it will
+    size of your `mod_perl` processes. If you set it to “5”, it will
     check a process after every fifth request handled by that process.
-    The default is â1â.
+    The default is “1”.
 
 [`MIN_SHARE_SIZE`]{#minsharesize}
 
 :   This directive indicates the minimum amount of shared memory the
     process must employ to avoid being considered a candidate for
     termination. Consult the Apache::SizeLimit documentation for more
-    information. The default is â0â, meaning that all Apache `mod_perl`
+    information. The default is “0”, meaning that all Apache `mod_perl`
     processes will have their sizes checked.
 
 [`MAX_UNSHARED_SIZE`]{#maxunsharedsize}
@@ -800,7 +800,7 @@ quickly enable and configure.
     process may consume to not be a candidate for termination. You can
     use this directive to tweak your settings if you find that
     Apache::SizeLimit terminates processes while they are still mainly
-    using shared memory. The default is â0â.
+    using shared memory. The default is “0”.
 
 ### [Virtual FTP Server Configuration]{#virtualftpserverconfiguration}
 
@@ -833,7 +833,7 @@ HomeSite, etc.). Here's how.
 
 :   This directive specifies a TCP/IP port on which the Bricolage
     virtual FTP server will listen for connections. The default is
-    â2121â.
+    “2121”.
 
 [`FTP_ADDRESS`]{#ftpaddress}
 
@@ -921,7 +921,7 @@ directives help you to do just that.
     localization libraries are Perl modules loaded at server startup
     time. For the most efficient use of memory, load the languages you
     expect to use most often by specifying the appropriate language
-    codes (such as âenâ for English, âpt\_ptâ for Portuguese, âde\_deâ
+    codes (such as “en” for English, “pt\_pt” for Portuguese, “de\_de”
     for German, etc.) in a space-delimited list via the `LOAD_LANGUAGES`
     directive.
 
@@ -942,7 +942,7 @@ As of Bricolage 1.8.0, Bricolage can generate thumbnail versions of
 image files uploaded for media documents. All you need to do is install
 the [Imager](http://search.cpan.org/dist/Imager/ "Imager on CPAN")
 module from CPAN (along with the necessary libraries for the image
-formats you useâsee the [Imager
+formats you use—see the [Imager
 README](http://search.cpan.org/src/TONYC/Imager-0.44/README "Imager
 README") file for details) and configure thumbnail support via these
 directives.
@@ -964,7 +964,7 @@ directives.
     pixels. Bricolage will use this number to constrain the size of the
     thumbnail so that its greatest dimension does not exceed this
     number. For example, if `THUMBNAIL_SIZE` has its default value,
-    â75â, and you upload a 150 x 100 pixel image file, Bricolage will
+    “75”, and you upload a 150 x 100 pixel image file, Bricolage will
     generate a 75 x 50 pixel thumbnail.
 
 ### [htmlArea Configuration]{#htmlareaconfiguration}
@@ -975,7 +975,7 @@ Website") JavaScript editor, though it has this feature disabled by
 default. To enable it, download and install htmlArea 3.0 (in beta
 release as of this writing) in the *comp/media/htmlarea* directory under
 your Bricolage root. Then configure it via these directives and restart
-Bricolage. You will then be able to specify a âWYSIWYGâ field type in
+Bricolage. You will then be able to specify a “WYSIWYG” field type in
 document element definitions, and content editors can take advantage of
 htmlArea's WYSIWYG features when editing content in those fields.
 
@@ -1001,8 +1001,8 @@ htmlArea's WYSIWYG features when editing content in those fields.
     comma-separated list of single-quoted strings with brackets at
     either end. See the htmlArea documentation for a [complete list of
     supported
-    controls](http://www.htmlarea.com/htmlarea_2/documentation.html#setup3 "âhtmlArea documentation: How can I change what controls are
-    displayed on the toolbar?â").
+    controls](http://www.htmlarea.com/htmlarea_2/documentation.html#setup3 "“htmlArea documentation: How can I change what controls are
+    displayed on the toolbar?“").
 
 ### [Up Next]{#upnext}
 

@@ -1,17 +1,17 @@
 {
-   "slug" : "/pub/2003/01/22/mechanize",
-   "tags" : [
-      "screen-scraping-web-mechanize"
-   ],
-   "date" : "2003-01-22T00:00:00-08:00",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "chris-ball"
    ],
    "description" : " Screen-scraping is the process of emulating an interaction with a Web site - not just downloading pages, but filling out forms, navigating around the site, and dealing with the HTML received as a result. As well as for traditional...",
-   "categories" : "web",
+   "image" : null,
+   "draft" : null,
    "thumbnail" : "/images/_pub_2003_01_22_mechanize/111-mechanize.gif",
+   "categories" : "web",
+   "date" : "2003-01-22T00:00:00-08:00",
+   "slug" : "/pub/2003/01/22/mechanize",
+   "tags" : [
+      "screen-scraping-web-mechanize"
+   ],
    "title" : "Screen-scraping with WWW::Mechanize"
 }
 

@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "tags" : [],
-   "date" : "2000-10-08T00:00:00-08:00",
-   "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001008",
-   "title" : "This Week on p5p 2000/10/08",
-   "description" : " Notes Self-tying is broken Virtual values Why is unshift slow? More Perl hacking guidelines Integer and floating-point handling printf %v format bug fixed Jarkko impersonates me Various Notes First, the meta-news this week is that you have a new...",
-   "categories" : "community",
    "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
+   "description" : " Notes Self-tying is broken Virtual values Why is unshift slow? More Perl hacking guidelines Integer and floating-point handling printf %v format bug fixed Jarkko impersonates me Various Notes First, the meta-news this week is that you have a new...",
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null
+   "tags" : [],
+   "title" : "This Week on p5p 2000/10/08",
+   "categories" : "community",
+   "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001008",
+   "date" : "2000-10-08T00:00:00-08:00"
 }
 
 

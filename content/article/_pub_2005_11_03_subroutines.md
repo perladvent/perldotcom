@@ -1,5 +1,7 @@
 {
+   "categories" : "development",
    "slug" : "/pub/2005/11/03/subroutines",
+   "date" : "2005-11-03T00:00:00-08:00",
    "tags" : [
       "functional-perl-programming",
       "perl-fp",
@@ -9,16 +11,14 @@
       "perl-tips",
       "perl-tutorial"
    ],
-   "date" : "2005-11-03T00:00:00-08:00",
+   "title" : "Making Sense of Subroutines",
    "draft" : null,
-   "image" : null,
+   "thumbnail" : "/images/_pub_2005_11_03_subroutines/111-subroutines.gif",
    "authors" : [
       "rob-kinyon"
    ],
-   "categories" : "development",
-   "thumbnail" : "/images/_pub_2005_11_03_subroutines/111-subroutines.gif",
    "description" : " Editor's Note: This article has a followup in Advanced Subroutine Techniques. A subroutine (or routine, function, procedure, macro, etc.) is, at its heart, a named chunk of work. It's shorthand that allows you to think about your problem in...",
-   "title" : "Making Sense of Subroutines"
+   "image" : null
 }
 
 

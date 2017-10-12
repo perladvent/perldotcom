@@ -1,21 +1,21 @@
 {
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_10_14_file_editing/111-cli_textedit.gif",
+   "authors" : [
+      "geoff-broadwell"
+   ],
+   "description" : "For those not used to the terminology, FMTYEWTK stands for Far More Than You Ever Wanted To Know. This one is fairly light as FMTYEWTKs usually go. In any case, the question before us is, \"How do you apply an...",
+   "image" : null,
+   "slug" : "/pub/2004/10/14/file_editing",
+   "date" : "2004-10-14T00:00:00-08:00",
+   "categories" : "Tooling",
    "tags" : [
       "command-line-file-editing",
       "fmtyewtk",
       "geoff-broadwell",
       "perl-file-editing"
    ],
-   "date" : "2004-10-14T00:00:00-08:00",
-   "slug" : "/pub/2004/10/14/file_editing",
-   "draft" : null,
-   "authors" : [
-      "geoff-broadwell"
-   ],
-   "image" : null,
-   "title" : "FMTYEWTK About Mass Edits In Perl",
-   "description" : "For those not used to the terminology, FMTYEWTK stands for Far More Than You Ever Wanted To Know. This one is fairly light as FMTYEWTKs usually go. In any case, the question before us is, \"How do you apply an...",
-   "thumbnail" : "/images/_pub_2004_10_14_file_editing/111-cli_textedit.gif",
-   "categories" : "Tooling"
+   "title" : "FMTYEWTK About Mass Edits In Perl"
 }
 
 
@@ -234,7 +234,7 @@ files and pipes, like so:
      | <Sink>
 
 This example first reads a header file, then the input from the pipe
-source, and then a footer file â the whole mess. The program modifies
+source, and then a footer file — the whole mess. The program modifies
 this text and sends it through to the out pipe.
 
 As I mentioned earlier, when dealing with multiple files it is usually
@@ -331,7 +331,7 @@ substitution, `s/Foo/Bar/g`.
 ### [Recursing Directories]{#recursing}
 
 For our final example, let's deal with a major weakness in the way we've
-been doing things so far â we're not recursing into directories, instead
+been doing things so far — we're not recursing into directories, instead
 expecting all of the files we need to read to appear explicitly on the
 command line. To perform the recursion, we need to pull out the big
 guns: `File::Find`. This Perl module provides very powerful recursion

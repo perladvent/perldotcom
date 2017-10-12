@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000521",
-   "tags" : [],
-   "date" : "2000-05-21T00:00:00-08:00",
-   "draft" : null,
    "image" : null,
+   "description" : " Notes my $x if 0; Trick Zero-padded numbers in formats Forbidden Declarations Port to Windows/CE chat2.pl is Still There pod2latex Long Regexes UTF8 Hash Keys UTF8 String Patches mktables.pl has Been Addressed More Environmental Problems readonly Pragma Tutorials Brad...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "description" : " Notes my $x if 0; Trick Zero-padded numbers in formats Forbidden Declarations Port to Windows/CE chat2.pl is Still There pod2latex Long Regexes UTF8 Hash Keys UTF8 String Patches mktables.pl has Been Addressed More Environmental Problems readonly Pragma Tutorials Brad...",
    "thumbnail" : null,
-   "categories" : "community",
-   "title" : "This Week on p5p 2000/05/21"
+   "draft" : null,
+   "tags" : [],
+   "title" : "This Week on p5p 2000/05/21",
+   "date" : "2000-05-21T00:00:00-08:00",
+   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000521",
+   "categories" : "community"
 }
 
 

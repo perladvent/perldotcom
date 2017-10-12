@@ -1,16 +1,16 @@
 {
-   "image" : null,
+   "date" : "2000-10-30T00:00:00-08:00",
+   "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001030",
+   "categories" : "community",
+   "tags" : [],
+   "title" : "This Week on p5p 2000/10/30",
    "authors" : [
       "simon-cozens"
    ],
-   "thumbnail" : null,
-   "categories" : "community",
+   "image" : null,
    "description" : " Notes sprintf Parameter Re-ordering The Dangers (and bugs) of Unicode Self-Tying Is Broken Configure Confused By Changing Architectures Encode Switch Various Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com....",
-   "title" : "This Week on p5p 2000/10/30",
-   "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001030",
-   "tags" : [],
-   "date" : "2000-10-30T00:00:00-08:00",
-   "draft" : null
+   "draft" : null,
+   "thumbnail" : null
 }
 
 

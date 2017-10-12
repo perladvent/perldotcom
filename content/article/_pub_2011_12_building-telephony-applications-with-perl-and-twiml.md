@@ -1,16 +1,16 @@
 {
    "thumbnail" : null,
-   "categories" : "Networking",
-   "description" : "Scott Wiersdorf shows how to write a little bit of Perl to build an automated voice mail menu with Twilio's API.",
-   "title" : "Building Telephony Applications with Perl and TwiML",
-   "image" : null,
+   "draft" : null,
    "authors" : [
       "scott-wiersdorf"
    ],
-   "draft" : null,
+   "image" : null,
+   "description" : "Scott Wiersdorf shows how to write a little bit of Perl to build an automated voice mail menu with Twilio's API.",
+   "categories" : "Networking",
+   "date" : "2011-12-12T06:00:01-08:00",
    "slug" : "/pub/2011/12/building-telephony-applications-with-perl-and-twiml",
-   "tags" : [],
-   "date" : "2011-12-12T06:00:01-08:00"
+   "title" : "Building Telephony Applications with Perl and TwiML",
+   "tags" : []
 }
 
 
@@ -180,23 +180,23 @@ create this TwiML document:
 Snippet number 1:
 
     my $say = WWW::Twilio::TwiML->new();
-    $sayâ>name('Say');
-    $sayâ>content("Kilroy was here");
-    $sayâ>attributes({voice => "man"});
+    $say−>name('Say');
+    $say−>content("Kilroy was here");
+    $say−>attributes({voice => "man"});
 
     my $resp = WWW::Twilio::TwiML->new();
-    $respâ>name('Response');
-    $respâ>content($say);
+    $resp−>name('Response');
+    $resp−>content($say);
 
     my $tw = WWW::Twilio::TwiML->new();
-    $twâ>content($resp);
-    print $twâ>to_string;
+    $tw−>content($resp);
+    print $tw−>to_string;
 
 And snippet number 2:
 
     my $tw = WWW::Twilio::TwiML->new();
-    $twâ>Responseâ>Say({voice => "man"}, "Kilroy was here");
-    print $twâ>to_string;
+    $tw−>Response−>Say({voice => "man"}, "Kilroy was here");
+    print $tw−>to_string;
 
 The second snippet uses a technique called "method chaining"; if you've
 used the jQuery module for Javascript, you may already know how powerful
