@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "title" : "Perl as a First Language",
-   "categories" : "Community",
-   "slug" : "/pub/1999/11/cozens.htm",
-   "date" : "1999-11-16T00:00:00-08:00",
-   "draft" : null,
    "thumbnail" : null,
-   "description" : null,
-   "image" : null,
    "authors" : [
       "nathan-torkington"
-   ]
+   ],
+   "tags" : [],
+   "description" : null,
+   "image" : null,
+   "slug" : "/pub/1999/11/cozens.htm",
+   "categories" : "Community",
+   "draft" : null,
+   "date" : "1999-11-16T00:00:00-08:00",
+   "title" : "Perl as a First Language"
 }
 
 

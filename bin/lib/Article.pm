@@ -47,7 +47,7 @@ sub preprocess_args {
   }
 
   # calculate slug
-  if ($args->{file} =~ m{perl\.com(/pub/.+?)\.html$}) {
+  if ($args->{file} =~ m{perl\.com(/pub/.+?)$}) {
     $args->{slug} = $1;
   }
 }
