@@ -239,6 +239,7 @@ sub slug_to_filepath {
   my $filepath = $self->{slug} =~ s{/}{_}gr;
   # dont have consecutive underscores
   $filepath =~ s/_+/_/g;
+  $filepath =~ s/\.html$//;
   return $filepath;
 }
 
