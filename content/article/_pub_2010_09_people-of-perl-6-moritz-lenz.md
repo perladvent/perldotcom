@@ -1,15 +1,15 @@
 {
-   "title" : "People of Perl 6: Moritz Lenz",
-   "tags" : [],
-   "categories" : "perl-6",
-   "date" : "2010-09-13T17:04:35-08:00",
-   "slug" : "/pub/2010/09/people-of-perl-6-moritz-lenz",
+   "thumbnail" : null,
    "description" : "<a href=\"http://perlgeek.de/\">Moritz Lenz</a> is a contributor to Perl 6 and <a href=\"http://www.rakudo.org/\">Rakudo Perl 6</a>.  You may know him as the writer of the popular <a href=\"http://perlgeek.de/blog-en/perl-6/\">Perlgeek.de Perl 6 blog</a> or a chief wrangler of the Perl 6 test suite.  Here are his own words on Perl 6 and Rakudo.",
-   "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "thumbnail" : null,
+   "image" : null,
+   "tags" : [],
+   "categories" : "perl-6",
+   "title" : "People of Perl 6: Moritz Lenz",
+   "slug" : "/pub/2010/09/people-of-perl-6-moritz-lenz.html",
+   "date" : "2010-09-13T17:04:35-08:00",
    "draft" : null
 }
 

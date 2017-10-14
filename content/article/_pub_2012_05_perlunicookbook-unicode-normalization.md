@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
    "description" : "℞ 27: Unicode normalization Prescription one reminded you to always decompose and recompose Unicode data at the boundaries of your application. Unicode::Normalize can do much more for you. It supports multiple Unicode Normalization Forms. Normalization, of course, takes Unicode data...",
-   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "thumbnail" : null,
-   "draft" : null,
-   "title" : "Perl Unicode Cookbook: Unicode Normalization",
-   "tags" : [],
+   "image" : null,
    "categories" : "unicode",
-   "slug" : "/pub/2012/05/perlunicookbook-unicode-normalization",
-   "date" : "2012-05-18T06:00:01-08:00"
+   "tags" : [],
+   "title" : "Perl Unicode Cookbook: Unicode Normalization",
+   "slug" : "/pub/2012/05/perlunicookbook-unicode-normalization.html",
+   "date" : "2012-05-18T06:00:01-08:00",
+   "draft" : null
 }
 
 

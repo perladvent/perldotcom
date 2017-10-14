@@ -1,21 +1,21 @@
 {
-   "categories" : "web",
-   "slug" : "/pub/2006/02/09/debug_mod_perl",
-   "date" : "2006-02-09T00:00:00-08:00",
-   "title" : "Debugging and Profiling mod_perl Applications",
    "tags" : [
       "apache-db",
       "apache-dprof",
       "apache-smallprof",
       "mod-perl"
    ],
-   "thumbnail" : "/images/_pub_2006_02_09_debug_mod_perl/111-mod_perl_debug.gif",
-   "draft" : null,
+   "categories" : "web",
+   "image" : null,
    "authors" : [
       "frank-wiles"
    ],
-   "description" : " Because of the added complexity of being inside of the Apache web server, debugging mod_perl applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN...",
-   "image" : null
+   "draft" : null,
+   "slug" : "/pub/2006/02/09/debug_mod_perl.html",
+   "date" : "2006-02-09T00:00:00-08:00",
+   "title" : "Debugging and Profiling mod_perl Applications",
+   "thumbnail" : "/images/_pub_2006_02_09_debug_mod_perl/111-mod_perl_debug.gif",
+   "description" : " Because of the added complexity of being inside of the Apache web server, debugging mod_perl applications is often not as straightforward as it is with regular Perl programs or CGIs. Is the problem with your code, Apache, a CPAN..."
 }
 
 

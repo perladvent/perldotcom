@@ -1,7 +1,7 @@
 {
-   "categories" : "Web",
+   "draft" : null,
+   "slug" : "/pub/2004/09/30/drop_the_soap.html",
    "date" : "2004-09-30T00:00:00-08:00",
-   "slug" : "/pub/2004/09/30/drop_the_soap",
    "title" : "Don't Be Afraid to Drop the SOAP",
    "tags" : [
       "bricolage",
@@ -13,13 +13,13 @@
       "soap",
       "web-services"
    ],
-   "thumbnail" : "/images/_pub_2004_09_30_drop_the_soap/111-drop_soap.gif",
-   "draft" : null,
+   "categories" : "Web",
+   "image" : null,
    "authors" : [
       "sam-tregar"
    ],
-   "image" : null,
-   "description" : "SOAP has great hype; portable, simple, efficient, flexible, and open, SOAP has it all. According to many intelligent people, writing a web service with SOAP should be a snap, and the results will speak for themselves. So they do, although..."
+   "description" : "SOAP has great hype; portable, simple, efficient, flexible, and open, SOAP has it all. According to many intelligent people, writing a web service with SOAP should be a snap, and the results will speak for themselves. So they do, although...",
+   "thumbnail" : "/images/_pub_2004_09_30_drop_the_soap/111-drop_soap.gif"
 }
 
 

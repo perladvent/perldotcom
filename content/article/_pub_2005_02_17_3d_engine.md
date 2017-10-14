@@ -1,14 +1,6 @@
 {
    "thumbnail" : null,
-   "draft" : null,
-   "authors" : [
-      "geoff-broadwell"
-   ],
    "description" : " This article is the third in a series aimed at building a full 3D engine in Perl. The first article started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The...",
-   "image" : null,
-   "date" : "2005-02-17T00:00:00-08:00",
-   "slug" : "/pub/2005/02/17/3d_engine",
-   "categories" : "Games",
    "tags" : [
       "opengl-lighting",
       "opengl-tutorial",
@@ -19,6 +11,14 @@
       "perl-opengl",
       "perl-sdl"
    ],
+   "categories" : "Games",
+   "image" : null,
+   "authors" : [
+      "geoff-broadwell"
+   ],
+   "draft" : null,
+   "date" : "2005-02-17T00:00:00-08:00",
+   "slug" : "/pub/2005/02/17/3d_engine.html",
    "title" : "Building a 3D Engine in Perl, Part 3"
 }
 

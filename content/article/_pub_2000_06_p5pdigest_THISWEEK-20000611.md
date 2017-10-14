@@ -1,16 +1,16 @@
 {
    "thumbnail" : null,
-   "draft" : null,
-   "image" : null,
    "description" : " Notes Byte-Order Marks Magic Auto-Decrement Bug Reports Core Dump I Core Dump II Exit status obliterated by system() after exit()-> Class::Struct objects misbehave with -&gt;isa() Data::Dumper Weirdness Blessed coderefs never DESTROYed Code compiled incorrectly MacPerl Test Suite Patches Why...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "title" : "This Week on p5p 2000/06/11",
+   "image" : null,
+   "categories" : "community",
    "tags" : [],
+   "title" : "This Week on p5p 2000/06/11",
+   "slug" : "/pub/2000/06/p5pdigest/THISWEEK-20000611.html",
    "date" : "2000-06-13T00:00:00-08:00",
-   "slug" : "/pub/2000/06/p5pdigest/THISWEEK-20000611",
-   "categories" : "community"
+   "draft" : null
 }
 
 

@@ -1,6 +1,4 @@
 {
-   "date" : "2006-02-02T00:00:00-08:00",
-   "slug" : "/pub/2006/02/02/x11_gui_testing",
    "categories" : "Graphics",
    "tags" : [
       "automated-testing",
@@ -11,14 +9,16 @@
       "x11-testing",
       "x11-guitest"
    ],
-   "title" : "Test-Driving X11 GUIs",
+   "image" : null,
    "authors" : [
       "george-nistorica"
    ],
-   "image" : null,
-   "description" : " Driving X11 GUIs using X11::GUITest Introduction Interfaces to GUI applications like DCOP or D-BUS allow you to interact with GUI applications in order to get at their internal states or set some arbitrary states. Sometimes GUIs don't allow for...",
    "draft" : null,
-   "thumbnail" : "/images/_pub_2006_02_02_x11_gui_testing/111-x11_test.gif"
+   "date" : "2006-02-02T00:00:00-08:00",
+   "slug" : "/pub/2006/02/02/x11_gui_testing.html",
+   "title" : "Test-Driving X11 GUIs",
+   "thumbnail" : "/images/_pub_2006_02_02_x11_gui_testing/111-x11_test.gif",
+   "description" : " Driving X11 GUIs using X11::GUITest Introduction Interfaces to GUI applications like DCOP or D-BUS allow you to interact with GUI applications in order to get at their internal states or set some arbitrary states. Sometimes GUIs don't allow for..."
 }
 
 

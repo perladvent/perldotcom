@@ -1,23 +1,23 @@
 {
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2004_01_23_macglue/111-mac_glue.gif",
-   "authors" : [
-      "simon-cozens",
-      "chris-nandor"
-   ],
-   "image" : null,
-   "description" : " Thanks to the popularity of Mac OS X, the new iBook, and the PowerBook G4, it's no longer uncool to talk about owning an Apple. Longtime Mac devotees have now been joined by longtime Unix devotees and pretty much...",
-   "slug" : "/pub/2004/01/23/macglue",
-   "date" : "2004-01-23T00:00:00-08:00",
    "categories" : "Mac",
-   "title" : "Introducing Mac::Glue",
    "tags" : [
       "mac-applications",
       "mac-glue",
       "perl-for-macs",
       "perl-mac-apps",
       "scripting"
-   ]
+   ],
+   "image" : null,
+   "authors" : [
+      "simon-cozens",
+      "chris-nandor"
+   ],
+   "draft" : null,
+   "slug" : "/pub/2004/01/23/macglue.html",
+   "date" : "2004-01-23T00:00:00-08:00",
+   "title" : "Introducing Mac::Glue",
+   "thumbnail" : "/images/_pub_2004_01_23_macglue/111-mac_glue.gif",
+   "description" : " Thanks to the popularity of Mac OS X, the new iBook, and the PowerBook G4, it's no longer uncool to talk about owning an Apple. Longtime Mac devotees have now been joined by longtime Unix devotees and pretty much..."
 }
 
 

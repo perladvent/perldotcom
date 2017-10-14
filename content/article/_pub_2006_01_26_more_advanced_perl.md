@@ -1,13 +1,10 @@
 {
-   "authors" : [
-      "simon-cozens"
-   ],
    "description" : " Around Easter last year, I finished writing the second edition of Advanced Perl Programming, a task that had been four years in the making. The aim of this new edition was to reflect the way that Perl programming had...",
-   "image" : null,
    "thumbnail" : "/images/_pub_2006_01_26_more_advanced_perl/111-advanced.gif",
    "draft" : null,
+   "title" : "More Advancements in Perl Programming",
+   "slug" : "/pub/2006/01/26/more_advanced_perl.html",
    "date" : "2006-01-26T00:00:00-08:00",
-   "slug" : "/pub/2006/01/26/more_advanced_perl",
    "categories" : "development",
    "tags" : [
       "advanced-perl",
@@ -26,7 +23,10 @@
       "perl-xs",
       "poe"
    ],
-   "title" : "More Advancements in Perl Programming"
+   "authors" : [
+      "simon-cozens"
+   ],
+   "image" : null
 }
 
 

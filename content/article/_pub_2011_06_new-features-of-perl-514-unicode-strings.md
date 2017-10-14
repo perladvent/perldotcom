@@ -1,16 +1,16 @@
 {
-   "title" : "New Features of Perl 5.14: unicode_strings",
    "tags" : [],
-   "slug" : "/pub/2011/06/new-features-of-perl-514-unicode-strings",
-   "date" : "2011-06-08T11:12:39-08:00",
    "categories" : "development",
-   "description" : "Perl 5.14 provides a new feature called unicode_strings to improve Unicode string handling.",
    "image" : null,
    "authors" : [
       "chromatic"
    ],
+   "draft" : null,
+   "slug" : "/pub/2011/06/new-features-of-perl-514-unicode-strings.html",
+   "date" : "2011-06-08T11:12:39-08:00",
+   "title" : "New Features of Perl 5.14: unicode_strings",
    "thumbnail" : null,
-   "draft" : null
+   "description" : "Perl 5.14 provides a new feature called unicode_strings to improve Unicode string handling."
 }
 
 

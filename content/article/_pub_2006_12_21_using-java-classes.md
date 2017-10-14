@@ -6,17 +6,17 @@
       "jcr",
       "perl-bindings"
    ],
-   "title" : "Using Java Classes in Perl",
-   "date" : "2006-12-21T00:00:00-08:00",
-   "slug" : "/pub/2006/12/21/using-java-classes",
    "categories" : "development",
-   "description" : " I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the Java Community...",
    "image" : null,
    "authors" : [
       "andrew-hanenkamp"
    ],
    "draft" : null,
-   "thumbnail" : "/images/_pub_2006_12_21_using-java-classes/111-inline_java.gif"
+   "slug" : "/pub/2006/12/21/using-java-classes.html",
+   "date" : "2006-12-21T00:00:00-08:00",
+   "title" : "Using Java Classes in Perl",
+   "thumbnail" : "/images/_pub_2006_12_21_using-java-classes/111-inline_java.gif",
+   "description" : " I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the Java Community..."
 }
 
 

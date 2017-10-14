@@ -1,21 +1,21 @@
 {
+   "description" : " HTTP::Recorder is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces WWW::Mechanize scripts by default (see WWW::Mechanize by Andy Lester), but provides functionality to use your own custom logger. Why Use...",
+   "thumbnail" : "/images/_pub_2004_06_04_recorder/111-httprec.gif",
+   "date" : "2004-06-04T00:00:00-08:00",
+   "slug" : "/pub/2004/06/04/recorder.html",
+   "title" : "Web Testing with HTTP::Recorder",
+   "draft" : null,
+   "image" : null,
    "authors" : [
       "linda-julien"
    ],
-   "image" : null,
-   "description" : " HTTP::Recorder is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces WWW::Mechanize scripts by default (see WWW::Mechanize by Andy Lester), but provides functionality to use your own custom logger. Why Use...",
-   "thumbnail" : "/images/_pub_2004_06_04_recorder/111-httprec.gif",
-   "draft" : null,
-   "categories" : "Web",
-   "date" : "2004-06-04T00:00:00-08:00",
-   "slug" : "/pub/2004/06/04/recorder",
    "tags" : [
       "proxy",
       "recorder",
       "testing",
       "web"
    ],
-   "title" : "Web Testing with HTTP::Recorder"
+   "categories" : "Web"
 }
 
 

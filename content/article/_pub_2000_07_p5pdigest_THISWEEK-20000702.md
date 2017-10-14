@@ -1,16 +1,16 @@
 {
    "description" : " Notes More Unicode Unicode Handling HOWTO Unicode Regex Matching I18N FAQ Normalization Simon Stops Working on Unicode Speeding up method lookups my __PACKAGE__ $foo cfgperl Missing Methods Signals on Windows New File::Spec Another depressing regex engine bug s/// Appears...",
-   "image" : null,
+   "thumbnail" : null,
+   "title" : "This Week on p5p 2000/07/02",
+   "date" : "2000-07-02T00:00:00-08:00",
+   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000702.html",
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "thumbnail" : null,
-   "draft" : null,
-   "tags" : [],
-   "title" : "This Week on p5p 2000/07/02",
+   "image" : null,
    "categories" : "community",
-   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000702",
-   "date" : "2000-07-02T00:00:00-08:00"
+   "tags" : []
 }
 
 

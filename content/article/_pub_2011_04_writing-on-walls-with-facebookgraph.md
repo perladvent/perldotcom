@@ -1,12 +1,13 @@
 {
+   "title" : "Writing on Walls with Facebook::Graph",
+   "date" : "2011-04-04T18:03:13-08:00",
+   "slug" : "/pub/2011/04/writing-on-walls-with-facebookgraph.html",
    "draft" : null,
-   "thumbnail" : null,
-   "description" : "JT Smith shows how to write Facebook applications with offline permissions to post to user walls with Perl and Facebook::Graph.",
-   "image" : null,
    "authors" : [
       "jt-smith"
    ],
-   "title" : "Writing on Walls with Facebook::Graph",
+   "image" : null,
+   "categories" : "Web",
    "tags" : [
       "cpan",
       "dancer",
@@ -14,9 +15,8 @@
       "facebook-graph",
       "web-development"
    ],
-   "categories" : "Web",
-   "slug" : "/pub/2011/04/writing-on-walls-with-facebookgraph",
-   "date" : "2011-04-04T18:03:13-08:00"
+   "description" : "JT Smith shows how to write Facebook applications with offline permissions to post to user walls with Perl and Facebook::Graph.",
+   "thumbnail" : null
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "date" : "2000-05-28T00:00:00-08:00",
-   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000528",
-   "categories" : "community",
-   "title" : "This Week on p5p 2000/05/28",
    "tags" : [],
+   "categories" : "community",
+   "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "description" : " Notes Regex Engine Enhancements eq and UTF8 operator Caching of the get*by* Functions Forbidden Declarations Continued Perl in the News readonly Pragma Continues Magical Autoincrement Doctor, Doctor, it Hurts When I Do This! use strict 'formatting' Complex Expressions in...",
-   "image" : null,
+   "draft" : null,
+   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000528.html",
+   "date" : "2000-05-28T00:00:00-08:00",
+   "title" : "This Week on p5p 2000/05/28",
    "thumbnail" : null,
-   "draft" : null
+   "description" : " Notes Regex Engine Enhancements eq and UTF8 operator Caching of the get*by* Functions Forbidden Declarations Continued Perl in the News readonly Pragma Continues Magical Autoincrement Doctor, Doctor, it Hurts When I Do This! use strict 'formatting' Complex Expressions in..."
 }
 
 

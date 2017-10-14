@@ -1,4 +1,13 @@
 {
+   "title" : "Parsing Protein Domains with Perl",
+   "slug" : "/pub/2001/11/16/perlbio2.html",
+   "date" : "2001-11-16T00:00:00-08:00",
+   "draft" : null,
+   "authors" : [
+      "james-d--tisdall"
+   ],
+   "image" : null,
+   "categories" : "science",
    "tags" : [
       "beginning-perl-for-bioinformatics",
       "bioinformaticians",
@@ -21,17 +30,8 @@
       "tisdall",
       "web"
    ],
-   "title" : "Parsing Protein Domains with Perl",
-   "categories" : "science",
-   "date" : "2001-11-16T00:00:00-08:00",
-   "slug" : "/pub/2001/11/16/perlbio2",
-   "image" : null,
    "description" : " The Perl programming language is popular with biologists because of its practicality. In my book, Beginning Perl for Bioinformatics, I demonstrate how many of the things biologists want to write programs for are readily-even enjoyably-accomplished with Perl. My book...",
-   "authors" : [
-      "james-d--tisdall"
-   ],
-   "thumbnail" : "/images/_pub_2001_11_16_perlbio2/111-perlprotein-ls.gif",
-   "draft" : null
+   "thumbnail" : "/images/_pub_2001_11_16_perlbio2/111-perlprotein-ls.gif"
 }
 
 

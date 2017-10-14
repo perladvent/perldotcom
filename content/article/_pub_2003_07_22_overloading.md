@@ -1,20 +1,20 @@
 {
-   "description" : " Introduction: What is Overloading? All object-oriented programming languages have a feature called overloading, but in most of them this term means something different from what it means in Perl. Take a look at this Java example: public Fraction(int num,...",
-   "image" : null,
-   "authors" : [
-      "dave-cross"
-   ],
    "thumbnail" : "/images/_pub_2003_07_22_overloading/111-overloading.gif",
-   "draft" : null,
+   "description" : " Introduction: What is Overloading? All object-oriented programming languages have a feature called overloading, but in most of them this term means something different from what it means in Perl. Take a look at this Java example: public Fraction(int num,...",
    "tags" : [
       "operator-overloading",
       "overload-pm",
       "perl-overloading-mechanism"
    ],
+   "categories" : "development",
+   "authors" : [
+      "dave-cross"
+   ],
+   "image" : null,
+   "draft" : null,
    "title" : "Overloading",
-   "slug" : "/pub/2003/07/22/overloading",
    "date" : "2003-07-22T00:00:00-08:00",
-   "categories" : "development"
+   "slug" : "/pub/2003/07/22/overloading.html"
 }
 
 

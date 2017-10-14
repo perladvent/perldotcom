@@ -1,19 +1,19 @@
 {
+   "draft" : null,
+   "slug" : "/pub/2004/03/18/synopsis3.html",
+   "date" : "2004-03-18T00:00:00-08:00",
    "title" : "Synopsis 3",
+   "categories" : "perl-6",
    "tags" : [
       "operators",
       "perl-6",
       "synopsis"
    ],
-   "categories" : "perl-6",
-   "slug" : "/pub/2004/03/18/synopsis3",
-   "date" : "2004-03-18T00:00:00-08:00",
    "image" : null,
-   "description" : "Operator Renaming Several operators have been given new names to increase clarity and better Huffman-code the language: -> becomes ., like the rest of the world uses. The string concatenation . becomes ~. Think of it as \"stitching\" the two...",
    "authors" : [
       "luke-palmer"
    ],
-   "draft" : null,
+   "description" : "Operator Renaming Several operators have been given new names to increase clarity and better Huffman-code the language: -> becomes ., like the rest of the world uses. The string concatenation . becomes ~. Think of it as \"stitching\" the two...",
    "thumbnail" : "/images/_pub_2004_03_18_synopsis3/111-synopsis3.gif"
 }
 

@@ -1,18 +1,18 @@
 {
    "categories" : "perl-6",
-   "date" : "2001-09-18T00:00:00-08:00",
-   "slug" : "/pub/2001/09/18/parrot",
    "tags" : [
       "parrot-perl-6-assembler-virtual-machine"
    ],
-   "title" : "Parrot : Some Assembly Required",
    "authors" : [
       "simon-cozens"
    ],
-   "description" : " Last week, the first public version of Parrot was released. This week, we're going to take a close look at what Parrot is, how you can get hold of it and play with it, and what we intend for...",
    "image" : null,
+   "draft" : null,
+   "title" : "Parrot : Some Assembly Required",
+   "date" : "2001-09-18T00:00:00-08:00",
+   "slug" : "/pub/2001/09/18/parrot.html",
    "thumbnail" : "/images/_pub_2001_09_18_parrot/111-parrot.jpg",
-   "draft" : null
+   "description" : " Last week, the first public version of Parrot was released. This week, we're going to take a close look at what Parrot is, how you can get hold of it and play with it, and what we intend for..."
 }
 
 

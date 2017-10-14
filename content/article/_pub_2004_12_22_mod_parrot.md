@@ -1,7 +1,7 @@
 {
+   "draft" : null,
+   "slug" : "/pub/2004/12/22/mod_parrot.html",
    "date" : "2004-12-22T00:00:00-08:00",
-   "slug" : "/pub/2004/12/22/mod_parrot",
-   "categories" : "Perl-6",
    "title" : "Introducing mod_parrot",
    "tags" : [
       "apache-modules",
@@ -10,13 +10,13 @@
       "parrot",
       "perl-6"
    ],
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2004_12_22_mod_parrot/111-mod_parrot.gif",
+   "categories" : "Perl-6",
+   "image" : null,
    "authors" : [
       "jeff-horwitz"
    ],
    "description" : " It's been almost nine years since the first release of mod_perl, and it remains a very powerful tool for writing web applications and extending the capabilities of the Apache web server. However, lurking around the corner is Perl 6,...",
-   "image" : null
+   "thumbnail" : "/images/_pub_2004_12_22_mod_parrot/111-mod_parrot.gif"
 }
 
 

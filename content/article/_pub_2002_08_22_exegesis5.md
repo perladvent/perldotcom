@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2002_08_22_exegesis5/111-exegesis5.gif",
+   "tags" : [
+      "apocalypse-exegesis-regular-expressions"
+   ],
+   "categories" : "perl-6",
+   "image" : null,
    "authors" : [
       "damian-conway"
    ],
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. Exegesis 5 What's the diff? Starting gently Lay it out for me Interpolate ye not ... The...",
-   "image" : null,
-   "slug" : "/pub/2002/08/22/exegesis5",
+   "draft" : null,
    "date" : "2002-08-22T00:00:00-08:00",
-   "categories" : "perl-6",
+   "slug" : "/pub/2002/08/22/exegesis5.html",
    "title" : "Exegesis 5",
-   "tags" : [
-      "apocalypse-exegesis-regular-expressions"
-   ]
+   "thumbnail" : "/images/_pub_2002_08_22_exegesis5/111-exegesis5.gif",
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. Exegesis 5 What's the diff? Starting gently Lay it out for me Interpolate ye not ... The..."
 }
 
 

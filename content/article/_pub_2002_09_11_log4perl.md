@@ -1,18 +1,18 @@
 {
-   "thumbnail" : "/images/_pub_2002_09_11_log4perl/111-log4perl.gif",
-   "draft" : null,
-   "authors" : [
-      "michael-schilli"
-   ],
-   "description" : "You've rolled out an application and it produces mysterious, sporadic errors? That's pretty common, even if fairly well-tested applications are exposed to real-world data. How can you track down when and where exactly your problem occurs? What kind of user...",
-   "image" : null,
-   "categories" : "Debugging",
-   "slug" : "/pub/2002/09/11/log4perl",
-   "date" : "2002-09-11T00:00:00-08:00",
    "tags" : [
       "log4perl-log4j-logging"
    ],
-   "title" : "Retire your debugger, log smartly with Log::Log4perl!"
+   "categories" : "Debugging",
+   "image" : null,
+   "authors" : [
+      "michael-schilli"
+   ],
+   "draft" : null,
+   "date" : "2002-09-11T00:00:00-08:00",
+   "slug" : "/pub/2002/09/11/log4perl.html",
+   "title" : "Retire your debugger, log smartly with Log::Log4perl!",
+   "thumbnail" : "/images/_pub_2002_09_11_log4perl/111-log4perl.gif",
+   "description" : "You've rolled out an application and it produces mysterious, sporadic errors? That's pretty common, even if fairly well-tested applications are exposed to real-world data. How can you track down when and where exactly your problem occurs? What kind of user..."
 }
 
 

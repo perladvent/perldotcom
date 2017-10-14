@@ -1,8 +1,14 @@
 {
-   "categories" : "development",
-   "slug" : "/pub/2003/08/21/perlcookbook",
    "date" : "2003-08-21T00:00:00-08:00",
+   "slug" : "/pub/2003/08/21/perlcookbook.html",
    "title" : "Cooking with Perl",
+   "draft" : null,
+   "image" : null,
+   "authors" : [
+      "tom-christiansen",
+      "nathan-torkington"
+   ],
+   "categories" : "development",
    "tags" : [
       "cooking-with-perl",
       "file-contents",
@@ -14,14 +20,8 @@
       "pretending-a-string-is-a-file",
       "tom-christiansen"
    ],
-   "authors" : [
-      "tom-christiansen",
-      "nathan-torkington"
-   ],
-   "image" : null,
    "description" : " Editor's note: The new edition of Perl Cookbook is about to hit store shelves, so to trumpet its release, we offer some recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 6 (\"Pattern...",
-   "thumbnail" : null,
-   "draft" : null
+   "thumbnail" : null
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "categories" : "unicode",
-   "date" : "2012-04-19T06:00:01-08:00",
-   "slug" : "/pub/2012/04/perlunicook-custom-named-characters",
    "title" : "Perl Unicode Cookbook: Custom Named Characters",
-   "tags" : [],
+   "date" : "2012-04-19T06:00:01-08:00",
+   "slug" : "/pub/2012/04/perlunicook-custom-named-characters.html",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
    "image" : null,
+   "tags" : [],
+   "categories" : "unicode",
    "description" : "℞ 10: Custom named characters As several other recipes demonstrate, the charnames pragma offers considerable power to use and manipulate Unicode characters by their names. Its :alias option allows you to give your own lexically scoped nicknames to existing characters,...",
-   "thumbnail" : null,
-   "draft" : null
+   "thumbnail" : null
 }
 
 

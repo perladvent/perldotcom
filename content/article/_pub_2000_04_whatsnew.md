@@ -1,18 +1,18 @@
 {
-   "thumbnail" : null,
-   "draft" : null,
-   "description" : " Table of Contents &nbsp;&nbsp;&#149;&nbsp;Unicode - Perl goes&nbsp;&nbsp;&nbsp;&nbsp;international! &nbsp;&nbsp;&#149; Better Building &nbsp;&nbsp;&#149; Improved Compiler &nbsp;&nbsp;&#149; Version Tuples &nbsp;&nbsp;&#149; Lexical Warnings &nbsp;&nbsp;&#149; Lvaluable Subroutines &nbsp;&nbsp;&#149; Weak References &nbsp;&nbsp;&#149; POSIX Character&nbsp;&nbsp;&nbsp;&nbsp;Classes &nbsp;&nbsp;&#149; Miscellaneous Bits `Darn it, who spiked my coffee with water?!'...",
+   "tags" : [
+      "unicode"
+   ],
+   "categories" : "community",
    "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "tags" : [
-      "unicode"
-   ],
-   "title" : "What's New in 5.6.0.",
-   "categories" : "community",
+   "draft" : null,
    "date" : "2000-04-18T00:00:00-08:00",
-   "slug" : "/pub/2000/04/whatsnew"
+   "slug" : "/pub/2000/04/whatsnew.html",
+   "title" : "What's New in 5.6.0.",
+   "thumbnail" : null,
+   "description" : " Table of Contents &nbsp;&nbsp;&#149;&nbsp;Unicode - Perl goes&nbsp;&nbsp;&nbsp;&nbsp;international! &nbsp;&nbsp;&#149; Better Building &nbsp;&nbsp;&#149; Improved Compiler &nbsp;&nbsp;&#149; Version Tuples &nbsp;&nbsp;&#149; Lexical Warnings &nbsp;&nbsp;&#149; Lvaluable Subroutines &nbsp;&nbsp;&#149; Weak References &nbsp;&nbsp;&#149; POSIX Character&nbsp;&nbsp;&nbsp;&nbsp;Classes &nbsp;&nbsp;&#149; Miscellaneous Bits `Darn it, who spiked my coffee with water?!'..."
 }
 
 

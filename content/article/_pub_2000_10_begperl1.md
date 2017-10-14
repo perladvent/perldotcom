@@ -1,16 +1,16 @@
 {
-   "title" : "Beginner's Introduction to Perl",
    "tags" : [],
-   "date" : "2000-10-16T00:00:00-08:00",
-   "slug" : "/pub/2000/10/begperl1",
    "categories" : "development",
-   "image" : null,
-   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
    "authors" : [
       "doug-sheppard"
    ],
+   "image" : null,
+   "draft" : null,
+   "title" : "Beginner's Introduction to Perl",
+   "slug" : "/pub/2000/10/begperl1.html",
+   "date" : "2000-10-16T00:00:00-08:00",
    "thumbnail" : null,
-   "draft" : null
+   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular..."
 }
 
 

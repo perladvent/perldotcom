@@ -1,19 +1,19 @@
 {
+   "description" : "Many database projects use ORMs and other helpers, but using Perl's DBI by itself is easier and faster than you might think.",
+   "thumbnail" : null,
+   "draft" : null,
    "title" : "DBI is OK",
+   "date" : "2001-03-20T00:00:00-08:00",
+   "slug" : "/pub/2001/03/dbiokay.html",
    "tags" : [
       "dbi",
       "dbix-recordset"
    ],
    "categories" : "data",
-   "date" : "2001-03-20T00:00:00-08:00",
-   "slug" : "/pub/2001/03/dbiokay",
-   "image" : null,
-   "description" : "Many database projects use ORMs and other helpers, but using Perl's DBI by itself is easier and faster than you might think.",
    "authors" : [
       "chromatic"
    ],
-   "draft" : null,
-   "thumbnail" : null
+   "image" : null
 }
 
 

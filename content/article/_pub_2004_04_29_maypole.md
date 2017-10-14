@@ -1,19 +1,19 @@
 {
+   "draft" : null,
+   "slug" : "/pub/2004/04/29/maypole.html",
+   "date" : "2004-04-29T00:00:00-08:00",
    "title" : "Rapid Web Application Deployment with Maypole : Part 2",
+   "categories" : "web",
    "tags" : [
       "maypole",
       "mvc"
    ],
-   "date" : "2004-04-29T00:00:00-08:00",
-   "slug" : "/pub/2004/04/29/maypole",
-   "categories" : "web",
-   "description" : " When we last left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping...",
    "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "thumbnail" : "/images/_pub_2004_04_29_maypole/111-test_libs.gif",
-   "draft" : null
+   "description" : " When we last left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping...",
+   "thumbnail" : "/images/_pub_2004_04_29_maypole/111-test_libs.gif"
 }
 
 

@@ -1,17 +1,17 @@
 {
-   "slug" : "/pub/2002/03/26/cpanplus",
-   "date" : "2002-03-26T00:00:00-08:00",
-   "categories" : "CPAN",
-   "tags" : [
-      "cpan-cpanplus"
-   ],
-   "title" : "CPAN PLUS",
+   "thumbnail" : null,
+   "description" : " Setting: A warm August day, somewhere in Amsterdam. In the bar of Yet Another Hotel. A large number of people are gathered. Judging by their attire, they're not here for business - or at least not the business of...",
    "authors" : [
       "jos-boumans"
    ],
-   "description" : " Setting: A warm August day, somewhere in Amsterdam. In the bar of Yet Another Hotel. A large number of people are gathered. Judging by their attire, they're not here for business - or at least not the business of...",
    "image" : null,
-   "thumbnail" : null,
+   "tags" : [
+      "cpan-cpanplus"
+   ],
+   "categories" : "CPAN",
+   "title" : "CPAN PLUS",
+   "slug" : "/pub/2002/03/26/cpanplus.html",
+   "date" : "2002-03-26T00:00:00-08:00",
    "draft" : null
 }
 

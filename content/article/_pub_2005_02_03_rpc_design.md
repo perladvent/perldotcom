@@ -1,21 +1,21 @@
 {
-   "date" : "2005-02-03T00:00:00-08:00",
-   "slug" : "/pub/2005/02/03/rpc_design",
+   "thumbnail" : "/images/_pub_2005_02_03_rpc_design/111-shapes.gif",
+   "description" : " Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http)...",
    "categories" : "community",
-   "title" : "Throwing Shapes",
    "tags" : [
       "algorithm-floodcontrol",
       "event-processing",
       "flood-control",
       "vladi-belperchinov-shabanski"
    ],
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2005_02_03_rpc_design/111-shapes.gif",
+   "image" : null,
    "authors" : [
       "vladi-belperchinov-shabanski"
    ],
-   "description" : " Sometimes data processing is better when separated into different processes that may run on the same machine or even on different ones. This is the well-known client-server technique. You can do it using a known protocol (such as http)...",
-   "image" : null
+   "draft" : null,
+   "slug" : "/pub/2005/02/03/rpc_design.html",
+   "date" : "2005-02-03T00:00:00-08:00",
+   "title" : "Throwing Shapes"
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "title" : "Yet Another YAPC Report: Montreal",
-   "tags" : [],
-   "date" : "2001-06-21T00:00:00-08:00",
-   "slug" : "/pub/2001/06/21/yapcreport",
-   "categories" : "Community",
    "description" : "A year ago, at Yet Another Perl Conference North America 19100, both Perl-the-language and Perl-the-community seemed to be headed for trouble. Longtime Perl hackers spoke openly with concern at the apparent stagnation of Perl 5 development, and how the community...",
-   "image" : null,
+   "thumbnail" : "/images/_pub_2001_06_21_yapcreport/111-yapc.jpg",
+   "title" : "Yet Another YAPC Report: Montreal",
+   "slug" : "/pub/2001/06/21/yapcreport.html",
+   "date" : "2001-06-21T00:00:00-08:00",
+   "draft" : null,
    "authors" : [
       "schuyler-erle"
    ],
-   "thumbnail" : "/images/_pub_2001_06_21_yapcreport/111-yapc.jpg",
-   "draft" : null
+   "image" : null,
+   "categories" : "Community",
+   "tags" : []
 }
 
 

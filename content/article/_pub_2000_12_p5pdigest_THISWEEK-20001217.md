@@ -1,15 +1,15 @@
 {
-   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001217",
+   "description" : " Notes Object creation and destruction More cool PerlIO stuff What to do with bugs UV Preserving Arithmetic Code checkers Precedence Reminder about the FAQ Various Notes You can subscribe to an email version of this summary by sending an...",
+   "thumbnail" : null,
+   "draft" : null,
+   "title" : "This Week on p5p 2000/12/17",
    "date" : "2000-12-17T00:00:00-08:00",
+   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001217.html",
    "categories" : "community",
    "tags" : [],
-   "title" : "This Week on p5p 2000/12/17",
-   "draft" : null,
-   "thumbnail" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "description" : " Notes Object creation and destruction More cool PerlIO stuff What to do with bugs UV Preserving Arithmetic Code checkers Precedence Reminder about the FAQ Various Notes You can subscribe to an email version of this summary by sending an...",
    "image" : null
 }
 

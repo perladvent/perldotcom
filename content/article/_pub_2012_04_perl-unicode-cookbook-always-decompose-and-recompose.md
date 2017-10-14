@@ -1,16 +1,16 @@
 {
-   "image" : null,
+   "thumbnail" : null,
    "description" : "To handle Unicode effectively, always decompose on the way in, then\nrecompose on the way out.",
+   "categories" : "unicode",
+   "tags" : [],
    "authors" : [
       "tom-christiansen"
    ],
-   "thumbnail" : null,
+   "image" : null,
    "draft" : null,
    "title" : "Perl Unicode Cookbook: Always Decompose and Recompose",
-   "tags" : [],
-   "categories" : "unicode",
-   "slug" : "/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose",
-   "date" : "2012-04-03T06:00:01-08:00"
+   "date" : "2012-04-03T06:00:01-08:00",
+   "slug" : "/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose.html"
 }
 
 

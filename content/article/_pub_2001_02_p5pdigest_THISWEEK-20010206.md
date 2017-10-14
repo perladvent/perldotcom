@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
+   "title" : "This Week on p5p 2001/02/06",
+   "slug" : "/pub/2001/02/p5pdigest/THISWEEK-20010206.html",
+   "date" : "2001-02-06T00:00:00-08:00",
    "draft" : null,
-   "image" : null,
-   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Wow. 600 messages this week, and...",
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "This Week on p5p 2001/02/06",
+   "image" : null,
    "tags" : [],
    "categories" : "community",
-   "date" : "2001-02-06T00:00:00-08:00",
-   "slug" : "/pub/2001/02/p5pdigest/THISWEEK-20010206"
+   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Wow. 600 messages this week, and...",
+   "thumbnail" : null
 }
 
 

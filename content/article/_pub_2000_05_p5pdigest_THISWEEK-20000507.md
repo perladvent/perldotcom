@@ -1,16 +1,16 @@
 {
-   "categories" : "community",
-   "date" : "2000-05-07T00:00:00-08:00",
-   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000507",
-   "title" : "This Week on p5p 2000/05/07",
-   "tags" : [],
+   "description" : " Notes Moderation is Imminent Simon's Guide to p5p Big Discussion of perldoc and Indexing X&lt;> splitpod Aliases perldoc Wishlist Tom's Plan Editorial Opinion Section Mark Fisher's man Replacement Pod::Parser Output Model roffitall Patches to perlre mktables.PL Needs Work Jarkko...",
    "thumbnail" : null,
    "draft" : null,
+   "slug" : "/pub/2000/05/p5pdigest/THISWEEK-20000507.html",
+   "date" : "2000-05-07T00:00:00-08:00",
+   "title" : "This Week on p5p 2000/05/07",
+   "tags" : [],
+   "categories" : "community",
+   "image" : null,
    "authors" : [
       "mark-jason-dominus"
-   ],
-   "image" : null,
-   "description" : " Notes Moderation is Imminent Simon's Guide to p5p Big Discussion of perldoc and Indexing X&lt;> splitpod Aliases perldoc Wishlist Tom's Plan Editorial Opinion Section Mark Fisher's man Replacement Pod::Parser Output Model roffitall Patches to perlre mktables.PL Needs Work Jarkko..."
+   ]
 }
 
 

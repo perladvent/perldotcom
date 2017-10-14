@@ -1,12 +1,8 @@
 {
-   "image" : null,
-   "description" : "Perl's debugger is powerful but somewhat esoteric. The core perldebtut tutorial is a good introduction, but who wants to skim through pages of documentation when you only need a quick refresher on the syntax of a command? Let this printable...",
    "authors" : [
       "richard-foley"
    ],
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2004_11_24_debugger_ref/111-debugger.gif",
-   "title" : "Perl Debugger Quick Reference",
+   "image" : null,
    "tags" : [
       "debugger-reference",
       "perl-debugger",
@@ -15,8 +11,12 @@
       "richard-foley"
    ],
    "categories" : "Debugging",
+   "title" : "Perl Debugger Quick Reference",
+   "slug" : "/pub/2004/11/24/debugger_ref.html",
    "date" : "2004-11-24T00:00:00-08:00",
-   "slug" : "/pub/2004/11/24/debugger_ref"
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_11_24_debugger_ref/111-debugger.gif",
+   "description" : "Perl's debugger is powerful but somewhat esoteric. The core perldebtut tutorial is a good introduction, but who wants to skim through pages of documentation when you only need a quick refresher on the syntax of a command? Let this printable..."
 }
 
 

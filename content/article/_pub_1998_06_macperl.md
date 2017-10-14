@@ -1,11 +1,12 @@
 {
-   "thumbnail" : null,
+   "title" : "MacPerl Gains Ground",
+   "date" : "1998-06-03T00:00:00-08:00",
+   "slug" : "/pub/1998/06/macperl.html",
    "draft" : null,
-   "image" : null,
-   "description" : " New MacPerl CD-ROM Available Rich Morin (rdm@cfcl.com) of Prime Time Freeware has produced the MacPerl CD-ROM, a distribution of the Perl for the Macintosh along with other Mac tools and documentation. I asked him about the MacPerl community and...",
    "authors" : [
       "perldotcom"
    ],
+   "image" : null,
    "tags" : [
       "mac",
       "macperl",
@@ -14,10 +15,9 @@
       "resources",
       "rich-morin"
    ],
-   "title" : "MacPerl Gains Ground",
-   "slug" : "/pub/1998/06/macperl",
-   "date" : "1998-06-03T00:00:00-08:00",
-   "categories" : "Mac"
+   "categories" : "Mac",
+   "description" : " New MacPerl CD-ROM Available Rich Morin (rdm@cfcl.com) of Prime Time Freeware has produced the MacPerl CD-ROM, a distribution of the Perl for the Macintosh along with other Mac tools and documentation. I asked him about the MacPerl community and...",
+   "thumbnail" : null
 }
 
 

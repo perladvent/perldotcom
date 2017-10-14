@@ -1,20 +1,20 @@
 {
    "thumbnail" : "/images/_pub_2002_01_09_perltk/111-tkwidgets.gif",
-   "draft" : null,
+   "description" : " In this Perl/Tk article, I'll discuss balloon help, photos and widget subclassing. Help balloons can be attached to widgets, menu items, and, as we'll see here, individual canvas items. Subclassing a Perl/Tk widget is also known as creating a...",
    "authors" : [
       "steve-lidie"
    ],
-   "description" : " In this Perl/Tk article, I'll discuss balloon help, photos and widget subclassing. Help balloons can be attached to widgets, menu items, and, as we'll see here, individual canvas items. Subclassing a Perl/Tk widget is also known as creating a...",
    "image" : null,
-   "date" : "2002-01-09T00:00:00-08:00",
-   "slug" : "/pub/2002/01/09/perltk",
-   "categories" : "development",
-   "title" : "Creating Custom Widgets",
    "tags" : [
       "perl",
       "perl-tk",
       "widgets"
-   ]
+   ],
+   "categories" : "development",
+   "title" : "Creating Custom Widgets",
+   "date" : "2002-01-09T00:00:00-08:00",
+   "slug" : "/pub/2002/01/09/perltk.html",
+   "draft" : null
 }
 
 

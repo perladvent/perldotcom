@@ -1,11 +1,12 @@
 {
+   "title" : "Pathologically Polluting Perl",
+   "slug" : "/pub/2001/02/inline.html",
+   "date" : "2001-02-06T00:00:00-08:00",
    "draft" : null,
-   "thumbnail" : null,
-   "image" : null,
-   "description" : "Pathologically Polluting Perl Table of Contents Inline in Action - Simple examples in C Hello, world Just Another ____ Hacker What about XS and SWIG? One-Liners Supported Platforms for C The Inline Syntax Fine Dining - A Glimpse at the...",
    "authors" : [
       "brian-ingerson"
    ],
+   "image" : null,
    "tags" : [
       "c",
       "c",
@@ -14,10 +15,9 @@
       "python",
       "xs"
    ],
-   "title" : "Pathologically Polluting Perl",
    "categories" : "Perl Internals",
-   "slug" : "/pub/2001/02/inline",
-   "date" : "2001-02-06T00:00:00-08:00"
+   "description" : "Pathologically Polluting Perl Table of Contents Inline in Action - Simple examples in C Hello, world Just Another ____ Hacker What about XS and SWIG? One-Liners Supported Platforms for C The Inline Syntax Fine Dining - A Glimpse at the...",
+   "thumbnail" : null
 }
 
 

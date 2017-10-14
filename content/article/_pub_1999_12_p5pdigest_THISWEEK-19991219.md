@@ -1,15 +1,15 @@
 {
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991219",
-   "date" : "1999-12-19T00:00:00-08:00",
-   "categories" : "community",
-   "title" : "This Week on p5p 1999/12/19",
    "tags" : [],
-   "draft" : null,
-   "thumbnail" : null,
+   "categories" : "community",
    "authors" : [
       "mark-jason-dominus"
    ],
    "image" : null,
+   "draft" : null,
+   "title" : "This Week on p5p 1999/12/19",
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991219.html",
+   "date" : "1999-12-19T00:00:00-08:00",
+   "thumbnail" : null,
    "description" : " Notes Meta-Information More 5.005_63 Results $^H and %^H Perl RPMs Development Continues on Ilya's Patches Change to xsubpp Closed Filhandle in Signal Handler pad_findlex Needs to be Recursive Conversion Specifier Bug The Trivial Test eof() at the Beginning of..."
 }
 

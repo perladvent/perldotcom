@@ -1,16 +1,16 @@
 {
+   "title" : "Perl Unicode Cookbook: Demo of Unicode Collation and Printing",
+   "date" : "2012-06-22T06:00:01-08:00",
+   "slug" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing.html",
    "draft" : null,
-   "thumbnail" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "description" : "℞ 44: PROGRAM: Demo of Unicode collation and printing The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more...",
    "image" : null,
    "categories" : "unicode",
-   "slug" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing",
-   "date" : "2012-06-22T06:00:01-08:00",
-   "title" : "Perl Unicode Cookbook: Demo of Unicode Collation and Printing",
-   "tags" : []
+   "tags" : [],
+   "description" : "℞ 44: PROGRAM: Demo of Unicode collation and printing The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more...",
+   "thumbnail" : null
 }
 
 

@@ -1,5 +1,13 @@
 {
    "title" : "Mail Filtering with Mail::Audit",
+   "slug" : "/pub/2001/07/17/mailfiltering.html",
+   "date" : "2001-07-17T00:00:00-08:00",
+   "draft" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
+   "image" : null,
+   "categories" : "Security",
    "tags" : [
       "e-mail",
       "filter",
@@ -7,16 +15,8 @@
       "rule",
       "spam"
    ],
-   "slug" : "/pub/2001/07/17/mailfiltering",
-   "date" : "2001-07-17T00:00:00-08:00",
-   "categories" : "Security",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2001_07_17_mailfiltering/111-mailaudit.jpg",
-   "image" : null,
    "description" : " Let's face it. procmail is horrid. But for most of us, it's the only sensible way to handle mail filtering. I used to tolerate procmail, with its grotesque syntax and its less-than-helpful error messages, because it was the only...",
-   "authors" : [
-      "simon-cozens"
-   ]
+   "thumbnail" : "/images/_pub_2001_07_17_mailfiltering/111-mailaudit.jpg"
 }
 
 

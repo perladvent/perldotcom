@@ -1,18 +1,18 @@
 {
-   "tags" : [
-      "template-database-sql-dbi"
-   ],
-   "title" : "How to Avoid Writing Code",
-   "categories" : "web",
-   "slug" : "/pub/2003/07/15/nocode",
-   "date" : "2003-07-15T00:00:00-08:00",
-   "image" : null,
    "description" : " One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it's also one of the most ubiquitous. Perl programmers being lazy, there...",
+   "thumbnail" : "/images/_pub_2003_07_15_nocode/111-nocode.gif",
+   "slug" : "/pub/2003/07/15/nocode.html",
+   "date" : "2003-07-15T00:00:00-08:00",
+   "title" : "How to Avoid Writing Code",
+   "draft" : null,
+   "image" : null,
    "authors" : [
       "kake-pugh"
    ],
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2003_07_15_nocode/111-nocode.gif"
+   "tags" : [
+      "template-database-sql-dbi"
+   ],
+   "categories" : "web"
 }
 
 

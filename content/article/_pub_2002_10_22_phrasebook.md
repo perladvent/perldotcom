@@ -1,18 +1,18 @@
 {
+   "categories" : "development",
+   "tags" : [
+      "phrasebook-languages"
+   ],
+   "image" : null,
    "authors" : [
       "rani-pinchuk"
    ],
-   "description" : " Have you ever written a Perl application that connects to a database? If so, then you probably faced a problem of having some code like: $statement = q(select isbn from book where title = 'Design Patterns'); $sth = $dbh-&gt;prepare($statement)...",
-   "image" : null,
    "draft" : null,
-   "thumbnail" : "/images/_pub_2002_10_22_phrasebook/111-design_patterns.gif",
    "date" : "2002-10-22T00:00:00-08:00",
-   "slug" : "/pub/2002/10/22/phrasebook",
-   "categories" : "development",
+   "slug" : "/pub/2002/10/22/phrasebook.html",
    "title" : "The Phrasebook Design Pattern",
-   "tags" : [
-      "phrasebook-languages"
-   ]
+   "thumbnail" : "/images/_pub_2002_10_22_phrasebook/111-design_patterns.gif",
+   "description" : " Have you ever written a Perl application that connects to a database? If so, then you probably faced a problem of having some code like: $statement = q(select isbn from book where title = 'Design Patterns'); $sth = $dbh-&gt;prepare($statement)..."
 }
 
 

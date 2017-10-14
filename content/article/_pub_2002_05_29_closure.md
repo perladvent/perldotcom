@@ -1,18 +1,18 @@
 {
-   "draft" : null,
    "thumbnail" : "/images/_pub_2002_05_29_closure/111-achieve_closure.gif",
-   "image" : null,
    "description" : "Maybe you've heard about closures; they're one of those aspects of Perl - like object-oriented programming - that everyone raves about and you can't really see the big deal until you play around with them and then they just click....",
+   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "Achieving Closure",
    "tags" : [
       "closure"
    ],
-   "slug" : "/pub/2002/05/29/closure",
+   "categories" : "development",
+   "slug" : "/pub/2002/05/29/closure.html",
    "date" : "2002-05-29T00:00:00-08:00",
-   "categories" : "development"
+   "title" : "Achieving Closure",
+   "draft" : null
 }
 
 

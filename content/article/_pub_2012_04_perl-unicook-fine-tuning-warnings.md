@@ -3,14 +3,14 @@
       "tom-christiansen"
    ],
    "image" : null,
-   "description" : "℞ 2: Fine-tuning Unicode warnings It's easy to get Unicode wrong, especially when handling user input and dealing with multiple encodings. Perl is happy to help you detect unexpected conditions of your data. Perl is also happy to let you...",
-   "thumbnail" : null,
-   "draft" : null,
-   "categories" : "unicode",
-   "date" : "2012-04-05T06:00:01-08:00",
-   "slug" : "/pub/2012/04/perl-unicook-fine-tuning-warnings",
    "tags" : [],
-   "title" : "Perl Unicode Cookbook: Fine-Tuning Unicode Warnings"
+   "categories" : "unicode",
+   "title" : "Perl Unicode Cookbook: Fine-Tuning Unicode Warnings",
+   "slug" : "/pub/2012/04/perl-unicook-fine-tuning-warnings.html",
+   "date" : "2012-04-05T06:00:01-08:00",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : "℞ 2: Fine-tuning Unicode warnings It's easy to get Unicode wrong, especially when handling user input and dealing with multiple encodings. Perl is happy to help you detect unexpected conditions of your data. Perl is also happy to let you..."
 }
 
 

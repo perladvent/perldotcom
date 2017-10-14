@@ -1,16 +1,16 @@
 {
-   "categories" : "community",
+   "slug" : "/pub/2000/01/10PerlMyths.html",
    "date" : "2000-02-23T00:00:00-08:00",
-   "slug" : "/pub/2000/01/10PerlMyths",
-   "tags" : [],
    "title" : "Ten Perl Myths",
-   "thumbnail" : null,
    "draft" : null,
+   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "description" : " Beginning Perl : Ten Perl Myths -> Introduction Table of Contents Perl is hard Perl looks like line noise Perl is hard because it has regexps Perl is hard because it has references Perl is just for Unix Perl..."
+   "categories" : "community",
+   "tags" : [],
+   "description" : " Beginning Perl : Ten Perl Myths -> Introduction Table of Contents Perl is hard Perl looks like line noise Perl is hard because it has regexps Perl is hard because it has references Perl is just for Unix Perl...",
+   "thumbnail" : null
 }
 
 

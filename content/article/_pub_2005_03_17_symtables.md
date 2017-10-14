@@ -1,14 +1,7 @@
 {
-   "authors" : [
-      "phil-crow"
-   ],
-   "image" : null,
-   "description" : " Having almost achieved the state of perfect laziness, one of my favorite modules is Class::DBI::mysql. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This...",
-   "thumbnail" : "/images/_pub_2005_03_17_symtables/111-syboltbl_trix.gif",
    "draft" : null,
-   "slug" : "/pub/2005/03/17/symtables",
    "date" : "2005-03-17T00:00:00-08:00",
-   "categories" : "data",
+   "slug" : "/pub/2005/03/17/symtables.html",
    "title" : "Symbol Table Manipulation",
    "tags" : [
       "dynamic-variable-names",
@@ -16,7 +9,14 @@
       "no-strict",
       "symbol-tables",
       "symbolic-references"
-   ]
+   ],
+   "categories" : "data",
+   "image" : null,
+   "authors" : [
+      "phil-crow"
+   ],
+   "description" : " Having almost achieved the state of perfect laziness, one of my favorite modules is Class::DBI::mysql. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This...",
+   "thumbnail" : "/images/_pub_2005_03_17_symtables/111-syboltbl_trix.gif"
 }
 
 

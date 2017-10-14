@@ -1,11 +1,7 @@
 {
-   "description" : " James D. Tisdall is the author of the soon-to-be-released Mastering Perl for Bioinformatics. For some time now, the use of Perl in biology has been standard practice. Perl remains the most popular language among biologists for a multitude of...",
-   "image" : null,
-   "authors" : [
-      "james-d--tisdall"
-   ],
    "thumbnail" : "/images/_pub_2003_09_10_bioinformatics/111-chromosome.gif",
-   "draft" : null,
+   "description" : " James D. Tisdall is the author of the soon-to-be-released Mastering Perl for Bioinformatics. For some time now, the use of Perl in biology has been standard practice. Perl remains the most popular language among biologists for a multitude of...",
+   "categories" : "Science",
    "tags" : [
       "bioinformatics",
       "biological-sequence-data",
@@ -13,10 +9,14 @@
       "perl-for-bioinformatics",
       "tisdall"
    ],
+   "authors" : [
+      "james-d--tisdall"
+   ],
+   "image" : null,
+   "draft" : null,
    "title" : "A Chromosome at a Time with Perl, Part 1",
-   "slug" : "/pub/2003/09/10/bioinformatics",
    "date" : "2003-09-11T00:00:00-08:00",
-   "categories" : "Science"
+   "slug" : "/pub/2003/09/10/bioinformatics.html"
 }
 
 

@@ -1,11 +1,7 @@
 {
-   "description" : " Many people who work with Perl code never touch the debugger. My goal in this article is to provide reasoned argument for adding the Perl debugger to your set of tools, as well as pointers on how to do...",
-   "image" : null,
-   "authors" : [
-      "daniel-allen"
-   ],
-   "draft" : null,
    "thumbnail" : "/images/_pub_2006_04_06_debugger/111-unravelling-code.gif",
+   "description" : " Many people who work with Perl code never touch the debugger. My goal in this article is to provide reasoned argument for adding the Perl debugger to your set of tools, as well as pointers on how to do...",
+   "categories" : "Debugging",
    "tags" : [
       "bug-fixing",
       "debugging",
@@ -14,10 +10,14 @@
       "perl-maintenance",
       "tracing"
    ],
+   "authors" : [
+      "daniel-allen"
+   ],
+   "image" : null,
+   "draft" : null,
    "title" : "Unraveling Code with the Debugger",
-   "categories" : "Debugging",
-   "date" : "2006-04-06T00:00:00-08:00",
-   "slug" : "/pub/2006/04/06/debugger"
+   "slug" : "/pub/2006/04/06/debugger.html",
+   "date" : "2006-04-06T00:00:00-08:00"
 }
 
 

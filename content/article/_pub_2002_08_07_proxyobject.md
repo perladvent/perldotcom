@@ -1,17 +1,17 @@
 {
-   "date" : "2002-08-07T00:00:00-08:00",
-   "slug" : "/pub/2002/08/07/proxyobject",
-   "categories" : "development",
    "tags" : [
       "proxy-objects-pattern-circular-references"
    ],
-   "title" : "Proxy Objects",
-   "thumbnail" : "/images/_pub_2002_08_07_proxyobject/111-proxy_objects.gif",
-   "draft" : null,
+   "categories" : "development",
    "authors" : [
       "matt-sergeant"
    ],
    "image" : null,
+   "draft" : null,
+   "title" : "Proxy Objects",
+   "slug" : "/pub/2002/08/07/proxyobject.html",
+   "date" : "2002-08-07T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2002_08_07_proxyobject/111-proxy_objects.gif",
    "description" : " In your time as a Perl programmer, it becomes almost inevitable that at some point you will have to manage in-memory tree structures of some sort. When you do this, it becomes important to be aware of how Perl..."
 }
 

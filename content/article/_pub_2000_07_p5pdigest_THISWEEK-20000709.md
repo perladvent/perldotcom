@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
    "description" : " Notes NEW! RDF Available Bug Database buildtoc use namespace Unicode Input Solution tr/a-z-0// Mutual use sprintf tests Complex Expressions in Formats Threading Failure Test Case What does changing PL_sh_path do? UNTIE Method Sarathy Fixes a Bug that Nobody Knew...",
-   "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "thumbnail" : null,
-   "draft" : null,
+   "image" : null,
    "tags" : [],
-   "title" : "This Week on p5p 2000/07/09",
    "categories" : "community",
-   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000709",
-   "date" : "2000-07-09T00:00:00-08:00"
+   "title" : "This Week on p5p 2000/07/09",
+   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000709.html",
+   "date" : "2000-07-09T00:00:00-08:00",
+   "draft" : null
 }
 
 

@@ -1,8 +1,4 @@
 {
-   "categories" : "perl-6",
-   "slug" : "/pub/2005/07/28/test_builder_p6",
-   "date" : "2005-07-28T00:00:00-08:00",
-   "title" : "Porting Test::Builder to Perl 6",
    "tags" : [
       "parrot",
       "perl-6",
@@ -13,13 +9,17 @@
       "test-driven-design-of-perl-6",
       "test-builder"
    ],
-   "thumbnail" : "/images/_pub_2005_07_28_test_builder_p6/111-testbuilder.gif",
-   "draft" : null,
+   "categories" : "perl-6",
    "authors" : [
       "chromatic"
    ],
-   "description" : "Pugs let real people write real Perl 6 code. This article presents a case study of porting Perl's venerable Test::Builder to Perl 6.",
-   "image" : null
+   "image" : null,
+   "draft" : null,
+   "title" : "Porting Test::Builder to Perl 6",
+   "date" : "2005-07-28T00:00:00-08:00",
+   "slug" : "/pub/2005/07/28/test_builder_p6.html",
+   "thumbnail" : "/images/_pub_2005_07_28_test_builder_p6/111-testbuilder.gif",
+   "description" : "Pugs let real people write real Perl 6 code. This article presents a case study of porting Perl's venerable Test::Builder to Perl 6."
 }
 
 

@@ -1,11 +1,6 @@
 {
-   "draft" : null,
    "thumbnail" : "/images/_pub_2005_01_13_quality_assurance/111-sure_quality.gif",
    "description" : " On Being Wrong When I decided to study computer science, I installed Linux on my computer and bought a copy of \"The C Programming Language\" by Kernighan and Ritchie. I have been trying to solve software problems ever since....",
-   "image" : null,
-   "authors" : [
-      "tom-mctighe"
-   ],
    "tags" : [
       "automated-testing",
       "perl-qa",
@@ -15,10 +10,15 @@
       "test-plans",
       "test-specifications"
    ],
-   "title" : "An Introduction to Quality Assurance",
+   "categories" : "Debugging",
+   "image" : null,
+   "authors" : [
+      "tom-mctighe"
+   ],
+   "draft" : null,
    "date" : "2005-01-13T00:00:00-08:00",
-   "slug" : "/pub/2005/01/13/quality_assurance",
-   "categories" : "Debugging"
+   "slug" : "/pub/2005/01/13/quality_assurance.html",
+   "title" : "An Introduction to Quality Assurance"
 }
 
 

@@ -1,12 +1,13 @@
 {
-   "description" : " Anyone who has used Perl for any length of time is familiar with the lookup hash, a handy idiom for doing existence tests: foreach my $e ( @things ) { $lookup{$e}++ } sub check { my ( $key )...",
+   "date" : "2004-04-08T00:00:00-08:00",
+   "slug" : "/pub/2004/04/08/bloom_filters.html",
+   "title" : "Using Bloom Filters",
+   "draft" : null,
    "image" : null,
    "authors" : [
       "maciej-ceglowski"
    ],
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2004_04_08_bloom_filters/111-bloom.gif",
-   "title" : "Using Bloom Filters",
+   "categories" : "science",
    "tags" : [
       "bloom-filters",
       "bloom16",
@@ -15,9 +16,8 @@
       "set-membership",
       "text-bloom"
    ],
-   "date" : "2004-04-08T00:00:00-08:00",
-   "slug" : "/pub/2004/04/08/bloom_filters",
-   "categories" : "science"
+   "description" : " Anyone who has used Perl for any length of time is familiar with the lookup hash, a handy idiom for doing existence tests: foreach my $e ( @things ) { $lookup{$e}++ } sub check { my ( $key )...",
+   "thumbnail" : "/images/_pub_2004_04_08_bloom_filters/111-bloom.gif"
 }
 
 

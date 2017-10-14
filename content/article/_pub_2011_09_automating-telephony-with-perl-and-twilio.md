@@ -1,19 +1,19 @@
 {
-   "thumbnail" : null,
+   "title" : "Automating Telephony with Perl and Twilio",
+   "date" : "2011-09-21T06:00:01-08:00",
+   "slug" : "/pub/2011/09/automating-telephony-with-perl-and-twilio.html",
    "draft" : null,
-   "description" : "Perl can make your phone ring. Scott Wiersdorf demonstrates how to use Twilio's API to make and receive phone calls and to automate SMS, all from Perl.",
-   "image" : null,
    "authors" : [
       "scott-wiersdorf"
    ],
-   "title" : "Automating Telephony with Perl and Twilio",
+   "image" : null,
+   "categories" : "Networking",
    "tags" : [
       "apis",
       "telephony"
    ],
-   "slug" : "/pub/2011/09/automating-telephony-with-perl-and-twilio",
-   "date" : "2011-09-21T06:00:01-08:00",
-   "categories" : "Networking"
+   "description" : "Perl can make your phone ring. Scott Wiersdorf demonstrates how to use Twilio's API to make and receive phone calls and to automate SMS, all from Perl.",
+   "thumbnail" : null
 }
 
 

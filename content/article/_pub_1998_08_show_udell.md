@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "description" : null,
+   "categories" : "community",
+   "tags" : [],
    "authors" : [
       "jon-udell"
    ],
-   "description" : null,
    "image" : null,
-   "thumbnail" : null,
    "draft" : null,
-   "slug" : "/pub/1998/08/show/udell",
+   "title" : "Perl's Prospects Are Brighter Than Ever",
    "date" : "1998-08-26T00:00:00-08:00",
-   "categories" : "community",
-   "tags" : [],
-   "title" : "Perl's Prospects Are Brighter Than Ever"
+   "slug" : "/pub/1998/08/show/udell.html"
 }
 
 

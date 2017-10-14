@@ -1,18 +1,18 @@
 {
-   "title" : "Improving mod_perl Sites' Performance: Part 8",
-   "tags" : [
-      "mod-perl-apache-performance"
-   ],
-   "categories" : "web",
-   "date" : "2003-03-04T00:00:00-08:00",
-   "slug" : "/pub/2003/03/04/mod_perl",
    "description" : " In this article we continue talking about how to optimize your site for performance without touching code, buying new hardware or telling casts. A few simple httpd.conf configuration changes can improve the performance tremendously. Choosing MinSpareServers, MaxSpareServers and StartServers...",
-   "image" : null,
+   "thumbnail" : null,
+   "title" : "Improving mod_perl Sites' Performance: Part 8",
+   "date" : "2003-03-04T00:00:00-08:00",
+   "slug" : "/pub/2003/03/04/mod_perl.html",
+   "draft" : null,
    "authors" : [
       "stas-bekman"
    ],
-   "draft" : null,
-   "thumbnail" : null
+   "image" : null,
+   "categories" : "web",
+   "tags" : [
+      "mod-perl-apache-performance"
+   ]
 }
 
 

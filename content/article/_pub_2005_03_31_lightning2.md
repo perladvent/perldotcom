@@ -1,5 +1,15 @@
 {
    "title" : "More Lightning Articles",
+   "slug" : "/pub/2005/03/31/lightning2.html",
+   "date" : "2005-03-31T00:00:00-08:00",
+   "draft" : null,
+   "authors" : [
+      "chromatic",
+      "bob-ducharme",
+      "shlomi-fish",
+      "mark-leighton-fisher"
+   ],
+   "image" : null,
    "tags" : [
       "devel-linetrace",
       "emacs-and-perl",
@@ -11,19 +21,9 @@
       "perl-unbuffer",
       "test-mockdbi"
    ],
-   "date" : "2005-03-31T00:00:00-08:00",
-   "slug" : "/pub/2005/03/31/lightning2",
    "categories" : "development",
-   "draft" : null,
-   "thumbnail" : null,
    "description" : "Customize Emacs with Perl, debug your programs with line tracing, mock the DBI for testing, and manage buffering effectively-four short articles for Perl programmers.",
-   "image" : null,
-   "authors" : [
-      "chromatic",
-      "bob-ducharme",
-      "shlomi-fish",
-      "mark-leighton-fisher"
-   ]
+   "thumbnail" : null
 }
 
 

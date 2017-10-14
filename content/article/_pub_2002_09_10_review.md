@@ -1,15 +1,15 @@
 {
+   "description" : " It seems every month or so, there's a new Perl and CGI book out; huge thick volumes promising to teach you all you need to know about programming for the Web in 24 hours. They all start with \"Hello...",
+   "thumbnail" : null,
+   "title" : "Writing CGI Applications with Perl",
+   "date" : "2002-09-10T00:00:00-08:00",
+   "slug" : "/pub/2002/09/10/review.html",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
    "image" : null,
-   "description" : " It seems every month or so, there's a new Perl and CGI book out; huge thick volumes promising to teach you all you need to know about programming for the Web in 24 hours. They all start with \"Hello...",
-   "thumbnail" : null,
-   "draft" : null,
    "categories" : "Web",
-   "date" : "2002-09-10T00:00:00-08:00",
-   "slug" : "/pub/2002/09/10/review",
-   "title" : "Writing CGI Applications with Perl",
    "tags" : []
 }
 

@@ -1,22 +1,22 @@
 {
-   "authors" : [
-      "igor-gariev"
-   ],
-   "image" : null,
-   "description" : " Larry Wall said that Perl makes easy things easy and hard things possible. Perl is good both for writing a two-line script that saves the world at the last minute (well, at least it saves you and your project)...",
    "thumbnail" : null,
-   "draft" : null,
-   "date" : "2007-06-07T00:00:00-08:00",
-   "slug" : "/pub/2007/06/07/better-code-through-destruction",
-   "categories" : "CPAN",
-   "title" : "Better Code Through Destruction",
+   "description" : " Larry Wall said that Perl makes easy things easy and hard things possible. Perl is good both for writing a two-line script that saves the world at the last minute (well, at least it saves you and your project)...",
    "tags" : [
       "object-destructor",
       "perl-memory-leaks",
       "perl-memory-management",
       "raii",
       "reference-counting"
-   ]
+   ],
+   "categories" : "CPAN",
+   "authors" : [
+      "igor-gariev"
+   ],
+   "image" : null,
+   "draft" : null,
+   "title" : "Better Code Through Destruction",
+   "date" : "2007-06-07T00:00:00-08:00",
+   "slug" : "/pub/2007/06/07/better-code-through-destruction.html"
 }
 
 

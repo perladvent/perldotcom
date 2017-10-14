@@ -1,15 +1,15 @@
 {
-   "categories" : "Tutorials",
-   "slug" : "/pub/2001/06/13/recdecent",
-   "date" : "2001-06-13T00:00:00-08:00",
-   "title" : "Parse::RecDescent Tutorial",
-   "tags" : [],
+   "thumbnail" : "/images/_pub_2001_06_13_recdecent/111-perl-parse.jpg",
+   "description" : " The Basics Parse::RecDescent is a combination compiler and interpreter. The language it uses can be thought of roughly as a macro language like CPP's, but the macros take no parameters. This may seem limiting, but the technique is very...",
    "authors" : [
       "jeffrey-goff"
    ],
    "image" : null,
-   "description" : " The Basics Parse::RecDescent is a combination compiler and interpreter. The language it uses can be thought of roughly as a macro language like CPP's, but the macros take no parameters. This may seem limiting, but the technique is very...",
-   "thumbnail" : "/images/_pub_2001_06_13_recdecent/111-perl-parse.jpg",
+   "tags" : [],
+   "categories" : "Tutorials",
+   "title" : "Parse::RecDescent Tutorial",
+   "slug" : "/pub/2001/06/13/recdecent.html",
+   "date" : "2001-06-13T00:00:00-08:00",
    "draft" : null
 }
 

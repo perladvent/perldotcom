@@ -1,16 +1,16 @@
 {
-   "title" : "Why I Hate Advocacy",
-   "tags" : [],
-   "categories" : "community",
-   "date" : "2000-12-12T00:00:00-08:00",
-   "slug" : "/pub/2000/12/advocacy",
+   "thumbnail" : null,
    "description" : null,
-   "image" : null,
+   "categories" : "community",
+   "tags" : [],
    "authors" : [
       "mark-jason-dominus"
    ],
+   "image" : null,
    "draft" : null,
-   "thumbnail" : null
+   "title" : "Why I Hate Advocacy",
+   "date" : "2000-12-12T00:00:00-08:00",
+   "slug" : "/pub/2000/12/advocacy.html"
 }
 
 

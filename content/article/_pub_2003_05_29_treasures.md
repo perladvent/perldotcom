@@ -1,16 +1,16 @@
 {
-   "title" : "Hidden Treasures of the Perl Core",
-   "tags" : [],
-   "categories" : "Perl Internals",
-   "slug" : "/pub/2003/05/29/treasures",
-   "date" : "2003-05-29T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2003_05_29_treasures/111-treasures.gif",
-   "draft" : null,
-   "image" : null,
    "description" : " The Perl Core comes with a lot of little modules to help you get thejob done. Many of these modules are not well-known. Even some of the well-known modules have some nice features that are often overlooked. In this...",
+   "image" : null,
    "authors" : [
       "casey-west"
-   ]
+   ],
+   "tags" : [],
+   "categories" : "Perl Internals",
+   "slug" : "/pub/2003/05/29/treasures.html",
+   "date" : "2003-05-29T00:00:00-08:00",
+   "title" : "Hidden Treasures of the Perl Core",
+   "draft" : null
 }
 
 

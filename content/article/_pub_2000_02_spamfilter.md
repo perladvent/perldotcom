@@ -1,18 +1,18 @@
 {
-   "image" : null,
-   "description" : "My Life with Spam -> or How I Caught the Spam and What I Did With It When I Caught it -> I wrote Part 1 of this series back in October 1999 for the LinuxPlanet web site, but the...",
-   "authors" : [
-      "mark-jason-dominus"
-   ],
    "draft" : null,
-   "thumbnail" : null,
+   "slug" : "/pub/2000/02/spamfilter.html",
+   "date" : "2000-02-09T00:00:00-08:00",
    "title" : "My Life With Spam",
+   "categories" : "Email",
    "tags" : [
       "spam"
    ],
-   "date" : "2000-02-09T00:00:00-08:00",
-   "slug" : "/pub/2000/02/spamfilter",
-   "categories" : "Email"
+   "image" : null,
+   "authors" : [
+      "mark-jason-dominus"
+   ],
+   "description" : "My Life with Spam -> or How I Caught the Spam and What I Did With It When I Caught it -> I wrote Part 1 of this series back in October 1999 for the LinuxPlanet web site, but the...",
+   "thumbnail" : null
 }
 
 

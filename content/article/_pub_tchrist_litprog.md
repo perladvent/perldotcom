@@ -1,16 +1,16 @@
 {
+   "slug" : "/pub/tchrist/litprog.html",
+   "date" : "2000-03-20T00:00:00-08:00",
+   "title" : "POD is not Literate Programming",
+   "draft" : null,
+   "image" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "description" : null,
-   "image" : null,
-   "draft" : null,
-   "thumbnail" : null,
    "categories" : "development",
-   "slug" : "/pub/tchrist/litprog",
-   "date" : "2000-03-20T00:00:00-08:00",
    "tags" : [],
-   "title" : "POD is not Literate Programming"
+   "description" : null,
+   "thumbnail" : null
 }
 
 

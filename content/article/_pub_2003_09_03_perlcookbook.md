@@ -1,15 +1,9 @@
 {
-   "thumbnail" : null,
-   "draft" : null,
    "authors" : [
       "tom-christiansen",
       "nathan-torkington"
    ],
    "image" : null,
-   "description" : " Editor's note: The new edition of Perl Cookbook has released, so this week we continue to highlight recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 14 (\"Database Access\") and Chapter 18 (\"Internet...",
-   "categories" : "development",
-   "date" : "2003-09-03T00:00:00-08:00",
-   "slug" : "/pub/2003/09/03/perlcookbook",
    "tags" : [
       "nathan-torkington",
       "perl",
@@ -18,7 +12,13 @@
       "tom-christiansen",
       "using-sql-without-a-database-server"
    ],
-   "title" : "Cooking with Perl, Part 2"
+   "categories" : "development",
+   "title" : "Cooking with Perl, Part 2",
+   "slug" : "/pub/2003/09/03/perlcookbook.html",
+   "date" : "2003-09-03T00:00:00-08:00",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : " Editor's note: The new edition of Perl Cookbook has released, so this week we continue to highlight recipes-new to the second edition-for your sampling pleasure. This week's excerpts include recipes from Chapter 14 (\"Database Access\") and Chapter 18 (\"Internet..."
 }
 
 

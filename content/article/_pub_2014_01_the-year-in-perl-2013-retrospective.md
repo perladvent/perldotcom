@@ -1,16 +1,16 @@
 {
-   "description" : "Perl had a great year in 2013. Here are some highlights.",
-   "image" : null,
+   "draft" : null,
+   "title" : "The Year in Perl 2013 Retrospective",
+   "slug" : "/pub/2014/01/the-year-in-perl-2013-retrospective.html",
+   "date" : "2014-01-01T06:00:01-08:00",
+   "tags" : [],
+   "categories" : "Community",
    "authors" : [
       "chromatic"
    ],
-   "draft" : null,
-   "thumbnail" : null,
-   "title" : "The Year in Perl 2013 Retrospective",
-   "tags" : [],
-   "categories" : "Community",
-   "date" : "2014-01-01T06:00:01-08:00",
-   "slug" : "/pub/2014/01/the-year-in-perl-2013-retrospective"
+   "image" : null,
+   "description" : "Perl had a great year in 2013. Here are some highlights.",
+   "thumbnail" : null
 }
 
 

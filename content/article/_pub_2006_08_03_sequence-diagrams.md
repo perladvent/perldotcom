@@ -1,5 +1,11 @@
 {
+   "description" : " Imagine yourself in a meeting with management. You're about to begin your third attempt to explain how to process online credit card payments. After a couple of sentences, you see some eyes glazing over. Someone says, \"Perhaps you could...",
+   "thumbnail" : "/images/_pub_2006_08_03_sequence-diagrams/111-seqdia.gif",
+   "draft" : null,
    "title" : "Generating UML and Sequence Diagrams",
+   "slug" : "/pub/2006/08/03/sequence-diagrams.html",
+   "date" : "2006-08-03T00:00:00-08:00",
+   "categories" : "data",
    "tags" : [
       "diagramming-code",
       "perl-and-java",
@@ -7,16 +13,10 @@
       "uml",
       "uml-sequence"
    ],
-   "categories" : "data",
-   "date" : "2006-08-03T00:00:00-08:00",
-   "slug" : "/pub/2006/08/03/sequence-diagrams",
-   "thumbnail" : "/images/_pub_2006_08_03_sequence-diagrams/111-seqdia.gif",
-   "draft" : null,
-   "description" : " Imagine yourself in a meeting with management. You're about to begin your third attempt to explain how to process online credit card payments. After a couple of sentences, you see some eyes glazing over. Someone says, \"Perhaps you could...",
-   "image" : null,
    "authors" : [
       "phil-crow"
-   ]
+   ],
+   "image" : null
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2012/06/perlunicook-unicode-text-in-dbm-files-the-easy-way",
-   "date" : "2012-06-20T06:00:01-08:00",
-   "categories" : "unicode",
+   "description" : "℞ 43: Unicode text in DBM hashes, the easy way Some Perl libraries require you to jump through hoops to handle Unicode data. Would that everything worked as easily as Perl's open pragma! For DBM files, here's how to implicitly...",
+   "thumbnail" : null,
    "title" : "Perl Unicode Cookbook: Unicode Text in DBM Files (the easy way)",
-   "tags" : [],
+   "slug" : "/pub/2012/06/perlunicook-unicode-text-in-dbm-files-the-easy-way.html",
+   "date" : "2012-06-20T06:00:01-08:00",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
    "image" : null,
-   "description" : "℞ 43: Unicode text in DBM hashes, the easy way Some Perl libraries require you to jump through hoops to handle Unicode data. Would that everything worked as easily as Perl's open pragma! For DBM files, here's how to implicitly...",
-   "thumbnail" : null,
-   "draft" : null
+   "tags" : [],
+   "categories" : "unicode"
 }
 
 

@@ -1,15 +1,15 @@
 {
+   "draft" : null,
    "title" : "Perl Unicode Cookbook: Unicode Text in Stubborn Libraries",
-   "tags" : [],
+   "slug" : "/pub/2012/06/perlunicook-unicode-text-in-stubborn-libraries.html",
    "date" : "2012-06-18T06:00:01-08:00",
-   "slug" : "/pub/2012/06/perlunicook-unicode-text-in-stubborn-libraries",
    "categories" : "unicode",
-   "image" : null,
-   "description" : "℞ 42: Unicode text in DBM hashes, the tedious way While Perl 5 has long been very careful about handling Unicode correctly inside the world of Perl itself, every time you leave the Perl internals, you cross a boundary at...",
+   "tags" : [],
    "authors" : [
       "tom-christiansen"
    ],
-   "draft" : null,
+   "image" : null,
+   "description" : "℞ 42: Unicode text in DBM hashes, the tedious way While Perl 5 has long been very careful about handling Unicode correctly inside the world of Perl itself, every time you leave the Perl internals, you cross a boundary at...",
    "thumbnail" : null
 }
 

@@ -1,8 +1,10 @@
 {
-   "slug" : "/pub/2004/05/14/affrus",
-   "date" : "2004-05-14T00:00:00-08:00",
-   "categories" : "Tooling",
-   "title" : "Affrus: An OS X Perl IDE",
+   "thumbnail" : "/images/_pub_2004_05_14_affrus/111-affrus.gif",
+   "description" : " When I last reviewed a Perl IDE, ActiveState's Komodo, I was nearly convinced; the only problem was that I use Mac OS X. Now, Late Night Software, more commonly known for their AppleScript tools, have taken their Mac programming...",
+   "authors" : [
+      "simon-cozens"
+   ],
+   "image" : null,
    "tags" : [
       "affrus",
       "ide",
@@ -10,13 +12,11 @@
       "os-x-ide",
       "unix-editors"
    ],
-   "authors" : [
-      "simon-cozens"
-   ],
-   "image" : null,
-   "description" : " When I last reviewed a Perl IDE, ActiveState's Komodo, I was nearly convinced; the only problem was that I use Mac OS X. Now, Late Night Software, more commonly known for their AppleScript tools, have taken their Mac programming...",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2004_05_14_affrus/111-affrus.gif"
+   "categories" : "Tooling",
+   "title" : "Affrus: An OS X Perl IDE",
+   "date" : "2004-05-14T00:00:00-08:00",
+   "slug" : "/pub/2004/05/14/affrus.html",
+   "draft" : null
 }
 
 

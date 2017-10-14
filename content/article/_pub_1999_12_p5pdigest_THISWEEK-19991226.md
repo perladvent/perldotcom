@@ -1,15 +1,15 @@
 {
-   "date" : "1999-12-26T00:00:00-08:00",
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991226",
-   "categories" : "community",
+   "draft" : null,
    "title" : "This Week on p5p 1999/12/26",
+   "date" : "1999-12-26T00:00:00-08:00",
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991226.html",
    "tags" : [],
+   "categories" : "community",
    "authors" : [
       "mark-jason-dominus"
    ],
    "image" : null,
    "description" : " Notes Meta-Information Module Interface and Version Meta-Information SVs by Default Another return of PREPARE More Flushing Problems Array::Virtual #line directives DProf Various Notes Last year I fell behind on reports because I took three business trips in two weeks....",
-   "draft" : null,
    "thumbnail" : null
 }
 

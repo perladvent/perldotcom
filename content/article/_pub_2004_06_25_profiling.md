@@ -1,21 +1,21 @@
 {
-   "categories" : "development",
-   "slug" : "/pub/2004/06/25/profiling",
-   "date" : "2004-06-24T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2004_06_25_profiling/111-profiling.gif",
+   "description" : "Update: Perl Profiling has evolved since this article was written, please see http://www.perl.org/about/whitepapers/perl-profiling.html for the latest information. Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it's impossible...",
    "tags" : [
       "optimization",
       "profiler",
       "profiling",
       "speed"
    ],
-   "title" : "Profiling Perl",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2004_06_25_profiling/111-profiling.gif",
+   "categories" : "development",
+   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "description" : "Update: Perl Profiling has evolved since this article was written, please see http://www.perl.org/about/whitepapers/perl-profiling.html for the latest information. Everyone wants their Perl code to run faster. Unfortunately, without understanding why the code is taking so long to start with, it's impossible..."
+   "draft" : null,
+   "date" : "2004-06-24T00:00:00-08:00",
+   "slug" : "/pub/2004/06/25/profiling.html",
+   "title" : "Profiling Perl"
 }
 
 

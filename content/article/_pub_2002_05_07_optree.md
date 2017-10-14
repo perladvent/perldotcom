@@ -1,17 +1,17 @@
 {
-   "title" : "Where Wizards Fear To Tread",
-   "tags" : [
-      "op-tree-b-generate-wizards"
-   ],
-   "categories" : "Perl Internals",
-   "date" : "2002-05-07T00:00:00-08:00",
-   "slug" : "/pub/2002/05/07/optree",
-   "thumbnail" : "/images/_pub_2002_05_07_optree/111-wizards.gif",
-   "draft" : null,
    "description" : " So you're a Perl master. You've got XS sorted. You know how the internals work. Hey, there's nothing we can teach you on perl.com that you don't already know. You think? Where Wizards Fear To Tread brings you the...",
+   "thumbnail" : "/images/_pub_2002_05_07_optree/111-wizards.gif",
+   "date" : "2002-05-07T00:00:00-08:00",
+   "slug" : "/pub/2002/05/07/optree.html",
+   "title" : "Where Wizards Fear To Tread",
+   "draft" : null,
    "image" : null,
    "authors" : [
       "simon-cozens"
+   ],
+   "categories" : "Perl Internals",
+   "tags" : [
+      "op-tree-b-generate-wizards"
    ]
 }
 

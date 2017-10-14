@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "draft" : null,
+   "tags" : [],
+   "categories" : "unicode",
    "authors" : [
       "tom-christiansen"
    ],
-   "description" : "℞ 24: Disabling Unicode-awareness in builtin charclasses Many regex tutorials gloss over the fact that builtin character classes include far more than ASCII characters. In particular, classes such as \"word character\" (\\w), \"word boundary\" (\\b), \"whitespace\" (\\s), and \"digit\" (\\d)...",
    "image" : null,
-   "slug" : "/pub/2012/05/perlunicook-disable-unicode-awareness-in-builtin-character-classes",
+   "draft" : null,
+   "title" : "Perl Unicode Cookbook: Disable Unicode-awareness in Builtin Character Classes",
+   "slug" : "/pub/2012/05/perlunicook-disable-unicode-awareness-in-builtin-character-classes.html",
    "date" : "2012-05-14T06:00:01-08:00",
-   "categories" : "unicode",
-   "tags" : [],
-   "title" : "Perl Unicode Cookbook: Disable Unicode-awareness in Builtin Character Classes"
+   "thumbnail" : null,
+   "description" : "℞ 24: Disabling Unicode-awareness in builtin charclasses Many regex tutorials gloss over the fact that builtin character classes include far more than ASCII characters. In particular, classes such as \"word character\" (\\w), \"word boundary\" (\\b), \"whitespace\" (\\s), and \"digit\" (\\d)..."
 }
 
 

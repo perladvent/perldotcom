@@ -1,16 +1,16 @@
 {
-   "categories" : "unicode",
-   "date" : "2012-05-10T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicook-match-unicode-linebreak-sequence",
-   "tags" : [],
-   "title" : "Perl Unicode Cookbook: Match Unicode Linebreak Sequence",
+   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "description" : "℞ 22: Match Unicode linebreak sequence in regex Unicode defines several characters as providing vertical whitespace, like the carriage return or newline characters. Unicode also gathers several characters under the banner of a linebreak sequence. A Unicode linebreak matches the...",
+   "tags" : [],
+   "categories" : "unicode",
+   "slug" : "/pub/2012/05/perlunicook-match-unicode-linebreak-sequence.html",
+   "date" : "2012-05-10T06:00:01-08:00",
+   "title" : "Perl Unicode Cookbook: Match Unicode Linebreak Sequence",
    "draft" : null,
-   "thumbnail" : null
+   "thumbnail" : null,
+   "description" : "℞ 22: Match Unicode linebreak sequence in regex Unicode defines several characters as providing vertical whitespace, like the carriage return or newline characters. Unicode also gathers several characters under the banner of a linebreak sequence. A Unicode linebreak matches the..."
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "draft" : null,
-   "image" : null,
    "description" : " Everyone who has read the Camel Book knows that the three great virtues of programming are laziness, impatience and hubris. Most of the columns that appear here at www.perl.com have to do, in one way or another, with either...",
+   "thumbnail" : null,
+   "title" : "How Perl Helped Me Win the Office Football Pool",
+   "date" : "2000-10-02T00:00:00-08:00",
+   "slug" : "/pub/2000/10/footpool.html",
+   "draft" : null,
    "authors" : [
       "walt-mankowski"
    ],
-   "tags" : [],
-   "title" : "How Perl Helped Me Win the Office Football Pool",
-   "date" : "2000-10-02T00:00:00-08:00",
-   "slug" : "/pub/2000/10/footpool",
-   "categories" : "Community"
+   "image" : null,
+   "categories" : "Community",
+   "tags" : []
 }
 
 

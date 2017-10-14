@@ -1,16 +1,16 @@
 {
    "thumbnail" : null,
-   "draft" : null,
+   "description" : "℞ 32: Reverse string by grapheme Because bytes and characters are not isomorphic in Unicode&mdash;and what you may see as a user-visible character (a grapheme) is not necessarily a single codepoint in a Unicode string&mdash;every string operation must be aware...",
+   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "description" : "℞ 32: Reverse string by grapheme Because bytes and characters are not isomorphic in Unicode&mdash;and what you may see as a user-visible character (a grapheme) is not necessarily a single codepoint in a Unicode string&mdash;every string operation must be aware...",
-   "image" : null,
-   "date" : "2012-05-29T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicook-reverse-string-by-grapheme",
-   "categories" : "unicode",
    "tags" : [],
-   "title" : "Perl Unicode Cookbook: Reverse String by Grapheme"
+   "categories" : "unicode",
+   "slug" : "/pub/2012/05/perlunicook-reverse-string-by-grapheme.html",
+   "date" : "2012-05-29T06:00:01-08:00",
+   "title" : "Perl Unicode Cookbook: Reverse String by Grapheme",
+   "draft" : null
 }
 
 

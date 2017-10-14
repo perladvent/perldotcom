@@ -1,18 +1,18 @@
 {
+   "draft" : null,
+   "title" : "Class::DBI",
    "date" : "2002-11-27T00:00:00-08:00",
-   "slug" : "/pub/2002/11/27/classdbi",
-   "categories" : "data",
+   "slug" : "/pub/2002/11/27/classdbi.html",
    "tags" : [
       "database-class-poop-class-dbi"
    ],
-   "title" : "Class::DBI",
-   "thumbnail" : "/images/_pub_2002_11_27_classdbi/111-class_dbi.gif",
-   "draft" : null,
+   "categories" : "data",
    "authors" : [
       "tony-bowden"
    ],
    "image" : null,
-   "description" : " Several articles on Perl.com, including the recent Phrasebook Design Pattern, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's DBIx::Recordset article attempted to show how code dealing with databases can be made..."
+   "description" : " Several articles on Perl.com, including the recent Phrasebook Design Pattern, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's DBIx::Recordset article attempted to show how code dealing with databases can be made...",
+   "thumbnail" : "/images/_pub_2002_11_27_classdbi/111-class_dbi.gif"
 }
 
 

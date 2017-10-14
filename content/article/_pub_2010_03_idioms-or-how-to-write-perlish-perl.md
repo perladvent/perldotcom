@@ -1,15 +1,4 @@
 {
-   "thumbnail" : null,
-   "draft" : null,
-   "authors" : [
-      "chromatic"
-   ],
-   "image" : null,
-   "description" : "Any language&mdash;programming or natural&mdash;develops idioms, or common patterns of expression. The earth revolves, but we speak of the sun rising or setting. We talk of clever hacks and nasty hacks and slinging code. We ping each other on IRC to...",
-   "categories" : "development",
-   "slug" : "/pub/2010/03/idioms-or-how-to-write-perlish-perl",
-   "date" : "2010-03-16T06:00:01-08:00",
-   "title" : "Idioms, or How to Write Perlish Perl",
    "tags" : [
       "idioms",
       "objects",
@@ -17,7 +6,18 @@
       "perl-5",
       "perl-programming",
       "schwartzian-transform"
-   ]
+   ],
+   "categories" : "development",
+   "image" : null,
+   "authors" : [
+      "chromatic"
+   ],
+   "draft" : null,
+   "date" : "2010-03-16T06:00:01-08:00",
+   "slug" : "/pub/2010/03/idioms-or-how-to-write-perlish-perl.html",
+   "title" : "Idioms, or How to Write Perlish Perl",
+   "thumbnail" : null,
+   "description" : "Any language&mdash;programming or natural&mdash;develops idioms, or common patterns of expression. The earth revolves, but we speak of the sun rising or setting. We talk of clever hacks and nasty hacks and slinging code. We ping each other on IRC to..."
 }
 
 

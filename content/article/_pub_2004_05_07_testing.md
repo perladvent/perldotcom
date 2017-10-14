@@ -1,20 +1,20 @@
 {
-   "thumbnail" : null,
    "draft" : null,
-   "authors" : [
-      "casey-west"
-   ],
-   "image" : null,
-   "description" : " Testing is an important step in developing any important body of work. In today's pragmatic culture, we're taught to test first, test often, and design with tests. The expectation is that chanting \"test test test\" forgives all sins. To...",
-   "categories" : "testing",
+   "title" : "Building Testing Libraries",
    "date" : "2004-05-07T00:00:00-08:00",
-   "slug" : "/pub/2004/05/07/testing",
+   "slug" : "/pub/2004/05/07/testing.html",
    "tags" : [
       "harness",
       "test",
       "testing"
    ],
-   "title" : "Building Testing Libraries"
+   "categories" : "testing",
+   "authors" : [
+      "casey-west"
+   ],
+   "image" : null,
+   "description" : " Testing is an important step in developing any important body of work. In today's pragmatic culture, we're taught to test first, test often, and design with tests. The expectation is that chanting \"test test test\" forgives all sins. To...",
+   "thumbnail" : null
 }
 
 

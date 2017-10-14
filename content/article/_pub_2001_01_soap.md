@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2001/01/soap",
-   "date" : "2001-01-29T00:00:00-08:00",
+   "thumbnail" : null,
+   "description" : "Quick Start with SOAP -> Table of Contents Quick Start with SOAPWriting a CGI-based ServerClientPassing ValuesAutodispatchingObjects accessError handlingService dispatch (different services on one server)Types and NamesConclusion Part 2 of this series SOAP (Simple Object Access Protocol) is a way for...",
    "categories" : "web",
    "tags" : [],
-   "title" : "Quick Start with SOAP",
-   "thumbnail" : null,
-   "draft" : null,
    "authors" : [
       "paul-kulchenko"
    ],
    "image" : null,
-   "description" : "Quick Start with SOAP -> Table of Contents Quick Start with SOAPWriting a CGI-based ServerClientPassing ValuesAutodispatchingObjects accessError handlingService dispatch (different services on one server)Types and NamesConclusion Part 2 of this series SOAP (Simple Object Access Protocol) is a way for..."
+   "draft" : null,
+   "title" : "Quick Start with SOAP",
+   "slug" : "/pub/2001/01/soap.html",
+   "date" : "2001-01-29T00:00:00-08:00"
 }
 
 

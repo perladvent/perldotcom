@@ -1,20 +1,20 @@
 {
-   "image" : null,
-   "description" : " Table of Contents  Essential Perl/Tk Programming  A Graphic Authorizing Example  TK Overview  A Pay Calculator Example  Creating A Window  Adding A Menubar  Adding Choices To A Menubar  More Menubar Choices ...",
-   "authors" : [
-      "brett-berry",
-      "lee-minniear"
-   ],
-   "thumbnail" : null,
-   "draft" : null,
-   "title" : "Perl/Tk Tutorial",
+   "categories" : "Tutorials",
    "tags" : [
       "perl",
       "perl-tk"
    ],
-   "categories" : "Tutorials",
-   "slug" : "/pub/1999/10/perltk/index",
-   "date" : "1999-10-15T00:00:00-08:00"
+   "image" : null,
+   "authors" : [
+      "brett-berry",
+      "lee-minniear"
+   ],
+   "draft" : null,
+   "slug" : "/pub/1999/10/perltk/index.html",
+   "date" : "1999-10-15T00:00:00-08:00",
+   "title" : "Perl/Tk Tutorial",
+   "thumbnail" : null,
+   "description" : " Table of Contents  Essential Perl/Tk Programming  A Graphic Authorizing Example  TK Overview  A Pay Calculator Example  Creating A Window  Adding A Menubar  Adding Choices To A Menubar  More Menubar Choices ..."
 }
 
 

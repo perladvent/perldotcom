@@ -1,20 +1,20 @@
 {
+   "draft" : null,
+   "slug" : "/pub/2010/04/inside-perl-512.html",
+   "date" : "2010-04-20T06:00:01-08:00",
    "title" : "Inside Perl 5.12",
    "tags" : [
       "perl-5",
       "perl-5-12",
       "perl-programming"
    ],
-   "slug" : "/pub/2010/04/inside-perl-512",
-   "date" : "2010-04-20T06:00:01-08:00",
    "categories" : "Community",
-   "draft" : null,
-   "thumbnail" : null,
    "image" : null,
-   "description" : "Perl 5.12 has just come out. A rejuvenated development process helps ensure a bright future for Perl as it enters its third decade of making easy things easy and hard things possible. Here's what you can expect when you upgrade...",
    "authors" : [
       "chromatic"
-   ]
+   ],
+   "description" : "Perl 5.12 has just come out. A rejuvenated development process helps ensure a bright future for Perl as it enters its third decade of making easy things easy and hard things possible. Here's what you can expect when you upgrade...",
+   "thumbnail" : null
 }
 
 

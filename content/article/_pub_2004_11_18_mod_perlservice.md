@@ -1,12 +1,12 @@
 {
+   "title" : "Cross-Language Remoting with mod_perlservice",
+   "date" : "2004-11-18T00:00:00-08:00",
+   "slug" : "/pub/2004/11/18/mod_perlservice.html",
    "draft" : null,
-   "thumbnail" : null,
-   "image" : null,
-   "description" : "Mod_perlservice? What is That? Mod_perlservice is a cool, new way to do remoting - sharing data between server and client processes - with Perl and Apache. Let's start by breaking that crazy name apart: mod + perl + service. Mod...",
    "authors" : [
       "michael-collins"
    ],
-   "title" : "Cross-Language Remoting with mod_perlservice",
+   "image" : null,
    "tags" : [
       "michael-w-collins",
       "mod-perl",
@@ -14,9 +14,9 @@
       "perl-remoting",
       "perl-server"
    ],
-   "date" : "2004-11-18T00:00:00-08:00",
-   "slug" : "/pub/2004/11/18/mod_perlservice",
-   "categories" : "Networking"
+   "categories" : "Networking",
+   "description" : "Mod_perlservice? What is That? Mod_perlservice is a cool, new way to do remoting - sharing data between server and client processes - with Perl and Apache. Let's start by breaking that crazy name apart: mod + perl + service. Mod...",
+   "thumbnail" : null
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "date" : "2012-04-12T06:00:01-08:00",
-   "slug" : "/pub/2012/04/perlunicook-character-names-by-number",
-   "categories" : "unicode",
+   "description" : "℞ 6: Get character name by number Unicode allows you to refer to characters by number or by name. Computers don't care, but humans do. When you have a character number, you can translate it to its name with the...",
+   "thumbnail" : null,
    "title" : "Perl Unicode Cookbook: Get Character Names by Number",
-   "tags" : [],
+   "date" : "2012-04-12T06:00:01-08:00",
+   "slug" : "/pub/2012/04/perlunicook-character-names-by-number.html",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "description" : "℞ 6: Get character name by number Unicode allows you to refer to characters by number or by name. Computers don't care, but humans do. When you have a character number, you can translate it to its name with the...",
    "image" : null,
-   "draft" : null,
-   "thumbnail" : null
+   "categories" : "unicode",
+   "tags" : []
 }
 
 

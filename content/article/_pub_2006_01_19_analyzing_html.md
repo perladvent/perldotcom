@@ -1,21 +1,21 @@
 {
-   "thumbnail" : "/images/_pub_2006_01_19_analyzing_html/111-analyzing_html.gif",
-   "draft" : null,
    "image" : null,
-   "description" : " Routine work is all around us every day, no matter if you like it or not. For a teacher on computing subjects, grading assignments can be such work. Certain computing assignments aim at practicing operating skills rather than creativity,...",
    "authors" : [
       "kendrew-lau"
    ],
-   "title" : "Analyzing HTML with Perl",
+   "categories" : "Web",
    "tags" : [
       "html-assignments-perl-html",
       "parsing-html",
       "perl-assignments",
       "perl-parsing"
    ],
-   "categories" : "Web",
    "date" : "2006-01-19T00:00:00-08:00",
-   "slug" : "/pub/2006/01/19/analyzing_html"
+   "slug" : "/pub/2006/01/19/analyzing_html.html",
+   "title" : "Analyzing HTML with Perl",
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2006_01_19_analyzing_html/111-analyzing_html.gif",
+   "description" : " Routine work is all around us every day, no matter if you like it or not. For a teacher on computing subjects, grading assignments can be such work. Certain computing assignments aim at practicing operating skills rather than creativity,..."
 }
 
 

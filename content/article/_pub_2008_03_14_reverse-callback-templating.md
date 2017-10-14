@@ -1,21 +1,21 @@
 {
+   "slug" : "/pub/2008/03/14/reverse-callback-templating.html",
+   "date" : "2008-03-14T00:00:00-08:00",
+   "title" : "Reverse Callback Templating",
    "draft" : null,
-   "thumbnail" : null,
    "image" : null,
-   "description" : " Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, pipeline and callback...",
    "authors" : [
       "james-robson"
    ],
-   "title" : "Reverse Callback Templating",
    "tags" : [
       "mvc",
       "presentation",
       "template-recall",
       "templating"
    ],
-   "slug" : "/pub/2008/03/14/reverse-callback-templating",
-   "date" : "2008-03-14T00:00:00-08:00",
-   "categories" : "Tooling"
+   "categories" : "Tooling",
+   "description" : " Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, pipeline and callback...",
+   "thumbnail" : null
 }
 
 

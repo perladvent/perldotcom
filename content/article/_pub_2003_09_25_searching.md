@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2003_09_25_searching/111-search_engines.gif",
-   "image" : null,
    "description" : " Introduction to Searching Usually, when building an application, a lot of thought goes into how the data is entered and updated, rather than finding it again. Finding data is an afterthought, especially when developing with a small dataset. If...",
-   "authors" : [
-      "aaron-trevena"
-   ],
+   "thumbnail" : "/images/_pub_2003_09_25_searching/111-search_engines.gif",
+   "draft" : null,
+   "date" : "2003-09-25T00:00:00-08:00",
+   "slug" : "/pub/2003/09/25/searching.html",
    "title" : "Adding Search Functionality to Perl Applications",
+   "categories" : "data",
    "tags" : [
       "searching-search-reverse-index"
    ],
-   "date" : "2003-09-25T00:00:00-08:00",
-   "slug" : "/pub/2003/09/25/searching",
-   "categories" : "data"
+   "image" : null,
+   "authors" : [
+      "aaron-trevena"
+   ]
 }
 
 

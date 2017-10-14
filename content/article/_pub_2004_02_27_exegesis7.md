@@ -1,21 +1,21 @@
 {
+   "title" : "Exegesis 7",
+   "slug" : "/pub/2004/02/27/exegesis7.html",
+   "date" : "2004-02-27T00:00:00-08:00",
    "draft" : null,
-   "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif",
    "authors" : [
       "damian-conway"
    ],
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 7 for the current design information. What a piece of work is Perl 6! How noble in reason! How infinite in faculty! In...",
    "image" : null,
-   "categories" : "perl-6",
-   "date" : "2004-02-27T00:00:00-08:00",
-   "slug" : "/pub/2004/02/27/exegesis7",
-   "title" : "Exegesis 7",
    "tags" : [
       "damian-conway",
       "exegesis",
       "formats",
       "perl-6"
-   ]
+   ],
+   "categories" : "perl-6",
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 7 for the current design information. What a piece of work is Perl 6! How noble in reason! How infinite in faculty! In...",
+   "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif"
 }
 
 

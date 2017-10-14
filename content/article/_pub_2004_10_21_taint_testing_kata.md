@@ -1,11 +1,13 @@
 {
+   "slug" : "/pub/2004/10/21/taint_testing_kata.html",
+   "date" : "2004-10-21T00:00:00-08:00",
+   "title" : "Perl Code Kata: Testing Taint",
    "draft" : null,
-   "thumbnail" : "/images/_pub_2004_10_21_taint_testing_kata/111-kata.gif",
-   "description" : "Perl's taint mode can help you avoid using untrusted input insecurely. Here's how to practice using it.",
    "image" : null,
    "authors" : [
       "chromatic"
    ],
+   "categories" : "testing",
    "tags" : [
       "chromatic",
       "code-kata",
@@ -14,10 +16,8 @@
       "perl-taint",
       "perl-testing"
    ],
-   "title" : "Perl Code Kata: Testing Taint",
-   "slug" : "/pub/2004/10/21/taint_testing_kata",
-   "date" : "2004-10-21T00:00:00-08:00",
-   "categories" : "testing"
+   "description" : "Perl's taint mode can help you avoid using untrusted input insecurely. Here's how to practice using it.",
+   "thumbnail" : "/images/_pub_2004_10_21_taint_testing_kata/111-kata.gif"
 }
 
 

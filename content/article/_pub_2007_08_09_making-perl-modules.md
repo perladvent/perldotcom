@@ -1,6 +1,12 @@
 {
-   "slug" : "/pub/2007/08/09/making-perl-modules",
    "date" : "2007-08-07T00:00:00-08:00",
+   "slug" : "/pub/2007/08/09/making-perl-modules.html",
+   "title" : "Making Perl Reusable with Modules",
+   "draft" : null,
+   "image" : null,
+   "authors" : [
+      "andy-sylvester"
+   ],
    "categories" : "CPAN",
    "tags" : [
       "cpan",
@@ -10,13 +16,7 @@
       "perl-distribution",
       "perl-reuse"
    ],
-   "title" : "Making Perl Reusable with Modules",
-   "authors" : [
-      "andy-sylvester"
-   ],
    "description" : " Perl software development can occur at several levels. When first developing the idea for an application, a Perl developer may start with a short program to flesh out the necessary algorithms. After that, the next step might be to...",
-   "image" : null,
-   "draft" : null,
    "thumbnail" : null
 }
 

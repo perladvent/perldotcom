@@ -1,12 +1,11 @@
 {
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2004_12_01_3d_engine/111-3d_engine.gif",
    "description" : " This article is the first in a series aimed at building a full 3D engine. It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design...",
-   "image" : null,
-   "authors" : [
-      "geoff-broadwell"
-   ],
+   "thumbnail" : "/images/_pub_2004_12_01_3d_engine/111-3d_engine.gif",
+   "draft" : null,
    "title" : "Building a 3D Engine in Perl",
+   "date" : "2004-12-01T00:00:00-08:00",
+   "slug" : "/pub/2004/12/01/3d_engine.html",
+   "categories" : "Games",
    "tags" : [
       "geoff-broadwell",
       "opengl-tutorial",
@@ -16,9 +15,10 @@
       "perl-opengl",
       "perl-sdl"
    ],
-   "categories" : "Games",
-   "date" : "2004-12-01T00:00:00-08:00",
-   "slug" : "/pub/2004/12/01/3d_engine"
+   "authors" : [
+      "geoff-broadwell"
+   ],
+   "image" : null
 }
 
 

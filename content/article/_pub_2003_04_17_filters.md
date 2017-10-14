@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "title" : "Filters in Apache 2.0",
-   "slug" : "/pub/2003/04/17/filters",
-   "date" : "2003-04-17T00:00:00-08:00",
-   "categories" : "web",
-   "thumbnail" : null,
-   "draft" : null,
    "description" : " Not too long ago, despite a relative dearth of free tuits, I decided that I had put off my investigation of mod_perl 2.0 for too long - it was time to really start kicking the tires and tinkering with...",
-   "image" : null,
+   "thumbnail" : null,
+   "title" : "Filters in Apache 2.0",
+   "slug" : "/pub/2003/04/17/filters.html",
+   "date" : "2003-04-17T00:00:00-08:00",
+   "draft" : null,
    "authors" : [
       "geoffrey-young"
-   ]
+   ],
+   "image" : null,
+   "tags" : [],
+   "categories" : "web"
 }
 
 

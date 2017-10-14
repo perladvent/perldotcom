@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "title" : "Choosing a Perl Book",
-   "date" : "2000-07-11T00:00:00-08:00",
-   "slug" : "/pub/2000/06/27/perlbook",
-   "categories" : "community",
    "thumbnail" : null,
-   "draft" : null,
-   "image" : null,
    "description" : " There are a huge number of books out there about Perl. A quick search onAmazon reveals 362 books; allowing for false positives and books where Perl is a minor part, I'd conservatively estimate there to be over 250 books...",
+   "tags" : [],
+   "categories" : "community",
    "authors" : [
       "simon-cozens"
-   ]
+   ],
+   "image" : null,
+   "draft" : null,
+   "title" : "Choosing a Perl Book",
+   "date" : "2000-07-11T00:00:00-08:00",
+   "slug" : "/pub/2000/06/27/perlbook.html"
 }
 
 

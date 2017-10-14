@@ -1,5 +1,7 @@
 {
-   "title" : "Understanding and Using Iterators",
+   "thumbnail" : "/images/_pub_2005_06_16_iterators/111-iterators.gif",
+   "description" : " The purpose of this tutorial is to give a general overview of what iterators are, why they are useful, how to build them, and things to consider to avoid common pitfalls. I intend to give the reader enough information...",
+   "categories" : "development",
    "tags" : [
       "functional-perl",
       "iteration",
@@ -8,16 +10,14 @@
       "perl-closures",
       "perl-generators"
    ],
-   "categories" : "development",
-   "slug" : "/pub/2005/06/16/iterators",
-   "date" : "2005-06-16T00:00:00-08:00",
    "image" : null,
-   "description" : " The purpose of this tutorial is to give a general overview of what iterators are, why they are useful, how to build them, and things to consider to avoid common pitfalls. I intend to give the reader enough information...",
    "authors" : [
       "joshua-gatcomb"
    ],
-   "thumbnail" : "/images/_pub_2005_06_16_iterators/111-iterators.gif",
-   "draft" : null
+   "draft" : null,
+   "date" : "2005-06-16T00:00:00-08:00",
+   "slug" : "/pub/2005/06/16/iterators.html",
+   "title" : "Understanding and Using Iterators"
 }
 
 

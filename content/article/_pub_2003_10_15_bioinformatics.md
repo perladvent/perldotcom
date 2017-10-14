@@ -1,8 +1,9 @@
 {
-   "date" : "2003-10-15T00:00:00-08:00",
-   "slug" : "/pub/2003/10/15/bioinformatics",
+   "image" : null,
+   "authors" : [
+      "james-d--tisdall"
+   ],
    "categories" : "science",
-   "title" : "A Chromosome at a Time with Perl, Part 2",
    "tags" : [
       "bioinformatics",
       "bioperl",
@@ -13,13 +14,12 @@
       "perl-and-bioinformatics",
       "subroutines"
    ],
+   "slug" : "/pub/2003/10/15/bioinformatics.html",
+   "date" : "2003-10-15T00:00:00-08:00",
+   "title" : "A Chromosome at a Time with Perl, Part 2",
    "draft" : null,
    "thumbnail" : null,
-   "authors" : [
-      "james-d--tisdall"
-   ],
-   "description" : " James D. Tisdall is the author of the recently released Mastering Perl for Bioinformatics. In my previous article, A Chromosome at a Time with Perl, Part I, I showed you some programming \"tricks\" that help you avoid the trap...",
-   "image" : null
+   "description" : " James D. Tisdall is the author of the recently released Mastering Perl for Bioinformatics. In my previous article, A Chromosome at a Time with Perl, Part I, I showed you some programming \"tricks\" that help you avoid the trap..."
 }
 
 

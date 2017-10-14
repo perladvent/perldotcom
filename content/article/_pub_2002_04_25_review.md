@@ -1,16 +1,16 @@
 {
    "thumbnail" : null,
-   "draft" : null,
+   "description" : "I always feel uneasy getting review copies of books like this; review copies of books are for me to look through, tell people how good or bad they are, and then sit on the shelf looking pretty. This book, essentially,...",
    "authors" : [
       "simon-cozens"
    ],
    "image" : null,
-   "description" : "I always feel uneasy getting review copies of books like this; review copies of books are for me to look through, tell people how good or bad they are, and then sit on the shelf looking pretty. This book, essentially,...",
-   "date" : "2002-04-25T00:00:00-08:00",
-   "slug" : "/pub/2002/04/25/review",
    "categories" : "web",
+   "tags" : [],
    "title" : "mod_perl Developer's Cookbook",
-   "tags" : []
+   "slug" : "/pub/2002/04/25/review.html",
+   "date" : "2002-04-25T00:00:00-08:00",
+   "draft" : null
 }
 
 

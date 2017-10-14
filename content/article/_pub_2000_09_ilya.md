@@ -1,16 +1,16 @@
 {
-   "title" : "Ilya Regularly Expresses",
-   "tags" : [],
-   "categories" : "Community",
-   "date" : "2000-09-20T00:00:00-08:00",
-   "slug" : "/pub/2000/09/ilya",
-   "thumbnail" : null,
-   "draft" : null,
-   "description" : null,
-   "image" : null,
    "authors" : [
       "joe-johnston"
-   ]
+   ],
+   "image" : null,
+   "tags" : [],
+   "categories" : "Community",
+   "title" : "Ilya Regularly Expresses",
+   "slug" : "/pub/2000/09/ilya.html",
+   "date" : "2000-09-20T00:00:00-08:00",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : null
 }
 
 

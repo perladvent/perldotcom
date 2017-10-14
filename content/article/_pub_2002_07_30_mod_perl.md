@@ -1,18 +1,18 @@
 {
-   "slug" : "/pub/2002/07/30/mod_perl",
-   "date" : "2002-07-30T00:00:00-08:00",
-   "categories" : "web",
-   "title" : "Improving mod_perl Sites' Performance: Part 4",
-   "tags" : [
-      "mod-perl-shared-memory"
-   ],
    "thumbnail" : null,
-   "draft" : null,
+   "description" : " Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the...",
    "authors" : [
       "stas-bekman"
    ],
-   "description" : " Introduction If your OS supports sharing of memory (and most sane systems do), you might save a lot of RAM by sharing it between child processes. This will allow you to run more processes and hopefully better satisfy the...",
-   "image" : null
+   "image" : null,
+   "categories" : "web",
+   "tags" : [
+      "mod-perl-shared-memory"
+   ],
+   "title" : "Improving mod_perl Sites' Performance: Part 4",
+   "slug" : "/pub/2002/07/30/mod_perl.html",
+   "date" : "2002-07-30T00:00:00-08:00",
+   "draft" : null
 }
 
 

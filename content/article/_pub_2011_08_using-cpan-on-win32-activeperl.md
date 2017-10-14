@@ -1,16 +1,16 @@
 {
-   "image" : null,
    "description" : "Christian Walde demonstrates that even ActivePerl users on Windows can use CPAN-out of the box.",
+   "thumbnail" : null,
+   "draft" : null,
+   "title" : "Using CPAN on Win32 ActivePerl",
+   "slug" : "/pub/2011/08/using-cpan-on-win32-activeperl.html",
+   "date" : "2011-08-03T06:00:01-08:00",
+   "categories" : "Windows",
+   "tags" : [],
    "authors" : [
       "chromatic"
    ],
-   "draft" : null,
-   "thumbnail" : null,
-   "tags" : [],
-   "title" : "Using CPAN on Win32 ActivePerl",
-   "date" : "2011-08-03T06:00:01-08:00",
-   "slug" : "/pub/2011/08/using-cpan-on-win32-activeperl",
-   "categories" : "Windows"
+   "image" : null
 }
 
 

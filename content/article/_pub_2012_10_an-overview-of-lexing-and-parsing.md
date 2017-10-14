@@ -1,16 +1,16 @@
 {
+   "description" : "Perl programmers spend a lot of time reading, modifying, and writing data. When regular expressions aren't enough, turn to something more powerful: parsing.",
    "thumbnail" : null,
    "draft" : null,
+   "date" : "2012-10-01T06:00:01-08:00",
+   "slug" : "/pub/2012/10/an-overview-of-lexing-and-parsing.html",
+   "title" : "An Overview of Lexing and Parsing",
+   "categories" : "development",
+   "tags" : [],
+   "image" : null,
    "authors" : [
       "ron-savage"
-   ],
-   "description" : "Perl programmers spend a lot of time reading, modifying, and writing data. When regular expressions aren't enough, turn to something more powerful: parsing.",
-   "image" : null,
-   "date" : "2012-10-01T06:00:01-08:00",
-   "slug" : "/pub/2012/10/an-overview-of-lexing-and-parsing",
-   "categories" : "development",
-   "title" : "An Overview of Lexing and Parsing",
-   "tags" : []
+   ]
 }
 
 

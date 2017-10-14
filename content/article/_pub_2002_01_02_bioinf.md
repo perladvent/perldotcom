@@ -1,18 +1,18 @@
 {
-   "thumbnail" : "/images/_pub_2002_01_02_bioinf/111-bioperl.gif",
    "draft" : null,
+   "title" : "Beginning Bioinformatics",
+   "slug" : "/pub/2002/01/02/bioinf.html",
+   "date" : "2002-01-02T00:00:00-08:00",
+   "tags" : [
+      "bioinformatics-biochemistry-biology-chemistry"
+   ],
+   "categories" : "science",
    "authors" : [
       "james-d--tisdall"
    ],
    "image" : null,
    "description" : " Bioinformatics, the use of computers in biology research, has been increasing in importance during the past decade as the Human Genome Project went from its beginning to the announcement last year of a \"draft\" of the complete sequence of...",
-   "date" : "2002-01-02T00:00:00-08:00",
-   "slug" : "/pub/2002/01/02/bioinf",
-   "categories" : "science",
-   "tags" : [
-      "bioinformatics-biochemistry-biology-chemistry"
-   ],
-   "title" : "Beginning Bioinformatics"
+   "thumbnail" : "/images/_pub_2002_01_02_bioinf/111-bioperl.gif"
 }
 
 

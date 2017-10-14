@@ -1,16 +1,16 @@
 {
-   "categories" : "unicode",
-   "slug" : "/pub/2012/05/perlunicook-specify-a-files-encoding",
-   "date" : "2012-05-04T06:00:01-08:00",
-   "tags" : [],
-   "title" : "Perl Unicode Cookbook: Specify a File's Encoding",
+   "thumbnail" : null,
+   "description" : "℞ 19: Open ﬁle with speciﬁc encoding While setting the default Unicode encoding for IO is sensible, sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to open...",
    "authors" : [
       "tom-christiansen"
    ],
    "image" : null,
-   "description" : "℞ 19: Open ﬁle with speciﬁc encoding While setting the default Unicode encoding for IO is sensible, sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to open...",
-   "draft" : null,
-   "thumbnail" : null
+   "tags" : [],
+   "categories" : "unicode",
+   "title" : "Perl Unicode Cookbook: Specify a File's Encoding",
+   "date" : "2012-05-04T06:00:01-08:00",
+   "slug" : "/pub/2012/05/perlunicook-specify-a-files-encoding.html",
+   "draft" : null
 }
 
 

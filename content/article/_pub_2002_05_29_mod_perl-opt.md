@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2002_05_29_mod_perl-opt/111-achieve_closure.gif",
-   "image" : null,
    "description" : " In the next series of articles, we are going to talk about mod_perl performance issues. We will try to look at as many aspects of the mod_perl driven service as possible: hardware, software, Perl coding and finally the mod_perl...",
-   "authors" : [
-      "stas-bekman"
-   ],
+   "thumbnail" : "/images/_pub_2002_05_29_mod_perl-opt/111-achieve_closure.gif",
+   "draft" : null,
    "title" : "Improving mod_perl Sites' Performance: Part 1",
+   "slug" : "/pub/2002/05/29/mod_perl-opt.html",
+   "date" : "2002-05-29T00:00:00-08:00",
+   "categories" : "web",
    "tags" : [
       "mod-perl-optimizing"
    ],
-   "categories" : "web",
-   "slug" : "/pub/2002/05/29/mod_perl-opt",
-   "date" : "2002-05-29T00:00:00-08:00"
+   "authors" : [
+      "stas-bekman"
+   ],
+   "image" : null
 }
 
 

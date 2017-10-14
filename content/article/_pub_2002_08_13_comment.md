@@ -1,18 +1,18 @@
 {
-   "slug" : "/pub/2002/08/13/comment",
-   "date" : "2002-08-13T00:00:00-08:00",
-   "categories" : "development",
-   "tags" : [
-      "commenting-multiline-comment-acme"
-   ],
-   "title" : "Acme::Comment",
+   "description" : " /* This is a Perl comment */ Commenting in Perl \"But what?\", I hear you think, \"Perl doesn't have multi-line comments!\" That's true. Perl doesn't have multiline comments. But why is that? What is wrong with them? Mostly, it...",
    "thumbnail" : null,
+   "title" : "Acme::Comment",
+   "slug" : "/pub/2002/08/13/comment.html",
+   "date" : "2002-08-13T00:00:00-08:00",
    "draft" : null,
    "authors" : [
       "jos-boumans"
    ],
    "image" : null,
-   "description" : " /* This is a Perl comment */ Commenting in Perl \"But what?\", I hear you think, \"Perl doesn't have multi-line comments!\" That's true. Perl doesn't have multiline comments. But why is that? What is wrong with them? Mostly, it..."
+   "tags" : [
+      "commenting-multiline-comment-acme"
+   ],
+   "categories" : "development"
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "categories" : "Community",
-   "slug" : "/pub/2012/08/embrace-the-reluctant-perl-programmer",
+   "description" : "editor's note: an earlier version of this article appeared at The Reluctant Perl Programmer. Per the suggestion of Ask Bjørn Hansen, this revision appears on Perl.com. Who We Are We all love Perl for different reasons. Some of us are...",
+   "thumbnail" : null,
    "date" : "2012-08-27T06:00:01-08:00",
+   "slug" : "/pub/2012/08/embrace-the-reluctant-perl-programmer.html",
    "title" : "Embrace the Reluctant Perl Programmer",
-   "tags" : [],
+   "draft" : null,
+   "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "image" : null,
-   "description" : "editor's note: an earlier version of this article appeared at The Reluctant Perl Programmer. Per the suggestion of Ask Bjørn Hansen, this revision appears on Perl.com. Who We Are We all love Perl for different reasons. Some of us are...",
-   "draft" : null,
-   "thumbnail" : null
+   "categories" : "Community",
+   "tags" : []
 }
 
 

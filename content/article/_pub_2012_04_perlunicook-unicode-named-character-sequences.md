@@ -1,16 +1,16 @@
 {
-   "title" : "Perl Unicode Cookbook: Unicode Named Character Sequences",
-   "tags" : [],
-   "categories" : "unicode",
-   "date" : "2012-04-17T06:00:01-08:00",
-   "slug" : "/pub/2012/04/perlunicook-unicode-named-character-sequences",
-   "draft" : null,
-   "thumbnail" : null,
    "image" : null,
-   "description" : "℞ 9: Unicode named sequences Unicode includes the feature of named character sequences, which combine multiple Unicode characters behind a single name. The charnames pragma allows the use of these named sequences in literals, just as it allows the use...",
    "authors" : [
       "tom-christiansen"
-   ]
+   ],
+   "tags" : [],
+   "categories" : "unicode",
+   "slug" : "/pub/2012/04/perlunicook-unicode-named-character-sequences.html",
+   "date" : "2012-04-17T06:00:01-08:00",
+   "title" : "Perl Unicode Cookbook: Unicode Named Character Sequences",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : "℞ 9: Unicode named sequences Unicode includes the feature of named character sequences, which combine multiple Unicode characters behind a single name. The charnames pragma allows the use of these named sequences in literals, just as it allows the use..."
 }
 
 
