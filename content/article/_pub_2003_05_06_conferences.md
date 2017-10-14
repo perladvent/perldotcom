@@ -1,16 +1,16 @@
 {
-   "title" : "2003 Perl Conferences",
-   "slug" : "/pub/2003/05/06/conferences.html",
-   "date" : "2003-05-06T00:00:00-08:00",
    "draft" : null,
-   "authors" : [
-      "simon-cozens"
-   ],
-   "image" : null,
-   "categories" : "Community",
    "tags" : [
       "conferences-yapc-tpc-oscon"
    ],
+   "image" : null,
+   "categories" : "Community",
+   "date" : "2003-05-06T00:00:00-08:00",
+   "authors" : [
+      "simon-cozens"
+   ],
+   "title" : "2003 Perl Conferences",
+   "slug" : "/pub/2003/05/06/conferences.html",
    "description" : " The season of Perl conferences is almost upon us! In fact, the first of the YAPCs for this year is in less than a week. So I thought this would be a good time to give a tour of...",
    "thumbnail" : "/images/_pub_2003_05_06_conferences/111-2003_conf.gif"
 }

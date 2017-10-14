@@ -1,16 +1,16 @@
 {
-   "title" : "This Fortnight on p5p 2000/12/31",
    "date" : "2001-01-09T00:00:00-08:00",
-   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010107.html",
    "draft" : null,
-   "authors" : [
-      "simon-cozens"
-   ],
    "image" : null,
    "categories" : "community",
    "tags" : [],
    "description" : " Notes Fix for gv_handler segfault rsync needs occasional delete Outstanding Unicode fix New Solaris hints file Lots of lvalue hackery Stephen McCamant and Doug MacEachern week Things to investigate Various Notes You can subscribe to an e-mail version of...",
-   "thumbnail" : null
+   "thumbnail" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
+   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010107.html",
+   "title" : "This Fortnight on p5p 2000/12/31"
 }
 
 

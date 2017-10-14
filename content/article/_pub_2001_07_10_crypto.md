@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2001/07/10/crypto.html",
    "date" : "2001-07-10T00:00:00-08:00",
-   "title" : "Symmetric Cryptography in Perl",
    "tags" : [
       "crypto-cryptography-crypt-idea-blowfish-symmetric"
    ],
-   "categories" : "Security",
    "image" : null,
+   "categories" : "Security",
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2001_07_10_crypto/111-crypto.jpg",
+   "description" : " Having purchased the $250 cookie recipe from Neiman-Marcus, Alice wants to send it to Bob, but keep it away from Eve, who snoops on everyone's network traffic from the cubicle down the hall. How can Perl help her? Ciphers...",
+   "title" : "Symmetric Cryptography in Perl",
+   "slug" : "/pub/2001/07/10/crypto.html",
    "authors" : [
       "abhijit-menon-sen"
-   ],
-   "description" : " Having purchased the $250 cookie recipe from Neiman-Marcus, Alice wants to send it to Bob, but keep it away from Eve, who snoops on everyone's network traffic from the cubicle down the hall. How can Perl help her? Ciphers...",
-   "thumbnail" : "/images/_pub_2001_07_10_crypto/111-crypto.jpg"
+   ]
 }
 
 

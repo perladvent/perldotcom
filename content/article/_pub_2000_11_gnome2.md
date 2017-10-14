@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "title" : "Programming GNOME Applications with Perl - Part 2",
-   "date" : "2000-11-28T00:00:00-08:00",
-   "slug" : "/pub/2000/11/gnome2.html",
-   "tags" : [],
-   "categories" : "apps",
+   "description" : "Programming GNOME Applications with Perl, Part Two -> Table of Contents The Cookbook Application The Main Screen Columned Lists Displaying Recipes Where We Are, And Where We're Going Notes on the Last Article Last month's article examined how to create...",
+   "thumbnail" : null,
    "authors" : [
       "simon-cozens"
    ],
+   "title" : "Programming GNOME Applications with Perl - Part 2",
+   "slug" : "/pub/2000/11/gnome2.html",
+   "date" : "2000-11-28T00:00:00-08:00",
+   "draft" : null,
    "image" : null,
-   "description" : "Programming GNOME Applications with Perl, Part Two -> Table of Contents The Cookbook Application The Main Screen Columned Lists Displaying Recipes Where We Are, And Where We're Going Notes on the Last Article Last month's article examined how to create...",
-   "thumbnail" : null
+   "categories" : "apps",
+   "tags" : []
 }
 
 

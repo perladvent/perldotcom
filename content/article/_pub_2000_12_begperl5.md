@@ -1,19 +1,19 @@
 {
-   "image" : null,
+   "slug" : "/pub/2000/12/begperl5.html",
+   "title" : "Beginners Intro to Perl - Part 5",
    "authors" : [
       "doug-sheppard"
    ],
+   "thumbnail" : null,
+   "description" : "Objects and Modules -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's...",
    "tags" : [
       "object-oriented-programming",
       "oop"
    ],
+   "image" : null,
    "categories" : "development",
-   "slug" : "/pub/2000/12/begperl5.html",
-   "date" : "2000-12-18T00:00:00-08:00",
-   "title" : "Beginners Intro to Perl - Part 5",
    "draft" : null,
-   "thumbnail" : null,
-   "description" : "Objects and Modules -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's..."
+   "date" : "2000-12-18T00:00:00-08:00"
 }
 
 

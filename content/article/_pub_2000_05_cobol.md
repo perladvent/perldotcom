@@ -1,15 +1,15 @@
 {
    "thumbnail" : null,
    "description" : " A few weeks ago I went to do a four-day beginning Perltraining at a local utility company. It was quite different from other training classes I'd given. Typically, my students have some Unix and C experience. These students, however,...",
-   "image" : null,
+   "slug" : "/pub/2000/05/cobol.html",
+   "title" : "Perl Meets COBOL",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "categories" : "community",
-   "tags" : [],
    "date" : "2000-05-15T00:00:00-08:00",
-   "slug" : "/pub/2000/05/cobol.html",
-   "title" : "Perl Meets COBOL",
+   "tags" : [],
+   "image" : null,
+   "categories" : "community",
    "draft" : null
 }
 

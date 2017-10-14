@@ -1,18 +1,18 @@
 {
-   "thumbnail" : "/images/_pub_2001_08_27_bjornstad/111-perldisabled.jpg",
-   "description" : "As part of Mark-Jason Dominus's Lightning Talks at the 2001 O'Reilly Open Source Convention, Jon Bjornstad gave a talk about a Perl/Tk program he wrote to help a mute quadriplegic friend, Sue Simpson, speak and better use her computer. Jon's...",
-   "image" : null,
+   "slug" : "/pub/2001/08/27/bjornstad.html",
+   "title" : "Perl Helps The Disabled",
    "authors" : [
       "dan-brian"
    ],
+   "thumbnail" : "/images/_pub_2001_08_27_bjornstad/111-perldisabled.jpg",
+   "description" : "As part of Mark-Jason Dominus's Lightning Talks at the 2001 O'Reilly Open Source Convention, Jon Bjornstad gave a talk about a Perl/Tk program he wrote to help a mute quadriplegic friend, Sue Simpson, speak and better use her computer. Jon's...",
    "tags" : [
       "disabled-accessibility-tk-bjornstad"
    ],
+   "image" : null,
    "categories" : "Community",
-   "date" : "2001-08-27T00:00:00-08:00",
-   "slug" : "/pub/2001/08/27/bjornstad.html",
-   "title" : "Perl Helps The Disabled",
-   "draft" : null
+   "draft" : null,
+   "date" : "2001-08-27T00:00:00-08:00"
 }
 
 

@@ -1,4 +1,14 @@
 {
+   "description" : "Autrijus Tang, creator of the Pugs Perl 6 implementation, explains how this project may bring Perl 6 to fruition.",
+   "thumbnail" : "/images/_pub_2005_03_03_pugs_interview/111-pugs.gif",
+   "authors" : [
+      "chromatic"
+   ],
+   "title" : "A Plan for Pugs",
+   "slug" : "/pub/2005/03/03/pugs_interview.html",
+   "date" : "2005-03-03T00:00:00-08:00",
+   "draft" : null,
+   "image" : null,
    "categories" : "Perl-6",
    "tags" : [
       "perl6",
@@ -10,17 +20,7 @@
       "parsec",
       "perl-6",
       "pugs"
-   ],
-   "image" : null,
-   "authors" : [
-      "chromatic"
-   ],
-   "draft" : null,
-   "slug" : "/pub/2005/03/03/pugs_interview.html",
-   "date" : "2005-03-03T00:00:00-08:00",
-   "title" : "A Plan for Pugs",
-   "thumbnail" : "/images/_pub_2005_03_03_pugs_interview/111-pugs.gif",
-   "description" : "Autrijus Tang, creator of the Pugs Perl 6 implementation, explains how this project may bring Perl 6 to fruition."
+   ]
 }
 
 

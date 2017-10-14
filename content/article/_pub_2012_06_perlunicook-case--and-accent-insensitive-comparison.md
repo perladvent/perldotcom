@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-comparison.html",
-   "date" : "2012-06-08T06:00:01-08:00",
-   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Comparison",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "tags" : [],
-   "categories" : "unicode",
+   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Comparison",
+   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-comparison.html",
    "description" : "℞ 39: Case- and accent-insensitive comparisons As you've noticed by now, many Unicode strings have multiple possible representations. Comparing two Unicode strings for equality requires far more than merely comparing their codepoints. Not only must you account for multiple representations,...",
-   "thumbnail" : null
+   "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
+   "categories" : "unicode",
+   "tags" : [],
+   "date" : "2012-06-08T06:00:01-08:00"
 }
 
 

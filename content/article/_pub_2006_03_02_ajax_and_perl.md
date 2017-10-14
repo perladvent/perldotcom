@@ -1,12 +1,5 @@
 {
-   "date" : "2006-03-02T00:00:00-08:00",
-   "slug" : "/pub/2006/03/02/ajax_and_perl.html",
-   "title" : "Using Ajax from Perl",
    "draft" : null,
-   "image" : null,
-   "authors" : [
-      "dominic-mitchell"
-   ],
    "tags" : [
       "ajax",
       "cgi-ajax",
@@ -15,7 +8,14 @@
       "perl-web-programming",
       "rest-and-perl"
    ],
+   "image" : null,
    "categories" : "web",
+   "date" : "2006-03-02T00:00:00-08:00",
+   "authors" : [
+      "dominic-mitchell"
+   ],
+   "slug" : "/pub/2006/03/02/ajax_and_perl.html",
+   "title" : "Using Ajax from Perl",
    "description" : " If you're even remotely connected to web development, you can't have failed to have heard of Ajax at some point in the last year. It probably sounded like the latest buzzword and was one of those things you stuck...",
    "thumbnail" : "/images/_pub_2006_03_02_ajax_and_perl/111-cgi_ajax.gif"
 }

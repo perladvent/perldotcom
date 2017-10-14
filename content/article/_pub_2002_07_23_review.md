@@ -1,16 +1,16 @@
 {
-   "description" : " I recently received Martien Verbruggen's long-awaited \"Graphics Programming in Perl,\" and I wasn't quite sure what to make of it. As he notes himself, \"I didn't think there would be enough coherent material to write such a book, and...",
-   "thumbnail" : null,
    "date" : "2002-07-23T00:00:00-08:00",
-   "slug" : "/pub/2002/07/23/review.html",
-   "title" : "Graphics Programming with Perl",
    "draft" : null,
    "image" : null,
+   "categories" : "Graphics",
+   "tags" : [],
+   "description" : " I recently received Martien Verbruggen's long-awaited \"Graphics Programming in Perl,\" and I wasn't quite sure what to make of it. As he notes himself, \"I didn't think there would be enough coherent material to write such a book, and...",
+   "thumbnail" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "tags" : [],
-   "categories" : "Graphics"
+   "slug" : "/pub/2002/07/23/review.html",
+   "title" : "Graphics Programming with Perl"
 }
 
 

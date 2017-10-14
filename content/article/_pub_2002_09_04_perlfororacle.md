@@ -1,20 +1,20 @@
 {
-   "description" : " Andy Duncan is the co-author of Perl for Oracle DBAs. My coauthor, Jared Still, and I had the task of writing a book, Perl for Oracle DBAs, about two of our favorite subjects, Perl and Oracle. Our goal was...",
-   "thumbnail" : "/images/_pub_2002_09_04_perlfororacle/111-oracleperl.gif",
-   "draft" : null,
-   "date" : "2002-09-04T00:00:00-08:00",
-   "slug" : "/pub/2002/09/04/perlfororacle.html",
-   "title" : "The Fusion of Perl and Oracle",
+   "image" : null,
+   "categories" : "Data",
    "tags" : [
       "oracle",
       "oracle-dba",
       "perl"
    ],
-   "categories" : "Data",
-   "image" : null,
+   "draft" : null,
+   "date" : "2002-09-04T00:00:00-08:00",
+   "title" : "The Fusion of Perl and Oracle",
+   "slug" : "/pub/2002/09/04/perlfororacle.html",
    "authors" : [
       "andy-duncan"
-   ]
+   ],
+   "thumbnail" : "/images/_pub_2002_09_04_perlfororacle/111-oracleperl.gif",
+   "description" : " Andy Duncan is the co-author of Perl for Oracle DBAs. My coauthor, Jared Still, and I had the task of writing a book, Perl for Oracle DBAs, about two of our favorite subjects, Perl and Oracle. Our goal was..."
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "categories" : "unicode",
+   "draft" : null,
    "tags" : [],
+   "image" : null,
+   "categories" : "unicode",
+   "date" : "2012-06-29T06:00:01-08:00",
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "draft" : null,
-   "title" : "Perl Unicode Cookbook: Further Resources",
-   "date" : "2012-06-29T06:00:01-08:00",
    "slug" : "/pub/2012/06/perlunicook-further-resources.html",
-   "thumbnail" : null,
-   "description" : "This series has shown you several features of Unicode by example, as well as several techniques for working with Unicode correctly and easily with recent releases of Perl 5. By now you know more than many programmers do about Unicode,..."
+   "title" : "Perl Unicode Cookbook: Further Resources",
+   "description" : "This series has shown you several features of Unicode by example, as well as several techniques for working with Unicode correctly and easily with recent releases of Perl 5. By now you know more than many programmers do about Unicode,...",
+   "thumbnail" : null
 }
 
 

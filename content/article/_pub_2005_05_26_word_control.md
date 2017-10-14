@@ -1,21 +1,21 @@
 {
-   "title" : "Manipulating Word Documents with Perl",
-   "slug" : "/pub/2005/05/26/word_control.html",
-   "date" : "2005-05-26T00:00:00-08:00",
-   "draft" : null,
-   "authors" : [
-      "andrew-savikas"
-   ],
    "image" : null,
+   "categories" : "windows",
    "tags" : [
       "invoke-perl-on-windows",
       "perl-embed",
       "word-macro-alternatives",
       "word-manipulation"
    ],
-   "categories" : "windows",
-   "description" : " In a recent lightning article, Customizing Emacs with Perl, Bob DuCharme explained how to use the Emacs shell-command-on-region function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the...",
-   "thumbnail" : "/images/_pub_2005_05_26_word_control/111-perl_in_word.gif"
+   "draft" : null,
+   "date" : "2005-05-26T00:00:00-08:00",
+   "title" : "Manipulating Word Documents with Perl",
+   "slug" : "/pub/2005/05/26/word_control.html",
+   "authors" : [
+      "andrew-savikas"
+   ],
+   "thumbnail" : "/images/_pub_2005_05_26_word_control/111-perl_in_word.gif",
+   "description" : " In a recent lightning article, Customizing Emacs with Perl, Bob DuCharme explained how to use the Emacs shell-command-on-region function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the..."
 }
 
 

@@ -1,20 +1,20 @@
 {
-   "draft" : null,
    "date" : "2004-08-27T00:00:00-08:00",
-   "slug" : "/pub/2004/08/27/bricolage.html",
-   "title" : "Content Management with Bricolage",
-   "categories" : "web",
    "tags" : [
       "bricolage",
       "cms",
       "content-management"
    ],
+   "categories" : "web",
    "image" : null,
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_08_27_bricolage/111-bricolage.gif",
+   "description" : " If you've ever had to manage a web site with tens of thousands of pages of content where many people need to be able to update that content, you've no doubt recognized the need for a content management system...",
+   "title" : "Content Management with Bricolage",
+   "slug" : "/pub/2004/08/27/bricolage.html",
    "authors" : [
       "david-wheeler"
-   ],
-   "description" : " If you've ever had to manage a web site with tens of thousands of pages of content where many people need to be able to update that content, you've no doubt recognized the need for a content management system...",
-   "thumbnail" : "/images/_pub_2004_08_27_bricolage/111-bricolage.gif"
+   ]
 }
 
 

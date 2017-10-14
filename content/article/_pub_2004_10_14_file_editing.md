@@ -1,21 +1,21 @@
 {
-   "description" : "For those not used to the terminology, FMTYEWTK stands for Far More Than You Ever Wanted To Know. This one is fairly light as FMTYEWTKs usually go. In any case, the question before us is, \"How do you apply an...",
-   "thumbnail" : "/images/_pub_2004_10_14_file_editing/111-cli_textedit.gif",
-   "title" : "FMTYEWTK About Mass Edits In Perl",
-   "slug" : "/pub/2004/10/14/file_editing.html",
    "date" : "2004-10-14T00:00:00-08:00",
    "draft" : null,
-   "authors" : [
-      "geoff-broadwell"
-   ],
    "image" : null,
+   "categories" : "Tooling",
    "tags" : [
       "command-line-file-editing",
       "fmtyewtk",
       "geoff-broadwell",
       "perl-file-editing"
    ],
-   "categories" : "Tooling"
+   "description" : "For those not used to the terminology, FMTYEWTK stands for Far More Than You Ever Wanted To Know. This one is fairly light as FMTYEWTKs usually go. In any case, the question before us is, \"How do you apply an...",
+   "thumbnail" : "/images/_pub_2004_10_14_file_editing/111-cli_textedit.gif",
+   "authors" : [
+      "geoff-broadwell"
+   ],
+   "title" : "FMTYEWTK About Mass Edits In Perl",
+   "slug" : "/pub/2004/10/14/file_editing.html"
 }
 
 

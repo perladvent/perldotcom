@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "title" : "Changing Hash Behaviour with tie",
-   "date" : "2001-09-04T00:00:00-08:00",
-   "slug" : "/pub/2001/09/04/tiedhash.html",
-   "categories" : "data",
-   "tags" : [
-      "tied-hash-behaviour"
-   ],
+   "description" : " Introduction In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl Objects have...",
+   "thumbnail" : "/images/_pub_2001_09_04_tiedhash/111-hashtie.jpg",
    "authors" : [
       "dave-cross"
    ],
+   "slug" : "/pub/2001/09/04/tiedhash.html",
+   "title" : "Changing Hash Behaviour with tie",
+   "date" : "2001-09-04T00:00:00-08:00",
+   "draft" : null,
+   "tags" : [
+      "tied-hash-behaviour"
+   ],
    "image" : null,
-   "description" : " Introduction In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl Objects have...",
-   "thumbnail" : "/images/_pub_2001_09_04_tiedhash/111-hashtie.jpg"
+   "categories" : "data"
 }
 
 

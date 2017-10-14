@@ -1,19 +1,19 @@
 {
    "description" : " Overview August 21 - 24, 1999 My main reason for attending the Open Source Conference is to observe Open Source developments and to gather business intelligence for Chevron. I learned Python. I also concentrated on understanding the business case...",
    "thumbnail" : null,
-   "draft" : null,
+   "authors" : [
+      "ian-clark"
+   ],
    "title" : "Open Source Highlights",
    "slug" : "/pub/1999/09/trips/tripreport.html",
    "date" : "1999-09-28T00:00:00-08:00",
+   "draft" : null,
    "tags" : [
       "open-source-conference",
       "python",
       "trip-report"
    ],
    "categories" : "community",
-   "authors" : [
-      "ian-clark"
-   ],
    "image" : null
 }
 

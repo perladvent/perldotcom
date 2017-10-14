@@ -1,8 +1,13 @@
 {
-   "image" : null,
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. As soon as she walked through my door I knew her type: she was an argument waiting...",
+   "thumbnail" : "/images/_pub_2003_07_29_exegesis6/111-exegesis_6.gif",
    "authors" : [
       "damian-conway"
    ],
+   "title" : "Exegesis 6",
+   "slug" : "/pub/2003/07/29/exegesis6.html",
+   "date" : "2003-07-29T00:00:00-08:00",
+   "draft" : null,
    "tags" : [
       "apocalypse-6",
       "damian-conway",
@@ -10,13 +15,8 @@
       "perl-6",
       "subroutines"
    ],
-   "categories" : "perl-6",
-   "slug" : "/pub/2003/07/29/exegesis6.html",
-   "date" : "2003-07-29T00:00:00-08:00",
-   "title" : "Exegesis 6",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2003_07_29_exegesis6/111-exegesis_6.gif",
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. As soon as she walked through my door I knew her type: she was an argument waiting..."
+   "image" : null,
+   "categories" : "perl-6"
 }
 
 

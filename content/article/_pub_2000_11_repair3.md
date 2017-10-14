@@ -1,16 +1,16 @@
 {
+   "date" : "2000-11-14T00:00:00-08:00",
+   "draft" : null,
+   "tags" : [],
+   "categories" : "development",
    "image" : null,
+   "description" : " What's wrong with this picture? The Interface The Code open_info_file start_info_file start_next_part read_next_node Looking for the menu Putting It All Together Red Flags Don't Repeat Code eof() return 0 and return undef Brief Confession What's wrong with this picture?...",
+   "thumbnail" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "categories" : "development",
-   "tags" : [],
-   "date" : "2000-11-14T00:00:00-08:00",
    "slug" : "/pub/2000/11/repair3.html",
-   "title" : "Program Repair Shop and Red Flags",
-   "draft" : null,
-   "thumbnail" : null,
-   "description" : " What's wrong with this picture? The Interface The Code open_info_file start_info_file start_next_part read_next_node Looking for the menu Putting It All Together Red Flags Don't Repeat Code eof() return 0 and return undef Brief Confession What's wrong with this picture?..."
+   "title" : "Program Repair Shop and Red Flags"
 }
 
 

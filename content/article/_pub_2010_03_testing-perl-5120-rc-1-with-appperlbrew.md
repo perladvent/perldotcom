@@ -1,7 +1,13 @@
 {
+   "description" : "I'm working on a project with Curtis \"Ovid\" Poe and Adrian Howard. We use Perl 5.10.1, but because we control which version of Perl 5 we use, there's no reason not to test with Perl 5.12.0 - and if we...",
+   "thumbnail" : null,
    "authors" : [
       "chromatic"
    ],
+   "slug" : "/pub/2010/03/testing-perl-5120-rc-1-with-appperlbrew.html",
+   "title" : "Testing Perl 5.12.0 RC 1 with App::perlbrew",
+   "date" : "2010-03-30T14:22:06-08:00",
+   "draft" : null,
    "image" : null,
    "categories" : "Tooling",
    "tags" : [
@@ -11,13 +17,7 @@
       "perl-5-12",
       "perlbrew",
       "testing"
-   ],
-   "title" : "Testing Perl 5.12.0 RC 1 with App::perlbrew",
-   "date" : "2010-03-30T14:22:06-08:00",
-   "slug" : "/pub/2010/03/testing-perl-5120-rc-1-with-appperlbrew.html",
-   "draft" : null,
-   "thumbnail" : null,
-   "description" : "I'm working on a project with Curtis \"Ovid\" Poe and Adrian Howard. We use Perl 5.10.1, but because we control which version of Perl 5 we use, there's no reason not to test with Perl 5.12.0 - and if we..."
+   ]
 }
 
 

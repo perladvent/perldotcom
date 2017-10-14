@@ -1,18 +1,18 @@
 {
+   "thumbnail" : "/images/_pub_2001_12_19_xmlrpc/111-active_dir.gif",
+   "description" : " Introduction Active Directory of Windows 2000's directory service, allowing organizations to keep and share information about networked resources and users. One significant feature of the Active Directory is that it is LDAP-compliant. Unfortunately, it is still very difficult to...",
    "title" : "Building a Bridge to the Active Directory",
-   "date" : "2001-12-19T00:00:00-08:00",
    "slug" : "/pub/2001/12/19/xmlrpc.html",
-   "draft" : null,
    "authors" : [
       "kelvin-param"
    ],
-   "image" : null,
-   "categories" : "data",
+   "date" : "2001-12-19T00:00:00-08:00",
    "tags" : [
       "active-directory-xml-rpc"
    ],
-   "description" : " Introduction Active Directory of Windows 2000's directory service, allowing organizations to keep and share information about networked resources and users. One significant feature of the Active Directory is that it is LDAP-compliant. Unfortunately, it is still very difficult to...",
-   "thumbnail" : "/images/_pub_2001_12_19_xmlrpc/111-active_dir.gif"
+   "categories" : "data",
+   "image" : null,
+   "draft" : null
 }
 
 

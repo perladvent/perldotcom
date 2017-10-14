@@ -1,21 +1,21 @@
 {
-   "thumbnail" : null,
-   "description" : "Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular Expressions...",
+   "slug" : "/pub/2001/01/begperl6.html",
+   "title" : "Beginners Intro to Perl - Part 6",
    "authors" : [
       "doug-sheppard"
    ],
-   "image" : null,
+   "thumbnail" : null,
+   "description" : "Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular Expressions...",
    "categories" : "development",
+   "image" : null,
    "tags" : [
       "debugging",
       "security",
       "tainting",
       "warnings"
    ],
-   "title" : "Beginners Intro to Perl - Part 6",
-   "date" : "2001-01-09T00:00:00-08:00",
-   "slug" : "/pub/2001/01/begperl6.html",
-   "draft" : null
+   "draft" : null,
+   "date" : "2001-01-09T00:00:00-08:00"
 }
 
 

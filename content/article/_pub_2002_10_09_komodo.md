@@ -1,14 +1,14 @@
 {
    "description" : "Every time I get a new copy of ActiveState's Komodo IDE, I do a review that invariably ends &quot;this would be the perfect IDE for me if I were the sort of person who used IDEs&quot;. And every time I...",
    "thumbnail" : null,
-   "date" : "2002-10-09T00:00:00-08:00",
-   "slug" : "/pub/2002/10/09/komodo.html",
-   "title" : "A Review of Komodo",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
+   "slug" : "/pub/2002/10/09/komodo.html",
+   "title" : "A Review of Komodo",
+   "date" : "2002-10-09T00:00:00-08:00",
+   "draft" : null,
+   "image" : null,
    "categories" : "Tooling",
    "tags" : [
       "komodo-ide"

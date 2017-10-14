@@ -1,10 +1,14 @@
 {
-   "thumbnail" : "/images/_pub_2003_07_08_mod_perl/111-modperl_auth.gif",
-   "description" : " Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time...",
-   "image" : null,
    "authors" : [
       "geoffrey-young"
    ],
+   "title" : "Integrating mod_perl with Apache 2.1 Authentication",
+   "slug" : "/pub/2003/07/08/mod_perl.html",
+   "description" : " Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time...",
+   "thumbnail" : "/images/_pub_2003_07_08_mod_perl/111-modperl_auth.gif",
+   "draft" : null,
+   "categories" : "web",
+   "image" : null,
    "tags" : [
       "apache-2",
       "apache-authhandler",
@@ -12,11 +16,7 @@
       "geoffrey-young",
       "mod-perl-2"
    ],
-   "categories" : "web",
-   "slug" : "/pub/2003/07/08/mod_perl.html",
-   "date" : "2003-07-08T00:00:00-08:00",
-   "title" : "Integrating mod_perl with Apache 2.1 Authentication",
-   "draft" : null
+   "date" : "2003-07-08T00:00:00-08:00"
 }
 
 

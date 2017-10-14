@@ -1,16 +1,16 @@
 {
+   "tags" : [],
+   "categories" : "Perl Internals",
+   "image" : null,
+   "draft" : null,
+   "date" : "2003-06-19T00:00:00-08:00",
    "title" : "Hidden Treasures of the Perl Core, part II",
    "slug" : "/pub/2003/06/19/treasures.html",
-   "date" : "2003-06-19T00:00:00-08:00",
-   "draft" : null,
    "authors" : [
       "casey-west"
    ],
-   "image" : null,
-   "tags" : [],
-   "categories" : "Perl Internals",
-   "description" : " In the previous hidden treasures article, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core....",
-   "thumbnail" : null
+   "thumbnail" : null,
+   "description" : " In the previous hidden treasures article, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core...."
 }
 
 

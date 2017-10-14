@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "description" : " Notes Meta-Information Brief Update p5p to become Refereed? perlretut and perlrequick Threading Hilarity Line Disciplines Older Discussion of Disciplines Big Line Numbers Pseudohash Field Names, Hash Performance, and map Performance C with Embedded Perl `Unreachable' code. sprintf Precision SDF...",
+   "tags" : [],
+   "image" : null,
+   "categories" : "community",
+   "draft" : null,
+   "date" : "2000-04-23T00:00:00-08:00",
+   "title" : "This Week on p5p 2000/04/23",
+   "slug" : "/pub/2000/04/p5pdigest/THISWEEK-20000423.html",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
-   "categories" : "community",
-   "tags" : [],
-   "title" : "This Week on p5p 2000/04/23",
-   "slug" : "/pub/2000/04/p5pdigest/THISWEEK-20000423.html",
-   "date" : "2000-04-23T00:00:00-08:00",
-   "draft" : null
+   "thumbnail" : null,
+   "description" : " Notes Meta-Information Brief Update p5p to become Refereed? perlretut and perlrequick Threading Hilarity Line Disciplines Older Discussion of Disciplines Big Line Numbers Pseudohash Field Names, Hash Performance, and map Performance C with Embedded Perl `Unreachable' code. sprintf Precision SDF..."
 }
 
 

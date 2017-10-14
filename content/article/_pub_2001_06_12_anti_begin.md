@@ -1,16 +1,16 @@
 {
+   "date" : "2001-06-12T00:00:00-08:00",
+   "draft" : null,
+   "image" : null,
    "categories" : "Community",
    "tags" : [],
-   "image" : null,
+   "description" : "A recent article here, Turning the Tides of Perl's Attitude Toward Beginners,\" described places on the Internet where beginners could get help without fear of being flamed mercilessly by insensitive, elitist Perl experts. Experienced programmers, in short, must be more...",
+   "thumbnail" : "/images/_pub_2001_06_12_anti_begin/111-perl-attitude.jpg",
    "authors" : [
       "robert-kiesling"
    ],
-   "draft" : null,
-   "slug" : "/pub/2001/06/12/anti_begin.html",
-   "date" : "2001-06-12T00:00:00-08:00",
    "title" : "The Beginner's Attitude of Perl: What Attitude?",
-   "thumbnail" : "/images/_pub_2001_06_12_anti_begin/111-perl-attitude.jpg",
-   "description" : "A recent article here, Turning the Tides of Perl's Attitude Toward Beginners,\" described places on the Internet where beginners could get help without fear of being flamed mercilessly by insensitive, elitist Perl experts. Experienced programmers, in short, must be more..."
+   "slug" : "/pub/2001/06/12/anti_begin.html"
 }
 
 

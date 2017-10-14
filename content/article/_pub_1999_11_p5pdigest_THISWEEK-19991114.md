@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "description" : " Notes Lexical variables and eval More About Line Disciplines link on WinNT Regex Optimization Threads on Solaris Regex Engine Reentrancy Big Files Continue Regexp Objects again Unicode Support on EBCDIC Machines Marshalling Modules Got Perl? localtime() has Another Bug!...",
+   "date" : "1999-11-14T00:00:00-08:00",
+   "image" : null,
    "categories" : "community",
    "tags" : [],
-   "image" : null,
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : " Notes Lexical variables and eval More About Line Disciplines link on WinNT Regex Optimization Threads on Solaris Regex Engine Reentrancy Big Files Continue Regexp Objects again Unicode Support on EBCDIC Machines Marshalling Modules Got Perl? localtime() has Another Bug!...",
+   "title" : "This Week on p5p 1999/11/14",
+   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991114.html",
    "authors" : [
       "mark-jason-dominus"
-   ],
-   "draft" : null,
-   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991114.html",
-   "date" : "1999-11-14T00:00:00-08:00",
-   "title" : "This Week on p5p 1999/11/14"
+   ]
 }
 
 

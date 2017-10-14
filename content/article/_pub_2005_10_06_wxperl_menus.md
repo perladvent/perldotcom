@@ -1,5 +1,13 @@
 {
+   "title" : "Making Menus with wxPerl",
+   "slug" : "/pub/2005/10/06/wxperl_menus.html",
+   "authors" : [
+      "roberto-alamos"
+   ],
+   "thumbnail" : "/images/_pub_2005_10_06_wxperl_menus/111-gui.gif",
+   "description" : " In a previous article about wxPerl published on Perl.com, Jouke Visser taught the very basics of wxPerl programming. In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover...",
    "categories" : "Graphics",
+   "image" : null,
    "tags" : [
       "perl-gui",
       "perl-gui-programming",
@@ -8,16 +16,8 @@
       "wxperl",
       "wxwidgets"
    ],
-   "authors" : [
-      "roberto-alamos"
-   ],
-   "image" : null,
    "draft" : null,
-   "title" : "Making Menus with wxPerl",
-   "date" : "2005-10-06T00:00:00-08:00",
-   "slug" : "/pub/2005/10/06/wxperl_menus.html",
-   "thumbnail" : "/images/_pub_2005_10_06_wxperl_menus/111-gui.gif",
-   "description" : " In a previous article about wxPerl published on Perl.com, Jouke Visser taught the very basics of wxPerl programming. In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover..."
+   "date" : "2005-10-06T00:00:00-08:00"
 }
 
 

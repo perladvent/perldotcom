@@ -1,20 +1,20 @@
 {
-   "slug" : "/pub/2004/07/09/xplane.html",
-   "date" : "2004-07-12T00:00:00-08:00",
    "title" : "Autopilots in Perl",
-   "draft" : null,
-   "image" : null,
+   "slug" : "/pub/2004/07/09/xplane.html",
    "authors" : [
       "jeffrey-goff"
    ],
+   "thumbnail" : "/images/_pub_2004_07_09_xplane/111-autopilots.gif",
+   "description" : " X-Plane is an ultra-realistic flight simulator used by aviation pioneers like Burt Rutan, who uses it in his simulator for SpaceShipOne. The latest revision sports a flight model so accurate that the FAA has decided that your time spent...",
    "tags" : [
       "flight-simulator",
       "x-plane",
       "xplane"
    ],
+   "image" : null,
    "categories" : "Games",
-   "description" : " X-Plane is an ultra-realistic flight simulator used by aviation pioneers like Burt Rutan, who uses it in his simulator for SpaceShipOne. The latest revision sports a flight model so accurate that the FAA has decided that your time spent...",
-   "thumbnail" : "/images/_pub_2004_07_09_xplane/111-autopilots.gif"
+   "draft" : null,
+   "date" : "2004-07-12T00:00:00-08:00"
 }
 
 

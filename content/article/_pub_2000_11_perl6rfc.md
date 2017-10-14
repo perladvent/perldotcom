@@ -1,14 +1,14 @@
 {
-   "slug" : "/pub/2000/11/perl6rfc.html",
-   "date" : "2000-10-31T00:00:00-08:00",
-   "title" : "Critique of the Perl 6 RFC Process",
    "draft" : null,
+   "tags" : [],
    "image" : null,
+   "categories" : "Community",
+   "date" : "2000-10-31T00:00:00-08:00",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "categories" : "Community",
-   "tags" : [],
+   "slug" : "/pub/2000/11/perl6rfc.html",
+   "title" : "Critique of the Perl 6 RFC Process",
    "description" : " Table of Contents Problems with Proposals of Major Changes Problems with Proposals of Minor Changes Miscellaneous Problems Overall Problems Bottom Line A Very Brief Summary Discussion of major changes is pointless in the absence of a familiarity with internals...",
    "thumbnail" : null
 }

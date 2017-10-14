@@ -1,18 +1,18 @@
 {
-   "image" : null,
    "authors" : [
       "damian-conway"
    ],
+   "slug" : "/pub/2001/05/08/exegesis2.html",
+   "title" : "Exegesis 2",
+   "description" : "Exegesis 2 -> Editor's note: this document is out of date and remains here for historic interest. See Synopsis 2 for the current design information. exegesis: n. an interpretation and explanation of a text, esp. Holy Writ This is the...",
+   "thumbnail" : null,
+   "draft" : null,
    "categories" : "perl-6",
+   "image" : null,
    "tags" : [
       "perl-6"
    ],
-   "slug" : "/pub/2001/05/08/exegesis2.html",
-   "date" : "2001-05-15T00:00:00-08:00",
-   "title" : "Exegesis 2",
-   "draft" : null,
-   "thumbnail" : null,
-   "description" : "Exegesis 2 -> Editor's note: this document is out of date and remains here for historic interest. See Synopsis 2 for the current design information. exegesis: n. an interpretation and explanation of a text, esp. Holy Writ This is the..."
+   "date" : "2001-05-15T00:00:00-08:00"
 }
 
 

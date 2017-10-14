@@ -1,16 +1,16 @@
 {
-   "tags" : [],
+   "draft" : null,
+   "image" : null,
    "categories" : "community",
+   "tags" : [],
+   "date" : "1999-10-17T00:00:00-08:00",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
-   "draft" : null,
-   "title" : "This Week on p5p 1999/10/17",
    "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991017.html",
-   "date" : "1999-10-17T00:00:00-08:00",
-   "thumbnail" : null,
-   "description" : "(11-17 October 1999) -> Introduction New Development Release 5.005_62 Unicode Character Classes Module Bundling and the proposed import pragma use fields allows overlapping member names PREPARE functions and my Class $foo declarations goto Out of Conditional Bug Regex Range Bug..."
+   "title" : "This Week on p5p 1999/10/17",
+   "description" : "(11-17 October 1999) -> Introduction New Development Release 5.005_62 Unicode Character Classes Module Bundling and the proposed import pragma use fields allows overlapping member names PREPARE functions and my Class $foo declarations goto Out of Conditional Bug Regex Range Bug...",
+   "thumbnail" : null
 }
 
 

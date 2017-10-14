@@ -1,18 +1,18 @@
 {
-   "description" : " It's desirable to avoid forking under mod_perl, as when you do, you are forking the entire Apache server - lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is mod_ssl, mod_rewrite,...",
-   "thumbnail" : null,
-   "draft" : null,
-   "title" : "Improving mod_perl Sites' Performance: Part 6",
    "date" : "2003-01-07T00:00:00-08:00",
-   "slug" : "/pub/2003/01/07/mod_perl.html",
+   "draft" : null,
    "tags" : [
       "mod-perl-fork"
    ],
+   "image" : null,
    "categories" : "web",
+   "description" : " It's desirable to avoid forking under mod_perl, as when you do, you are forking the entire Apache server - lock, stock and barrel. Not only is your Perl code and Perl interpreter being duplicated, but so is mod_ssl, mod_rewrite,...",
+   "thumbnail" : null,
    "authors" : [
       "stas-bekman"
    ],
-   "image" : null
+   "slug" : "/pub/2003/01/07/mod_perl.html",
+   "title" : "Improving mod_perl Sites' Performance: Part 6"
 }
 
 

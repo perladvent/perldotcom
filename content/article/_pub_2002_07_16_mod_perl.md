@@ -1,18 +1,18 @@
 {
+   "authors" : [
+      "stas-bekman"
+   ],
+   "slug" : "/pub/2002/07/16/mod_perl.html",
+   "title" : "Improving mod_perl Sites' Performance: Part 3",
+   "description" : " In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring. Code Profiling Techniques The profiling process helps you to determine...",
+   "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
    "categories" : "web",
    "tags" : [
       "mod-perl-benchmarking-test"
    ],
-   "image" : null,
-   "authors" : [
-      "stas-bekman"
-   ],
-   "draft" : null,
-   "slug" : "/pub/2002/07/16/mod_perl.html",
-   "date" : "2002-07-16T00:00:00-08:00",
-   "title" : "Improving mod_perl Sites' Performance: Part 3",
-   "thumbnail" : null,
-   "description" : " In this article we will continue the topic started in the previous article. This time we talk about tools that help us with code profiling and memory usage measuring. Code Profiling Techniques The profiling process helps you to determine..."
+   "date" : "2002-07-16T00:00:00-08:00"
 }
 
 

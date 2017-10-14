@@ -1,8 +1,6 @@
 {
-   "image" : null,
-   "authors" : [
-      "brian-d-foy"
-   ],
+   "date" : "2008-01-18T00:00:00-08:00",
+   "draft" : null,
    "tags" : [
       "brian-d-foy",
       "conference",
@@ -12,12 +10,14 @@
       "perl-conference"
    ],
    "categories" : "Community",
-   "date" : "2008-01-18T00:00:00-08:00",
-   "slug" : "/pub/2008/01/18/how-to-tell-your-perl-story.html",
-   "title" : "How to Tell Your Perl Story (at OSCON)",
-   "draft" : null,
+   "image" : null,
+   "description" : "brian d foy is the author of Mastering Perl, now available in its second edition, as well as several other Perl books. As the founder of Perl mongers, he's been active in the Perl community for almost 20 years. Ever...",
    "thumbnail" : null,
-   "description" : "brian d foy is the author of Mastering Perl, now available in its second edition, as well as several other Perl books. As the founder of Perl mongers, he's been active in the Perl community for almost 20 years. Ever..."
+   "authors" : [
+      "brian-d-foy"
+   ],
+   "title" : "How to Tell Your Perl Story (at OSCON)",
+   "slug" : "/pub/2008/01/18/how-to-tell-your-perl-story.html"
 }
 
 

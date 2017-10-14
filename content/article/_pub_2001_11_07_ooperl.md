@@ -1,19 +1,19 @@
 {
-   "draft" : null,
-   "title" : "Object-Oriented Perl",
-   "date" : "2001-11-07T00:00:00-08:00",
    "slug" : "/pub/2001/11/07/ooperl.html",
+   "title" : "Object-Oriented Perl",
+   "authors" : [
+      "simon-cozens"
+   ],
+   "thumbnail" : "/images/_pub_2001_11_07_ooperl/111-perlobj.gif",
+   "description" : " I've recently started learning to play the game of Go. Go and Perl have many things in common - the basic stuff of which they are made, the rules of the game, are relatively simple, and hide an amazing...",
    "tags" : [
       "object-oriented",
       "perl"
    ],
-   "categories" : "development",
-   "authors" : [
-      "simon-cozens"
-   ],
    "image" : null,
-   "description" : " I've recently started learning to play the game of Go. Go and Perl have many things in common - the basic stuff of which they are made, the rules of the game, are relatively simple, and hide an amazing...",
-   "thumbnail" : "/images/_pub_2001_11_07_ooperl/111-perlobj.gif"
+   "categories" : "development",
+   "draft" : null,
+   "date" : "2001-11-07T00:00:00-08:00"
 }
 
 

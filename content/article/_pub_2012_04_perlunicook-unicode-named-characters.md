@@ -1,16 +1,16 @@
 {
-   "authors" : [
-      "tom-christiansen"
-   ],
+   "date" : "2012-04-16T06:00:01-08:00",
+   "tags" : [],
    "image" : null,
    "categories" : "unicode",
-   "tags" : [],
-   "title" : "Perl Unicode Cookbook: Unicode Named Characters",
-   "slug" : "/pub/2012/04/perlunicook-unicode-named-characters.html",
-   "date" : "2012-04-16T06:00:01-08:00",
    "draft" : null,
    "thumbnail" : null,
-   "description" : "℞ 8: Unicode named characters Use the \\N{charname} notation to get the character by that name for use in interpolated literals (double-quoted strings and regexes). In v5.16, there is an implicit use charnames qw(:full :short); But prior to v5.16, you..."
+   "description" : "℞ 8: Unicode named characters Use the \\N{charname} notation to get the character by that name for use in interpolated literals (double-quoted strings and regexes). In v5.16, there is an implicit use charnames qw(:full :short); But prior to v5.16, you...",
+   "slug" : "/pub/2012/04/perlunicook-unicode-named-characters.html",
+   "title" : "Perl Unicode Cookbook: Unicode Named Characters",
+   "authors" : [
+      "tom-christiansen"
+   ]
 }
 
 

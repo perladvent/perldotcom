@@ -1,9 +1,13 @@
 {
-   "draft" : null,
-   "date" : "1998-07-22T00:00:00-08:00",
-   "slug" : "/pub/1998/07/rwperl.html",
+   "description" : " This article is the first in a series that will provide examples of Perl solving real-world problems, particularly in an organization. If you have your own real-life story to tell, send it to Perl.com Editor. How many times have...",
+   "thumbnail" : null,
+   "authors" : [
+      "brent-michalski"
+   ],
    "title" : "How Perl Creates Orders For The Air Force",
-   "categories" : "community",
+   "slug" : "/pub/1998/07/rwperl.html",
+   "date" : "1998-07-22T00:00:00-08:00",
+   "draft" : null,
    "tags" : [
       "air-force",
       "databases",
@@ -11,12 +15,8 @@
       "perl",
       "programming"
    ],
-   "image" : null,
-   "authors" : [
-      "brent-michalski"
-   ],
-   "description" : " This article is the first in a series that will provide examples of Perl solving real-world problems, particularly in an organization. If you have your own real-life story to tell, send it to Perl.com Editor. How many times have...",
-   "thumbnail" : null
+   "categories" : "community",
+   "image" : null
 }
 
 

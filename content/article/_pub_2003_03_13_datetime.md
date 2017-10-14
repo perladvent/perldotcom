@@ -1,16 +1,16 @@
 {
-   "description" : " Some Basic Concepts In order to understand what you might want to do with dates and times, it's good to have a handle on some basic concepts. Here are some terms that I'll be using in this article: datetime...",
    "thumbnail" : "/images/_pub_2003_03_13_datetime/111-dates_times.gif",
+   "description" : " Some Basic Concepts In order to understand what you might want to do with dates and times, it's good to have a handle on some basic concepts. Here are some terms that I'll be using in this article: datetime...",
    "slug" : "/pub/2003/03/13/datetime.html",
-   "date" : "2003-03-13T00:00:00-08:00",
    "title" : "The Many Dates and Times of Perl",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "dave-rolsky"
    ],
+   "date" : "2003-03-13T00:00:00-08:00",
+   "image" : null,
+   "categories" : "CPAN",
    "tags" : [],
-   "categories" : "CPAN"
+   "draft" : null
 }
 
 

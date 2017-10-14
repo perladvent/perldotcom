@@ -1,9 +1,5 @@
 {
    "draft" : null,
-   "slug" : "/pub/2004/12/16/import_kata.html",
-   "date" : "2004-12-16T00:00:00-08:00",
-   "title" : "Perl Code Kata: Testing Imports",
-   "categories" : "testing",
    "tags" : [
       "code-kata",
       "exporting",
@@ -13,10 +9,14 @@
       "perl-modules",
       "perl-testing"
    ],
+   "categories" : "testing",
    "image" : null,
+   "date" : "2004-12-16T00:00:00-08:00",
    "authors" : [
       "chromatic"
    ],
+   "title" : "Perl Code Kata: Testing Imports",
+   "slug" : "/pub/2004/12/16/import_kata.html",
    "description" : "Want to get better at Perl? This short exercise helps you understand how modules import symbols into namespaces.",
    "thumbnail" : null
 }

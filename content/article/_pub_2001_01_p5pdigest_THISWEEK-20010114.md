@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "description" : " Notes Excising sigsetjmp Benchmarking UTF8 Heroism Cygwin versus Windows Lvalue lists Linux large file support Calls for papers Various Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send...",
-   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "categories" : "community",
-   "tags" : [],
-   "date" : "2001-01-15T00:00:00-08:00",
-   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010114.html",
    "title" : "This Week on p5p 2001/01/14",
-   "draft" : null
+   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010114.html",
+   "description" : " Notes Excising sigsetjmp Benchmarking UTF8 Heroism Cygwin versus Windows Lvalue lists Linux large file support Calls for papers Various Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send...",
+   "thumbnail" : null,
+   "draft" : null,
+   "categories" : "community",
+   "image" : null,
+   "tags" : [],
+   "date" : "2001-01-15T00:00:00-08:00"
 }
 
 

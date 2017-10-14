@@ -1,7 +1,5 @@
 {
-   "thumbnail" : "/images/_pub_2007_02_02_htmltemplate-widgets/111-HTML_Frag.gif",
-   "description" : " My previous article, looked at extending HTML::Template through custom tags and filters. This article looks at ways to manage large, more complex pages, by bundling HTML::Template into something like GUI \"widgets\" (or \"controls\"). Imagine you have a basic page...",
-   "categories" : "Web",
+   "draft" : null,
    "tags" : [
       "html-templating",
       "html-template",
@@ -9,14 +7,16 @@
       "web-templates",
       "widgets"
    ],
+   "image" : null,
+   "categories" : "Web",
+   "date" : "2007-02-01T00:00:00-08:00",
    "authors" : [
       "philipp-janert"
    ],
-   "image" : null,
-   "draft" : null,
    "title" : "Advanced HTML::Template: Widgets",
    "slug" : "/pub/2007/02/02/htmltemplate-widgets.html",
-   "date" : "2007-02-01T00:00:00-08:00"
+   "description" : " My previous article, looked at extending HTML::Template through custom tags and filters. This article looks at ways to manage large, more complex pages, by bundling HTML::Template into something like GUI \"widgets\" (or \"controls\"). Imagine you have a basic page...",
+   "thumbnail" : "/images/_pub_2007_02_02_htmltemplate-widgets/111-HTML_Frag.gif"
 }
 
 

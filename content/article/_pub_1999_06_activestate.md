@@ -1,20 +1,20 @@
 {
-   "title" : "Microsoft to Fund Perl Development",
-   "slug" : "/pub/1999/06/activestate.html",
-   "date" : "1999-06-09T00:00:00-08:00",
-   "draft" : null,
+   "description" : " If the good news is that the world's largest software company has recognized the value of Perl and they are willing to fund new Perl development, then you know the bad news. Microsoft has entered into a three-year agreement...",
+   "thumbnail" : null,
    "authors" : [
       "dale-dougherty"
    ],
+   "slug" : "/pub/1999/06/activestate.html",
+   "title" : "Microsoft to Fund Perl Development",
+   "date" : "1999-06-09T00:00:00-08:00",
+   "draft" : null,
    "image" : null,
+   "categories" : "community",
    "tags" : [
       "activestate",
       "microsoft",
       "windows"
-   ],
-   "categories" : "community",
-   "description" : " If the good news is that the world's largest software company has recognized the value of Perl and they are willing to fund new Perl development, then you know the bad news. Microsoft has entered into a three-year agreement...",
-   "thumbnail" : null
+   ]
 }
 
 

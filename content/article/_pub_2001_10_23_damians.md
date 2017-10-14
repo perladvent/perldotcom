@@ -1,20 +1,20 @@
 {
+   "thumbnail" : "/images/_pub_2001_10_23_damians/111-damian.jpg",
+   "description" : " London.pm technical meetings are always inspiring events with top notch speakers. At our most recent gathering Richard Clamp and Mark Fowler gave us \"Wax::On, Wax::Off - how to become a Perl sensei\"; Paul Mison showed us how to make...",
+   "slug" : "/pub/2001/10/23/damians.html",
+   "title" : "Perl 6 : Not Just For Damians",
+   "authors" : [
+      "piers-cawley"
+   ],
+   "date" : "2001-10-23T00:00:00-08:00",
+   "image" : null,
+   "categories" : "perl-6",
    "tags" : [
       "damian-conway",
       "larry-wall",
       "perl-6"
    ],
-   "categories" : "perl-6",
-   "image" : null,
-   "authors" : [
-      "piers-cawley"
-   ],
-   "draft" : null,
-   "date" : "2001-10-23T00:00:00-08:00",
-   "slug" : "/pub/2001/10/23/damians.html",
-   "title" : "Perl 6 : Not Just For Damians",
-   "thumbnail" : "/images/_pub_2001_10_23_damians/111-damian.jpg",
-   "description" : " London.pm technical meetings are always inspiring events with top notch speakers. At our most recent gathering Richard Clamp and Mark Fowler gave us \"Wax::On, Wax::Off - how to become a Perl sensei\"; Paul Mison showed us how to make..."
+   "draft" : null
 }
 
 

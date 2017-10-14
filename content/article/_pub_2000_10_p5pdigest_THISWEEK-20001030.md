@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "description" : " Notes sprintf Parameter Re-ordering The Dangers (and bugs) of Unicode Self-Tying Is Broken Configure Confused By Changing Architectures Encode Switch Various Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com....",
+   "draft" : null,
    "image" : null,
+   "categories" : "community",
+   "tags" : [],
+   "date" : "2000-10-30T00:00:00-08:00",
    "authors" : [
       "simon-cozens"
    ],
-   "tags" : [],
-   "categories" : "community",
    "slug" : "/pub/2000/10/p5pdigest/THISWEEK-20001030.html",
-   "date" : "2000-10-30T00:00:00-08:00",
    "title" : "This Week on p5p 2000/10/30",
-   "draft" : null
+   "description" : " Notes sprintf Parameter Re-ordering The Dangers (and bugs) of Unicode Self-Tying Is Broken Configure Confused By Changing Architectures Encode Switch Various Notes You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com....",
+   "thumbnail" : null
 }
 
 

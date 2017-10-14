@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "categories" : "unicode",
-   "image" : null,
+   "title" : "Perl Unicode Cookbook: String Length in Graphemes",
+   "slug" : "/pub/2012/05/perlunicook-string-length-in-graphemes.html",
    "authors" : [
       "tom-christiansen"
    ],
-   "draft" : null,
-   "date" : "2012-05-30T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicook-string-length-in-graphemes.html",
-   "title" : "Perl Unicode Cookbook: String Length in Graphemes",
    "thumbnail" : null,
-   "description" : "℞ 33: String length in graphemes If you learn nothing else about Unicode, remember this: characters are not bytes are not graphemes are not codepoints. A user-visible symbol (a grapheme) may be composed of multiple codepoints. Multiple combinations of codepoints..."
+   "description" : "℞ 33: String length in graphemes If you learn nothing else about Unicode, remember this: characters are not bytes are not graphemes are not codepoints. A user-visible symbol (a grapheme) may be composed of multiple codepoints. Multiple combinations of codepoints...",
+   "tags" : [],
+   "image" : null,
+   "categories" : "unicode",
+   "draft" : null,
+   "date" : "2012-05-30T06:00:01-08:00"
 }
 
 

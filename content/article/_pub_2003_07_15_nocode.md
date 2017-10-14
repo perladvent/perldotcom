@@ -1,18 +1,18 @@
 {
-   "description" : " One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it's also one of the most ubiquitous. Perl programmers being lazy, there...",
-   "thumbnail" : "/images/_pub_2003_07_15_nocode/111-nocode.gif",
-   "slug" : "/pub/2003/07/15/nocode.html",
-   "date" : "2003-07-15T00:00:00-08:00",
-   "title" : "How to Avoid Writing Code",
-   "draft" : null,
    "image" : null,
-   "authors" : [
-      "kake-pugh"
-   ],
+   "categories" : "web",
    "tags" : [
       "template-database-sql-dbi"
    ],
-   "categories" : "web"
+   "draft" : null,
+   "date" : "2003-07-15T00:00:00-08:00",
+   "slug" : "/pub/2003/07/15/nocode.html",
+   "title" : "How to Avoid Writing Code",
+   "authors" : [
+      "kake-pugh"
+   ],
+   "thumbnail" : "/images/_pub_2003_07_15_nocode/111-nocode.gif",
+   "description" : " One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it's also one of the most ubiquitous. Perl programmers being lazy, there..."
 }
 
 

@@ -1,13 +1,11 @@
 {
    "slug" : "/pub/2005/06/30/annocpan.html",
-   "date" : "2005-06-30T00:00:00-08:00",
    "title" : "Annotating CPAN",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "ivan-tubert-brohman"
    ],
-   "categories" : "CPAN",
+   "thumbnail" : "/images/_pub_2005_06_30_annocpan/111-cpan_annot.gif",
+   "description" : " AnnoCPAN is a new website that shows the documentation for every Perl module available on CPAN and allows anyone to post annotations in the margins of the documents. The notes are public, so everyone can read and reuse them...",
    "tags" : [
       "annocpan",
       "cpan-documentation",
@@ -18,8 +16,10 @@
       "tpf",
       "tpf-grants"
    ],
-   "description" : " AnnoCPAN is a new website that shows the documentation for every Perl module available on CPAN and allows anyone to post annotations in the margins of the documents. The notes are public, so everyone can read and reuse them...",
-   "thumbnail" : "/images/_pub_2005_06_30_annocpan/111-cpan_annot.gif"
+   "categories" : "CPAN",
+   "image" : null,
+   "draft" : null,
+   "date" : "2005-06-30T00:00:00-08:00"
 }
 
 

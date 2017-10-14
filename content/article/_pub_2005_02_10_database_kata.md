@@ -1,8 +1,12 @@
 {
-   "draft" : null,
-   "date" : "2005-02-10T00:00:00-08:00",
-   "slug" : "/pub/2005/02/10/database_kata.html",
+   "authors" : [
+      "stevan-little"
+   ],
    "title" : "Perl Code Kata: Testing Databases",
+   "slug" : "/pub/2005/02/10/database_kata.html",
+   "description" : " Testing code that uses a database can be tricky. The most common solution is to set up a test database with test data and run your tests against this. This, of course, requires bookkeeping code to keep your test...",
+   "thumbnail" : null,
+   "draft" : null,
    "tags" : [
       "database-testing",
       "dbd-mock",
@@ -12,13 +16,9 @@
       "perl-test-kata",
       "perl-testing"
    ],
-   "categories" : "data",
    "image" : null,
-   "authors" : [
-      "stevan-little"
-   ],
-   "description" : " Testing code that uses a database can be tricky. The most common solution is to set up a test database with test data and run your tests against this. This, of course, requires bookkeeping code to keep your test...",
-   "thumbnail" : null
+   "categories" : "data",
+   "date" : "2005-02-10T00:00:00-08:00"
 }
 
 

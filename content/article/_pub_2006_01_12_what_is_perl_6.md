@@ -1,6 +1,12 @@
 {
    "thumbnail" : "/images/_pub_2006_01_12_what_is_perl_6/111-whats_perl6.gif",
    "description" : "In the sixth year of Perl 6's multi-year reinvention, some of its developers reflected on why it was taking so long.",
+   "title" : "What Is Perl 6",
+   "slug" : "/pub/2006/01/12/what_is_perl_6.html",
+   "authors" : [
+      "chromatic"
+   ],
+   "date" : "2006-01-12T00:00:00-08:00",
    "tags" : [
       "language-design",
       "parrot",
@@ -11,15 +17,9 @@
       "programming-languages",
       "pugs"
    ],
-   "categories" : "perl-6",
    "image" : null,
-   "authors" : [
-      "chromatic"
-   ],
-   "draft" : null,
-   "slug" : "/pub/2006/01/12/what_is_perl_6.html",
-   "date" : "2006-01-12T00:00:00-08:00",
-   "title" : "What Is Perl 6"
+   "categories" : "perl-6",
+   "draft" : null
 }
 
 

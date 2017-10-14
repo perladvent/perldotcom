@@ -1,18 +1,18 @@
 {
-   "draft" : null,
+   "description" : " &quot;This is a great war long-planned, and we are but one piece in it, whatever pride may say. ... And now, all realms shall be put to the test.&quot; - Beregond, &lt;&lt;Lord of the Rings&gt;&gt; Introduction In CPANPLUS -...",
+   "thumbnail" : "/images/_pub_2002_04_30_cpants/111-test_mods.gif",
+   "authors" : [
+      "autrijus-tang"
+   ],
+   "slug" : "/pub/2002/04/30/cpants.html",
    "title" : "Becoming a CPAN Tester with CPANPLUS",
    "date" : "2002-04-30T00:00:00-08:00",
-   "slug" : "/pub/2002/04/30/cpants.html",
+   "draft" : null,
    "tags" : [
       "cpanplus-testing-cpants-cpan"
    ],
    "categories" : "CPAN",
-   "authors" : [
-      "autrijus-tang"
-   ],
-   "image" : null,
-   "description" : " &quot;This is a great war long-planned, and we are but one piece in it, whatever pride may say. ... And now, all realms shall be put to the test.&quot; - Beregond, &lt;&lt;Lord of the Rings&gt;&gt; Introduction In CPANPLUS -...",
-   "thumbnail" : "/images/_pub_2002_04_30_cpants/111-test_mods.gif"
+   "image" : null
 }
 
 

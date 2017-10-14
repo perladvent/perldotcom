@@ -1,8 +1,6 @@
 {
-   "draft" : null,
-   "date" : "2007-03-01T00:00:00-08:00",
-   "slug" : "/pub/2007/03/01/perl-6-parameter-passing.html",
-   "title" : "The Beauty of Perl 6 Parameter Passing",
+   "image" : null,
+   "categories" : "perl-6",
    "tags" : [
       "exegeses",
       "parameter-passing",
@@ -13,13 +11,15 @@
       "subroutines",
       "synopses"
    ],
-   "categories" : "perl-6",
-   "image" : null,
+   "draft" : null,
+   "date" : "2007-03-01T00:00:00-08:00",
+   "slug" : "/pub/2007/03/01/perl-6-parameter-passing.html",
+   "title" : "The Beauty of Perl 6 Parameter Passing",
    "authors" : [
       "phil-crow"
    ],
-   "description" : " Perl 6 is not finished, but you can already play with it. I hope this article will encourage you to try it. Begin by installing Pugs, a Perl 6 compiler implemented in Haskell. Note that you will also need...",
-   "thumbnail" : null
+   "thumbnail" : null,
+   "description" : " Perl 6 is not finished, but you can already play with it. I hope this article will encourage you to try it. Begin by installing Pugs, a Perl 6 compiler implemented in Haskell. Note that you will also need..."
 }
 
 

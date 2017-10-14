@@ -1,21 +1,21 @@
 {
-   "description" : "Perl 5.14 adds a package BLOCK declaration.",
-   "thumbnail" : null,
-   "title" : "New Features of Perl 5.14: package BLOCK",
-   "slug" : "/pub/2011/05/new-features-of-perl-514-package-block.html",
    "date" : "2011-05-16T11:31:25-08:00",
    "draft" : null,
-   "authors" : [
-      "chromatic"
-   ],
-   "image" : null,
    "categories" : "development",
+   "image" : null,
    "tags" : [
       "language",
       "perl-5",
       "perl-5-14",
       "syntax"
-   ]
+   ],
+   "description" : "Perl 5.14 adds a package BLOCK declaration.",
+   "thumbnail" : null,
+   "authors" : [
+      "chromatic"
+   ],
+   "slug" : "/pub/2011/05/new-features-of-perl-514-package-block.html",
+   "title" : "New Features of Perl 5.14: package BLOCK"
 }
 
 

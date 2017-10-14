@@ -1,8 +1,13 @@
 {
-   "draft" : null,
    "title" : "A Refactoring Example",
-   "date" : "2003-10-09T00:00:00-08:00",
    "slug" : "/pub/2003/10/09/refactoring.html",
+   "authors" : [
+      "michael-schwern"
+   ],
+   "thumbnail" : "/images/_pub_2003_10_09_refactoring/111-refactoring.gif",
+   "description" : " About a year ago, a person asked the Fun With Perl mailing list about some code they had written to do database queries. It's important to note that this person was posting from an .it address; why will become...",
+   "categories" : "development",
+   "image" : null,
    "tags" : [
       "faster",
       "optimization",
@@ -11,13 +16,8 @@
       "refactoring-techniques",
       "speed"
    ],
-   "categories" : "development",
-   "authors" : [
-      "michael-schwern"
-   ],
-   "image" : null,
-   "description" : " About a year ago, a person asked the Fun With Perl mailing list about some code they had written to do database queries. It's important to note that this person was posting from an .it address; why will become...",
-   "thumbnail" : "/images/_pub_2003_10_09_refactoring/111-refactoring.gif"
+   "draft" : null,
+   "date" : "2003-10-09T00:00:00-08:00"
 }
 
 

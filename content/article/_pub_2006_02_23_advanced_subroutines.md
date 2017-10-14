@@ -1,13 +1,6 @@
 {
-   "description" : " In \"Making Sense of Subroutines,\" I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful....",
-   "thumbnail" : "/images/_pub_2006_02_23_advanced_subroutines/111-adv_subroutines.gif",
-   "title" : "Advanced Subroutine Techniques",
-   "slug" : "/pub/2006/02/23/advanced_subroutines.html",
    "date" : "2006-02-23T00:00:00-08:00",
    "draft" : null,
-   "authors" : [
-      "rob-kinyon"
-   ],
    "image" : null,
    "categories" : "development",
    "tags" : [
@@ -15,7 +8,14 @@
       "perl-functions",
       "perl-subroutines",
       "perl-tutorial"
-   ]
+   ],
+   "description" : " In \"Making Sense of Subroutines,\" I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful....",
+   "thumbnail" : "/images/_pub_2006_02_23_advanced_subroutines/111-adv_subroutines.gif",
+   "authors" : [
+      "rob-kinyon"
+   ],
+   "title" : "Advanced Subroutine Techniques",
+   "slug" : "/pub/2006/02/23/advanced_subroutines.html"
 }
 
 

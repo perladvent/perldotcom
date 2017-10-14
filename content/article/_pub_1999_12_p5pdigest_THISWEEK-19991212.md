@@ -1,16 +1,16 @@
 {
-   "description" : " Notes Meta-Information 5.005_63 Released Development Continues on Ilya's Patches Regex Optimizations PREPARE XSLoader Change to xsubpp Path Location New Improved File::Find DB_File Locking Technique use Parameters in XS Module Initializations next in XS-invoked Perl subroutines -Dp improvement Log::Agent Getopt::Long...",
-   "thumbnail" : null,
-   "draft" : null,
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991212.html",
-   "date" : "1999-12-12T00:00:00-08:00",
-   "title" : "This Week on p5p 1999/12/12",
+   "image" : null,
    "categories" : "community",
    "tags" : [],
-   "image" : null,
+   "draft" : null,
+   "date" : "1999-12-12T00:00:00-08:00",
+   "title" : "This Week on p5p 1999/12/12",
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991212.html",
    "authors" : [
       "mark-jason-dominus"
-   ]
+   ],
+   "thumbnail" : null,
+   "description" : " Notes Meta-Information 5.005_63 Released Development Continues on Ilya's Patches Regex Optimizations PREPARE XSLoader Change to xsubpp Path Location New Improved File::Find DB_File Locking Technique use Parameters in XS Module Initializations next in XS-invoked Perl subroutines -Dp improvement Log::Agent Getopt::Long..."
 }
 
 

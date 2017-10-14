@@ -1,16 +1,16 @@
 {
+   "date" : "2001-01-24T00:00:00-08:00",
+   "draft" : null,
+   "tags" : [],
+   "image" : null,
+   "categories" : "community",
    "description" : " Notes Notes sigsetjmp wrangling continues Safe Signals Large file support wrangling continues Multiple Pre-Incrementing Test::Harness Megapatch Tokeniser reporting and pretty-printing Unicode Various You can subscribe to an email version of this summary by sending an empty message to p5p-digest-subscribe@plover.com....",
    "thumbnail" : null,
-   "title" : "This Week on p5p 2001/01/21",
-   "date" : "2001-01-24T00:00:00-08:00",
-   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010121.html",
-   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "categories" : "community",
-   "tags" : []
+   "slug" : "/pub/2001/01/p5pdigest/THISWEEK-20010121.html",
+   "title" : "This Week on p5p 2001/01/21"
 }
 
 

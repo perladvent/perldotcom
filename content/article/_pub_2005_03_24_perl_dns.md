@@ -1,20 +1,20 @@
 {
-   "thumbnail" : "/images/_pub_2005_03_24_perl_dns/111-auto_windows.gif",
-   "description" : "Driving Windows DNS Server If you happen to manage a DNS server running on Windows 2000 or Windows 2003 with more than just a couple of dozen resource records on it, you've probably already hit the limits of the MMC...",
-   "categories" : "Windows",
+   "date" : "2005-03-24T00:00:00-08:00",
    "tags" : [
       "dns-updates-with-perl",
       "dnscmd",
       "windows-automation"
    ],
    "image" : null,
+   "categories" : "Windows",
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_03_24_perl_dns/111-auto_windows.gif",
+   "description" : "Driving Windows DNS Server If you happen to manage a DNS server running on Windows 2000 or Windows 2003 with more than just a couple of dozen resource records on it, you've probably already hit the limits of the MMC...",
+   "slug" : "/pub/2005/03/24/perl_dns.html",
+   "title" : "Automating Windows (DNS) with Perl",
    "authors" : [
       "thomas-herchenroeder"
-   ],
-   "draft" : null,
-   "slug" : "/pub/2005/03/24/perl_dns.html",
-   "date" : "2005-03-24T00:00:00-08:00",
-   "title" : "Automating Windows (DNS) with Perl"
+   ]
 }
 
 

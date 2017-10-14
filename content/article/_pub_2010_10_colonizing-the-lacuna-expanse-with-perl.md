@@ -1,12 +1,14 @@
 {
+   "thumbnail" : null,
+   "description" : "Perl productivity has suffered this month with JT Smith's announcement of <a href=\"http://lacunaexpanse.com/\">The Lacuna Expanse</a>, a web-based space empire strategy game.  As with most of Smith's projects, TLE uses Perl extensively. Perl.com recently conducted an email interview to explore the world behind the game world.",
    "slug" : "/pub/2010/10/colonizing-the-lacuna-expanse-with-perl.html",
-   "date" : "2010-10-22T10:42:40-08:00",
    "title" : "Colonizing the Lacuna Expanse with Perl",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "chromatic"
    ],
+   "date" : "2010-10-22T10:42:40-08:00",
+   "image" : null,
+   "categories" : "Games",
    "tags" : [
       "business",
       "cpan",
@@ -16,9 +18,7 @@
       "plack",
       "web-development"
    ],
-   "categories" : "Games",
-   "description" : "Perl productivity has suffered this month with JT Smith's announcement of <a href=\"http://lacunaexpanse.com/\">The Lacuna Expanse</a>, a web-based space empire strategy game.  As with most of Smith's projects, TLE uses Perl extensively. Perl.com recently conducted an email interview to explore the world behind the game world.",
-   "thumbnail" : null
+   "draft" : null
 }
 
 

@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "slug" : "/pub/2003/02/19/engine.html",
    "date" : "2003-02-19T00:00:00-08:00",
-   "title" : "Building a Vector Space Search Engine in Perl",
+   "draft" : null,
+   "image" : null,
+   "categories" : "Tooling",
    "tags" : [
       "search-engine-vector-space"
    ],
-   "categories" : "Tooling",
-   "image" : null,
+   "description" : " Building a Vector Space Search Engine in Perl A Few Words About Vectors Getting Down To Business Building the Search Engine Making it Better Further Reading Why waste time reinventing the wheel, when you could be reinventing the engine?...",
+   "thumbnail" : "/images/_pub_2003_02_19_engine/111-vector_search.gif",
    "authors" : [
       "maciej-ceglowski"
    ],
-   "description" : " Building a Vector Space Search Engine in Perl A Few Words About Vectors Getting Down To Business Building the Search Engine Making it Better Further Reading Why waste time reinventing the wheel, when you could be reinventing the engine?...",
-   "thumbnail" : "/images/_pub_2003_02_19_engine/111-vector_search.gif"
+   "title" : "Building a Vector Space Search Engine in Perl",
+   "slug" : "/pub/2003/02/19/engine.html"
 }
 
 

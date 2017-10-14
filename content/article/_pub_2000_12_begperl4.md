@@ -1,10 +1,13 @@
 {
    "thumbnail" : null,
    "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
-   "image" : null,
+   "title" : "Beginners Intro to Perl - Part 4",
+   "slug" : "/pub/2000/12/begperl4.html",
    "authors" : [
       "doug-sheppard"
    ],
+   "date" : "2000-12-06T00:00:00-08:00",
+   "image" : null,
    "categories" : "development",
    "tags" : [
       "cgi",
@@ -12,9 +15,6 @@
       "security",
       "web"
    ],
-   "date" : "2000-12-06T00:00:00-08:00",
-   "slug" : "/pub/2000/12/begperl4.html",
-   "title" : "Beginners Intro to Perl - Part 4",
    "draft" : null
 }
 

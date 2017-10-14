@@ -1,18 +1,18 @@
 {
-   "thumbnail" : null,
-   "description" : " This summer, at yapc in Pittsburgh and again at the third Perl Conference, I was very fortunate to meet with a lot of friends from other regional Perl Monger groups. A lot of our groups have similar problems and...",
-   "image" : null,
+   "title" : "Virtual Presentations with Perl",
+   "slug" : "/pub/1999/12/virtual-presentations.html",
    "authors" : [
       "adam-turoff"
    ],
+   "thumbnail" : null,
+   "description" : " This summer, at yapc in Pittsburgh and again at the third Perl Conference, I was very fortunate to meet with a lot of friends from other regional Perl Monger groups. A lot of our groups have similar problems and...",
+   "image" : null,
    "categories" : "Community",
    "tags" : [
       "perl-mongers"
    ],
-   "slug" : "/pub/1999/12/virtual-presentations.html",
-   "date" : "1999-12-20T00:00:00-08:00",
-   "title" : "Virtual Presentations with Perl",
-   "draft" : null
+   "draft" : null,
+   "date" : "1999-12-20T00:00:00-08:00"
 }
 
 

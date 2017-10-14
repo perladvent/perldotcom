@@ -1,16 +1,16 @@
 {
-   "description" : " Table of Contents Design Principles So, uh, what is it? Where did it get? What else can be done? What can't be done? Structure of a Sapphire The future of Sapphire Reflections through a Sapphire Naming languages after stones...",
-   "thumbnail" : null,
-   "title" : "Sapphire",
-   "date" : "2000-09-19T00:00:00-08:00",
-   "slug" : "/pub/2000/09/sapphire.html",
    "draft" : null,
+   "image" : null,
+   "categories" : "Perl Internals",
+   "tags" : [],
+   "date" : "2000-09-19T00:00:00-08:00",
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "tags" : [],
-   "categories" : "Perl Internals"
+   "slug" : "/pub/2000/09/sapphire.html",
+   "title" : "Sapphire",
+   "description" : " Table of Contents Design Principles So, uh, what is it? Where did it get? What else can be done? What can't be done? Structure of a Sapphire The future of Sapphire Reflections through a Sapphire Naming languages after stones...",
+   "thumbnail" : null
 }
 
 

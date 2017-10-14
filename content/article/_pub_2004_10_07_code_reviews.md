@@ -1,14 +1,13 @@
 {
    "description" : "Richard Gabriel of Sun Microsystems suggests that beginning programmers should study the source code for great works of software as part of a Master of Fine Arts course in software. Prominent Extreme Programmers talk about finding the Quality Without a...",
    "thumbnail" : "/images/_pub_2004_10_07_code_reviews/111-good_code.gif",
+   "authors" : [
+      "luke-schubert"
+   ],
    "title" : "Why Review Code?",
    "slug" : "/pub/2004/10/07/code_reviews.html",
    "date" : "2004-10-07T00:00:00-08:00",
    "draft" : null,
-   "authors" : [
-      "luke-schubert"
-   ],
-   "image" : null,
    "tags" : [
       "code-reviews",
       "good-perl-code",
@@ -16,7 +15,8 @@
       "math-complex",
       "reading-code"
    ],
-   "categories" : "development"
+   "categories" : "development",
+   "image" : null
 }
 
 

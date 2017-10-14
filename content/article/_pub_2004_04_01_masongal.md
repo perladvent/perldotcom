@@ -1,20 +1,20 @@
 {
-   "thumbnail" : "/images/_pub_2004_04_01_masongal/111-mason.gif",
-   "description" : " Creating a photo gallery is usually considered a daunting task. Lots of people have tried it, not many have succeeded. One of the reasons for so many similar projects is that they don't often integrate well into an existing...",
+   "draft" : null,
    "tags" : [
       "galleries",
       "imager",
       "mason"
    ],
-   "categories" : "Graphics",
    "image" : null,
+   "categories" : "Graphics",
+   "date" : "2004-04-01T00:00:00-08:00",
    "authors" : [
       "casey-west"
    ],
-   "draft" : null,
-   "date" : "2004-04-01T00:00:00-08:00",
    "slug" : "/pub/2004/04/01/masongal.html",
-   "title" : "Photo Galleries with Mason and Imager"
+   "title" : "Photo Galleries with Mason and Imager",
+   "description" : " Creating a photo gallery is usually considered a daunting task. Lots of people have tried it, not many have succeeded. One of the reasons for so many similar projects is that they don't often integrate well into an existing...",
+   "thumbnail" : "/images/_pub_2004_04_01_masongal/111-mason.gif"
 }
 
 

@@ -1,17 +1,17 @@
 {
    "thumbnail" : "/images/_pub_2002_03_22_modperl/111-intro_modperl.gif",
    "description" : " Introduction In the previous article, I've shown quite amazing Web performance reports from companies that have deployed mod_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod_perl...",
+   "title" : "mod_perl in 30 minutes",
+   "slug" : "/pub/2002/03/22/modperl.html",
    "authors" : [
       "stas-bekman"
    ],
+   "date" : "2002-03-22T00:00:00-08:00",
    "image" : null,
    "categories" : "web",
    "tags" : [
       "mod-perl"
    ],
-   "title" : "mod_perl in 30 minutes",
-   "date" : "2002-03-22T00:00:00-08:00",
-   "slug" : "/pub/2002/03/22/modperl.html",
    "draft" : null
 }
 

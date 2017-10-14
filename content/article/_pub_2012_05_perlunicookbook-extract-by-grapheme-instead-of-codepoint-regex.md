@@ -1,16 +1,16 @@
 {
    "date" : "2012-05-24T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html",
-   "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (regex)",
-   "draft" : null,
    "image" : null,
+   "categories" : "unicode",
+   "tags" : [],
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : "℞ 30: Extract by grapheme instead of by codepoint (regex) Remember that Unicode defines a grapheme as \"what a user thinks of as a character\". A codepoint is an integer value in the Unicode codespace. While ASCII conflates the two,...",
+   "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (regex)",
+   "slug" : "/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html",
    "authors" : [
       "tom-christiansen"
-   ],
-   "tags" : [],
-   "categories" : "unicode",
-   "description" : "℞ 30: Extract by grapheme instead of by codepoint (regex) Remember that Unicode defines a grapheme as \"what a user thinks of as a character\". A codepoint is an integer value in the Unicode codespace. While ASCII conflates the two,...",
-   "thumbnail" : null
+   ]
 }
 
 

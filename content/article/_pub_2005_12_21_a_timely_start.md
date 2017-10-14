@@ -1,21 +1,21 @@
 {
-   "date" : "2005-12-21T00:00:00-08:00",
-   "slug" : "/pub/2005/12/21/a_timely_start.html",
-   "title" : "A Timely Start",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "jean-louis-leroy"
    ],
+   "slug" : "/pub/2005/12/21/a_timely_start.html",
+   "title" : "A Timely Start",
+   "description" : " This article is a follow-up to the lightning talk I delivered at the recent YAPC::Europe 2005 that took place in Braga, Portugal: \"Perl Vs. Korn Shell: 1-1.\" I presented two case studies taken from my experience as Perl expert...",
+   "thumbnail" : "/images/_pub_2005_12_21_a_timely_start/111-timely_start.gif",
+   "draft" : null,
    "tags" : [
       "perl-administration",
       "perl-installation",
       "perl-optimization",
       "perl-profiling"
    ],
+   "image" : null,
    "categories" : "Tooling",
-   "description" : " This article is a follow-up to the lightning talk I delivered at the recent YAPC::Europe 2005 that took place in Braga, Portugal: \"Perl Vs. Korn Shell: 1-1.\" I presented two case studies taken from my experience as Perl expert...",
-   "thumbnail" : "/images/_pub_2005_12_21_a_timely_start/111-timely_start.gif"
+   "date" : "2005-12-21T00:00:00-08:00"
 }
 
 

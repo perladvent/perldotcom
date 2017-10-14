@@ -1,9 +1,5 @@
 {
-   "thumbnail" : null,
-   "description" : " Michael Schwern will be speaking at the O'Reilly Open Source Convention in San Diego, CA, July 23-27, 2001. Excuse me, I'm going to ramble a bit about traffic lights as they relate to language design to see whether something...",
-   "authors" : [
-      "michael-schwern"
-   ],
+   "categories" : "community",
    "image" : null,
    "tags" : [
       "design",
@@ -12,11 +8,15 @@
       "perl-6",
       "traffic"
    ],
-   "categories" : "community",
+   "draft" : null,
+   "date" : "2001-05-22T00:00:00-08:00",
    "title" : "Taking Lessons From Traffic Lights",
    "slug" : "/pub/2001/05/22/trafficlights.html",
-   "date" : "2001-05-22T00:00:00-08:00",
-   "draft" : null
+   "authors" : [
+      "michael-schwern"
+   ],
+   "thumbnail" : null,
+   "description" : " Michael Schwern will be speaking at the O'Reilly Open Source Convention in San Diego, CA, July 23-27, 2001. Excuse me, I'm going to ramble a bit about traffic lights as they relate to language design to see whether something..."
 }
 
 

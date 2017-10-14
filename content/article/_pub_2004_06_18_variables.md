@@ -1,19 +1,19 @@
 {
-   "thumbnail" : "/images/_pub_2004_06_18_variables/111-variables.gif",
    "description" : " One of the best ways to make your Perl code look more like ... well, like Perl code - and not like C or BASIC or whatever you used before you were introduced to Perl - is to get...",
-   "tags" : [
-      "file-handling",
-      "variables"
-   ],
-   "categories" : "data",
+   "thumbnail" : "/images/_pub_2004_06_18_variables/111-variables.gif",
    "authors" : [
       "dave-cross"
    ],
-   "image" : null,
-   "draft" : null,
-   "title" : "Perl's Special Variables",
    "slug" : "/pub/2004/06/18/variables.html",
-   "date" : "2004-06-18T00:00:00-08:00"
+   "title" : "Perl's Special Variables",
+   "date" : "2004-06-18T00:00:00-08:00",
+   "draft" : null,
+   "image" : null,
+   "categories" : "data",
+   "tags" : [
+      "file-handling",
+      "variables"
+   ]
 }
 
 

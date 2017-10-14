@@ -1,16 +1,16 @@
 {
-   "description" : " An Interview with HP's Larry Rosler Larry Rosler was both editor of the draft standard and chairman of the Language Subcommittee for X3J11. He helped put 'ANSI' in front of C. He is also just another Perl hacker. Larry...",
-   "thumbnail" : null,
    "draft" : null,
-   "title" : "ANSI Standard Perl?",
-   "date" : "2000-06-06T00:00:00-08:00",
-   "slug" : "/pub/2000/06/rosler.html",
-   "categories" : "Community",
    "tags" : [],
+   "image" : null,
+   "categories" : "Community",
+   "date" : "2000-06-06T00:00:00-08:00",
    "authors" : [
       "joe-johnston"
    ],
-   "image" : null
+   "title" : "ANSI Standard Perl?",
+   "slug" : "/pub/2000/06/rosler.html",
+   "description" : " An Interview with HP's Larry Rosler Larry Rosler was both editor of the draft standard and chairman of the Language Subcommittee for X3J11. He helped put 'ANSI' in front of C. He is also just another Perl hacker. Larry...",
+   "thumbnail" : null
 }
 
 

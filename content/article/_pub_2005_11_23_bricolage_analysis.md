@@ -1,12 +1,13 @@
 {
-   "slug" : "/pub/2005/11/23/bricolage_analysis.html",
-   "date" : "2005-11-23T00:00:00-08:00",
+   "thumbnail" : null,
+   "description" : " Previous Perl.com articles have reviewed where Bricolage fits into the universe of content management systems and worked through Bricolage installation and Bricolage configuration. Now it's time to go through the steps required to model the structure of an existing...",
    "title" : "Document Modeling with Bricolage",
-   "draft" : null,
-   "image" : null,
+   "slug" : "/pub/2005/11/23/bricolage_analysis.html",
    "authors" : [
       "david-wheeler"
    ],
+   "date" : "2005-11-23T00:00:00-08:00",
+   "image" : null,
    "categories" : "data",
    "tags" : [
       "bricolage",
@@ -15,8 +16,7 @@
       "document-modeling",
       "open-source-cms"
    ],
-   "description" : " Previous Perl.com articles have reviewed where Bricolage fits into the universe of content management systems and worked through Bricolage installation and Bricolage configuration. Now it's time to go through the steps required to model the structure of an existing...",
-   "thumbnail" : null
+   "draft" : null
 }
 
 

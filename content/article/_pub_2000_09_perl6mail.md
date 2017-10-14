@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "description" : " Table of Contents &#149;Announcements and Overviews &#149;Internals &#149;Language &nbsp;&nbsp;&#149;perl6-language-data &nbsp;&nbsp;&#149;perl6-language-datetime &nbsp;&nbsp;&#149;perl6-language-errors &nbsp;&nbsp;&#149;perl6-language-flow &nbsp;&nbsp;&#149;perl6-language-io &nbsp;&nbsp;&#149;perl6-language-mlc &nbsp;&nbsp;&#149;perl6-language-objects &nbsp;&nbsp;&#149;perl6-language-regex &nbsp;&nbsp;&#149;perl6-language-strict &nbsp;&nbsp;&#149;perl6-language-subs &nbsp;&nbsp;&#149;perl6-language-unlink &#149;Miscellaneous Larry said at the Perl conference this summer that the old model of Perl development was not working well...",
+   "title" : "Guide to the Perl 6 Working Groups",
+   "slug" : "/pub/2000/09/perl6mail.html",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
-   "tags" : [],
-   "categories" : "perl-6",
-   "title" : "Guide to the Perl 6 Working Groups",
-   "slug" : "/pub/2000/09/perl6mail.html",
    "date" : "2000-09-05T00:00:00-08:00",
-   "draft" : null,
-   "thumbnail" : null,
-   "description" : " Table of Contents &#149;Announcements and Overviews &#149;Internals &#149;Language &nbsp;&nbsp;&#149;perl6-language-data &nbsp;&nbsp;&#149;perl6-language-datetime &nbsp;&nbsp;&#149;perl6-language-errors &nbsp;&nbsp;&#149;perl6-language-flow &nbsp;&nbsp;&#149;perl6-language-io &nbsp;&nbsp;&#149;perl6-language-mlc &nbsp;&nbsp;&#149;perl6-language-objects &nbsp;&nbsp;&#149;perl6-language-regex &nbsp;&nbsp;&#149;perl6-language-strict &nbsp;&nbsp;&#149;perl6-language-subs &nbsp;&nbsp;&#149;perl6-language-unlink &#149;Miscellaneous Larry said at the Perl conference this summer that the old model of Perl development was not working well..."
+   "tags" : [],
+   "image" : null,
+   "categories" : "perl-6",
+   "draft" : null
 }
 
 

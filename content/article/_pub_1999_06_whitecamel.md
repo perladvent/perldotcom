@@ -1,8 +1,5 @@
 {
-   "image" : null,
-   "authors" : [
-      "perldotcom"
-   ],
+   "draft" : null,
    "tags" : [
       "awards",
       "o-reilly",
@@ -11,13 +8,16 @@
       "perl-mongers",
       "white-camel"
    ],
+   "image" : null,
    "categories" : "community",
-   "slug" : "/pub/1999/06/whitecamel.html",
    "date" : "1999-06-28T00:00:00-08:00",
+   "authors" : [
+      "perldotcom"
+   ],
+   "slug" : "/pub/1999/06/whitecamel.html",
    "title" : "White Camel Awards to be Presented at O'Reilly's Perl Conference 3.0",
-   "draft" : null,
-   "thumbnail" : null,
-   "description" : " Coming soon - our nomination form for the first White Camel Awards. Let us know who you think has made outstanding contributions to Perl Advocacy, Perl User Groups, and the Perl Community. The White Camel awards will be presented..."
+   "description" : " Coming soon - our nomination form for the first White Camel Awards. Let us know who you think has made outstanding contributions to Perl Advocacy, Perl User Groups, and the Perl Community. The White Camel awards will be presented...",
+   "thumbnail" : null
 }
 
 

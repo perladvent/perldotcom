@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "description" : "℞ 31: Extract by grapheme instead of by codepoint (substr) The Unicode Standard Annex #29 discusses the boundaries between grapheme clusters&mdash;what users might perceive as \"characters\". The CPAN module Unicode::GCString allows you to treat a Unicode string as a sequence...",
-   "categories" : "unicode",
-   "tags" : [],
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "draft" : null,
+   "slug" : "/pub/2012/05/perlunicook-extract-by-grapheme-instead-of-codepoint-substr.html",
    "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (substr)",
-   "date" : "2012-05-25T06:00:01-08:00",
-   "slug" : "/pub/2012/05/perlunicook-extract-by-grapheme-instead-of-codepoint-substr.html"
+   "description" : "℞ 31: Extract by grapheme instead of by codepoint (substr) The Unicode Standard Annex #29 discusses the boundaries between grapheme clusters&mdash;what users might perceive as \"characters\". The CPAN module Unicode::GCString allows you to treat a Unicode string as a sequence...",
+   "thumbnail" : null,
+   "draft" : null,
+   "image" : null,
+   "categories" : "unicode",
+   "tags" : [],
+   "date" : "2012-05-25T06:00:01-08:00"
 }
 
 

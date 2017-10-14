@@ -1,11 +1,5 @@
 {
-   "thumbnail" : null,
-   "description" : " Problems Using DBI at Application-Level Intolerance to Table and Data Mutation Error-Prone and Tedious Query Construction Manual and Complex Mapping of Database Data to Perl Data Structures Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners'') Control and Monitoring of...",
-   "authors" : [
-      "terrence-monroe-brannon"
-   ],
-   "image" : null,
-   "categories" : "data",
+   "draft" : null,
    "tags" : [
       "database",
       "dbi",
@@ -13,10 +7,16 @@
       "interface",
       "perl"
    ],
-   "title" : "DBIx::Recordset VS DBI",
-   "slug" : "/pub/2001/02/dbix.html",
+   "image" : null,
+   "categories" : "data",
    "date" : "2001-02-27T00:00:00-08:00",
-   "draft" : null
+   "authors" : [
+      "terrence-monroe-brannon"
+   ],
+   "slug" : "/pub/2001/02/dbix.html",
+   "title" : "DBIx::Recordset VS DBI",
+   "description" : " Problems Using DBI at Application-Level Intolerance to Table and Data Mutation Error-Prone and Tedious Query Construction Manual and Complex Mapping of Database Data to Perl Data Structures Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners'') Control and Monitoring of...",
+   "thumbnail" : null
 }
 
 

@@ -1,15 +1,15 @@
 {
    "description" : " -> Table of Contents Architecture Introduction Hello, World Adding a Menu Bar Adding an About Box Adding More Chrome Final Program GNOME is the Unix desktop. It's a framework for writing graphical applications with Unix, providing drag-and-drop, interapplication communication,...",
    "thumbnail" : null,
-   "date" : "2000-10-16T00:00:00-08:00",
-   "slug" : "/pub/2000/10/gnome.html",
-   "title" : "Programming GNOME Applications with Perl",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "perldotcom"
    ],
+   "title" : "Programming GNOME Applications with Perl",
+   "slug" : "/pub/2000/10/gnome.html",
+   "date" : "2000-10-16T00:00:00-08:00",
+   "draft" : null,
    "categories" : "apps",
+   "image" : null,
    "tags" : []
 }
 

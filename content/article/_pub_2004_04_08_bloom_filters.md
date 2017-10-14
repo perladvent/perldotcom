@@ -1,13 +1,5 @@
 {
-   "date" : "2004-04-08T00:00:00-08:00",
-   "slug" : "/pub/2004/04/08/bloom_filters.html",
-   "title" : "Using Bloom Filters",
    "draft" : null,
-   "image" : null,
-   "authors" : [
-      "maciej-ceglowski"
-   ],
-   "categories" : "science",
    "tags" : [
       "bloom-filters",
       "bloom16",
@@ -16,6 +8,14 @@
       "set-membership",
       "text-bloom"
    ],
+   "image" : null,
+   "categories" : "science",
+   "date" : "2004-04-08T00:00:00-08:00",
+   "authors" : [
+      "maciej-ceglowski"
+   ],
+   "title" : "Using Bloom Filters",
+   "slug" : "/pub/2004/04/08/bloom_filters.html",
    "description" : " Anyone who has used Perl for any length of time is familiar with the lookup hash, a handy idiom for doing existence tests: foreach my $e ( @things ) { $lookup{$e}++ } sub check { my ( $key )...",
    "thumbnail" : "/images/_pub_2004_04_08_bloom_filters/111-bloom.gif"
 }

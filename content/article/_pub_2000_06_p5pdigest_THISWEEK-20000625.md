@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2000/06/p5pdigest/THISWEEK-20000625.html",
    "date" : "2000-06-25T00:00:00-08:00",
-   "title" : "This Week on p5p 2000/06/25",
    "draft" : null,
    "image" : null,
-   "authors" : [
-      "mark-jason-dominus"
-   ],
    "categories" : "community",
    "tags" : [],
    "description" : " Notes Method Lookup Speedup tr///CU and tr///UC Removed is_utf8_string Byte-Order Marks Return pack(\"U\") Lexical variables and eval() FILEGV perlhacktut perlutil.pod Missing Methods Suppress prototype mismatch warnings Autoloaded Constants not Inlined lib.pm use English Numeric opens in IPC::Open3 Regex Bug...",
-   "thumbnail" : null
+   "thumbnail" : null,
+   "authors" : [
+      "mark-jason-dominus"
+   ],
+   "slug" : "/pub/2000/06/p5pdigest/THISWEEK-20000625.html",
+   "title" : "This Week on p5p 2000/06/25"
 }
 
 

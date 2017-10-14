@@ -1,16 +1,16 @@
 {
-   "description" : " Last year Europe had its first Yet Another Perl Conference. Leon Brocard, Jon Peterson and Greg McCarroll did a marvellous job organizing this grassroots conference - themed \"The Art of Perl\" - from scratch within two months. For the...",
-   "thumbnail" : "/images/_pub_2001_08_13_yapc-europe/111-yapc-europe.jpg",
-   "draft" : null,
-   "slug" : "/pub/2001/08/13/yapc-europe.html",
-   "date" : "2001-08-13T00:00:00-08:00",
-   "title" : "Yet Another Perl Conference Europe 2001",
-   "categories" : "Community",
    "tags" : [],
    "image" : null,
+   "categories" : "Community",
+   "draft" : null,
+   "date" : "2001-08-13T00:00:00-08:00",
+   "slug" : "/pub/2001/08/13/yapc-europe.html",
+   "title" : "Yet Another Perl Conference Europe 2001",
    "authors" : [
       "jouke-visser"
-   ]
+   ],
+   "thumbnail" : "/images/_pub_2001_08_13_yapc-europe/111-yapc-europe.jpg",
+   "description" : " Last year Europe had its first Yet Another Perl Conference. Leon Brocard, Jon Peterson and Greg McCarroll did a marvellous job organizing this grassroots conference - themed \"The Art of Perl\" - from scratch within two months. For the..."
 }
 
 

@@ -1,13 +1,8 @@
 {
-   "title" : "Perl Internationalization and Haskell: An Interview with Autrijus Tang",
    "date" : "2005-09-08T00:00:00-08:00",
-   "slug" : "/pub/2005/09/08/autrijus-tang.html",
    "draft" : null,
-   "authors" : [
-      "edd-dumbill"
-   ],
-   "image" : null,
    "categories" : "unicode",
+   "image" : null,
    "tags" : [
       "autrijus-tang",
       "cpan",
@@ -20,7 +15,12 @@
       "pugs"
    ],
    "description" : " Author's note: Autrijus Tang is a speaker at this October's European Open Source Convention. In the fine tradition of the OSCON, he is a Perl hacker, entrepreneur, internationalization geek, and self-proclaimed \"Net activist, artist, and anarchist.\" AT EuroOSCON, Tang...",
-   "thumbnail" : "/images/_pub_2005_09_08_autrijus-tang/111-euoscon_tang.gif"
+   "thumbnail" : "/images/_pub_2005_09_08_autrijus-tang/111-euoscon_tang.gif",
+   "authors" : [
+      "edd-dumbill"
+   ],
+   "slug" : "/pub/2005/09/08/autrijus-tang.html",
+   "title" : "Perl Internationalization and Haskell: An Interview with Autrijus Tang"
 }
 
 

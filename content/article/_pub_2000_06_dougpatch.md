@@ -1,16 +1,16 @@
 {
-   "description" : null,
-   "thumbnail" : null,
-   "title" : "Notes on Doug's Method Lookup Patch",
-   "slug" : "/pub/2000/06/dougpatch.html",
-   "date" : "2000-06-27T00:00:00-08:00",
-   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
+   "title" : "Notes on Doug's Method Lookup Patch",
+   "slug" : "/pub/2000/06/dougpatch.html",
+   "description" : null,
+   "thumbnail" : null,
+   "draft" : null,
+   "tags" : [],
    "image" : null,
    "categories" : "community",
-   "tags" : []
+   "date" : "2000-06-27T00:00:00-08:00"
 }
 
 

@@ -1,16 +1,16 @@
 {
+   "date" : "2012-11-30T06:00:01-08:00",
+   "tags" : [],
+   "image" : null,
+   "categories" : "Games",
+   "draft" : null,
    "thumbnail" : null,
    "description" : "When JT Smith ported his web game The Lacuna Expanse to a board game, he used Perl to automate things. Here's how he did it.",
-   "categories" : "Games",
-   "tags" : [],
+   "slug" : "/pub/2012/11/designing-board-games-with-perl.html",
+   "title" : "Designing Board Games With Perl",
    "authors" : [
       "jt-smith"
-   ],
-   "image" : null,
-   "draft" : null,
-   "title" : "Designing Board Games With Perl",
-   "slug" : "/pub/2012/11/designing-board-games-with-perl.html",
-   "date" : "2012-11-30T06:00:01-08:00"
+   ]
 }
 
 

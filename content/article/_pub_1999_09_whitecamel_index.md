@@ -1,14 +1,14 @@
 {
-   "categories" : "Community",
    "tags" : [],
+   "image" : null,
+   "categories" : "Community",
+   "draft" : null,
+   "date" : "1999-09-16T00:00:00-08:00",
+   "title" : "White Camel Awards",
+   "slug" : "/pub/1999/09/whitecamel/index.html",
    "authors" : [
       "brent-michalski"
    ],
-   "image" : null,
-   "draft" : null,
-   "title" : "White Camel Awards",
-   "slug" : "/pub/1999/09/whitecamel/index.html",
-   "date" : "1999-09-16T00:00:00-08:00",
    "thumbnail" : null,
    "description" : " The Perl Conference brought us the first \"White Camel\" awards. The White Camel Awards were created to honor individuals who devote remarkable creativity, energy, and time to the non-technical work that supports Perl's active and loyal user community. The..."
 }

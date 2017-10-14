@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
    "description" : "Kevin Carillo asks for assistance surveying newcomers to the Perl community about their experiences, positive and otherwise.",
-   "categories" : "Community",
-   "tags" : [],
-   "image" : null,
+   "thumbnail" : null,
    "authors" : [
       "kevin-carillo"
    ],
-   "draft" : null,
-   "date" : "2012-10-15T06:00:01-08:00",
+   "title" : "Newcomer Experience in the Perl Community Survey",
    "slug" : "/pub/2012/10/newcomer-experience-in-the-perl-community-survey.html",
-   "title" : "Newcomer Experience in the Perl Community Survey"
+   "date" : "2012-10-15T06:00:01-08:00",
+   "draft" : null,
+   "image" : null,
+   "categories" : "Community",
+   "tags" : []
 }
 
 

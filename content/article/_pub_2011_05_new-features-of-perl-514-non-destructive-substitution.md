@@ -1,9 +1,4 @@
 {
-   "thumbnail" : null,
-   "description" : "Perl 5.14 adds non-destructive substitution.",
-   "authors" : [
-      "chromatic"
-   ],
    "image" : null,
    "categories" : "development",
    "tags" : [
@@ -12,10 +7,15 @@
       "perl-5-14",
       "syntax"
    ],
+   "draft" : null,
+   "date" : "2011-05-18T15:08:19-08:00",
    "title" : "New Features of Perl 5.14: Non-destructive Substitution",
    "slug" : "/pub/2011/05/new-features-of-perl-514-non-destructive-substitution.html",
-   "date" : "2011-05-18T15:08:19-08:00",
-   "draft" : null
+   "authors" : [
+      "chromatic"
+   ],
+   "thumbnail" : null,
+   "description" : "Perl 5.14 adds non-destructive substitution."
 }
 
 

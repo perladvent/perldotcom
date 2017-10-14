@@ -1,9 +1,12 @@
 {
    "thumbnail" : "/images/_pub_2005_12_08_test_files/111-file_test.gif",
    "description" : " For the last several years, there has been more and more emphasis on automated testing. No self-respecting CPAN author can post a distribution without tests. Yet some things are hard to test. This article explains how writing Test::Files gave...",
+   "title" : "Testing Files and Test Modules",
+   "slug" : "/pub/2005/12/08/test_files.html",
    "authors" : [
       "phil-crow"
    ],
+   "date" : "2005-12-08T00:00:00-08:00",
    "image" : null,
    "categories" : "data",
    "tags" : [
@@ -14,9 +17,6 @@
       "test-builder-tester",
       "test-files"
    ],
-   "title" : "Testing Files and Test Modules",
-   "slug" : "/pub/2005/12/08/test_files.html",
-   "date" : "2005-12-08T00:00:00-08:00",
    "draft" : null
 }
 

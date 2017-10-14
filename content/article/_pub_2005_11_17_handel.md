@@ -1,10 +1,5 @@
 {
-   "description" : " Over the years of doing various levels of web-based programming, I've come feel like Dante taking a trip through the nine circles of web programmer hell. There are certain things we must endure over and over, from project to...",
-   "thumbnail" : "/images/_pub_2005_11_17_handel/111-ecommerce.gif",
    "draft" : null,
-   "title" : "Building E-Commerce Sites with Handel",
-   "date" : "2005-11-17T00:00:00-08:00",
-   "slug" : "/pub/2005/11/17/handel.html",
    "tags" : [
       "catalyst",
       "e-commerce",
@@ -13,11 +8,16 @@
       "perl-web-frameworks",
       "perl-web-programming"
    ],
+   "image" : null,
    "categories" : "Web",
+   "date" : "2005-11-17T00:00:00-08:00",
    "authors" : [
       "christopher-h--laco"
    ],
-   "image" : null
+   "title" : "Building E-Commerce Sites with Handel",
+   "slug" : "/pub/2005/11/17/handel.html",
+   "description" : " Over the years of doing various levels of web-based programming, I've come feel like Dante taking a trip through the nine circles of web programmer hell. There are certain things we must endure over and over, from project to...",
+   "thumbnail" : "/images/_pub_2005_11_17_handel/111-ecommerce.gif"
 }
 
 

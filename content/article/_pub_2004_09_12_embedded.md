@@ -1,12 +1,4 @@
 {
-   "date" : "2004-09-16T00:00:00-08:00",
-   "slug" : "/pub/2004/09/12/embedded.html",
-   "title" : "Embedded Databases",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "philipp-janert"
-   ],
    "tags" : [
       "berkeleydb",
       "perl-databases",
@@ -15,9 +7,17 @@
       "sqlite",
       "tie-file"
    ],
+   "image" : null,
    "categories" : "data",
-   "description" : " The expression \"Embedded Database\" requires an explanation. A \"database\" is an application that allows the targeted retrieval of stored data - a log-file is not a database. By \"embedded\" I mean a database that does not run in a...",
-   "thumbnail" : "/images/_pub_2004_09_12_embedded/111-embedded_dbase.gif"
+   "draft" : null,
+   "date" : "2004-09-16T00:00:00-08:00",
+   "slug" : "/pub/2004/09/12/embedded.html",
+   "title" : "Embedded Databases",
+   "authors" : [
+      "philipp-janert"
+   ],
+   "thumbnail" : "/images/_pub_2004_09_12_embedded/111-embedded_dbase.gif",
+   "description" : " The expression \"Embedded Database\" requires an explanation. A \"database\" is an application that allows the targeted retrieval of stored data - a log-file is not a database. By \"embedded\" I mean a database that does not run in a..."
 }
 
 

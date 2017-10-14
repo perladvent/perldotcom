@@ -1,12 +1,12 @@
 {
-   "slug" : "/pub/2007/12/21/20-years-of-perl.html",
-   "date" : "2007-12-21T00:00:00-08:00",
    "title" : "Memories of 20 Years of Perl",
-   "draft" : null,
-   "image" : null,
+   "slug" : "/pub/2007/12/21/20-years-of-perl.html",
    "authors" : [
       "chromatic"
    ],
+   "thumbnail" : null,
+   "description" : "For Perl's 20th anniversary, several Perl programmers reflect on their experiences with the language.",
+   "image" : null,
    "categories" : "Community",
    "tags" : [
       "anniversary",
@@ -14,8 +14,8 @@
       "perl",
       "programming-stories"
    ],
-   "description" : "For Perl's 20th anniversary, several Perl programmers reflect on their experiences with the language.",
-   "thumbnail" : null
+   "draft" : null,
+   "date" : "2007-12-21T00:00:00-08:00"
 }
 
 

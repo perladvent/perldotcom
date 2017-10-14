@@ -1,21 +1,21 @@
 {
-   "draft" : null,
+   "authors" : [
+      "jouke-visser"
+   ],
    "title" : "Using Perl to Enable the Disabled",
    "slug" : "/pub/2003/08/28/pvoice.html",
-   "date" : "2003-08-23T00:00:00-08:00",
+   "description" : " We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user...",
+   "thumbnail" : "/images/_pub_2003_08_28_pvoice/111-pvoice.gif",
+   "draft" : null,
    "tags" : [
       "disabled-speech",
       "jouke-visser",
       "perl",
       "pvoice"
    ],
-   "categories" : "community",
-   "authors" : [
-      "jouke-visser"
-   ],
    "image" : null,
-   "description" : " We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user...",
-   "thumbnail" : "/images/_pub_2003_08_28_pvoice/111-pvoice.gif"
+   "categories" : "community",
+   "date" : "2003-08-23T00:00:00-08:00"
 }
 
 

@@ -1,6 +1,5 @@
 {
-   "thumbnail" : "/images/_pub_2005_12_01_client_side_success/111-success.gif",
-   "description" : " Accurate software inventory management is critical to any organization. Without an accurate software inventory, organizations may either be out of compliance with their vendor licensing agreements or they may be paying extra for licenses that they do not need....",
+   "image" : null,
    "categories" : "Community",
    "tags" : [
       "client-side-perl",
@@ -10,14 +9,15 @@
       "perlapp",
       "windows-perl"
    ],
-   "image" : null,
-   "authors" : [
-      "jiann-wang"
-   ],
    "draft" : null,
    "date" : "2005-12-01T00:00:00-08:00",
    "slug" : "/pub/2005/12/01/client_side_success.html",
-   "title" : "Perl Success Story: Client-Side Collection and Reporting"
+   "title" : "Perl Success Story: Client-Side Collection and Reporting",
+   "authors" : [
+      "jiann-wang"
+   ],
+   "thumbnail" : "/images/_pub_2005_12_01_client_side_success/111-success.gif",
+   "description" : " Accurate software inventory management is critical to any organization. Without an accurate software inventory, organizations may either be out of compliance with their vendor licensing agreements or they may be paying extra for licenses that they do not need...."
 }
 
 

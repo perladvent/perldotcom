@@ -1,10 +1,12 @@
 {
-   "description" : " Now that Content Management with Bricolage has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several...",
    "thumbnail" : null,
-   "draft" : null,
-   "date" : "2004-10-28T00:00:00-08:00",
+   "description" : " Now that Content Management with Bricolage has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several...",
    "slug" : "/pub/2004/10/28/bricolage_installation.html",
    "title" : "Installing Bricolage",
+   "authors" : [
+      "david-wheeler"
+   ],
+   "date" : "2004-10-28T00:00:00-08:00",
    "tags" : [
       "bricolage",
       "cms",
@@ -12,11 +14,9 @@
       "cpan-installation",
       "mod-perl-installation"
    ],
-   "categories" : "Web",
    "image" : null,
-   "authors" : [
-      "david-wheeler"
-   ]
+   "categories" : "Web",
+   "draft" : null
 }
 
 

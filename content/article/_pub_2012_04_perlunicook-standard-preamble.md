@@ -1,15 +1,15 @@
 {
    "thumbnail" : null,
    "description" : "Tom Christiansen demonstrates the bare minimum feature set necessary to work with Unicode effectively in Perl 5.",
+   "slug" : "/pub/2012/04/perlunicook-standard-preamble.html",
+   "title" : "Perl Unicode Cookbook: The Standard Preamble",
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "tags" : [],
-   "categories" : "unicode",
-   "title" : "Perl Unicode Cookbook: The Standard Preamble",
    "date" : "2012-04-02T06:00:01-08:00",
-   "slug" : "/pub/2012/04/perlunicook-standard-preamble.html",
+   "image" : null,
+   "categories" : "unicode",
+   "tags" : [],
    "draft" : null
 }
 

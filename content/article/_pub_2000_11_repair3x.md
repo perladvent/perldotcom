@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "title" : "Red Flags Return",
-   "slug" : "/pub/2000/11/repair3x.html",
-   "date" : "2000-11-28T00:00:00-08:00",
-   "tags" : [],
-   "categories" : "development",
+   "description" : "What's Wrong With This Picture? -> Astute readers had a number of comments about last week's Program Repair Shop and Red Flags article. Control Flow Puzzle In the article, I had a section of code that looked like this: $_...",
+   "thumbnail" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
-   "description" : "What's Wrong With This Picture? -> Astute readers had a number of comments about last week's Program Repair Shop and Red Flags article. Control Flow Puzzle In the article, I had a section of code that looked like this: $_...",
-   "thumbnail" : null
+   "title" : "Red Flags Return",
+   "slug" : "/pub/2000/11/repair3x.html",
+   "date" : "2000-11-28T00:00:00-08:00",
+   "draft" : null,
+   "tags" : [],
+   "categories" : "development",
+   "image" : null
 }
 
 

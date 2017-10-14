@@ -1,13 +1,4 @@
 {
-   "date" : "2005-06-02T00:00:00-08:00",
-   "slug" : "/pub/2005/06/02/catalyst.html",
-   "title" : "Catalyst",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "jesse-sheidlower"
-   ],
-   "categories" : "Web",
    "tags" : [
       "catalyst",
       "minimojo",
@@ -18,8 +9,17 @@
       "perl-web-framework",
       "perl-wiki"
    ],
-   "description" : " Web frameworks are an area of significant interest at the moment. Now that we've all learned the basics of web programming, we're ready to get the common stuff out of the way to concentrate on the task at hand;...",
-   "thumbnail" : "/images/_pub_2005_06_02_catalyst/111-catalyst.gif"
+   "image" : null,
+   "categories" : "Web",
+   "draft" : null,
+   "date" : "2005-06-02T00:00:00-08:00",
+   "title" : "Catalyst",
+   "slug" : "/pub/2005/06/02/catalyst.html",
+   "authors" : [
+      "jesse-sheidlower"
+   ],
+   "thumbnail" : "/images/_pub_2005_06_02_catalyst/111-catalyst.gif",
+   "description" : " Web frameworks are an area of significant interest at the moment. Now that we've all learned the basics of web programming, we're ready to get the common stuff out of the way to concentrate on the task at hand;..."
 }
 
 

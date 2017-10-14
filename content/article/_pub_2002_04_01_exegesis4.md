@@ -1,18 +1,18 @@
 {
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 4 for the current design information. And I'd se-ell my-y so-oul for flow of con-tro-ol ... over Perl - The Motels, \"Total Control\"...",
-   "thumbnail" : "/images/_pub_2002_04_01_exegesis4/111-exegesis4.gif",
    "draft" : null,
-   "date" : "2002-04-02T00:00:00-08:00",
-   "slug" : "/pub/2002/04/01/exegesis4.html",
-   "title" : "Exegesis 4",
+   "categories" : "perl-6",
+   "image" : null,
    "tags" : [
       "apocalypse-exegesis-control-flow"
    ],
-   "categories" : "perl-6",
-   "image" : null,
+   "date" : "2002-04-02T00:00:00-08:00",
    "authors" : [
       "damian-conway"
-   ]
+   ],
+   "slug" : "/pub/2002/04/01/exegesis4.html",
+   "title" : "Exegesis 4",
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 4 for the current design information. And I'd se-ell my-y so-oul for flow of con-tro-ol ... over Perl - The Motels, \"Total Control\"...",
+   "thumbnail" : "/images/_pub_2002_04_01_exegesis4/111-exegesis4.gif"
 }
 
 

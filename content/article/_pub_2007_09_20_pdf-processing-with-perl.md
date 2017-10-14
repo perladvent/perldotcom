@@ -1,10 +1,7 @@
 {
-   "description" : " Adobe's PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document...",
-   "thumbnail" : null,
-   "draft" : null,
-   "slug" : "/pub/2007/09/20/pdf-processing-with-perl.html",
    "date" : "2007-09-21T00:00:00-08:00",
-   "title" : "PDF Processing with Perl",
+   "draft" : null,
+   "image" : null,
    "categories" : "CPAN",
    "tags" : [
       "creating-pdfs",
@@ -12,10 +9,13 @@
       "pdf-create",
       "pdf-reuse"
    ],
-   "image" : null,
+   "description" : " Adobe's PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document...",
+   "thumbnail" : null,
    "authors" : [
       "detlef-groth"
-   ]
+   ],
+   "slug" : "/pub/2007/09/20/pdf-processing-with-perl.html",
+   "title" : "PDF Processing with Perl"
 }
 
 

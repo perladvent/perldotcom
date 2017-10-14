@@ -1,16 +1,16 @@
 {
-   "thumbnail" : "/images/_pub_2001_10_03_exegesis3/111-exegesis.jpg",
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 3 for the current design information. Diamond lives (context-aware); Underscore space means concatenate; fat comma means pair; A pre-star will flatten; colon-equals will...",
-   "tags" : [],
-   "categories" : "perl-6",
+   "thumbnail" : "/images/_pub_2001_10_03_exegesis3/111-exegesis.jpg",
    "authors" : [
       "damian-conway"
    ],
-   "image" : null,
-   "draft" : null,
    "title" : "Exegesis 3",
+   "slug" : "/pub/2001/10/03/exegesis3.html",
    "date" : "2001-10-03T00:00:00-08:00",
-   "slug" : "/pub/2001/10/03/exegesis3.html"
+   "draft" : null,
+   "tags" : [],
+   "categories" : "perl-6",
+   "image" : null
 }
 
 

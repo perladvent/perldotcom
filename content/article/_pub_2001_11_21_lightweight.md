@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "date" : "2001-11-21T00:00:00-08:00",
-   "slug" : "/pub/2001/11/21/lightweight.html",
+   "description" : " What happens if you get a bunch of academic computer scientists and implementors of languages such as Perl, Python, Smalltalk and Curl, and lock them into a room for a day? Bringing together the academic and commercial sides of...",
+   "thumbnail" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
    "title" : "Lightweight Languages",
-   "categories" : "community",
+   "slug" : "/pub/2001/11/21/lightweight.html",
+   "date" : "2001-11-21T00:00:00-08:00",
+   "draft" : null,
    "tags" : [
       "lightweight-languages-conference-mit-ai-research-academic"
    ],
    "image" : null,
-   "authors" : [
-      "simon-cozens"
-   ],
-   "description" : " What happens if you get a bunch of academic computer scientists and implementors of languages such as Perl, Python, Smalltalk and Curl, and lock them into a room for a day? Bringing together the academic and commercial sides of...",
-   "thumbnail" : null
+   "categories" : "community"
 }
 
 

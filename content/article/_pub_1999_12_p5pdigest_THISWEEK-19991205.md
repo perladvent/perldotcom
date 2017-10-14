@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
    "description" : " Notes Meta-Information m//g in List Context eof() at the Beginning of the Input Shadow Passwords Continue Perl, EBCDIC, and Unicode lock Keyword Safe::Hole Change to xsubpp Euphoria Talarian SmartSockets perlxstut and perlxs Additions Reset umasks Mailling List Archives Unavailable...",
-   "tags" : [],
-   "categories" : "community",
+   "thumbnail" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
-   "draft" : null,
    "title" : "This Week on p5p 1999/12/05",
    "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991205.html",
-   "date" : "1999-12-05T00:00:00-08:00"
+   "date" : "1999-12-05T00:00:00-08:00",
+   "draft" : null,
+   "tags" : [],
+   "image" : null,
+   "categories" : "community"
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "date" : "2001-03-26T00:00:00-08:00",
    "slug" : "/pub/2001/03/p5pdigest/THISWEEK-20010326.html",
    "title" : "This Week on p5p 2001/03/26",
-   "categories" : "community",
-   "tags" : [],
-   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
+   "thumbnail" : null,
    "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters...",
-   "thumbnail" : null
+   "image" : null,
+   "categories" : "community",
+   "tags" : [],
+   "draft" : null,
+   "date" : "2001-03-26T00:00:00-08:00"
 }
 
 

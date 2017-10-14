@@ -1,16 +1,16 @@
 {
    "thumbnail" : null,
    "description" : "As Andy Lester points out in this month's Perl Review, one big advantage of there being so many Perl books around is that the publishers can now get around to putting out books on some of the more &quot;niche&quot; areas...",
-   "categories" : "CPAN",
-   "tags" : [],
+   "slug" : "/pub/2002/11/06/review.html",
+   "title" : "Writing Perl Modules for CPAN",
    "authors" : [
       "simon-cozens"
    ],
+   "date" : "2002-11-06T00:00:00-08:00",
+   "tags" : [],
    "image" : null,
-   "draft" : null,
-   "title" : "Writing Perl Modules for CPAN",
-   "slug" : "/pub/2002/11/06/review.html",
-   "date" : "2002-11-06T00:00:00-08:00"
+   "categories" : "CPAN",
+   "draft" : null
 }
 
 

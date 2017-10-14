@@ -1,11 +1,14 @@
 {
    "thumbnail" : "/images/_pub_2006_06_01_fear-api/111-FEAR-less.gif",
    "description" : " Imagine that you have an assignment that you need to fetch all of the web pages of a given website, scrape data from them, and transfer the data to another place, such as a database or plain files. This...",
+   "title" : "FEAR-less Site Scraping",
+   "slug" : "/pub/2006/06/01/fear-api.html",
    "authors" : [
       "yung-chung-lin"
    ],
-   "image" : null,
+   "date" : "2006-06-01T00:00:00-08:00",
    "categories" : "web",
+   "image" : null,
    "tags" : [
       "domain-specific-languages",
       "dsl",
@@ -15,9 +18,6 @@
       "web-scraping",
       "web-spiders"
    ],
-   "title" : "FEAR-less Site Scraping",
-   "slug" : "/pub/2006/06/01/fear-api.html",
-   "date" : "2006-06-01T00:00:00-08:00",
    "draft" : null
 }
 

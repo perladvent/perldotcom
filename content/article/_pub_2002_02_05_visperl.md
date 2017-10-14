@@ -1,18 +1,18 @@
 {
-   "description" : " Jumbo shrimp, military intelligence - Visual Perl? ActiveState built its reputation by bringing Perl to the Windows platform, thereby extending the reach of Perl and the size and nature of the Perl community. However, regardless of the Windows port,...",
-   "thumbnail" : "/images/_pub_2002_02_05_visperl/111-visual_perl.gif",
    "draft" : null,
-   "title" : "Visual Perl",
-   "slug" : "/pub/2002/02/05/visperl.html",
-   "date" : "2002-02-06T00:00:00-08:00",
-   "categories" : "development",
    "tags" : [
       "microsoft-visual-perl-studio"
    ],
+   "categories" : "development",
+   "image" : null,
+   "date" : "2002-02-06T00:00:00-08:00",
    "authors" : [
       "eric-promislow"
    ],
-   "image" : null
+   "title" : "Visual Perl",
+   "slug" : "/pub/2002/02/05/visperl.html",
+   "description" : " Jumbo shrimp, military intelligence - Visual Perl? ActiveState built its reputation by bringing Perl to the Windows platform, thereby extending the reach of Perl and the size and nature of the Perl community. However, regardless of the Windows port,...",
+   "thumbnail" : "/images/_pub_2002_02_05_visperl/111-visual_perl.gif"
 }
 
 

@@ -1,21 +1,21 @@
 {
-   "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular...",
-   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
-   "title" : "Implementing Flood Control",
-   "date" : "2004-11-11T00:00:00-08:00",
-   "slug" : "/pub/2004/11/11/floodcontrol.html",
-   "draft" : null,
-   "authors" : [
-      "vladi-belperchinov-shabanski"
-   ],
-   "image" : null,
    "tags" : [
       "algorithm-floodcontrol",
       "event-processing",
       "flood-control",
       "vladi-belperchinov-shabanski"
    ],
-   "categories" : "science"
+   "image" : null,
+   "categories" : "science",
+   "draft" : null,
+   "date" : "2004-11-11T00:00:00-08:00",
+   "slug" : "/pub/2004/11/11/floodcontrol.html",
+   "title" : "Implementing Flood Control",
+   "authors" : [
+      "vladi-belperchinov-shabanski"
+   ],
+   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
+   "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular..."
 }
 
 

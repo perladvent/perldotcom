@@ -1,10 +1,14 @@
 {
    "description" : " In my previous article, I provided a guided tour of the Bricolage installation process. If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as Mr. Popeil used to...",
    "thumbnail" : null,
-   "draft" : null,
+   "authors" : [
+      "david-wheeler"
+   ],
    "title" : "Bricolage Configuration Directives",
-   "date" : "2005-01-06T00:00:00-08:00",
    "slug" : "/pub/2005/01/06/bricolage_configuration.html",
+   "date" : "2005-01-06T00:00:00-08:00",
+   "draft" : null,
+   "image" : null,
    "categories" : "Web",
    "tags" : [
       "bricolage",
@@ -14,11 +18,7 @@
       "content-management",
       "cpan-installation",
       "mod-perl-installation"
-   ],
-   "authors" : [
-      "david-wheeler"
-   ],
-   "image" : null
+   ]
 }
 
 

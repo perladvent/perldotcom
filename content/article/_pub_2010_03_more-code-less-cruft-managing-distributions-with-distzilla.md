@@ -1,11 +1,12 @@
 {
-   "title" : "More Code, Less Cruft: Managing Distributions with Dist::Zilla",
-   "date" : "2010-03-09T16:14:12-08:00",
-   "slug" : "/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html",
-   "draft" : null,
    "authors" : [
       "ricardo-signes"
    ],
+   "title" : "More Code, Less Cruft: Managing Distributions with Dist::Zilla",
+   "slug" : "/pub/2010/03/more-code-less-cruft-managing-distributions-with-distzilla.html",
+   "description" : "Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap&mdash;though this distinction is too subtle. Much of the documentation and code is crap, too. It's pointless. It's...",
+   "thumbnail" : null,
+   "draft" : null,
    "image" : null,
    "categories" : "Tooling",
    "tags" : [
@@ -16,8 +17,7 @@
       "perl-5",
       "perl-programming"
    ],
-   "description" : "Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap&mdash;though this distinction is too subtle. Much of the documentation and code is crap, too. It's pointless. It's...",
-   "thumbnail" : null
+   "date" : "2010-03-09T16:14:12-08:00"
 }
 
 

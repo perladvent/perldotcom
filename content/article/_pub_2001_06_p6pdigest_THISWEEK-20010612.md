@@ -1,16 +1,16 @@
 {
-   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to bwarnock@capita.com. The Perl 6 mailing lists saw 226 messages across 19 threads, with 40 authors...",
-   "thumbnail" : null,
-   "draft" : null,
-   "title" : "This Week in Perl 6 (3 - 9 June 2001)",
-   "slug" : "/pub/2001/06/p6pdigest/THISWEEK-20010612.html",
-   "date" : "2001-06-12T00:00:00-08:00",
+   "image" : null,
    "categories" : "community",
    "tags" : [],
+   "draft" : null,
+   "date" : "2001-06-12T00:00:00-08:00",
+   "title" : "This Week in Perl 6 (3 - 9 June 2001)",
+   "slug" : "/pub/2001/06/p6pdigest/THISWEEK-20010612.html",
    "authors" : [
       "bryan-warnock"
    ],
-   "image" : null
+   "thumbnail" : null,
+   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to bwarnock@capita.com. The Perl 6 mailing lists saw 226 messages across 19 threads, with 40 authors..."
 }
 
 

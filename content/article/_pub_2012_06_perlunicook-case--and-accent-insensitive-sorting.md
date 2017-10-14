@@ -1,16 +1,16 @@
 {
+   "date" : "2012-06-04T06:00:01-08:00",
+   "draft" : null,
    "image" : null,
+   "categories" : "unicode",
+   "tags" : [],
+   "description" : "℞ 36: Case- and accent-insensitive Unicode sort The Unicode Collation Algorithm defines several levels of collation strength by which you can specify certain character properties as relevant or irrelevant to the collation ordering. In simple terms, you can use collation...",
+   "thumbnail" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "tags" : [],
-   "categories" : "unicode",
-   "date" : "2012-06-04T06:00:01-08:00",
    "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-sorting.html",
-   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Sorting",
-   "draft" : null,
-   "thumbnail" : null,
-   "description" : "℞ 36: Case- and accent-insensitive Unicode sort The Unicode Collation Algorithm defines several levels of collation strength by which you can specify certain character properties as relevant or irrelevant to the collation ordering. In simple terms, you can use collation..."
+   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Sorting"
 }
 
 

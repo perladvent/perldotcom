@@ -1,11 +1,12 @@
 {
-   "thumbnail" : "/images/_pub_2005_12_15_perl_prolog/111-logic.gif",
-   "description" : " Computing languages can be addictive; developers sometimes blame themselves for perceived inadequacies, making apologies for them. That is the case, at least, when one defends his or her language of choice against the criticism of another language's devotee. Regardless,...",
-   "image" : null,
    "authors" : [
       "robert-pratte"
    ],
-   "categories" : "development",
+   "slug" : "/pub/2005/12/15/perl_prolog.html",
+   "title" : "Logic Programming with Perl and Prolog",
+   "description" : " Computing languages can be addictive; developers sometimes blame themselves for perceived inadequacies, making apologies for them. That is the case, at least, when one defends his or her language of choice against the criticism of another language's devotee. Regardless,...",
+   "thumbnail" : "/images/_pub_2005_12_15_perl_prolog/111-logic.gif",
+   "draft" : null,
    "tags" : [
       "ai-prolog",
       "graphviz",
@@ -13,10 +14,9 @@
       "perl-logic-programming",
       "prolog"
    ],
-   "slug" : "/pub/2005/12/15/perl_prolog.html",
-   "date" : "2005-12-15T00:00:00-08:00",
-   "title" : "Logic Programming with Perl and Prolog",
-   "draft" : null
+   "categories" : "development",
+   "image" : null,
+   "date" : "2005-12-15T00:00:00-08:00"
 }
 
 

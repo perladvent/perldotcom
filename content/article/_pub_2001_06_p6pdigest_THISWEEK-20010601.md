@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2001/06/p6pdigest/THISWEEK-20010601.html",
    "date" : "2001-06-04T00:00:00-08:00",
-   "title" : "This Week in Perl 6 (27 May - 2 June 2001)",
-   "draft" : null,
+   "tags" : [],
    "image" : null,
+   "categories" : "perl-6",
+   "draft" : null,
+   "thumbnail" : null,
+   "description" : " 3 June 2001 Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org, where YYYYMM is the current year and month. It was a...",
+   "slug" : "/pub/2001/06/p6pdigest/THISWEEK-20010601.html",
+   "title" : "This Week in Perl 6 (27 May - 2 June 2001)",
    "authors" : [
       "bryan-warnock"
-   ],
-   "categories" : "perl-6",
-   "tags" : [],
-   "description" : " 3 June 2001 Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org, where YYYYMM is the current year and month. It was a...",
-   "thumbnail" : null
+   ]
 }
 
 

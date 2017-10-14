@@ -2,15 +2,15 @@
    "authors" : [
       "mark-jason-dominus"
    ],
+   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991128.html",
+   "title" : "This Week on p5p 1999/11/28",
+   "description" : " Notes New Meta-Information Thread Model Discussion Discussion of Line Disciplines Continues Shadow Passwords Bugs in NT Perl Sockets? Run Out of File Descriptors Lexical Variable Leak Control-Backslash Bitwise Operators Taint Bug? next Outside a Block Quiet List Various Notes...",
+   "thumbnail" : null,
+   "draft" : null,
+   "tags" : [],
    "image" : null,
    "categories" : "community",
-   "tags" : [],
-   "title" : "This Week on p5p 1999/11/28",
-   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991128.html",
-   "date" : "1999-11-28T00:00:00-08:00",
-   "draft" : null,
-   "thumbnail" : null,
-   "description" : " Notes New Meta-Information Thread Model Discussion Discussion of Line Disciplines Continues Shadow Passwords Bugs in NT Perl Sockets? Run Out of File Descriptors Lexical Variable Leak Control-Backslash Bitwise Operators Taint Bug? next Outside a Block Quiet List Various Notes..."
+   "date" : "1999-11-28T00:00:00-08:00"
 }
 
 

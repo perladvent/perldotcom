@@ -1,14 +1,4 @@
 {
-   "slug" : "/pub/2005/10/20/scriptome.html",
-   "date" : "2005-10-20T00:00:00-08:00",
-   "title" : "Data Munging for Non-Programming Biologists",
-   "draft" : null,
-   "image" : null,
-   "authors" : [
-      "amir-karger",
-      "eitan-rubin"
-   ],
-   "categories" : "Science",
    "tags" : [
       "bioinformatics",
       "bioperl",
@@ -18,8 +8,18 @@
       "perl-data-munging",
       "scriptome"
    ],
-   "description" : " Have you ever renamed 768 files? Merged the content from 96 files into a spreadsheet? Filtered 100 lines out of a 20,000-line file? Have you ever done these things by hand? Disciples of laziness-one of the three Perl programmer's...",
-   "thumbnail" : "/images/_pub_2005_10_20_scriptome/111-scriptome.gif"
+   "image" : null,
+   "categories" : "Science",
+   "draft" : null,
+   "date" : "2005-10-20T00:00:00-08:00",
+   "slug" : "/pub/2005/10/20/scriptome.html",
+   "title" : "Data Munging for Non-Programming Biologists",
+   "authors" : [
+      "amir-karger",
+      "eitan-rubin"
+   ],
+   "thumbnail" : "/images/_pub_2005_10_20_scriptome/111-scriptome.gif",
+   "description" : " Have you ever renamed 768 files? Merged the content from 96 files into a spreadsheet? Filtered 100 lines out of a 20,000-line file? Have you ever done these things by hand? Disciples of laziness-one of the three Perl programmer's..."
 }
 
 

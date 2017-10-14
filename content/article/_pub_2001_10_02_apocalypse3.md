@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "categories" : "perl-6",
    "authors" : [
       "larry-wall"
    ],
-   "image" : null,
-   "draft" : null,
    "title" : "Apocalypse 3",
    "slug" : "/pub/2001/10/02/apocalypse3.html",
-   "date" : "2001-10-02T00:00:00-08:00",
+   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 03 for the latest information. Table of Contents  RFC 025: Operators: Multiway comparisons  RFC 320: Allow grouping of -X file tests...",
    "thumbnail" : "/images/_pub_2001_10_02_apocalypse3/111-apocalypse.jpg",
-   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 03 for the latest information. Table of Contents  RFC 025: Operators: Multiway comparisons  RFC 320: Allow grouping of -X file tests..."
+   "draft" : null,
+   "tags" : [],
+   "image" : null,
+   "categories" : "perl-6",
+   "date" : "2001-10-02T00:00:00-08:00"
 }
 
 

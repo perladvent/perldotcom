@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "description" : "Thanks to Torsten Raudssus, who wrote in with this announcement. What is Plat_Forms? Plat_Forms is a contest and competition in which top-class teams of three programmers compete to implement the same requirements for a web-based system within two days, using...",
+   "draft" : null,
+   "image" : null,
+   "categories" : "Community",
+   "tags" : [],
+   "date" : "2012-08-29T13:21:52-08:00",
    "authors" : [
       "chromatic"
    ],
-   "image" : null,
-   "tags" : [],
-   "categories" : "Community",
-   "title" : "Show off Perl in Plat_Forms 2012",
-   "date" : "2012-08-29T13:21:52-08:00",
    "slug" : "/pub/2012/08/show-off-perl-in-plat-forms-2012.html",
-   "draft" : null
+   "title" : "Show off Perl in Plat_Forms 2012",
+   "description" : "Thanks to Torsten Raudssus, who wrote in with this announcement. What is Plat_Forms? Plat_Forms is a contest and competition in which top-class teams of three programmers compete to implement the same requirements for a web-based system within two days, using...",
+   "thumbnail" : null
 }
 
 

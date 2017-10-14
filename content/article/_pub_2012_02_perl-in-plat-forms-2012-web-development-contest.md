@@ -1,18 +1,18 @@
 {
    "thumbnail" : null,
    "description" : "Thanks to Lars Dɪᴇᴄᴋᴏᴡ for coordinating entries into the Plat_Forms 2012 web development contest. This annual contest pits some of the best developers of frameworks and languages against each other to solve real problems. Perl developers have participated for several...",
-   "categories" : "Community",
+   "slug" : "/pub/2012/02/perl-in-plat-forms-2012-web-development-contest.html",
+   "title" : "Perl in Plat_Forms 2012 Web Development Contest",
+   "authors" : [
+      "chromatic"
+   ],
+   "date" : "2012-02-02T17:33:35-08:00",
    "tags" : [
       "web-development"
    ],
    "image" : null,
-   "authors" : [
-      "chromatic"
-   ],
-   "draft" : null,
-   "date" : "2012-02-02T17:33:35-08:00",
-   "slug" : "/pub/2012/02/perl-in-plat-forms-2012-web-development-contest.html",
-   "title" : "Perl in Plat_Forms 2012 Web Development Contest"
+   "categories" : "Community",
+   "draft" : null
 }
 
 

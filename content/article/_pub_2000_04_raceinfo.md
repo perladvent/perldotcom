@@ -1,19 +1,19 @@
 {
-   "description" : "What's wrong with this picture? -> What's wrong with this picture? Reading the Input Computing Average and Total Times Sort Order Printing the Report Red Flags Get Rid of Array Size Variables Use Compound Data Structures Instead of Variable Families...",
-   "thumbnail" : null,
-   "title" : "Program Repair Shop and Red Flags",
-   "slug" : "/pub/2000/04/raceinfo.html",
    "date" : "2000-05-02T00:00:00-08:00",
    "draft" : null,
-   "authors" : [
-      "mark-jason-dominus"
-   ],
-   "image" : null,
    "categories" : "development",
+   "image" : null,
    "tags" : [
       "briandfoy",
       "perl-conference"
-   ]
+   ],
+   "description" : "What's wrong with this picture? -> What's wrong with this picture? Reading the Input Computing Average and Total Times Sort Order Printing the Report Red Flags Get Rid of Array Size Variables Use Compound Data Structures Instead of Variable Families...",
+   "thumbnail" : null,
+   "authors" : [
+      "mark-jason-dominus"
+   ],
+   "slug" : "/pub/2000/04/raceinfo.html",
+   "title" : "Program Repair Shop and Red Flags"
 }
 
 

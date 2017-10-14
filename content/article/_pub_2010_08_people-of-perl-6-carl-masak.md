@@ -1,21 +1,21 @@
 {
-   "date" : "2010-08-31T06:00:01-08:00",
-   "slug" : "/pub/2010/08/people-of-perl-6-carl-masak.html",
-   "title" : "People of Perl 6: Carl Mäsak",
-   "draft" : null,
-   "image" : null,
    "authors" : [
       "chromatic"
    ],
-   "categories" : "perl-6",
+   "title" : "People of Perl 6: Carl Mäsak",
+   "slug" : "/pub/2010/08/people-of-perl-6-carl-masak.html",
+   "description" : "Carl Mäsak is a developer of <a href=\"http://www.rakudo.org/\">Rakudo Perl\n6</a> and arguably the most dedicated bug wrangler.  He's contributed to\nmore bug reports than anyone else.  If you find that Rakudo does not do as you\nexpect, you'll likely talk to him on #perl6 for help triaging and categorizing\nyour bug.\n\nIn his own words, here's how he's helped make Perl 6 real.",
+   "thumbnail" : null,
+   "draft" : null,
    "tags" : [
       "interview",
       "perl",
       "perl-6",
       "rakudo"
    ],
-   "description" : "Carl Mäsak is a developer of <a href=\"http://www.rakudo.org/\">Rakudo Perl\n6</a> and arguably the most dedicated bug wrangler.  He's contributed to\nmore bug reports than anyone else.  If you find that Rakudo does not do as you\nexpect, you'll likely talk to him on #perl6 for help triaging and categorizing\nyour bug.\n\nIn his own words, here's how he's helped make Perl 6 real.",
-   "thumbnail" : null
+   "image" : null,
+   "categories" : "perl-6",
+   "date" : "2010-08-31T06:00:01-08:00"
 }
 
 

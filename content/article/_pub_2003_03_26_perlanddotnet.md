@@ -1,10 +1,7 @@
 {
-   "description" : " Randy Ray is coauthor of Programming Web Services with Perl Abstract: One of the most common categories of questions on the SOAP::Lite mailing list is how to get Perl SOAP applications to work with .NET services. It's not that...",
-   "thumbnail" : "/images/_pub_2003_03_26_perlanddotnet/111-dotnet_and_perl.gif",
-   "draft" : null,
-   "slug" : "/pub/2003/03/26/perlanddotnet.html",
    "date" : "2003-03-26T00:00:00-08:00",
-   "title" : "Five Tips for .NET Programming in Perl",
+   "image" : null,
+   "categories" : "Windows",
    "tags" : [
       "net",
       "net",
@@ -12,8 +9,11 @@
       "perl-soap-applications",
       "soap-lite"
    ],
-   "categories" : "Windows",
-   "image" : null,
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2003_03_26_perlanddotnet/111-dotnet_and_perl.gif",
+   "description" : " Randy Ray is coauthor of Programming Web Services with Perl Abstract: One of the most common categories of questions on the SOAP::Lite mailing list is how to get Perl SOAP applications to work with .NET services. It's not that...",
+   "slug" : "/pub/2003/03/26/perlanddotnet.html",
+   "title" : "Five Tips for .NET Programming in Perl",
    "authors" : [
       "randy-ray"
    ]

@@ -1,16 +1,16 @@
 {
-   "tags" : [],
+   "draft" : null,
+   "image" : null,
    "categories" : "unicode",
+   "tags" : [],
+   "date" : "2012-05-31T06:00:01-08:00",
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "draft" : null,
    "title" : "Perl Unicode Cookbook: Unicode Column Width for Printing",
-   "date" : "2012-05-31T06:00:01-08:00",
    "slug" : "/pub/2012/05/perlunicook-unicode-column-width-for-printing.html",
-   "thumbnail" : null,
-   "description" : "℞ 34: Unicode column-width for printing Perl's printf, sprintf, and format think all codepoints take up 1 print column, but many codepoints take 0 or 2. If you use any of these builtins to align text, you may find that..."
+   "description" : "℞ 34: Unicode column-width for printing Perl's printf, sprintf, and format think all codepoints take up 1 print column, but many codepoints take 0 or 2. If you use any of these builtins to align text, you may find that...",
+   "thumbnail" : null
 }
 
 

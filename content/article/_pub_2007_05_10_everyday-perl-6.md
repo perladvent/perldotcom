@@ -1,11 +1,13 @@
 {
-   "title" : "Everyday Perl 6",
-   "date" : "2007-05-10T00:00:00-08:00",
-   "slug" : "/pub/2007/05/10/everyday-perl-6.html",
-   "draft" : null,
+   "description" : " Perl 6 will soon be here. How will programming in Perl 6 be different from programming in Perl 5 for your average Perl programmer? The answer is: very different yet very much the same. A Perl 6 program viewed...",
+   "thumbnail" : null,
    "authors" : [
       "jonathan-scott-duff"
    ],
+   "title" : "Everyday Perl 6",
+   "slug" : "/pub/2007/05/10/everyday-perl-6.html",
+   "date" : "2007-05-10T00:00:00-08:00",
+   "draft" : null,
    "image" : null,
    "categories" : "perl-6",
    "tags" : [
@@ -13,9 +15,7 @@
       "perl-5",
       "perl-6",
       "pugs"
-   ],
-   "description" : " Perl 6 will soon be here. How will programming in Perl 6 be different from programming in Perl 5 for your average Perl programmer? The answer is: very different yet very much the same. A Perl 6 program viewed...",
-   "thumbnail" : null
+   ]
 }
 
 

@@ -1,6 +1,4 @@
 {
-   "thumbnail" : null,
-   "description" : " Editor's note: In this third and final batch of recipes excerpted from Perl Cookbook, you'll find solutions and code examples for extracting HTML table data, templating with HTML::Mason, and making simple changes to elements or text. Sample Recipe: Extracting...",
    "tags" : [
       "extracting-table-data",
       "making-simple-changes-to-elements-or-text",
@@ -10,15 +8,17 @@
       "templating-with-html-mason",
       "tom-christiansen"
    ],
-   "categories" : "development",
    "image" : null,
+   "categories" : "development",
+   "draft" : null,
+   "date" : "2003-09-17T00:00:00-08:00",
+   "title" : "Cooking with Perl, Part 3",
+   "slug" : "/pub/2003/09/17/perlcookbook.html",
    "authors" : [
       "perldotcom"
    ],
-   "draft" : null,
-   "slug" : "/pub/2003/09/17/perlcookbook.html",
-   "date" : "2003-09-17T00:00:00-08:00",
-   "title" : "Cooking with Perl, Part 3"
+   "thumbnail" : null,
+   "description" : " Editor's note: In this third and final batch of recipes excerpted from Perl Cookbook, you'll find solutions and code examples for extracting HTML table data, templating with HTML::Mason, and making simple changes to elements or text. Sample Recipe: Extracting..."
 }
 
 

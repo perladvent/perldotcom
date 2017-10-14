@@ -1,14 +1,14 @@
 {
-   "image" : null,
-   "authors" : [
-      "simon-cozens"
-   ],
    "tags" : [],
+   "image" : null,
    "categories" : "community",
+   "draft" : null,
    "date" : "2000-12-27T00:00:00-08:00",
    "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001225.html",
    "title" : "This Week on p5p 2000/12/24",
-   "draft" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
    "thumbnail" : null,
    "description" : " Notes 5.6.1 Trial is out! Profiling Solaris and Sockets strtoul Language-sensitive editors Numeric conversion on HPUX Various Repository browser Dependency checker Unicode task use constant Updates Miscellany Notes You can subscribe to an email version of this summary by..."
 }

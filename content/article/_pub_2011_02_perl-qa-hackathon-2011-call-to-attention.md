@@ -1,16 +1,16 @@
 {
+   "categories" : "Community",
+   "image" : null,
+   "tags" : [],
    "draft" : null,
+   "date" : "2011-02-02T11:32:47-08:00",
    "title" : "Perl QA Hackathon 2011: Call to Attention",
    "slug" : "/pub/2011/02/perl-qa-hackathon-2011-call-to-attention.html",
-   "date" : "2011-02-02T11:32:47-08:00",
-   "tags" : [],
-   "categories" : "Community",
    "authors" : [
       "chromatic"
    ],
-   "image" : null,
-   "description" : "Lars Dɪᴇᴄᴋᴏᴡ has sent out a call for attention for the 2011 Perl QA Hackathon: The Perl QA hackathon 2011 is taking place from Saturday, April 16th to Monday, April 18th 2011 in Amsterdam, The Netherlands. Attendance is gratis. We...",
-   "thumbnail" : null
+   "thumbnail" : null,
+   "description" : "Lars Dɪᴇᴄᴋᴏᴡ has sent out a call for attention for the 2011 Perl QA Hackathon: The Perl QA hackathon 2011 is taking place from Saturday, April 16th to Monday, April 18th 2011 in Amsterdam, The Netherlands. Attendance is gratis. We..."
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "image" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "tags" : [],
-   "categories" : "unicode",
-   "slug" : "/pub/2012/05/perlunicook-get-character-categories.html",
-   "date" : "2012-05-11T06:00:01-08:00",
    "title" : "Perl Unicode Cookbook: Get Character Categories",
-   "draft" : null,
+   "slug" : "/pub/2012/05/perlunicook-get-character-categories.html",
+   "description" : "℞ 23: Get character category Unicode is a set of characters and a list of rules and properties applied to those characters. The Unicode Character Database collects those properties. The core module Unicode::UCD provides access to these properties. These general...",
    "thumbnail" : null,
-   "description" : "℞ 23: Get character category Unicode is a set of characters and a list of rules and properties applied to those characters. The Unicode Character Database collects those properties. The core module Unicode::UCD provides access to these properties. These general..."
+   "draft" : null,
+   "tags" : [],
+   "image" : null,
+   "categories" : "unicode",
+   "date" : "2012-05-11T06:00:01-08:00"
 }
 
 

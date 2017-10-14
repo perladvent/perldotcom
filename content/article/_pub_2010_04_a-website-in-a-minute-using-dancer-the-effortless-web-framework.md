@@ -1,5 +1,5 @@
 {
-   "categories" : "web",
+   "date" : "2010-04-06T06:00:01-08:00",
    "tags" : [
       "cpan",
       "dancer",
@@ -9,15 +9,15 @@
       "web-development"
    ],
    "image" : null,
-   "authors" : [
-      "perldotcom"
-   ],
+   "categories" : "web",
    "draft" : null,
-   "date" : "2010-04-06T06:00:01-08:00",
+   "thumbnail" : null,
+   "description" : "While Perl has a few heavy hitters in the web framework world (Catalyst, Jifty, CGI::App), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler....",
    "slug" : "/pub/2010/04/a-website-in-a-minute-using-dancer-the-effortless-web-framework.html",
    "title" : "A Website in a Minute Using Dancer, the Effortless Web Framework",
-   "thumbnail" : null,
-   "description" : "While Perl has a few heavy hitters in the web framework world (Catalyst, Jifty, CGI::App), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler...."
+   "authors" : [
+      "perldotcom"
+   ]
 }
 
 

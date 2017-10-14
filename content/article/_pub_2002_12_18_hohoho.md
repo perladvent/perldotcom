@@ -2,17 +2,17 @@
    "authors" : [
       "alex-gough"
    ],
-   "image" : null,
-   "categories" : "Community",
+   "title" : "How Perl Powers Christmas",
+   "slug" : "/pub/2002/12/18/hohoho.html",
+   "description" : " You know, it's not easy having the happiness of billions of children around the world resting with your organization, and it's even harder on the IT department. The incorporated elves and pixiefolk of the North Pole, under the direction...",
+   "thumbnail" : "/images/_pub_2002_12_18_hohoho/111-perl_xmas.gif",
+   "draft" : null,
    "tags" : [
       "christmas-success-santa"
    ],
-   "title" : "How Perl Powers Christmas",
-   "slug" : "/pub/2002/12/18/hohoho.html",
-   "date" : "2002-12-18T00:00:00-08:00",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2002_12_18_hohoho/111-perl_xmas.gif",
-   "description" : " You know, it's not easy having the happiness of billions of children around the world resting with your organization, and it's even harder on the IT department. The incorporated elves and pixiefolk of the North Pole, under the direction..."
+   "image" : null,
+   "categories" : "Community",
+   "date" : "2002-12-18T00:00:00-08:00"
 }
 
 
