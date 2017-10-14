@@ -245,7 +245,8 @@ sub slug_to_filepath {
 
 sub front_matter {
   my $self = shift;
-  my @author_keys = map { s/\W/-/g;lc } @{ $self->{authors} };
+  my @author_keys = map { lc($_) =~ s/[^a-z]/-/gr } @{ $self->{authors} };
+
   return {
     title => $self->{title},
     date  => $self->{date},
