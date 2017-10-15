@@ -1,18 +1,18 @@
 {
    "date" : "2003-11-17T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : "/images/_pub_2003_11_17_lmsolve/111-games.gif",
    "title" : "Solving Puzzles with LM-Solve",
-   "authors" : [
-      "shlomi-fish"
-   ],
-   "categories" : "Games",
-   "slug" : "/pub/2003/11/17/lmsolve.html",
+   "categories" : "games",
+   "thumbnail" : "/images/_pub_2003_11_17_lmsolve/111-games.gif",
    "tags" : [
       "games-puzzles-logic-maze"
    ],
+   "slug" : "/pub/2003/11/17/lmsolve.html",
    "description" : " Suppose you encounter a (single-player) riddle or a puzzle that you don't know how to solve. Let's also suppose that this puzzle involves moving between several states of the board with an enumerable number of moves emerging from one...",
-   "draft" : null
+   "draft" : null,
+   "authors" : [
+      "shlomi-fish"
+   ]
 }
 
 

@@ -1,7 +1,10 @@
 {
+   "authors" : [
+      "ivan-tubert-brohman"
+   ],
    "draft" : null,
-   "description" : " AnnoCPAN is a new website that shows the documentation for every Perl module available on CPAN and allows anyone to post annotations in the margins of the documents. The notes are public, so everyone can read and reuse them...",
    "slug" : "/pub/2005/06/30/annocpan.html",
+   "description" : " AnnoCPAN is a new website that shows the documentation for every Perl module available on CPAN and allows anyone to post annotations in the margins of the documents. The notes are public, so everyone can read and reuse them...",
    "tags" : [
       "annocpan",
       "cpan-documentation",
@@ -12,14 +15,11 @@
       "tpf",
       "tpf-grants"
    ],
-   "authors" : [
-      "ivan-tubert-brohman"
-   ],
-   "title" : "Annotating CPAN",
-   "categories" : "CPAN",
-   "date" : "2005-06-30T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2005_06_30_annocpan/111-cpan_annot.gif",
-   "image" : null
+   "categories" : "cpan",
+   "title" : "Annotating CPAN",
+   "image" : null,
+   "date" : "2005-06-30T00:00:00-08:00"
 }
 
 
@@ -137,7 +137,7 @@ By translating, I mean "figuring out where the note goes in a different version 
 
 ### Adding a Web Interface
 
-The web interface combines the strengths of Class::DBI and the [Template Toolkit](http://www.template-toolkit.org/), using the methods discussed in "[How to Avoid Writing Code--Using Template Toolkit and Class::DBI](/pub/a/2003/07/15/nocode.html)," by Kake Pugh. The only thing remaining, besides writing the templates, was to provide a controller module (called as a part of the [Model-View-Controller](http://c2.com/cgi-bin/wiki?ModelViewController) (MVC) design pattern. The controller module has to parse the CGI parameters and cookies, decide what to do with them, authenticate the user if necessary, fetch something from the database, choose the template to use, and pass all of the required information to the Template Toolkit rendering engine. Some people advocate using modules such as [CGI::Application](http://search.cpan.org/perldoc?CGI::Application) as a base class for the controller module, but I found that writing it by hand was simple enough for my purposes.
+The web interface combines the strengths of Class::DBI and the [Template Toolkit](http://www.template-toolkit.org/), using the methods discussed in "[How to Avoid Writing Code--Using Template Toolkit and Class::DBI](/pub/2003/07/15/nocode.html)," by Kake Pugh. The only thing remaining, besides writing the templates, was to provide a controller module (called as a part of the [Model-View-Controller](http://c2.com/cgi-bin/wiki?ModelViewController) (MVC) design pattern. The controller module has to parse the CGI parameters and cookies, decide what to do with them, authenticate the user if necessary, fetch something from the database, choose the template to use, and pass all of the required information to the Template Toolkit rendering engine. Some people advocate using modules such as [CGI::Application](http://search.cpan.org/perldoc?CGI::Application) as a base class for the controller module, but I found that writing it by hand was simple enough for my purposes.
 
 ### Conclusion
 

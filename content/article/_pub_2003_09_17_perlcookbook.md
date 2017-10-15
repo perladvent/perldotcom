@@ -1,14 +1,4 @@
 {
-   "categories" : "development",
-   "authors" : [
-      "perldotcom"
-   ],
-   "title" : "Cooking with Perl, Part 3",
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2003-09-17T00:00:00-08:00",
-   "draft" : null,
-   "description" : " Editor's note: In this third and final batch of recipes excerpted from Perl Cookbook, you'll find solutions and code examples for extracting HTML table data, templating with HTML::Mason, and making simple changes to elements or text. Sample Recipe: Extracting...",
    "tags" : [
       "extracting-table-data",
       "making-simple-changes-to-elements-or-text",
@@ -18,6 +8,16 @@
       "templating-with-html-mason",
       "tom-christiansen"
    ],
+   "thumbnail" : null,
+   "categories" : "development",
+   "title" : "Cooking with Perl, Part 3",
+   "image" : null,
+   "date" : "2003-09-17T00:00:00-08:00",
+   "draft" : null,
+   "authors" : [
+      "perldotcom"
+   ],
+   "description" : " Editor's note: In this third and final batch of recipes excerpted from Perl Cookbook, you'll find solutions and code examples for extracting HTML table data, templating with HTML::Mason, and making simple changes to elements or text. Sample Recipe: Extracting...",
    "slug" : "/pub/2003/09/17/perlcookbook.html"
 }
 
@@ -125,8 +125,8 @@ The data tags still contain tags and entities. If you don't want the tags and en
 <tr class="odd">
 <td><div class="secondary">
 <h4 id="previous-articles-in-this-series">Previous Articles in this Series</h4>
-<p>• <a href="/pub/a/2003/08/21/perlcookbook.html">Cooking with Perl</a><br />
-• <a href="/pub/a/2003/09/03/perlcookbook.html">Cooking with Perl, Part 2</a></p>
+<p>• <a href="/pub/2003/08/21/perlcookbook.html">Cooking with Perl</a><br />
+• <a href="/pub/2003/09/03/perlcookbook.html">Cooking with Perl, Part 2</a></p>
 </div></td>
 </tr>
 </tbody>

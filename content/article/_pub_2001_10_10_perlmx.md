@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "description" : " Introduction PerlMx is a utility by ActiveState that allows Perl programs to interface with Sendmail connections. It's quite a powerful tool, and once installed, it's very easy to use. This article will detail how to install and setup PerlMx,...",
    "tags" : [
       "perlmx-activestate-sendmail"
    ],
-   "slug" : "/pub/2001/10/10/perlmx.html",
+   "thumbnail" : "/images/_pub_2001_10_10_perlmx/111-perlmx.jpg",
+   "date" : "2001-10-10T00:00:00-08:00",
    "categories" : "web",
+   "title" : "Filtering Mail with PerlMx",
+   "image" : null,
+   "slug" : "/pub/2001/10/10/perlmx.html",
+   "description" : " Introduction PerlMx is a utility by ActiveState that allows Perl programs to interface with Sendmail connections. It's quite a powerful tool, and once installed, it's very easy to use. This article will detail how to install and setup PerlMx,...",
+   "draft" : null,
    "authors" : [
       "mike-degraw-bertsch"
-   ],
-   "title" : "Filtering Mail with PerlMx",
-   "thumbnail" : "/images/_pub_2001_10_10_perlmx/111-perlmx.jpg",
-   "image" : null,
-   "date" : "2001-10-10T00:00:00-08:00"
+   ]
 }
 
 

@@ -1,29 +1,29 @@
 {
-   "categories" : "Tutorials",
-   "title" : "A Beginner's Introduction to Perl 5.10",
-   "authors" : [
-      "chromatic",
-      "doug-sheppard"
-   ],
-   "thumbnail" : null,
-   "image" : null,
    "date" : "2008-04-23T00:00:00-08:00",
-   "description" : "First, a Little Sales Pitch Editor's note: this series is based on Doug Sheppard's Beginner's Introduction to Perl. A Beginner's Introduction to Files and Strings with Perl 5.10 explains how to use files and strings, and A Beginner's Introduction to...",
-   "draft" : null,
+   "title" : "A Beginner's Introduction to Perl 5.10",
+   "image" : null,
+   "categories" : "tutorials",
+   "thumbnail" : null,
    "tags" : [
       "novice-programmers",
       "perl-5-10",
       "perl-for-beginners",
       "perl-tutorial"
    ],
-   "slug" : "/pub/2008/04/23/a-beginners-introduction-to-perl-510.html"
+   "slug" : "/pub/2008/04/23/a-beginners-introduction-to-perl-510.html",
+   "description" : "First, a Little Sales Pitch Editor's note: this series is based on Doug Sheppard's Beginner's Introduction to Perl. A Beginner's Introduction to Files and Strings with Perl 5.10 explains how to use files and strings, and A Beginner's Introduction to...",
+   "draft" : null,
+   "authors" : [
+      "chromatic",
+      "doug-sheppard"
+   ]
 }
 
 
 
 ### First, a Little Sales Pitch
 
-*Editor's note: this series is based on [Doug Sheppard's](/pub/au/Sheppard_Doug) [Beginner's Introduction to Perl](/pub/a/2000/10/begperl1.html)*. [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/a/2008/05/07/beginners-introduction-to-perl-510-part-2.html) explains how to use files and strings, and [A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html) explores regular expressions, matching, and substitutions. [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html) demonstrates how to write web programs.
+*Editor's note: this series is based on [Doug Sheppard's](/authors/doug-sheppard) [Beginner's Introduction to Perl](/pub/2000/10/begperl1.html)*. [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html) explains how to use files and strings, and [A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html) explores regular expressions, matching, and substitutions. [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html) demonstrates how to write web programs.
 
 Welcome to Perl.
 

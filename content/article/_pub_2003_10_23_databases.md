@@ -1,21 +1,21 @@
 {
-   "authors" : [
-      "simon-cozens"
-   ],
-   "title" : "Database Programming with Perl",
-   "categories" : "data",
-   "date" : "2003-10-23T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2003_10_23_databases/111-db_programming.gif",
-   "image" : null,
-   "draft" : null,
-   "description" : " An Embarrassing Confession I'd like to think that I'm a reasonably decent Perl programmer now. I'd like to think that I have a good grasp of how to solve relatively common problems in Perl. But, you know, it hasn't...",
-   "slug" : "/pub/2003/10/23/databases.html",
    "tags" : [
       "databases",
       "dbi",
       "rdbms",
       "relational-databases"
-   ]
+   ],
+   "thumbnail" : "/images/_pub_2003_10_23_databases/111-db_programming.gif",
+   "categories" : "data",
+   "title" : "Database Programming with Perl",
+   "image" : null,
+   "date" : "2003-10-23T00:00:00-08:00",
+   "draft" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
+   "slug" : "/pub/2003/10/23/databases.html",
+   "description" : " An Embarrassing Confession I'd like to think that I'm a reasonably decent Perl programmer now. I'd like to think that I have a good grasp of how to solve relatively common problems in Perl. But, you know, it hasn't..."
 }
 
 
@@ -176,7 +176,7 @@ There are many other DBI tricks, too many to go into here; for more information 
 
 ### <span id="where_to_from_here">Where to from Here?</span>
 
-These days, I actually don't write very much SQL; there are many more Perlish abstraction layers on top of SQL, such as Tony Bowden's [`Class::DBI`](/pub/a/2002/11/27/classdbi.html), the [`DBIx::RecordSet`](/pub/a/2001/02/dbix.html), [`DBIx::SearchBuilder`](http://search.cpan.org/perldoc?DBIx::SearchBuilder) and many more.
+These days, I actually don't write very much SQL; there are many more Perlish abstraction layers on top of SQL, such as Tony Bowden's [`Class::DBI`](/pub/2002/11/27/classdbi.html), the [`DBIx::RecordSet`](/pub/2001/02/dbix.html), [`DBIx::SearchBuilder`](http://search.cpan.org/perldoc?DBIx::SearchBuilder) and many more.
 
 Additionally, there are some very interesting things going on in the world of database servers -- [SQLite](http://www.hwaci.com/sw/sqlite/) is a very fast embedded SQL engine which doesn't require an external server process, and there are Perl bindings to that in the form of `DBD::SQLite`.
 

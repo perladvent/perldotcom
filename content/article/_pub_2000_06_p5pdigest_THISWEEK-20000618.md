@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2000/06/p5pdigest/THISWEEK-20000618.html",
-   "tags" : [],
-   "draft" : null,
    "description" : " Notes Method Call Speedups More Attempts to Make B::Bytecode Faster Byte-Order Marks Continue Slurp Bug EPOC Port README.hpux Paths in MacPerl Non-destructed anonymous functions Extensions required for regression tests Eudora Problem crypt docs Magic Auto-Decrement Various Notes You can...",
-   "date" : "2000-06-17T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
+   "slug" : "/pub/2000/06/p5pdigest/THISWEEK-20000618.html",
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
+   "date" : "2000-06-17T00:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
    "title" : "This Week on p5p 2000/06/18",
-   "categories" : "community"
+   "tags" : [],
+   "thumbnail" : null
 }
 
 

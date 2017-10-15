@@ -1,5 +1,14 @@
 {
+   "description" : " Now that Content Management with Bricolage has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several...",
    "slug" : "/pub/2004/10/28/bricolage_installation.html",
+   "draft" : null,
+   "authors" : [
+      "david-wheeler"
+   ],
+   "date" : "2004-10-28T00:00:00-08:00",
+   "categories" : "web",
+   "image" : null,
+   "title" : "Installing Bricolage",
    "tags" : [
       "bricolage",
       "cms",
@@ -7,21 +16,12 @@
       "cpan-installation",
       "mod-perl-installation"
    ],
-   "description" : " Now that Content Management with Bricolage has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several...",
-   "draft" : null,
-   "date" : "2004-10-28T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "title" : "Installing Bricolage",
-   "authors" : [
-      "david-wheeler"
-   ],
-   "categories" : "Web"
+   "thumbnail" : null
 }
 
 
 
-Now that [Content Management with Bricolage](/pub/a/2004/08/27/bricolage.html "Content Management with Bricolage") has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several third-party applications and modules to do its job. That said, the installer tries hard to identify what pieces you have and which ones you don't, to help you through the process. Even still, it can help to have a nice guide to step you through the process.
+Now that [Content Management with Bricolage](/pub/2004/08/27/bricolage.html "Content Management with Bricolage") has piqued your interest, you might be wondering what you need to do to install it. I'll be the first to admit that installing Bricolage is not trivial, given that it requires several third-party applications and modules to do its job. That said, the installer tries hard to identify what pieces you have and which ones you don't, to help you through the process. Even still, it can help to have a nice guide to step you through the process.
 
 This article is here to help.
 
@@ -50,7 +50,7 @@ The packaged distributions of Bricolage are great because they handle all of the
 
 The alternative is to compile and install Bricolage and all of its dependencies yourself. This is not as difficult as it might at first sound, because Bricolage is a 100% Perl application and therefore requires no compilation. Many of the dependencies, however, *do* require compilation and have their own histories of successful installation on a given platform. For the most part, however, they have solid histories of success, and in the event of trouble, there are lots of resources for help on the Internet (see, for example, my articles on [building Apache/`mod_perl` on Mac OS X](http://www.oreillynet.com/pub/au/1059 "building Apache/mod_perl on Mac OS X")). The platform-specific *README* files that come with Bricolage also contain useful information to help with your installation.
 
-The next few sections of this article cover manual installation of Bricolage. If you're happy with a package install, this information can still be very useful for understanding Bricolage's requirements. If you're antsy, [skip to the end](/pub/a/2004/10/28/bricolage_installation.html?page=3#upnext "Bricolage Runtime Configuration") to find out where to go next.
+The next few sections of this article cover manual installation of Bricolage. If you're happy with a package install, this information can still be very useful for understanding Bricolage's requirements. If you're antsy, [skip to the end](/pub/2004/10/28/bricolage_installation.html?page=3#upnext "Bricolage Runtime Configuration") to find out where to go next.
 
 ### Prerequisites
 

@@ -1,16 +1,16 @@
 {
-   "categories" : "Community",
-   "title" : "The Final Day at The Perl Conference",
+   "description" : null,
+   "slug" : "/pub/1998/08/show/day4.html",
+   "draft" : null,
    "authors" : [
       "brent-michalski"
    ],
    "thumbnail" : null,
-   "image" : null,
-   "date" : "1998-08-21T00:00:00-08:00",
-   "description" : null,
-   "draft" : null,
    "tags" : [],
-   "slug" : "/pub/1998/08/show/day4.html"
+   "date" : "1998-08-21T00:00:00-08:00",
+   "title" : "The Final Day at The Perl Conference",
+   "image" : null,
+   "categories" : "community"
 }
 
 

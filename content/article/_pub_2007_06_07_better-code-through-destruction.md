@@ -1,14 +1,4 @@
 {
-   "categories" : "CPAN",
-   "authors" : [
-      "igor-gariev"
-   ],
-   "title" : "Better Code Through Destruction",
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2007-06-07T00:00:00-08:00",
-   "draft" : null,
-   "description" : " Larry Wall said that Perl makes easy things easy and hard things possible. Perl is good both for writing a two-line script that saves the world at the last minute (well, at least it saves you and your project)...",
    "tags" : [
       "object-destructor",
       "perl-memory-leaks",
@@ -16,7 +6,17 @@
       "raii",
       "reference-counting"
    ],
-   "slug" : "/pub/2007/06/07/better-code-through-destruction.html"
+   "thumbnail" : null,
+   "date" : "2007-06-07T00:00:00-08:00",
+   "categories" : "cpan",
+   "title" : "Better Code Through Destruction",
+   "image" : null,
+   "description" : " Larry Wall said that Perl makes easy things easy and hard things possible. Perl is good both for writing a two-line script that saves the world at the last minute (well, at least it saves you and your project)...",
+   "slug" : "/pub/2007/06/07/better-code-through-destruction.html",
+   "draft" : null,
+   "authors" : [
+      "igor-gariev"
+   ]
 }
 
 
@@ -346,4 +346,4 @@ The [Devel::Monitor](http://search.cpan.org/perldoc?Devel::Monitor) module has g
 
 There are several modules for lexically scoped resource management on CPAN, but the [Object::Destroyer](http://search.cpan.org/perldoc?Object::Destroyer) is my favorite. You may also look at [Hook::Scope](http://search.cpan.org/perldoc?Hook::Scope), [Scope::Guard](http://search.cpan.org/perldoc?Scope::Guard) and [Sub::ScopeFinalizer](http://search.cpan.org/perldoc?Sub::ScopeFinalizer).
 
-Finally, [Object Oriented Exception Handling in Perl](/pub/a/2002/11/14/exception.html) discusses why exceptions are invaluable for big projects.
+Finally, [Object Oriented Exception Handling in Perl](/pub/2002/11/14/exception.html) discusses why exceptions are invaluable for big projects.

@@ -1,30 +1,30 @@
 {
-   "image" : null,
-   "thumbnail" : "/images/_pub_2005_05_26_word_control/111-perl_in_word.gif",
-   "date" : "2005-05-26T00:00:00-08:00",
    "categories" : "windows",
-   "authors" : [
-      "andrew-savikas"
-   ],
    "title" : "Manipulating Word Documents with Perl",
+   "image" : null,
+   "date" : "2005-05-26T00:00:00-08:00",
    "tags" : [
       "invoke-perl-on-windows",
       "perl-embed",
       "word-macro-alternatives",
       "word-manipulation"
    ],
-   "slug" : "/pub/2005/05/26/word_control.html",
+   "thumbnail" : "/images/_pub_2005_05_26_word_control/111-perl_in_word.gif",
    "draft" : null,
+   "authors" : [
+      "andrew-savikas"
+   ],
+   "slug" : "/pub/2005/05/26/word_control.html",
    "description" : " In a recent lightning article, Customizing Emacs with Perl, Bob DuCharme explained how to use the Emacs shell-command-on-region function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the..."
 }
 
 
 
-In a recent lightning article, [Customizing Emacs with Perl](/pub/a/2005/03/31/lightning2.html), [Bob DuCharme](/pub/au/DuCharme_Bob) explained how to use the Emacs `shell-command-on-region` function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the time needed to write the [elisp](http://www.gnu.org/software/emacs/elisp-manual/html_mono/elisp.html) code needed for a particular string manipulation, especially when he knew how much easier it would be for him to do that manipulation with Perl. However, by using the Emacs function `shell-command-on-region`, Bob could have his cake an eat it too--keep editing with Emacs, while using Perl on demand for string manipulation.
+In a recent lightning article, [Customizing Emacs with Perl](/pub/2005/03/31/lightning2.html), [Bob DuCharme](/authors/bob-ducharme) explained how to use the Emacs `shell-command-on-region` function to invoke a Perl script on a marked region of text. Bob writes that he was reluctant to invest the time needed to write the [elisp](http://www.gnu.org/software/emacs/elisp-manual/html_mono/elisp.html) code needed for a particular string manipulation, especially when he knew how much easier it would be for him to do that manipulation with Perl. However, by using the Emacs function `shell-command-on-region`, Bob could have his cake an eat it too--keep editing with Emacs, while using Perl on demand for string manipulation.
 
 I've often been in the same boat as Bob, though while using Microsoft Word. When facing a thorny string manipulation problem, I, too, have found myself thinking, *This would be so easy if I could just use Perl!*
 
-Unfortunately, Word VBA doesn't include a feature analogous to the `shell-command-on-region` function ...which certainly sounded like a challenge to me. In [Word Hacks](http://www.oreilly.com/catalog/wordhks), [Sean M. Burke](http://www.oreillynet.com/cs/catalog/view/au/906) and I [demonstrated](http://www.windowsdevcenter.com/pub/a/windows/excerpt/wdhks_1/index.html?page=5)how to use the Windows clipboard as a primitive but simple means of exchanging data between Word and a Perl script. I decided to see if I could generalize that technique to emulate the Emacs `shell-command-on-region` function from Word, using VBA and Perl. I'm happy to report that it works. Using the code shown in this article, you'll be able to run any DOS command that accepts standard input (like most in the fabulous [UnxUtils package](http://unxutils.sourceforge.net/)) on text you've selected in Microsoft Word, then either have the output echoed back or use it to replace the selected text. As an example, you can use the code in this article to run Bob's [`OLDate2ISO.pl`](/media/_pub_2005_05_26_word_control/ol2iso.pl) script on a selected date. (The `OLDate2ISO.pl` script converts a Microsoft Outlook style date, like "Sat 4/16/2005 7:35 PM" to ISO 8609 format, like "2005-04-16T19:35".)
+Unfortunately, Word VBA doesn't include a feature analogous to the `shell-command-on-region` function ...which certainly sounded like a challenge to me. In [Word Hacks](http://www.oreilly.com/catalog/wordhks), [Sean M. Burke](http://www.oreillynet.com/cs/catalog/view/au/906) and I [demonstrated](http://www.windowsdevcenter.com/pub/windows/excerpt/wdhks_1/index.html?page=5)how to use the Windows clipboard as a primitive but simple means of exchanging data between Word and a Perl script. I decided to see if I could generalize that technique to emulate the Emacs `shell-command-on-region` function from Word, using VBA and Perl. I'm happy to report that it works. Using the code shown in this article, you'll be able to run any DOS command that accepts standard input (like most in the fabulous [UnxUtils package](http://unxutils.sourceforge.net/)) on text you've selected in Microsoft Word, then either have the output echoed back or use it to replace the selected text. As an example, you can use the code in this article to run Bob's [`OLDate2ISO.pl`](/media/_pub_2005_05_26_word_control/ol2iso.pl) script on a selected date. (The `OLDate2ISO.pl` script converts a Microsoft Outlook style date, like "Sat 4/16/2005 7:35 PM" to ISO 8609 format, like "2005-04-16T19:35".)
 
 VBA doesn't offer any easy way to capture shell command output, so there are actually two scripts needed to emulate the Emacs `shell-command-on-region` function: a Perl script to interact with the DOS shell, and a VBA function to manage that Perl script and deal with the output. In addition, I also wrote a simple wrapper macro that emulates the interactive (`Escape+|`) form of the `shell-command-on-region` function, using an input box, as shown in [Figure 2](#shell_command_dialog).
 

@@ -1,18 +1,18 @@
 {
+   "authors" : [
+      "alex-gough"
+   ],
+   "draft" : null,
+   "slug" : "/pub/2001/08/08/quantum.html",
+   "description" : " There Is More Than One World (In Which) To Do It With the possible exception of many physicists, quantum mechanics is one of the stranger things to have emerged from science over the last hundred years. It has led...",
+   "thumbnail" : "/images/_pub_2001_08_08_quantum/111-quantum.jpg",
    "tags" : [
       "quantum-physics-superpositions-entanglement"
    ],
-   "slug" : "/pub/2001/08/08/quantum.html",
-   "description" : " There Is More Than One World (In Which) To Do It With the possible exception of many physicists, quantum mechanics is one of the stranger things to have emerged from science over the last hundred years. It has led...",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2001_08_08_quantum/111-quantum.jpg",
    "image" : null,
-   "date" : "2001-08-08T00:00:00-08:00",
-   "categories" : "science",
    "title" : "Quantum::Entanglement",
-   "authors" : [
-      "alex-gough"
-   ]
+   "categories" : "science",
+   "date" : "2001-08-08T00:00:00-08:00"
 }
 
 

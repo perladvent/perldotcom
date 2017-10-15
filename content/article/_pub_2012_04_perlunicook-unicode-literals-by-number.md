@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2012-04-10T06:00:01-08:00",
    "categories" : "unicode",
+   "image" : null,
    "title" : "Perl Unicode Cookbook: Unicode Literals by Number",
+   "date" : "2012-04-10T06:00:01-08:00",
+   "tags" : [],
+   "thumbnail" : null,
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "tags" : [],
    "slug" : "/pub/2012/04/perlunicook-unicode-literals-by-number.html",
-   "description" : "℞ 5: Unicode literals by character number In an interpolated literal, whether a double-quoted string or a regex, you may specify a character by its number using the \\x{HHHHHH} escape. String: &quot;\\x{3a3}&quot; Regex: /\\x{3a3}/ String: &quot;\\x{1d45b}&quot; Regex: /\\x{1d45b}/ # even...",
-   "draft" : null
+   "description" : "℞ 5: Unicode literals by character number In an interpolated literal, whether a double-quoted string or a regex, you may specify a character by its number using the \\x{HHHHHH} escape. String: &quot;\\x{3a3}&quot; Regex: /\\x{3a3}/ String: &quot;\\x{1d45b}&quot; Regex: /\\x{1d45b}/ # even..."
 }
 
 

@@ -1,18 +1,18 @@
 {
-   "categories" : "development",
+   "description" : " Perl 5.8.0 is the first version of Perl with a stable threading implementation. Threading has the potential to change the way we program in Perl, and even the way we think about programming. This article explores Perl's new threading...",
+   "slug" : "/pub/2002/09/04/threads.html",
    "authors" : [
       "sam-tregar"
    ],
-   "title" : "Going Up?",
-   "thumbnail" : "/images/_pub_2002_09_04_threads/111-oracleperl.gif",
-   "image" : null,
-   "date" : "2002-09-04T00:00:00-08:00",
    "draft" : null,
-   "description" : " Perl 5.8.0 is the first version of Perl with a stable threading implementation. Threading has the potential to change the way we program in Perl, and even the way we think about programming. This article explores Perl's new threading...",
+   "date" : "2002-09-04T00:00:00-08:00",
+   "categories" : "development",
+   "title" : "Going Up?",
+   "image" : null,
    "tags" : [
       "elevator-threading-threads-simulation"
    ],
-   "slug" : "/pub/2002/09/04/threads.html"
+   "thumbnail" : "/images/_pub_2002_09_04_threads/111-oracleperl.gif"
 }
 
 

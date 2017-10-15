@@ -1,27 +1,27 @@
 {
+   "description" : "Objects and Modules -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's...",
    "slug" : "/pub/2000/12/begperl5.html",
+   "authors" : [
+      "doug-sheppard"
+   ],
+   "draft" : null,
    "tags" : [
       "object-oriented-programming",
       "oop"
    ],
-   "draft" : null,
-   "description" : "Objects and Modules -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's...",
-   "date" : "2000-12-18T00:00:00-08:00",
-   "image" : null,
    "thumbnail" : null,
-   "authors" : [
-      "doug-sheppard"
-   ],
-   "title" : "Beginners Intro to Perl - Part 5",
-   "categories" : "development"
+   "date" : "2000-12-18T00:00:00-08:00",
+   "categories" : "development",
+   "image" : null,
+   "title" : "Beginners Intro to Perl - Part 5"
 }
 
 
 
 *Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at:*
 
--   [A Beginner's Introduction to Perl 5.10](/pub/a/2008/04/23/a-beginners-introduction-to-perl-510.html)
--   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/a/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
+-   [A Beginner's Introduction to Perl 5.10](/pub/2008/04/23/a-beginners-introduction-to-perl-510.html)
+-   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
 -   [A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html)
 -   [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html)
 
@@ -38,7 +38,7 @@
 •<strong><a href="/pub/2000/11/begperl2.html">Part 2 of this series</a></strong><br />
 •<strong><a href="/pub/2000/11/begperl3.html">Part 3 of this series</a></strong><br />
 •<strong><a href="/pub/2000/12/begperl4.html">Part 4 of this series</a></strong><br />
-•<strong><a href="/pub/a/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
+•<strong><a href="/pub/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
 <br />
 •<a href="#what%20is%20an%20object">What Is an Object?</a><br />
 •<a href="#our%20goal">Our Goal</a><br />

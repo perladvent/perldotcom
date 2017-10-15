@@ -1,18 +1,18 @@
 {
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-01-12T00:00:00-08:00",
-   "categories" : "development",
-   "title" : "In Defense of Coding Standards",
    "authors" : [
       "kirrily---skud---robert"
    ],
+   "draft" : null,
+   "description" : " How to Create Coding Standards that Work One of the things that we love most about Perl is its flexibility, itssimilarity to natural language, and the fact that There's More Than One Way To Do It. Of course, when...",
+   "slug" : "/pub/2000/01/CodingStandards.html",
+   "thumbnail" : null,
    "tags" : [
       "standards"
    ],
-   "slug" : "/pub/2000/01/CodingStandards.html",
-   "description" : " How to Create Coding Standards that Work One of the things that we love most about Perl is its flexibility, itssimilarity to natural language, and the fact that There's More Than One Way To Do It. Of course, when...",
-   "draft" : null
+   "title" : "In Defense of Coding Standards",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2000-01-12T00:00:00-08:00"
 }
 
 
@@ -60,7 +60,7 @@ Those rules were developed during a one-hour meeting with all development staff.
 
 Our standards then go on to give a few extra guidelines for each language. For Perl, we have the following standards:
 
-1. Read [`perldoc perlstyle`](/pub/doc/manual/html/pod/perlstyle.html) and follow all suggestions contained therein, except where they disagree with the general coding standards, which take precedence.
+1. Read [`perldoc perlstyle`](http://perldoc.perl.org/perlstyle.html) and follow all suggestions contained therein, except where they disagree with the general coding standards, which take precedence.
 
 2. Use the `-w` command line flag and the `strict` pragma at all times, and `-T` (taint checking) where appropriate.
 

@@ -1,16 +1,16 @@
 {
-   "image" : null,
-   "thumbnail" : null,
    "date" : "1999-11-03T00:00:00-08:00",
-   "categories" : "community",
-   "authors" : [
-      "mark-jason-dominus"
-   ],
+   "image" : null,
    "title" : "This Week on p5p 1999/10/31",
+   "categories" : "community",
+   "thumbnail" : null,
    "tags" : [],
+   "description" : " Notes glob case-sensitivity Perl under UNICOS New perlthread man page Threading and explicit unlocking Threading and Regexes pack t Template Happy Birthday CPAN! Local Address in LWP Return of ref prototype $^O sort improvements Shell.pm enhancements. Time Zone Output...",
    "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991031.html",
    "draft" : null,
-   "description" : " Notes glob case-sensitivity Perl under UNICOS New perlthread man page Threading and explicit unlocking Threading and Regexes pack t Template Happy Birthday CPAN! Local Address in LWP Return of ref prototype $^O sort improvements Shell.pm enhancements. Time Zone Output..."
+   "authors" : [
+      "mark-jason-dominus"
+   ]
 }
 
 
@@ -111,7 +111,7 @@ Andy Dougherty is patching `Configure` to have it find out what sort of Linux it
 
 ### <span id="sort_improvements">`sort` improvements</span>
 
-Peter Haworth submitted an improved version of his patch for `sort`. He says he has benchmarked the new `sort` with several trivial comparator functions and performance is not bad at all. (If it were slower, you would expect to see the greatest difference with a trivial comparator.) You still cannot use an XSUB as a sort comparator function, but Peter is working on that. [Reread what I said last week.](./THISWEEK-19991024.html#C_sort_improvement)
+Peter Haworth submitted an improved version of his patch for `sort`. He says he has benchmarked the new `sort` with several trivial comparator functions and performance is not bad at all. (If it were slower, you would expect to see the greatest difference with a trivial comparator.) You still cannot use an XSUB as a sort comparator function, but Peter is working on that. [Reread what I said last week.](/pub/1999/10/p5pdigest/THISWEEK-19991024.html#C_sort_improvement)
 
 [The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01354.html)
 

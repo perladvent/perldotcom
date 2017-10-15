@@ -1,18 +1,18 @@
 {
-   "description" : " &quot;This is a great war long-planned, and we are but one piece in it, whatever pride may say. ... And now, all realms shall be put to the test.&quot; - Beregond, &lt;&lt;Lord of the Rings&gt;&gt; Introduction In CPANPLUS -...",
-   "draft" : null,
    "slug" : "/pub/2002/04/30/cpants.html",
-   "tags" : [
-      "cpanplus-testing-cpants-cpan"
-   ],
-   "title" : "Becoming a CPAN Tester with CPANPLUS",
+   "description" : " &quot;This is a great war long-planned, and we are but one piece in it, whatever pride may say. ... And now, all realms shall be put to the test.&quot; - Beregond, &lt;&lt;Lord of the Rings&gt;&gt; Introduction In CPANPLUS -...",
    "authors" : [
       "autrijus-tang"
    ],
-   "categories" : "CPAN",
+   "draft" : null,
    "date" : "2002-04-30T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : "/images/_pub_2002_04_30_cpants/111-test_mods.gif"
+   "title" : "Becoming a CPAN Tester with CPANPLUS",
+   "categories" : "cpan",
+   "thumbnail" : "/images/_pub_2002_04_30_cpants/111-test_mods.gif",
+   "tags" : [
+      "cpanplus-testing-cpants-cpan"
+   ]
 }
 
 
@@ -25,9 +25,9 @@
 
 ### <span id="introduction">Introduction</span>
 
-In [*CPANPLUS -- Like CPAN.pm only better?*](/pub/a%7Bcs.r.file%7D?page=2#f1), Jos Boumans recounted the tale of how his **CPANPLUS** project came to be; one of the original goals was to provide a modular backend to *CPANTS*, the CPAN Testing Service, so modules can be automatically built and tested on multiple platforms.
+In [*CPANPLUS -- Like CPAN.pm only better?*](#f1), Jos Boumans recounted the tale of how his **CPANPLUS** project came to be; one of the original goals was to provide a modular backend to *CPANTS*, the CPAN Testing Service, so modules can be automatically built and tested on multiple platforms.
 
-Although the initial **CPANPLUS** release did not support testing-related features, Jos considered them important enough to be listed near the top of his *Current and Future Developments* wish list, and quoted Michael Schwern's opinion on their potential benefits[<sup>\*</sup>](/pub/a%7Bcs.r.file%7D?page=2#f2):
+Although the initial **CPANPLUS** release did not support testing-related features, Jos considered them important enough to be listed near the top of his *Current and Future Developments* wish list, and quoted Michael Schwern's opinion on their potential benefits[<sup>\*</sup>](#f2):
 
 > *It would alter the way free software is distributed. It would get a mark of quality; it would be tested and reviewed. And gosh darnit, it would be good.*
 
@@ -58,7 +58,7 @@ You should generally answer `y` here, as only modules that can safely install on
 
 For this article's purpose, you need to answer `y` to all such questions, since we will be using **LWP**, **Mail::Send** and **IPC::Run** extensively in testing-related functions.
 
-After running *Makefile.PL*, you should run `make test`[<sup>\*</sup>](/pub/a%7Bcs.r.file%7D?page=2#f3) like every good user; if any dependent modules were selected in the previous step, then you will have to run `make test` as root, so it can fetch and install these modules automatically before testing itself.
+After running *Makefile.PL*, you should run `make test`[<sup>\*</sup>](#f3) like every good user; if any dependent modules were selected in the previous step, then you will have to run `make test` as root, so it can fetch and install these modules automatically before testing itself.
 
 After the comforting `All tests successful` message appears on your screen, just do a `make install`, and we are ready to go.
 
@@ -254,7 +254,7 @@ The **-a** option lets *cpansmoke* enter the non-interactive mode. In this mode,
 
 Additionally, you should specify the *-s* flag to avoid duplicate reports, and *-p* to avoid false-negatives caused by unsatisfied dependencies.
 
-Setting up an auto-smoking machine is simple, using a mail filtering mechanism; just join the CPAN Testers list by sending an empty email to *<cpan-testers-subscribe@perl.org>*, and add the lines below to your [**Mail::Audit** filter](/pub/a%7Bcs.r.file%7D?page=2#f4):
+Setting up an auto-smoking machine is simple, using a mail filtering mechanism; just join the CPAN Testers list by sending an empty email to *<cpan-testers-subscribe@perl.org>*, and add the lines below to your [**Mail::Audit** filter](#f4):
 
      fork || exec("sleep 40000 && cpansmoke -aps $1 >/dev/null 2>&1")
          if $mail->subject =~ /^CPAN Upload: (.*)$/;
@@ -340,7 +340,7 @@ Finally, if you decide to follow the steps in this article and participate in th
 
 ### <span id="footnotes">Footnotes</span>
 
-1.  <span id="f1">It's an introductory text for the **CPANPLUS** project, available at</span>[http://www.perl.com/pub/a/2002/03/26/cpanplus.html](/pub/a/2002/03/26/cpanplus.html).
+1.  <span id="f1">It's an introductory text for the **CPANPLUS** project, available at</span>[http://www.perl.com/pub/2002/03/26/cpanplus.html](/pub/2002/03/26/cpanplus.html).
 2.  <span id="f2">Jos later confessed that these are not exactly Schwern's words; he just made the quote up for dramatic effect.</span>
 3.  <span id="f3">With ActivePerl on Windows, simply replace all `make` with `nmake`. If you don't have *nmake.exe* in your `%PATH`, our *Makefile.PL* is smart enough to fetch and install it for you.</span>
 4.  <span id="f5">Purl, the magnet \#perl infobot, is also a cultural mechanism herself; see</span><http://www.infobot.org/> for additional information.

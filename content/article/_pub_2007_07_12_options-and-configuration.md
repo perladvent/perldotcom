@@ -1,13 +1,15 @@
 {
-   "date" : "2007-07-12T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "title" : "Option and Configuration Processing Made Easy",
+   "slug" : "/pub/2007/07/12/options-and-configuration.html",
+   "description" : " When you first fire up your editor and start writing a program, it's tempting to hardcode any settings or configuration so you can focus on the real task of getting the thing working. But as soon as you have...",
+   "draft" : null,
    "authors" : [
       "jon-allen"
    ],
-   "categories" : "CPAN",
-   "slug" : "/pub/2007/07/12/options-and-configuration.html",
+   "date" : "2007-07-12T00:00:00-08:00",
+   "image" : null,
+   "title" : "Option and Configuration Processing Made Easy",
+   "categories" : "cpan",
+   "thumbnail" : null,
    "tags" : [
       "argument-processing",
       "cli",
@@ -15,9 +17,7 @@
       "getopt",
       "getopt-argvfile",
       "getopt-long"
-   ],
-   "description" : " When you first fire up your editor and start writing a program, it's tempting to hardcode any settings or configuration so you can focus on the real task of getting the thing working. But as soon as you have...",
-   "draft" : null
+   ]
 }
 
 

@@ -1,16 +1,16 @@
 {
-   "date" : "1999-12-26T00:00:00-08:00",
-   "image" : null,
+   "tags" : [],
    "thumbnail" : null,
+   "categories" : "community",
+   "image" : null,
    "title" : "This Week on p5p 1999/12/26",
+   "date" : "1999-12-26T00:00:00-08:00",
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "categories" : "community",
    "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991226.html",
-   "tags" : [],
-   "description" : " Notes Meta-Information Module Interface and Version Meta-Information SVs by Default Another return of PREPARE More Flushing Problems Array::Virtual #line directives DProf Various Notes Last year I fell behind on reports because I took three business trips in two weeks....",
-   "draft" : null
+   "description" : " Notes Meta-Information Module Interface and Version Meta-Information SVs by Default Another return of PREPARE More Flushing Problems Array::Virtual #line directives DProf Various Notes Last year I fell behind on reports because I took three business trips in two weeks...."
 }
 
 
@@ -31,8 +31,6 @@
 Last year I fell behind on reports because I took three business trips in two weeks. I still haven't caught up, so I am going to skip the last couple of reports. I was going to skip this week's report also, but it was so small I decided to do it anyway. The next report should be for 9--15 January. Sorry for the inconvenience.
 
 #### <span id="Meta_Information_">Meta-Information</span>
-
-The most recent report will always be available at [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

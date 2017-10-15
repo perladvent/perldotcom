@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "description" : "brian d foy explores the state of Perl in 2014 by soliciting opinions from various respected Perl programmers.",
    "tags" : [],
+   "thumbnail" : null,
+   "date" : "2014-02-10T06:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
+   "title" : "Perl Today (February 2014)",
    "slug" : "/pub/2014/02/perl-today-february-2014.html",
-   "categories" : "Community",
+   "description" : "brian d foy explores the state of Perl in 2014 by soliciting opinions from various respected Perl programmers.",
+   "draft" : null,
    "authors" : [
       "brian-d-foy"
-   ],
-   "title" : "Perl Today (February 2014)",
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2014-02-10T06:00:00-08:00"
+   ]
 }
 
 

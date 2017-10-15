@@ -1,18 +1,18 @@
 {
-   "categories" : "science",
-   "authors" : [
-      "james-d--tisdall"
-   ],
-   "title" : "Beginning Bioinformatics",
-   "image" : null,
    "thumbnail" : "/images/_pub_2002_01_02_bioinf/111-bioperl.gif",
-   "date" : "2002-01-02T00:00:00-08:00",
-   "draft" : null,
-   "description" : " Bioinformatics, the use of computers in biology research, has been increasing in importance during the past decade as the Human Genome Project went from its beginning to the announcement last year of a \"draft\" of the complete sequence of...",
    "tags" : [
       "bioinformatics-biochemistry-biology-chemistry"
    ],
-   "slug" : "/pub/2002/01/02/bioinf.html"
+   "date" : "2002-01-02T00:00:00-08:00",
+   "image" : null,
+   "title" : "Beginning Bioinformatics",
+   "categories" : "science",
+   "slug" : "/pub/2002/01/02/bioinf.html",
+   "description" : " Bioinformatics, the use of computers in biology research, has been increasing in importance during the past decade as the Human Genome Project went from its beginning to the announcement last year of a \"draft\" of the complete sequence of...",
+   "draft" : null,
+   "authors" : [
+      "james-d--tisdall"
+   ]
 }
 
 
@@ -41,9 +41,9 @@ In my new job I started working with bioinformatics software, both supporting an
 </colgroup>
 <tbody>
 <tr class="odd">
-<td><a href="http://conferences.oreilly.com/biocon/"><img src="/images/conf/biocon2002/chrome.gif" alt="O&#39;Reilly Bioinformatics Technology Conference" width="162" height="100" /></a>
+<td><a href="http://conferences.oreilly.com/biocon/">O&#39;Reilly Bioinformatics Technology Conference</a>
 <p>Don't miss the <a href="http://conferences.oreillynet.com/cs/bio2002/view/e_sess/1935">Beginning Perl for Bioinformatics session</a>, Monday, January 28, 2002, at the <a href="http://conferences.oreilly.com/biocon/">O'Reilly Bioinformatics Technology Conference</a>.</p>
-<img src="/images/conf/biocon2002/chrome_rule.gif" alt=" " width="162" height="5" /></td>
+</td>
 </tr>
 </tbody>
 </table>

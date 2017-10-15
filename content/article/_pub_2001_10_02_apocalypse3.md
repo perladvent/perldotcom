@@ -1,16 +1,16 @@
 {
-   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 03 for the latest information. Table of Contents  RFC 025: Operators: Multiway comparisons  RFC 320: Allow grouping of -X file tests...",
-   "draft" : null,
+   "thumbnail" : "/images/_pub_2001_10_02_apocalypse3/111-apocalypse.jpg",
    "tags" : [],
-   "slug" : "/pub/2001/10/02/apocalypse3.html",
-   "categories" : "perl-6",
+   "image" : null,
    "title" : "Apocalypse 3",
+   "categories" : "perl-6",
+   "date" : "2001-10-02T00:00:00-08:00",
+   "draft" : null,
    "authors" : [
       "larry-wall"
    ],
-   "thumbnail" : "/images/_pub_2001_10_02_apocalypse3/111-apocalypse.jpg",
-   "image" : null,
-   "date" : "2001-10-02T00:00:00-08:00"
+   "slug" : "/pub/2001/10/02/apocalypse3.html",
+   "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 03 for the latest information. Table of Contents  RFC 025: Operators: Multiway comparisons  RFC 320: Allow grouping of -X file tests..."
 }
 
 
@@ -27,57 +27,57 @@
 </tr>
 <tr class="even">
 <td><p>Table of Contents</p>
-<p>• <a href="/pub/a/2001/10/02/apocalypse3.html?page=2#rfc%20025:%20operators:%20multiway%20comparisons">RFC 025: Operators: Multiway comparisons</a><br />
+<p>• <a href="/pub/2001/10/02/apocalypse3.html?page=2#rfc%20025:%20operators:%20multiway%20comparisons">RFC 025: Operators: Multiway comparisons</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=2#rfc%20320:%20allow%20grouping%20of%20x%20file%20tests%20and%20add%20filetest%20builtin">RFC 320: Allow grouping of -X file tests and add <code>filetest</code> builtin</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=2#rfc%20320:%20allow%20grouping%20of%20x%20file%20tests%20and%20add%20filetest%20builtin">RFC 320: Allow grouping of -X file tests and add <code>filetest</code> builtin</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=2#rfc%20290:%20better%20english%20names%20for%20x">RFC 290: Better english names for -X</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=2#rfc%20290:%20better%20english%20names%20for%20x">RFC 290: Better english names for -X</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=3#rfc%20283:%20tr///%20in%20array%20context%20should%20return%20a%20histogram">RFC 283: <code>tr///</code> in array context should return a histogram</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=3#rfc%20283:%20tr///%20in%20array%20context%20should%20return%20a%20histogram">RFC 283: <code>tr///</code> in array context should return a histogram</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=3#rfc%20084:%20replace%20=%3E%20(stringifying%20comma)%20with%20=%3E%20(pair%20constructor)">RFC 084: Replace <code>=&gt;</code> (stringifying comma) with <code>=&gt;</code> (pair constructor)</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=3#rfc%20084:%20replace%20=%3E%20(stringifying%20comma)%20with%20=%3E%20(pair%20constructor)">RFC 084: Replace <code>=&gt;</code> (stringifying comma) with <code>=&gt;</code> (pair constructor)</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=3#rfc%20081:%20lazily%20evaluated%20list%20generation%20functions">RFC 081: Lazily evaluated list generation functions</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=3#rfc%20081:%20lazily%20evaluated%20list%20generation%20functions">RFC 081: Lazily evaluated list generation functions</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=4#rfc%20285:%20lazy%20input%20/%20contextsensitive%20input">RFC 285: Lazy Input / Context-sensitive Input</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=4#rfc%20285:%20lazy%20input%20/%20contextsensitive%20input">RFC 285: Lazy Input / Context-sensitive Input</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=4#rfc%20082:%20arrays:%20apply%20operators%20elementwise%20in%20a%20list%20context">RFC 082: Arrays: Apply operators element-wise in a list context</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=4#rfc%20082:%20arrays:%20apply%20operators%20elementwise%20in%20a%20list%20context">RFC 082: Arrays: Apply operators element-wise in a list context</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=4#rfc%20045:%20%7C%7C%20and%20&amp;&amp;%20should%20propagate%20result%20context%20to%20both%20sides">RFC 045: <code>||</code> and <code>&amp;&amp;</code> should propagate result context to both sides</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=4#rfc%20045:%20%7C%7C%20and%20&amp;&amp;%20should%20propagate%20result%20context%20to%20both%20sides">RFC 045: <code>||</code> and <code>&amp;&amp;</code> should propagate result context to both sides</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20054:%20operators:%20polymorphic%20comparisons">RFC 054: Operators: Polymorphic comparisons</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=5#rfc%20054:%20operators:%20polymorphic%20comparisons">RFC 054: Operators: Polymorphic comparisons</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20104:%20backtracking">RFC 104: Backtracking</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=5#rfc%20104:%20backtracking">RFC 104: Backtracking</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20143:%20case%20ignoring%20eq%20and%20cmp%20operators">RFC 143: Case ignoring <code>eq</code> and <code>cmp</code> operators</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=5#rfc%20143:%20case%20ignoring%20eq%20and%20cmp%20operators">RFC 143: Case ignoring <code>eq</code> and <code>cmp</code> operators</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=5#rfc%20170:%20generalize%20=~%20to%20a%20special%20applyto%20assignment%20operator">RFC 170: Generalize <code>=~</code> to a special ``apply-to'' assignment operator</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=5#rfc%20170:%20generalize%20=~%20to%20a%20special%20applyto%20assignment%20operator">RFC 170: Generalize <code>=~</code> to a special ``apply-to'' assignment operator</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#nonrfc%20considerations">Non-RFC considerations</a></p>
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#nonrfc%20considerations">Non-RFC considerations</a></p>
 <table>
 <tbody>
 <tr class="odd">
 <td> </td>
-<td><span class="tiny"> • <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20.%20(dot)">Binary <code>.</code> (dot)</a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#unary%20.%20(dot)">Unary <code>.</code> (dot)</a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20_">Binary <code>_</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#unary%20_">Unary <code>_</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#unary%20+%20X">Unary <code>+</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20:=%20Y">Binary <code>:=</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#unary%20*%20XX">Unary <code>*</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#list%20context">List context</a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20:%20YY">Binary <code>:</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#trinary%20::">Trinary <code>??::</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20//%20YYY">Binary <code>//</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20;%20YYYY">Binary <code>;</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#unary%20%5E%20XXX">Unary <code>^</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#unary%20">Unary <code>?</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20">Binary <code>?</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20~%20YYYYY">Binary <code>~</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#binary%20~~%20YYYYYY">Binary <code>~~</code></a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#user%20defined%20operators">User defined operators</a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#unicode%20operators">Unicode operators</a><br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html?page=6#precedence">Precedence</a><br />
+<td><span class="tiny"> • <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20.%20(dot)">Binary <code>.</code> (dot)</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#unary%20.%20(dot)">Unary <code>.</code> (dot)</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20_">Binary <code>_</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#unary%20_">Unary <code>_</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#unary%20+%20X">Unary <code>+</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20:=%20Y">Binary <code>:=</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#unary%20*%20XX">Unary <code>*</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#list%20context">List context</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20:%20YY">Binary <code>:</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#trinary%20::">Trinary <code>??::</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20//%20YYY">Binary <code>//</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20;%20YYYY">Binary <code>;</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#unary%20%5E%20XXX">Unary <code>^</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#unary%20">Unary <code>?</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20">Binary <code>?</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20~%20YYYYY">Binary <code>~</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#binary%20~~%20YYYYYY">Binary <code>~~</code></a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#user%20defined%20operators">User defined operators</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#unicode%20operators">Unicode operators</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html?page=6#precedence">Precedence</a><br />
 </span></td>
 </tr>
 </tbody>
@@ -159,9 +159,9 @@ Note that you can click on the following RFC titles to view a copy of the RFC in
 </tr>
 <tr class="even">
 <td><p>Previous Apocalypses</p>
-<p>• <a href="/pub/a/2001/04/02/wall.html">Apocalypse 1</a><br />
+<p>• <a href="/pub/2001/04/02/wall.html">Apocalypse 1</a><br />
 <br />
-• <a href="/pub/a/2001/05/03/wall.html">Apocalypse 2</a><br />
+• <a href="/pub/2001/05/03/wall.html">Apocalypse 2</a><br />
 <br />
 </p></td>
 </tr>

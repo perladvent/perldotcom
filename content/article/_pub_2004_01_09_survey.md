@@ -1,18 +1,18 @@
 {
-   "categories" : "Community",
-   "title" : "The State of Perl",
-   "authors" : [
-      "adam-turoff"
-   ],
-   "thumbnail" : "/images/_pub_2004_01_09_survey/111-state_of_perl.gif",
-   "image" : null,
    "date" : "2004-01-09T00:00:00-08:00",
-   "description" : " A colleague of mine recently asked me about Perl's future. Specifically, he wondered if we have any tricks up our sleeves to compete against today's two most popular platforms: .NET and Java. Without a second's hesitation, I repeated the...",
-   "draft" : null,
+   "categories" : "community",
+   "image" : null,
+   "title" : "The State of Perl",
    "tags" : [
       "perl-future-directions"
    ],
-   "slug" : "/pub/2004/01/09/survey.html"
+   "thumbnail" : "/images/_pub_2004_01_09_survey/111-state_of_perl.gif",
+   "description" : " A colleague of mine recently asked me about Perl's future. Specifically, he wondered if we have any tricks up our sleeves to compete against today's two most popular platforms: .NET and Java. Without a second's hesitation, I repeated the...",
+   "slug" : "/pub/2004/01/09/survey.html",
+   "authors" : [
+      "adam-turoff"
+   ],
+   "draft" : null
 }
 
 
@@ -119,7 +119,7 @@ And isn't that the **real** definition of production quality, anyway?
 
 ### <span id="The_Other_State_of_Perl_Usage">The Other State of Perl Usage</span>
 
-As Larry mentioned in his second keynote address to the Perl Conference in 1998 ([www.perl.com/pub/a/1998/08/show/onion.html](/pub/a/1998/08/show/onion.html)), the Perl community is like an onion. The important part isn't the small core, but rather the larger outer layers where most of the mass and all of the growth are found. Therefore, the true state of Perl isn't about interpreter development or CPAN growth, but in how we all use Perl every day.
+As Larry mentioned in his second keynote address to the Perl Conference in 1998 ([www.perl.com/pub/1998/08/show/onion.html](/pub/1998/08/show/onion.html)), the Perl community is like an onion. The important part isn't the small core, but rather the larger outer layers where most of the mass and all of the growth are found. Therefore, the true state of Perl isn't about interpreter development or CPAN growth, but in how we all use Perl every day.
 
 Why do we use Perl *every day*? Because Perl scales to solve both small and large problems. Unlike languages like C, C++, and Java, Perl allows us to write small, trivial programs quickly and easily, without sacrificing the ability to build large applications and systems. The skills and tools we use on large projects are also available when we write small programs.
 

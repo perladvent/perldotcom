@@ -1,24 +1,24 @@
 {
-   "slug" : "/pub/2004/04/29/maypole.html",
+   "date" : "2004-04-29T00:00:00-08:00",
+   "title" : "Rapid Web Application Deployment with Maypole : Part 2",
+   "image" : null,
+   "categories" : "web",
+   "thumbnail" : "/images/_pub_2004_04_29_maypole/111-test_libs.gif",
    "tags" : [
       "maypole",
       "mvc"
    ],
    "description" : " When we last left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping...",
+   "slug" : "/pub/2004/04/29/maypole.html",
    "draft" : null,
-   "date" : "2004-04-29T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2004_04_29_maypole/111-test_libs.gif",
-   "image" : null,
-   "title" : "Rapid Web Application Deployment with Maypole : Part 2",
    "authors" : [
       "simon-cozens"
-   ],
-   "categories" : "web"
+   ]
 }
 
 
 
-When we [last](/pub/a/2004/04/15/maypole.html) left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping cart and all the usual trimmings. It's time to see some of that flexibility we talked about last week; unfortunately this means we're going to have to write some more code, but we can't have everything.
+When we [last](/pub/2004/04/15/maypole.html) left our intrepid web developer, he had successfully set up an online sales catalogue in 11 lines of code. Now, however, he has to move on to turning this into a sales site with a shopping cart and all the usual trimmings. It's time to see some of that flexibility we talked about last week; unfortunately this means we're going to have to write some more code, but we can't have everything.
 
 ### <span id="Who_Am_I?">Who Am I?</span>
 

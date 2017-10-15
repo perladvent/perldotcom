@@ -1,22 +1,22 @@
 {
-   "draft" : null,
    "description" : " Scratching Your Own Itch Some time ago I became intrigued with Digest authentication, which uses the same general mechanism as the familiar Basic authentication scheme but offers significantly more password security without requiring an SSL connection. At the time...",
+   "slug" : "/pub/2003/07/08/mod_perl.html",
+   "authors" : [
+      "geoffrey-young"
+   ],
+   "draft" : null,
+   "date" : "2003-07-08T00:00:00-08:00",
+   "title" : "Integrating mod_perl with Apache 2.1 Authentication",
+   "image" : null,
+   "categories" : "web",
+   "thumbnail" : "/images/_pub_2003_07_08_mod_perl/111-modperl_auth.gif",
    "tags" : [
       "apache-2",
       "apache-authhandler",
       "digest-authentication",
       "geoffrey-young",
       "mod-perl-2"
-   ],
-   "slug" : "/pub/2003/07/08/mod_perl.html",
-   "categories" : "web",
-   "authors" : [
-      "geoffrey-young"
-   ],
-   "title" : "Integrating mod_perl with Apache 2.1 Authentication",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2003_07_08_mod_perl/111-modperl_auth.gif",
-   "date" : "2003-07-08T00:00:00-08:00"
+   ]
 }
 
 
@@ -421,7 +421,7 @@ That is all there is to it. No hash checking, no header manipulations, no back f
 
 ### Don't Forget the Tests!
 
-Of course, no module would be complete without a test suite, and the [Apache-Test](http://search.cpan.org/search?query=Apache-Test) framework introduced [last time](/pub/a/2003/05/22/testing.html) gives us all the tools we need to write a complete set of tests.
+Of course, no module would be complete without a test suite, and the [Apache-Test](http://search.cpan.org/search?query=Apache-Test) framework introduced [last time](/pub/2003/05/22/testing.html) gives us all the tools we need to write a complete set of tests.
 
 For the most part, the tests for Apache::AuthenHook are not that different from those presented before. LWP supports Digest authentication natively, so all our test scripts really need to do is make a request to a protected URI and let LWP do all the work. Here is a snippet from one of the tests.
 

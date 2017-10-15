@@ -1,18 +1,18 @@
 {
-   "image" : null,
-   "thumbnail" : "/images/_pub_2002_08_27_filtering/111-mail_filtering.gif",
-   "date" : "2002-08-27T00:00:00-08:00",
-   "categories" : "Email",
+   "slug" : "/pub/2002/08/27/filtering.html",
+   "description" : " There are many ways to filter your e-mail with Perl. Two of the more popular and interesting ways are to use PerlMx or Mail::Audit. I took a long look at both, and this is what I thought of them....",
+   "draft" : null,
    "authors" : [
       "michael-stevens"
    ],
+   "date" : "2002-08-27T00:00:00-08:00",
+   "image" : null,
    "title" : "Mail Filtering",
+   "categories" : "email",
+   "thumbnail" : "/images/_pub_2002_08_27_filtering/111-mail_filtering.gif",
    "tags" : [
       "mail-filtering"
-   ],
-   "slug" : "/pub/2002/08/27/filtering.html",
-   "draft" : null,
-   "description" : " There are many ways to filter your e-mail with Perl. Two of the more popular and interesting ways are to use PerlMx or Mail::Audit. I took a long look at both, and this is what I thought of them...."
+   ]
 }
 
 

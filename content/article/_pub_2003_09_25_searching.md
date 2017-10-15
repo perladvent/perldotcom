@@ -1,18 +1,18 @@
 {
+   "thumbnail" : "/images/_pub_2003_09_25_searching/111-search_engines.gif",
+   "tags" : [
+      "searching-search-reverse-index"
+   ],
+   "date" : "2003-09-25T00:00:00-08:00",
+   "image" : null,
    "title" : "Adding Search Functionality to Perl Applications",
+   "categories" : "data",
+   "slug" : "/pub/2003/09/25/searching.html",
+   "description" : " Introduction to Searching Usually, when building an application, a lot of thought goes into how the data is entered and updated, rather than finding it again. Finding data is an afterthought, especially when developing with a small dataset. If...",
    "authors" : [
       "aaron-trevena"
    ],
-   "categories" : "data",
-   "date" : "2003-09-25T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2003_09_25_searching/111-search_engines.gif",
-   "image" : null,
-   "description" : " Introduction to Searching Usually, when building an application, a lot of thought goes into how the data is entered and updated, rather than finding it again. Finding data is an afterthought, especially when developing with a small dataset. If...",
-   "draft" : null,
-   "slug" : "/pub/2003/09/25/searching.html",
-   "tags" : [
-      "searching-search-reverse-index"
-   ]
+   "draft" : null
 }
 
 
@@ -946,10 +946,10 @@ When you control the indexing, it is possible to recognize dates and convert the
 
 ### References and Further Reading
 
--   "[Designing a Search Engine](/pub/a/2001/04/10/engine.html)" by Pete Sergeant. Useful information on coping without an RDBMS and implementing phrase-matching/Boolean searches. (perl.com)
+-   "[Designing a Search Engine](/pub/2001/04/10/engine.html)" by Pete Sergeant. Useful information on coping without an RDBMS and implementing phrase-matching/Boolean searches. (perl.com)
 -   "[The Windows 2000 Content Index](http://www.ddj.com/articles/2000/0012/)" by Bartosz Milewski. The principles and design of the Windows 2000 content index. (Dr. Dobb's Journal -- registration required.)
 -   "[Web Site Searching and Indexing in Perl](http://www.ddj.com/articles/2001/0103/)" by Neil Gunton. Indexing websites using MySQL and DBIx::FullTextSearch. (Dr. Dobb's Journal -- registration required.)
 -   "<a href="http://www.ddj.com/articles/1999/9901/" id="tk">Full-text indexing in perl</a>" by Tim Kientzle. A concise introduction to full-text indexing in `perl` -- an essential read. (Dr. Dobb's Journal -- registration required.)
--   "<a href="/pub/a/2003/02/19/engine.html" id="mc">Building a Vector Space Search Engine in Perl</a>" by Maciej Ceglowski. Covers the Vector-based alternative to Reverse Index searching, as well as pointers on splitting text into words, etc. (perl.com)
--   "<a href="/pub/a/2003/07/15/nocode.html" id="kh">How to Avoid Writing Code</a>" by Kake Pugh. Quick introduction to practical use of Class::DBI including how to add a full-text search to an object. (perl.com)
+-   "<a href="/pub/2003/02/19/engine.html" id="mc">Building a Vector Space Search Engine in Perl</a>" by Maciej Ceglowski. Covers the Vector-based alternative to Reverse Index searching, as well as pointers on splitting text into words, etc. (perl.com)
+-   "<a href="/pub/2003/07/15/nocode.html" id="kh">How to Avoid Writing Code</a>" by Kake Pugh. Quick introduction to practical use of Class::DBI including how to add a full-text search to an object. (perl.com)
 

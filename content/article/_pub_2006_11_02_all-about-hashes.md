@@ -1,12 +1,10 @@
 {
-   "thumbnail" : "/images/_pub_2006_11_02_all-about-hashes/111-hashes.gif",
-   "image" : null,
-   "date" : "2006-11-02T00:00:00-08:00",
-   "categories" : "development",
-   "title" : "Hash Crash Course",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
+   "description" : " When I teach about hashes, I do what most Perl tutors and tutorials do: I introduce the hash as a \"dictionary\": a mapping between one thing and another. The classic example, for instance, is to have a set of...",
+   "slug" : "/pub/2006/11/02/all-about-hashes.html",
    "tags" : [
       "hash-tables",
       "hashes",
@@ -15,9 +13,11 @@
       "perl-syntax",
       "perl-variables"
    ],
-   "slug" : "/pub/2006/11/02/all-about-hashes.html",
-   "description" : " When I teach about hashes, I do what most Perl tutors and tutorials do: I introduce the hash as a \"dictionary\": a mapping between one thing and another. The classic example, for instance, is to have a set of...",
-   "draft" : null
+   "thumbnail" : "/images/_pub_2006_11_02_all-about-hashes/111-hashes.gif",
+   "categories" : "development",
+   "image" : null,
+   "title" : "Hash Crash Course",
+   "date" : "2006-11-02T00:00:00-08:00"
 }
 
 

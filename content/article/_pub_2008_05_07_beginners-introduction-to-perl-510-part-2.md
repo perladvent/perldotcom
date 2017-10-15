@@ -1,27 +1,27 @@
 {
-   "draft" : null,
-   "description" : " A Beginner's Introduction to Perl 5.10 talked about the core elements of Perl: variables (scalars, arrays, and hashes), math operators and some basic flow control (the for statement). Now it's time to interact with the world. (A Beginner's Introduction...",
-   "slug" : "/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html",
+   "thumbnail" : null,
    "tags" : [
       "files",
       "perl-5-10",
       "perl-filehandles",
       "string"
    ],
+   "title" : "Beginner's Introduction to Perl 5.10, Part 2",
+   "image" : null,
+   "categories" : "tutorials",
+   "date" : "2008-05-07T00:00:00-08:00",
    "authors" : [
       "chromatic",
       "doug-sheppard"
    ],
-   "title" : "Beginner's Introduction to Perl 5.10, Part 2",
-   "categories" : "Tutorials",
-   "date" : "2008-05-07T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null
+   "draft" : null,
+   "description" : " A Beginner's Introduction to Perl 5.10 talked about the core elements of Perl: variables (scalars, arrays, and hashes), math operators and some basic flow control (the for statement). Now it's time to interact with the world. (A Beginner's Introduction...",
+   "slug" : "/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html"
 }
 
 
 
-[A Beginner's Introduction to Perl 5.10](/pub/a/2008/04/23/a-beginners-introduction-to-perl-510.html) talked about the core elements of Perl: variables (scalars, arrays, and hashes), math operators and some basic flow control (the `for` statement). Now it's time to interact with the world. ([A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html) explores regular expressions, matching, and substitutions. [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html) demonstrates how to write web programs.)
+[A Beginner's Introduction to Perl 5.10](/pub/2008/04/23/a-beginners-introduction-to-perl-510.html) talked about the core elements of Perl: variables (scalars, arrays, and hashes), math operators and some basic flow control (the `for` statement). Now it's time to interact with the world. ([A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html) explores regular expressions, matching, and substitutions. [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html) demonstrates how to write web programs.)
 
 This installment discusses how to slice and dice strings, how to play with files and how to define your own functions. First, you need to understand one more core concept of the Perl language: conditions and comparisons.
 

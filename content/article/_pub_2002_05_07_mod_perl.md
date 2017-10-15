@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "description" : " Introduction In this article, we continue to talk about the essential Perl basics that you should know before starting to program for mod_perl. Tracing Warnings Reports Sometimes it's hard to understand what a warning is complaining about. You see...",
-   "slug" : "/pub/2002/05/07/mod_perl.html",
+   "thumbnail" : "/images/_pub_2002_05_07_mod_perl/111-wizards.gif",
    "tags" : [
       "mod-perl-perl-subroutines-stay-shared"
    ],
-   "authors" : [
-      "stas-bekman"
-   ],
+   "date" : "2002-05-07T00:00:00-08:00",
+   "image" : null,
    "title" : "The Perl You Need To Know - Part 2",
    "categories" : "web",
-   "date" : "2002-05-07T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2002_05_07_mod_perl/111-wizards.gif",
-   "image" : null
+   "slug" : "/pub/2002/05/07/mod_perl.html",
+   "description" : " Introduction In this article, we continue to talk about the essential Perl basics that you should know before starting to program for mod_perl. Tracing Warnings Reports Sometimes it's hard to understand what a warning is complaining about. You see...",
+   "draft" : null,
+   "authors" : [
+      "stas-bekman"
+   ]
 }
 
 
@@ -121,12 +121,12 @@ Take a moment to understand the calls stack trace. The deepest calls are printed
 </colgroup>
 <tbody>
 <tr class="odd">
-<td><img src="/images/pixel-hub.gif" alt=" " width="200" height="2" /><br />
+<td>
 
-<a href="http://conferences.oreilly.com/oscon/"><img src="/images/os2002/oscon-sidebar.gif" alt="O&#39;Reilly Open Source Convention -- July 22-26, San Diego, CA." width="143" height="78" /></a>
+<a href="http://conferences.oreilly.com/oscon/">O&#39;Reilly Open Source Convention -- July 22-26, San Diego, CA.</a>
 <p><strong>From the Frontiers of Research to the Heart of the Enterprise</strong></p>
 <p><a href="http://conferences.oreillynet.com/cs/os2002/view/e_sess/3032">mod_perl 2.0, the Next Generation</a> Stas Bekman will provide an overview of what's new in mod_perl 2.0 and what else is planned for the future in his talk at the upcoming <a href="http://conferences.oreillynet.com/os2002/">O'Reilly Open Source Convention</a>, this July 22-26, in San Diego.</p>
-<img src="/images/pixel-hub.gif" alt=" " width="200" height="2" /></td>
+</td>
 </tr>
 </tbody>
 </table>
@@ -623,13 +623,13 @@ For more information, please refer to perlref and perlsub manpages.
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="/pub/a/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
+<p><a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />
-<a href="/pub/a/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
+<a href="/pub/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
 <br />
-<a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
 <br />
-<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -641,7 +641,7 @@ For more information, please refer to perlref and perlsub manpages.
 
 It's a known fact that one cannot become a Perl hacker and especially mod\_perl hacker without knowing how to read Perl documentation and search through it. Books are good, but an easily accessible and searchable Perl reference at your fingertips is a great time saver. It always has the up-to-date information for the version of perl you're using.
 
-Of course, you can use online Perl documentation at the Web. I prefer <http://theoryx5.uwinnipeg.ca/CPAN/perl/> to the official URL: [http://www.perl.com/pub/v/documentation](/pub/v/documentation) is very slow :( . The `perldoc` utility provides you with access to the documentation installed on your system. To find out what Perl manpages are available execute:
+Of course, you can use online Perl documentation at the Web. I prefer [http://theoryx5.uwinnipeg.ca/CPAN/perl](http://theoryx5.uwinnipeg.ca/CPAN/perl/) to the official URL: [perldoc](https://perldoc.perl.org) is very slow :( . The `perldoc` utility provides you with access to the documentation installed on your system. To find out what Perl manpages are available execute:
 
       % perldoc perl
 
@@ -667,7 +667,7 @@ To read the *perldoc* manpage you would execute:
 
 ### <span id="references">References</span>
 
--   Online documentation: <http://theoryx5.uwinnipeg.ca/CPAN/perl/> [http://www.perl.com/pub/v/documentation/](/pub/v/documentation/)
+-   Online documentation: [http://theoryx5.uwinnipeg.ca/CPAN/perl](http://theoryx5.uwinnipeg.ca/CPAN/perl/) [perldoc](https://perldoc.perl.org)
 
 -   The book \`\`*Programming Perl*'' 3rd edition by L.Wall, T. Christiansen and J.Orwant (also known as the \`\`*Camel*'' book, named after the camel picture on the cover of the book). You want to refer to Chapter 8 that talks about nested subroutines among other things.
 

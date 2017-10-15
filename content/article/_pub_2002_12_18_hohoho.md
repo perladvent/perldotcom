@@ -1,18 +1,18 @@
 {
-   "draft" : null,
    "description" : " You know, it's not easy having the happiness of billions of children around the world resting with your organization, and it's even harder on the IT department. The incorporated elves and pixiefolk of the North Pole, under the direction...",
    "slug" : "/pub/2002/12/18/hohoho.html",
-   "tags" : [
-      "christmas-success-santa"
-   ],
+   "draft" : null,
    "authors" : [
       "alex-gough"
    ],
-   "title" : "How Perl Powers Christmas",
-   "categories" : "Community",
    "date" : "2002-12-18T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : "/images/_pub_2002_12_18_hohoho/111-perl_xmas.gif"
+   "title" : "How Perl Powers Christmas",
+   "categories" : "community",
+   "thumbnail" : "/images/_pub_2002_12_18_hohoho/111-perl_xmas.gif",
+   "tags" : [
+      "christmas-success-santa"
+   ]
 }
 
 
@@ -29,11 +29,6 @@ The first application of Perl was in the Health and Safety department. For many 
 
 Perl continued to make inroads on the databases of Santa's grottos. Next to fall to its rogueish charms was the global child distribution and route planning systems. These had been implemented on two mainframes under two different packages but global population growth scaled faster than the earlier architecture, requiring a shift to an entirely new distributed design. The database itself uses a commercial package but the data migration was handled using Perl. Its flexible dynamic typing, object system and, above all, the set of DBI drivers allowed Perl to talk to every database in its own language without the programmers needing to learn each and every one of them. This project was completed ahead of schedule leaving the team of crack data migration experts with little to do, so they were tasked to set their tools onto the internally infamous naughtyness database.
 
-------------------------------------------------------------------------
-
-[<img src="/images/ads/oreillygear_468x60.gif" alt="O&#39;Reilly Gear" width="468" height="60" />](http://www.thinkgeek.com/oreilly/)
-
-------------------------------------------------------------------------
 
 The naughtyness database was, for many years, simply a set of paper files kept in a filing cabinet in a dungeon by a troll. Every year, the troll would carefully collate every good deed and every black act of every boy and girl the world over. Before distributing presents on Christmas day, Father Christmas would ask the troll if there were any children that deserved coal instead. Of course, due to his meticulous record keeping the troll could honestly, if gruffly, reply "no, not a single child has been that bad." The mounting volumes of data near the end of the last century left the troll unable to keep up with developments. Soon he began to confuse one child with another, sometimes he couldn't enter every good thought of every child and eventually the system failed. A child was assigned not one but two sacks of coal. Thankfully an internal investigation revealed the problems faced by the troll and corrected the error, but it was decided that the troll must be retired in favor of a system based on the latest developments in artificial intelligence technologies. The review also concluded that the system should also modified so that especially good children would get better presents delivered, and coal was retired in favor of a good talking to from the troll who now relishes his new line in community work.
 

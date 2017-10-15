@@ -1,5 +1,4 @@
 {
-   "slug" : "/pub/2005/12/01/client_side_success.html",
    "tags" : [
       "client-side-perl",
       "hitachi-gst",
@@ -8,16 +7,17 @@
       "perlapp",
       "windows-perl"
    ],
-   "description" : " Accurate software inventory management is critical to any organization. Without an accurate software inventory, organizations may either be out of compliance with their vendor licensing agreements or they may be paying extra for licenses that they do not need....",
-   "draft" : null,
-   "date" : "2005-12-01T00:00:00-08:00",
-   "image" : null,
    "thumbnail" : "/images/_pub_2005_12_01_client_side_success/111-success.gif",
+   "date" : "2005-12-01T00:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
    "title" : "Perl Success Story: Client-Side Collection and Reporting",
+   "description" : " Accurate software inventory management is critical to any organization. Without an accurate software inventory, organizations may either be out of compliance with their vendor licensing agreements or they may be paying extra for licenses that they do not need....",
+   "slug" : "/pub/2005/12/01/client_side_success.html",
+   "draft" : null,
    "authors" : [
       "jiann-wang"
-   ],
-   "categories" : "Community"
+   ]
 }
 
 

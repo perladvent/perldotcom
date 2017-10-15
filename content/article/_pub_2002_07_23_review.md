@@ -1,13 +1,13 @@
 {
+   "thumbnail" : null,
    "tags" : [],
+   "date" : "2002-07-23T00:00:00-08:00",
+   "image" : null,
+   "title" : "Graphics Programming with Perl",
+   "categories" : "graphics",
    "slug" : "/pub/2002/07/23/review.html",
    "description" : " I recently received Martien Verbruggen's long-awaited \"Graphics Programming in Perl,\" and I wasn't quite sure what to make of it. As he notes himself, \"I didn't think there would be enough coherent material to write such a book, and...",
    "draft" : null,
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2002-07-23T00:00:00-08:00",
-   "categories" : "Graphics",
-   "title" : "Graphics Programming with Perl",
    "authors" : [
       "simon-cozens"
    ]

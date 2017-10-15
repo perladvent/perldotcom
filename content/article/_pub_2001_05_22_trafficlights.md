@@ -1,6 +1,11 @@
 {
-   "description" : " Michael Schwern will be speaking at the O'Reilly Open Source Convention in San Diego, CA, July 23-27, 2001. Excuse me, I'm going to ramble a bit about traffic lights as they relate to language design to see whether something...",
+   "authors" : [
+      "michael-schwern"
+   ],
    "draft" : null,
+   "description" : " Michael Schwern will be speaking at the O'Reilly Open Source Convention in San Diego, CA, July 23-27, 2001. Excuse me, I'm going to ramble a bit about traffic lights as they relate to language design to see whether something...",
+   "slug" : "/pub/2001/05/22/trafficlights.html",
+   "thumbnail" : null,
    "tags" : [
       "design",
       "development",
@@ -8,20 +13,15 @@
       "perl-6",
       "traffic"
    ],
-   "slug" : "/pub/2001/05/22/trafficlights.html",
-   "categories" : "community",
    "title" : "Taking Lessons From Traffic Lights",
-   "authors" : [
-      "michael-schwern"
-   ],
    "image" : null,
-   "thumbnail" : null,
+   "categories" : "community",
    "date" : "2001-05-22T00:00:00-08:00"
 }
 
 
 
-[<img src="/images/conf/confchrome.jpg" alt="O&#39;Reilly Open Source Convention" width="252" height="77" />](http://conferences.oreilly.com/oscon/)
+[O&#39;Reilly Open Source Convention](http://conferences.oreilly.com/oscon/)
 *Michael Schwern will be speaking at the [O'Reilly Open Source Convention](http://conferences.oreilly.com/oscon/) in San Diego, CA, July 23-27, 2001.*
 
 Excuse me, I'm going to ramble a bit about traffic lights as they relate to language design to see whether something interesting falls out.
@@ -49,7 +49,7 @@ This idea of having redundant syntax that exists to merely make something easier
 <tbody>
 <tr class="odd">
 <td><hr />
-<img src="/images/conf/sidebar-chrome.jpg" alt="O&#39;Reilly Open Source Convention Featured Speaker" width="187" height="73" /></td>
+O&#39;Reilly Open Source Convention Featured Speaker</td>
 </tr>
 <tr class="even">
 <td><p><strong><a href="http://conferences.oreillynet.com/cs/os2001/view/e_spkr/324">Michael Schwern</a> will be presenting four sessions at the <a href="http://conferences.oreilly.com/oscon/">O'Reilly Open Source Convention</a> in San Diego, CA, July 23-27, 2001. Rub elbows with Open Source leaders while relaxing on the beautiful Sheraton San Diego Hotel and Marina waterfront. For more information, visit our <a href="http://conferences.oreilly.com/oscon/">conference home page</a>.</strong></p>

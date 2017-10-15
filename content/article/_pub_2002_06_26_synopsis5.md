@@ -1,18 +1,18 @@
 {
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. A summary of the changes in Apocalypse 5: Unchanged features Capturing: (...) Repetition quantifiers: *, +, and...",
-   "draft" : null,
    "slug" : "/pub/2002/06/26/synopsis5.html",
-   "tags" : [
-      "pattern-matching-apocalypse"
-   ],
-   "title" : "Synopsis 5",
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. A summary of the changes in Apocalypse 5: Unchanged features Capturing: (...) Repetition quantifiers: *, +, and...",
    "authors" : [
       "damian-conway",
       "allison-randal"
    ],
-   "categories" : "perl-6",
+   "draft" : null,
    "date" : "2002-06-26T00:00:00-08:00",
+   "categories" : "perl-6",
    "image" : null,
+   "title" : "Synopsis 5",
+   "tags" : [
+      "pattern-matching-apocalypse"
+   ],
    "thumbnail" : "/images/_pub_2002_06_26_synopsis5/111-synopsis5.gif"
 }
 

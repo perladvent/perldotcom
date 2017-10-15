@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "slug" : "/pub/2000/06/perlwhirl.html",
-   "description" : "Adventures on Perl Whirl 2000 -> Can a tech conference on a luxury cruise boat possibly be legitimate? Sure it is, and then some. This past Memorial Day, I joined about 200 attendees on Perl Whirl 2000, the inaugural Geek...",
    "draft" : null,
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-06-13T00:00:00-08:00",
-   "categories" : "Community",
-   "title" : "Adventures on Perl Whirl 2000",
    "authors" : [
       "adam-turoff"
-   ]
+   ],
+   "description" : "Adventures on Perl Whirl 2000 -> Can a tech conference on a luxury cruise boat possibly be legitimate? Sure it is, and then some. This past Memorial Day, I joined about 200 attendees on Perl Whirl 2000, the inaugural Geek...",
+   "slug" : "/pub/2000/06/perlwhirl.html",
+   "image" : null,
+   "title" : "Adventures on Perl Whirl 2000",
+   "categories" : "community",
+   "date" : "2000-06-13T00:00:00-08:00",
+   "thumbnail" : null,
+   "tags" : []
 }
 
 
@@ -51,7 +51,7 @@ All in all, I had a wonderful time on Perl Whirl 2000. The Perl was great and Al
 
 ------------------------------------------------------------------------
 
--   If you haven't seen it already, you might want to check out [the 31 things Tim Bray learned on the cruise](http://www.oreillynet.com/pub/a/network/2000/06/06/geekcruise.html). It has pictures, including one of Larry in one of his many tuxedos.
+-   If you haven't seen it already, you might want to check out [the 31 things Tim Bray learned on the cruise](http://www.oreillynet.com/pub/network/2000/06/06/geekcruise.html). It has pictures, including one of Larry in one of his many tuxedos.
 -   It turns out to be surprisingly easy to keep up an 8 AM - 11 PM schedule when the sun doesn't start setting until 9 PM and then comes up again at 3 AM.
 -   I can attest to the laid-back attitude on the cruise. Everyone I met was kind and friendly, which isn't always the case at shorter conferences in less delightful venues.
 -   In Glacier Bay, if you were quiet, you could hear the glacier creaking and popping as it slid into the sea. I had heard stories of glaciers calving, which is when a piece breaks off and falls into the water. (This is where icebergs come from.) I had always imagined that this was a comparatively rare event, that if you watched the glacier every moment for a whole day, you might, if you were lucky, see a piece break off. Wrong! Stuff is breaking off the glacier all the time and you only have to watch for a few minutes before something happens.

@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "description" : " Introduction Go on, admit it: You've written a templating system. It's OK, nearly everyone has at some point. You start with something beautifully simple like $HTML =~ s/\\$(\\w+)/${$1}/g and end up adding conditionals, loops and includes until you've created...",
-   "slug" : "/pub/2001/08/21/templating.html",
    "tags" : [
       "templating-text-html"
    ],
+   "thumbnail" : "/images/_pub_2001_08_21_templating/111-perltemplate.jpg",
+   "date" : "2001-08-21T00:00:00-08:00",
+   "categories" : "development",
+   "title" : "Choosing a Templating System",
+   "image" : null,
+   "slug" : "/pub/2001/08/21/templating.html",
+   "description" : " Introduction Go on, admit it: You've written a templating system. It's OK, nearly everyone has at some point. You start with something beautifully simple like $HTML =~ s/\\$(\\w+)/${$1}/g and end up adding conditionals, loops and includes until you've created...",
+   "draft" : null,
    "authors" : [
       "perrin-harkins"
-   ],
-   "title" : "Choosing a Templating System",
-   "categories" : "development",
-   "date" : "2001-08-21T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2001_08_21_templating/111-perltemplate.jpg",
-   "image" : null
+   ]
 }
 
 

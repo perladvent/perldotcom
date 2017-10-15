@@ -1,20 +1,20 @@
 {
+   "authors" : [
+      "philipp-janert"
+   ],
    "draft" : null,
-   "description" : " The CPAN module HTML::Template is a very simple, yet extremely useful module to achieve true separation of presentation and logic when programming CGI scripts. The basic idea is that, rather than having print statements scattered all through your code...",
    "slug" : "/pub/2006/11/30/html-template-filters.html",
+   "description" : " The CPAN module HTML::Template is a very simple, yet extremely useful module to achieve true separation of presentation and logic when programming CGI scripts. The basic idea is that, rather than having print statements scattered all through your code...",
+   "categories" : "web",
+   "title" : "Advanced HTML::Template: Filters",
+   "image" : null,
+   "date" : "2006-11-30T00:00:00-08:00",
    "tags" : [
       "filters",
       "html-templating",
       "html-template",
       "perl-templating"
    ],
-   "authors" : [
-      "philipp-janert"
-   ],
-   "title" : "Advanced HTML::Template: Filters",
-   "categories" : "Web",
-   "date" : "2006-11-30T00:00:00-08:00",
-   "image" : null,
    "thumbnail" : "/images/_pub_2006_11_30_html-template-filters/111-html_filter.jpg"
 }
 

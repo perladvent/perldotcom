@@ -1,24 +1,24 @@
 {
-   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
-   "draft" : null,
-   "slug" : "/pub/2000/10/begperl1.html",
    "tags" : [],
+   "thumbnail" : null,
+   "date" : "2000-10-16T00:00:00-08:00",
+   "categories" : "development",
    "title" : "Beginner's Introduction to Perl",
+   "image" : null,
+   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
+   "slug" : "/pub/2000/10/begperl1.html",
+   "draft" : null,
    "authors" : [
       "doug-sheppard"
-   ],
-   "categories" : "development",
-   "date" : "2000-10-16T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null
+   ]
 }
 
 
 
 *Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at:*
 
--   [A Beginner's Introduction to Perl 5.10](/pub/a/2008/04/23/a-beginners-introduction-to-perl-510.html)
--   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/a/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
+-   [A Beginner's Introduction to Perl 5.10](/pub/2008/04/23/a-beginners-introduction-to-perl-510.html)
+-   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
 -   [A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html)
 -   [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html)
 
@@ -37,7 +37,7 @@
 •<strong><a href="/pub/2000/11/begperl3.html">Part 3 of this series</a></strong><br />
 •<strong><a href="/pub/2000/12/begperl4.html">Part 4 of this series</a></strong><br />
 •<strong><a href="/pub/2000/12/begperl5.html">Part 5 of this series</a></strong><br />
-•<strong><a href="/pub/a/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
+•<strong><a href="/pub/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
 <br />
 •<a href="#a%20word%20about%20operating%20systems">A Word About Operating Systems</a><br />
 •<a href="#your%20first%20perl%20program">Your First Perl Program</a><br />

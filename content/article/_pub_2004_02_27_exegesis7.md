@@ -1,7 +1,9 @@
 {
-   "draft" : null,
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 7 for the current design information. What a piece of work is Perl 6! How noble in reason! How infinite in faculty! In...",
-   "slug" : "/pub/2004/02/27/exegesis7.html",
+   "image" : null,
+   "title" : "Exegesis 7",
+   "categories" : "perl-6",
+   "date" : "2004-02-27T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif",
    "tags" : [
       "damian-conway",
       "exegesis",
@@ -11,11 +13,9 @@
    "authors" : [
       "damian-conway"
    ],
-   "title" : "Exegesis 7",
-   "categories" : "perl-6",
-   "date" : "2004-02-27T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif",
-   "image" : null
+   "draft" : null,
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 7 for the current design information. What a piece of work is Perl 6! How noble in reason! How infinite in faculty! In...",
+   "slug" : "/pub/2004/02/27/exegesis7.html"
 }
 
 
@@ -122,7 +122,7 @@ At first glance the Perl 6 version may seem like something of a backwards step �
 -   it uses the standard Perl 6 subroutine call syntax, so we can use the full power of Perl data structures and control flow when setting up formats;
 -   it delimits every field specification by braces, which allows for a much wider range of field types;
 -   it removes the special meanings of `'@'`, `'^'`, `'~'`, and `'.'` in formats, leaving only `'{'` as special;
--   it provides [an extension mechanism](/pub/a/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.) for creating new field types;
+-   it provides [an extension mechanism](/pub/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.) for creating new field types;
 -   it greatly simplifies the common task of formatting data into a string (rather than requiring the format data to be written to an output stream);
 -   it doesn't destroy the contents of data variables when formatting them across multiple lines;
 -   it's easy to create new formats on-the-fly, rather than being forced to statically declare them at compile-time (or in a run-time string `eval`);
@@ -225,7 +225,7 @@ first.
 
 Note that the above definition of `form` specifies that the subroutine takes a list of arguments (`*@args`), each of which must be a string, array or pair (`type FormArgs ::= Str|Num|Array|Pair`). And the `is context` trait specifies that each of those arguments will be evaluated in a scalar context.
 
-That last bit is important, because normally a "slurpy" array parameter like `*@args` would impose a list context on the corresponding arguments. We don't want that here, mainly because we're going to want to be able to [pass arrays to `form`](/pub/a/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...) without having them flattened.
+That last bit is important, because normally a "slurpy" array parameter like `*@args` would impose a list context on the corresponding arguments. We don't want that here, mainly because we're going to want to be able to [pass arrays to `form`](/pub/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...) without having them flattened.
 
 ------------------------------------------------------------------------
 
@@ -513,7 +513,7 @@ rather than:
           * The hideous and malevolent             *nuts.             *
             Richard III                            *                  *
 
-That's because the `"*"` that's being used as a bullet for the first column is a literal (i.e. mere decoration), and so it will be repeated on *every* line that is formatted, regardless of whether that line is the start of a new element of `@roles` or merely the broken-and-wrapped remains of the previous element. Happily, as we shall see later, this particular problem has [a simple solution](/pub/a/2004/02/27/exegesis7.html?page=13#these_paper_bullets_of_the_brain...).
+That's because the `"*"` that's being used as a bullet for the first column is a literal (i.e. mere decoration), and so it will be repeated on *every* line that is formatted, regardless of whether that line is the start of a new element of `@roles` or merely the broken-and-wrapped remains of the previous element. Happily, as we shall see later, this particular problem has [a simple solution](/pub/2004/02/27/exegesis7.html?page=13#these_paper_bullets_of_the_brain...).
 
 Despite these minor complications, array data sources are particularly useful when formatting, especially if the data is known to fit within the specified width. For example:
 
@@ -541,7 +541,7 @@ Note the use of the Perl6-ish listwise division (`»/«`) to produce the array o
 
 The most commonly used fields are those that justify their contents: to the left, to the right, to the left *and* right, or towards the centre.
 
-Left-justified and right-justified fields extract from their data source the largest substring that will fit inside them, push that string to the left or right as appropriate, and then pad the string out to the required field width with spaces (or the [nominated fill character](/pub/a/2004/02/27/exegesis7.html?page=10#he_doth_fill_fields_with_harness...)).
+Left-justified and right-justified fields extract from their data source the largest substring that will fit inside them, push that string to the left or right as appropriate, and then pad the string out to the required field width with spaces (or the [nominated fill character](/pub/2004/02/27/exegesis7.html?page=10#he_doth_fill_fields_with_harness...)).
 
 Centred fields (`{>>>><<<<}` and `{]]]][[[[}`) likewise extract as much data as possible, and then pad both sides of it with (near) equal numbers of spaces. If the amount of padding required is not evenly divisible by 2, the one extra space is added *after* the data.
 
@@ -582,7 +582,7 @@ One special case we need to consider is an empty set of field delimiters:
 
 This specification is treated as a two-column-wide, left-justified block field (since that seems to be the type of two-column-wide field most often required).
 
-Other kinds of two-column (and single-column) fields can also be created using [imperative field widths](/pub/a/2004/02/27/exegesis7.html?page=9#what_you_will_command_me_will_i_do...) and and [user-defined fields](/pub/a/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.).
+Other kinds of two-column (and single-column) fields can also be created using [imperative field widths](/pub/2004/02/27/exegesis7.html?page=9#what_you_will_command_me_will_i_do...) and and [user-defined fields](/pub/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.).
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 7](http://dev.perl.org/perl6/doc/design/syn/S07.html) for the current design information.*
 
@@ -606,7 +606,7 @@ prints:
 
 The points are all aligned, the minimal number of decimal places are shown, and the decimals are rounded (using the same rounding protocol that `printf` employs). Note in particular that, even though both `1` and `1.0001` would normally convert to the same 3-decimal-place value (`1.000`), a `form` call only shows all three zeros in the second case since only in the second case are they "significant".
 
-In other words, unless we [tell it otherwise](/pub/a/2004/02/27/exegesis7.html?page=10#but_say_thou_nought...), `form` tries to avoid displaying a number with more accuracy than it actually possesses (within the constraint that it must always show at least one decimal place).
+In other words, unless we [tell it otherwise](/pub/2004/02/27/exegesis7.html?page=10#but_say_thou_nought...), `form` tries to avoid displaying a number with more accuracy than it actually possesses (within the constraint that it must always show at least one decimal place).
 
 #### <span id="here_are_only_numbers_ratified.">Here are only numbers ratified.</span>
 
@@ -618,7 +618,7 @@ So, instead, it indicates that the number doesn't fit by filling the field with 
 
         Thy score be: #####.###
 
-Note, however, that it *is* possible to [change this behaviour](/pub/a/2004/02/27/exegesis7.html?page=9#that_we_our_largest_bounty_may_extend...) should we need to.
+Note, however, that it *is* possible to [change this behaviour](/pub/2004/02/27/exegesis7.html?page=9#that_we_our_largest_bounty_may_extend...) should we need to.
 
 It's also possible that someone (not you, of course!) might attempt to pass a numeric field some data that isn't numeric at all:
 
@@ -672,7 +672,7 @@ the call prints:
         Votre score est:   111,235
         Votre score est:     1,000
 
-In fact, `form` is extremely flexible about the characters we're allowed to use as a decimal marker: anything except an angle- or square bracket or [a plus sign](/pub/a/2004/02/27/exegesis7.html?page=9#that_we_our_largest_bounty_may_extend...) is acceptable.
+In fact, `form` is extremely flexible about the characters we're allowed to use as a decimal marker: anything except an angle- or square bracket or [a plus sign](/pub/2004/02/27/exegesis7.html?page=9#that_we_our_largest_bounty_may_extend...) is acceptable.
 
 As a bonus, `form` allows us to use the specified decimal marker in the *data* as well as in the format. So this works too:
 
@@ -856,7 +856,7 @@ Wait a minute...
 
 Where exactly did we conjure that `:locale` syntax from? And what, exactly, did it create? What *is* an "option"?
 
-Well, we're passing `:locale` as an argument to `form`, and `form`'s [signature](/pub/a/2004/02/27/exegesis7.html?page=2#why,_how_now,_ho!_from_whence_ariseth_this) guarantees us that it can only accept a `Str`, or an `Array`, or a `Pair` as an argument. So an "option" must be one of those three types, and that funky `:identifier` syntax must be a constructor for the equivalent data structure.
+Well, we're passing `:locale` as an argument to `form`, and `form`'s [signature](/pub/2004/02/27/exegesis7.html?page=2#why,_how_now,_ho!_from_whence_ariseth_this) guarantees us that it can only accept a `Str`, or an `Array`, or a `Pair` as an argument. So an "option" must be one of those three types, and that funky `:identifier` syntax must be a constructor for the equivalent data structure.
 
 And indeed, that's the case. An "option" is just a pair, and the funky `:identifier` syntax is just another way of writing a pair constructor.
 
@@ -1076,7 +1076,7 @@ to produce:
         proteins doth our Caesar feed, / that he is           G===C        
         grown so great?                                         T==A
 
-Note that, unlike other types of fields, verbatim fields don't [break and wrap their data](/pub/a/2004/02/27/exegesis7.html?page=7#a_man_may_break_a_word_with_you,_sir...) if that data doesn't fit on a single line. Instead, they truncate each line to the appropriate field width. So a too-short verbatim field:
+Note that, unlike other types of fields, verbatim fields don't [break and wrap their data](/pub/2004/02/27/exegesis7.html?page=7#a_man_may_break_a_word_with_you,_sir...) if that data doesn't fit on a single line. Instead, they truncate each line to the appropriate field width. So a too-short verbatim field:
 
         print form
             '{[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]}       {""""""}',
@@ -1251,7 +1251,7 @@ Using overflow fields, we could rewrite our quotation generator like this:
 
 Which would once again produce the recipe shown earlier.
 
-Note that the overflow fields interact equally well in formats with single-line and block fields. That's because block overflow fields have one other special feature: they're non-greedy. Unless we [specify otherwise](/pub/a/2004/02/27/exegesis7.html?page=10#i_have_got_strength_of_limit), all types of block fields will consume their entire data source. For example, if we wrote:
+Note that the overflow fields interact equally well in formats with single-line and block fields. That's because block overflow fields have one other special feature: they're non-greedy. Unless we [specify otherwise](/pub/2004/02/27/exegesis7.html?page=10#i_have_got_strength_of_limit), all types of block fields will consume their entire data source. For example, if we wrote:
 
         print form :layout«across»,
              '{<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>…}',
@@ -1312,7 +1312,7 @@ we get both a cleaner specification and a more elegant result:
         fright the souls  of  fearful  adversaries,  /  He  capers
         nimbly in a lady's chamber.
 
-Notice that, in the third format line of the previous example, the two overflow fields on either side of the advertisement are each overflowing from the single field that's above both of them. This kind of multiple overflow is fine, but it does require that we specify *how* the various fields overflow (i.e. as two separate columns of text, or – as in this case – as a single, broken column across the page). That's the purpose of the `:layout«across»` option on the first line. This option is explained in detail [below](/pub/a/2004/02/27/exegesis7.html?page=8#lay_out._lay_out.).
+Notice that, in the third format line of the previous example, the two overflow fields on either side of the advertisement are each overflowing from the single field that's above both of them. This kind of multiple overflow is fine, but it does require that we specify *how* the various fields overflow (i.e. as two separate columns of text, or – as in this case – as a single, broken column across the page). That's the purpose of the `:layout«across»` option on the first line. This option is explained in detail [below](/pub/2004/02/27/exegesis7.html?page=8#lay_out._lay_out.).
 
 The `{VVVVVVVV}` fields only consumed as much data from `$speech` as was required to sandwich the output lines created by the verbatim advertisement. This feature is important, because it means we can lay out a series of block fields in one column and a single overflowed field in another column without introducing ugly gaps. For example, because the `{VVVVVVVVV}` fields in:
 
@@ -1427,7 +1427,7 @@ When it comes to specifying the data source for each field in a format, `form` o
 
 Whenever a field is passed more data than it can accommodate in a single line, `form` is forced to "break" that data somewhere.
 
-If the field in question is *W* columns wide, `form` first squeezes any whitespace (as specified by the [user's `:ws` option](/pub/a/2004/02/27/exegesis7.html?page=10#within_that_space_you_may_have_drawn_together...)) and then looks at the next *W* columns of the string. (Of course, that might actually correspond to less than *W* *characters* if the string contains wide characters. However, for the sake of exposition we'll pretend that all characters are one column wide here.)
+If the field in question is *W* columns wide, `form` first squeezes any whitespace (as specified by the [user's `:ws` option](/pub/2004/02/27/exegesis7.html?page=10#within_that_space_you_may_have_drawn_together...)) and then looks at the next *W* columns of the string. (Of course, that might actually correspond to less than *W* *characters* if the string contains wide characters. However, for the sake of exposition we'll pretend that all characters are one column wide here.)
 
 `form`'s breaking algorithm then searches for a newline, a carriage return, any other whitespace character, or a hyphen. If it finds a newline or carriage return within the first *W* columns, it immediately breaks the data string at that point. Otherwise it locates the *last* whitespace or hyphen in the first *W* columns and breaks the string immediately after that space or hyphen. If it can't find anywhere suitable to break the string, it breaks it at the (*W*-1)th column and appends a hyphen.
 
@@ -1472,7 +1472,7 @@ Of course, this particular style of line-breaking may not be suitable to all app
 
 To support different line-breaking strategies `form` provides the `:break` option. The `:break` option's value must be a closure/subroutine, which will then be called whenever a data string needs to be broken to fit a particular field width.
 
-That subroutine is passed three arguments: the data string itself, an integer specifying how wide the field is, and a regex indicating which (if any) characters are to be [squeezed](/pub/a/2004/02/27/exegesis7.html?page=10#within_that_space_you_may_have_drawn_together...). It is expected to return a list of two values: a string which is taken as the "broken" text for the field, and a boolean value indicating whether or not any data remains after the break (so `form` knows when to stop breaking the data string). The subroutine is also expected to update the `.pos` of the data string to point immediately after the break it has imposed.
+That subroutine is passed three arguments: the data string itself, an integer specifying how wide the field is, and a regex indicating which (if any) characters are to be [squeezed](/pub/2004/02/27/exegesis7.html?page=10#within_that_space_you_may_have_drawn_together...). It is expected to return a list of two values: a string which is taken as the "broken" text for the field, and a boolean value indicating whether or not any data remains after the break (so `form` knows when to stop breaking the data string). The subroutine is also expected to update the `.pos` of the data string to point immediately after the break it has imposed.
 
 For example, if we always wanted to break at the exact width of the field (with no hyphens), we could do that with:
 
@@ -1554,7 +1554,7 @@ producing:
         |aced   |
         |man    |
 
-We'll see yet another application of user-defined breaking when we discuss [user-defined fields](/pub/a/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.).
+We'll see yet another application of user-defined breaking when we discuss [user-defined fields](/pub/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.).
 
 #### <span id="he,_being_in_the_vaward,_placed_behind...">He, being in the vaward, placed behind...</span>
 
@@ -1683,7 +1683,7 @@ That's not much use in this particular example, but it was exactly what was need
 
 #### <span id="lay_out._lay_out.">Lay out. Lay out.</span>
 
-As we saw earlier, with [follow-on fields](/pub/a/2004/02/27/exegesis7.html?page=3#and_mark_what_way_i_make...) and [overflow fields](/pub/a/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_their_banks.), `form` is perfectly happy to have several fields in a single format that are all fed by the same data source. For example:
+As we saw earlier, with [follow-on fields](/pub/2004/02/27/exegesis7.html?page=3#and_mark_what_way_i_make...) and [overflow fields](/pub/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_their_banks.), `form` is perfectly happy to have several fields in a single format that are all fed by the same data source. For example:
 
         print form
             "{[[[[[[[[]]]]]]]]]]…}   {…[[[[[[[]]]]]]]]]]…}   {…[[[[[[[[]]]]]]]]]]}",
@@ -1730,7 +1730,7 @@ Or should the text run down the columns, but in such a way as to leave those col
 
 Well, of course, there's no "right" answer to that; it depends entirely on what kind of effect we're trying to achieve.
 
-The first approach (i.e. lay out the text down each column first) works well if we're formatting a news-column, or a report, or a description of some kind. The second (i.e. lay out the text across each line first), is excellent for putting diagrams or call-outs in the middle of a piece of text (as we did for [Mrs Miggins](/pub/a/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_their_banks.)). The third approach (i.e. lay out the data downwards but balance the columns) is best for presenting a single list of data in multiple columns – like `ls` does.
+The first approach (i.e. lay out the text down each column first) works well if we're formatting a news-column, or a report, or a description of some kind. The second (i.e. lay out the text across each line first), is excellent for putting diagrams or call-outs in the middle of a piece of text (as we did for [Mrs Miggins](/pub/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_their_banks.)). The third approach (i.e. lay out the data downwards but balance the columns) is best for presenting a single list of data in multiple columns – like `ls` does.
 
 So we need an option with which to tell `form` which of these useful alternatives we want for a particular format. That option is named `:layout` and can take one of three string values: `"down"`, `"across"`, or `"balanced"`. So, for example, to produce three versions of Richard III's famous monologue in the order shown above, we'd use:
 
@@ -1756,7 +1756,7 @@ By the way, the default value for the `:layout` option is `"balanced"` since for
 
 The `:layout` option controls one other form of inter-column formatting: tabular layout.
 
-So far, all the examples of tables we've created (for example, our [normalized scores](/pub/a/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...)) lined up nicely. But that was only because each item in each row happened to take the same number of lines (typically just one). So, a table generator like this:
+So far, all the examples of tables we've created (for example, our [normalized scores](/pub/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...)) lined up nicely. But that was only because each item in each row happened to take the same number of lines (typically just one). So, a table generator like this:
 
         my @play = map {"$_\r"}  ( "Othello", "Richard III", "Hamlet"   );
         my @name = map {"$_\r"}  ( "Iago",    "Henry",       "Claudius" );
@@ -1777,7 +1777,7 @@ correctly produces:
 
         Claudius        Hamlet
 
-Note that we appended `"\r"` to each element to add an extra newline after each entry in the table. We can't use `"\n"` to specify a line-break within an array element, because `form` uses `"\n"` as an ["end-of-element" marker](/pub/a/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...). So, to allow line breaks within a single element of an array datum, `form` treats `"\r"` as "end-of-line-but-not-end-of-element" (somewhat like Perl 5's `format` does).
+Note that we appended `"\r"` to each element to add an extra newline after each entry in the table. We can't use `"\n"` to specify a line-break within an array element, because `form` uses `"\n"` as an ["end-of-element" marker](/pub/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...). So, to allow line breaks within a single element of an array datum, `form` treats `"\r"` as "end-of-line-but-not-end-of-element" (somewhat like Perl 5's `format` does).
 
 However, if we were to use the full titles for each character and each play:
 
@@ -1808,7 +1808,7 @@ the same formatter would produce:
                         Prince of   
                         Denmark
 
-The problem is that the two block fields we're using just grab all the data from each array and format it independently into each column. Usually that's fine because the columns *are* independent (as we've [previously seen](/pub/a/2004/02/27/exegesis7.html?page=5#able_verbatim_to_rehearse...)).
+The problem is that the two block fields we're using just grab all the data from each array and format it independently into each column. Usually that's fine because the columns *are* independent (as we've [previously seen](/pub/2004/02/27/exegesis7.html?page=5#able_verbatim_to_rehearse...)).
 
 But in a table, the data in each column specifically relates to data in other columns, so corresponding elements from the column's data arrays ought to remain vertically aligned. To achieve this, we simply tell `form` that the data in the various columns should be laid out like a table:
 
@@ -1839,13 +1839,13 @@ which then produces the desired result:
 
 ### <span id="give_him_line_and_scope...">Give him line and scope...</span>
 
-Sometimes we want to use a particular option or combination of options in every call we make to `form`. Or, more likely, in every call we make within a specific scope. For example, we might wish to default to a different [line-breaking algorithm](/pub/a/2004/02/27/exegesis7.html?page=7#a_man_may_break_a_word_with_you,_sir...) everywhere, or we might want to make repeated use of [a new type of field specifier](/pub/a/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.), or we might want to [reset the standard page length](/pub/a/2004/02/27/exegesis7.html?page=12#measure_his_woe_the_length_and_breadth_of_mine...) from a printable 60 to a screenable 24.
+Sometimes we want to use a particular option or combination of options in every call we make to `form`. Or, more likely, in every call we make within a specific scope. For example, we might wish to default to a different [line-breaking algorithm](/pub/2004/02/27/exegesis7.html?page=7#a_man_may_break_a_word_with_you,_sir...) everywhere, or we might want to make repeated use of [a new type of field specifier](/pub/2004/02/27/exegesis7.html?page=13#define,_define,_welleducated_infant.), or we might want to [reset the standard page length](/pub/2004/02/27/exegesis7.html?page=12#measure_his_woe_the_length_and_breadth_of_mine...) from a printable 60 to a screenable 24.
 
 Normally in Perl 6, if we wanted to preset a particular optional argument we'd simply make an assumption:
 
         my &down_form := &form.assuming(:layout«down»);
 
-But, of course, `form` collects all of its arguments in [a single slurpy array](/pub/a/2004/02/27/exegesis7.html?page=2#why,_how_now,_ho!_from_whence_ariseth_this), so it doesn't actually *have* a `$layout` parameter that we can prebind.
+But, of course, `form` collects all of its arguments in [a single slurpy array](/pub/2004/02/27/exegesis7.html?page=2#why,_how_now,_ho!_from_whence_ariseth_this), so it doesn't actually *have* a `$layout` parameter that we can prebind.
 
 Fortunately, the `.assuming` method is smart enough to recognize when it being applied to a subroutine whose arguments are slurped. In such cases, it just prepends any prebound arguments to the resulting subroutine's argument list. That is, the binding of `down_form` shown above is equivalent to:
 
@@ -1937,7 +1937,7 @@ For example, the format in the previous example could be specified imperatively 
 
 Note that the actual width of any field becomes irrelevant if it contains an imperative width. The field will be condensed or expanded to the specified width, with subsequent fields pushed left or right accordingly.
 
-Imperative fields disrupt the WYSIWYG layout of a format, so they're generally only used when the format itself is being generated programmatically. For example, when we were counting down the [top ten reasons not to do one's English Lit homework](/pub/a/2004/02/27/exegesis7.html?page=2#what_a_block_art_thou...), we used a fixed-width `{>}` field to format each number:
+Imperative fields disrupt the WYSIWYG layout of a format, so they're generally only used when the format itself is being generated programmatically. For example, when we were counting down the [top ten reasons not to do one's English Lit homework](/pub/2004/02/27/exegesis7.html?page=2#what_a_block_art_thou...), we used a fixed-width `{>}` field to format each number:
 
         for @reasons.kv -> $n, $reason {
             my $n = @reasons - $index ~ '.';
@@ -2087,7 +2087,7 @@ in which case we'd get:
          2439  head anne.boleyn       0:00.18    0.1%
          2581  dig -short grave       0:01.04    0.0%
 
-That preserves the data, but the results are still ugly, and it also requires some fancy footwork – making the percentage sign part of the field specification, as if it were [a currency marker](/pub/a/2004/02/27/exegesis7.html?page=5#some_tender_money_to_me...) – to make the last field work correctly. In other words: it's a kludge. The sad truth is that sometimes variable-width fields are a better solution.
+That preserves the data, but the results are still ugly, and it also requires some fancy footwork – making the percentage sign part of the field specification, as if it were [a currency marker](/pub/2004/02/27/exegesis7.html?page=5#some_tender_money_to_me...) – to make the last field work correctly. In other words: it's a kludge. The sad truth is that sometimes variable-width fields are a better solution.
 
 So `form` provides them too. Any field specification may include a plus sign (`+`) anywhere between its braces, in which case it specifies an *extensible field*: a field whose width is minimal, rather than absolute. So, in the above example, our call to `form` should actually look like this:
 
@@ -2372,13 +2372,13 @@ To specify a range of heights we can use the `:min` and `:max` suboptions:
 
 This specifies that, no matter how much data is available, the output will be no less than three lines and no more than 20.
 
-Note, however, that the `height` option refers to the height of individual fields, not of entire output pages. we'll see how to control the latter [anon](/pub/a/2004/02/27/exegesis7.html?page=12#measure_his_woe_the_length_and_breadth_of_mine...).
+Note, however, that the `height` option refers to the height of individual fields, not of entire output pages. we'll see how to control the latter [anon](/pub/2004/02/27/exegesis7.html?page=12#measure_his_woe_the_length_and_breadth_of_mine...).
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 7](http://dev.perl.org/perl6/doc/design/syn/S07.html) for the current design information.*
 
 #### <span id="forbear,_and_eat_no_more.">Forbear, and eat no more.</span>
 
-As we saw [earlier](/pub/a/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_their_banks.), a block overflow field (`{VVVVVVVVV}`) has the special property that it only overflows as much as necessary to fill the output lines generated by other block fields. That enabled us to create an overflowing column of text like so:
+As we saw [earlier](/pub/2004/02/27/exegesis7.html?page=6#and_now_at_length_they_overflow_their_banks.), a block overflow field (`{VVVVVVVVV}`) has the special property that it only overflows as much as necessary to fill the output lines generated by other block fields. That enabled us to create an overflowing column of text like so:
 
         print form
             :interleave, <<EOFORMAT,
@@ -2579,7 +2579,7 @@ Many people, of course, prefer to draw the underlines themselves, as the results
 
 #### <span id="they_come_like_sacrifices_in_their_trim...">They come like sacrifices in their trim...</span>
 
-The default [fill-with-spaces behaviour](/pub/a/2004/02/27/exegesis7.html?page=10#he_doth_fill_fields_with_harness...) of fields is useful to preserve the vertical alignment of columns within a formatted text, but it could also potentially increase the size of `form`'s output unnecessarily. For example, the following:
+The default [fill-with-spaces behaviour](/pub/2004/02/27/exegesis7.html?page=10#he_doth_fill_fields_with_harness...) of fields is useful to preserve the vertical alignment of columns within a formatted text, but it could also potentially increase the size of `form`'s output unnecessarily. For example, the following:
 
         print form 
             'To Do:',
@@ -2641,7 +2641,7 @@ All these features are controlled by the the `page` option (or more precisely, b
 
 The `:page{ :length(...) }` suboption determines the number of output lines per page (including headers and footers). Normally, this suboption is set to infinity, which produces that single, arbitrarily long, unbroken page of text. But the suboption can be set to any positive integer value, to cause `form` to generate distinct pages of that many lines each.
 
-The value of the `:page{ :width(...) }` suboption is used to determine the width of [distributive fields](/pub/a/2004/02/27/exegesis7.html?page=9#and_every_one_shall_share...) and in some [page body postprocessors](/pub/a/2004/02/27/exegesis7.html?page=12#do_to_this_body_what_extremes_you_can...). By default, this suboption is set to 78 (columns), but it may be set to any positive integer value.
+The value of the `:page{ :width(...) }` suboption is used to determine the width of [distributive fields](/pub/2004/02/27/exegesis7.html?page=9#and_every_one_shall_share...) and in some [page body postprocessors](/pub/2004/02/27/exegesis7.html?page=12#do_to_this_body_what_extremes_you_can...). By default, this suboption is set to 78 (columns), but it may be set to any positive integer value.
 
 The `:page{ :number(...) }` suboption specifies the current page number. By default it starts at 1, but may be set to any numeric value. This suboption is generally only of use in headers and footers (see below).
 
@@ -3106,7 +3106,7 @@ The `:single` option does exactly the same thing as the `:field` options shown a
 
 ### <span id="these_paper_bullets_of_the_brain...">These paper bullets of the brain...</span>
 
-Bulleted lists of items are a very common feature of reports, but as we saw [earlier](/pub/a/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...) they're surprisingly hard to get right.
+Bulleted lists of items are a very common feature of reports, but as we saw [earlier](/pub/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...) they're surprisingly hard to get right.
 
 Suppose, for example, we want a list of items bulleted by "diamonds":
 
@@ -3180,7 +3180,7 @@ The presence of this `:bullet` option causes `form` to treat the sequence `"<>"`
 
 Or, more simply, if we tell `form` that `"<>"` is a bullet, `form` treats it like a bullet that's attached to the very next field.
 
-So we could finally fix our [Shakespearean roles example](/pub/a/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...), like so:
+So we could finally fix our [Shakespearean roles example](/pub/2004/02/27/exegesis7.html?page=3#therefore,_put_you_in_your_best_array...), like so:
 
         print "The best Shakespearean roles are:\n\n";
 

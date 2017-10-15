@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/2000/10/yapc-europe.html",
-   "tags" : [],
-   "draft" : null,
-   "description" : "YAPC::Europe::London -> This is written for those poor souls who couldn't make it to give them aflavor of the wonderful event they missed. Despite being an ex-Londoner, I got on the wrong tube Friday morning. The train was packed and...",
-   "date" : "2000-10-02T00:00:00-08:00",
-   "image" : null,
    "thumbnail" : null,
+   "tags" : [],
+   "title" : "Report from YAPC::Europe",
+   "image" : null,
+   "categories" : "community",
+   "date" : "2000-10-02T00:00:00-08:00",
    "authors" : [
       "mark-summerfield"
    ],
-   "title" : "Report from YAPC::Europe",
-   "categories" : "Community"
+   "draft" : null,
+   "slug" : "/pub/2000/10/yapc-europe.html",
+   "description" : "YAPC::Europe::London -> This is written for those poor souls who couldn't make it to give them aflavor of the wonderful event they missed. Despite being an ex-Londoner, I got on the wrong tube Friday morning. The train was packed and..."
 }
 
 

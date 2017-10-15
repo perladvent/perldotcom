@@ -1,15 +1,9 @@
 {
-   "title" : "Building a 3D Engine in Perl, Part 2",
-   "authors" : [
-      "geoff-broadwell"
-   ],
-   "categories" : "Games",
    "date" : "2004-12-29T00:00:00-08:00",
    "image" : null,
+   "title" : "Building a 3D Engine in Perl, Part 2",
+   "categories" : "games",
    "thumbnail" : null,
-   "description" : " This article is the second in a series aimed at building a full 3D engine in Perl. The first article, Building a 3D Engine in Perl, covered basic program structure, opening an OpenGL window using SDL, basic projection and...",
-   "draft" : null,
-   "slug" : "/pub/2004/12/29/3d_engine.html",
    "tags" : [
       "geoff-broadwell",
       "opengl-tutorial",
@@ -18,14 +12,20 @@
       "perl-graphics",
       "perl-opengl",
       "perl-sdl"
-   ]
+   ],
+   "slug" : "/pub/2004/12/29/3d_engine.html",
+   "description" : " This article is the second in a series aimed at building a full 3D engine in Perl. The first article, Building a 3D Engine in Perl, covered basic program structure, opening an OpenGL window using SDL, basic projection and...",
+   "authors" : [
+      "geoff-broadwell"
+   ],
+   "draft" : null
 }
 
 
 
-This article is the second in a [series](/pub/au/Broadwell_Geoff) aimed at building a full 3D engine in Perl. The first article, [Building a 3D Engine in Perl](/pub/a/2004/12/01/3d_engine.html), covered basic program structure, opening an OpenGL window using SDL, basic projection and viewing setup, simple object rendering, object transformations, and depth ordering using the OpenGL depth buffer.
+This article is the second in a [series](/authors/geoff-broadwell) aimed at building a full 3D engine in Perl. The first article, [Building a 3D Engine in Perl](/pub/2004/12/01/3d_engine.html), covered basic program structure, opening an OpenGL window using SDL, basic projection and viewing setup, simple object rendering, object transformations, and depth ordering using the OpenGL depth buffer.
 
-*Editor's note: see also the rest of the series, [lighting and movement](/pub/a/2005/02/17/3d_engine.html), and [profiling your application](/pub/a/2005/08/04/3d_engine.html).*
+*Editor's note: see also the rest of the series, [lighting and movement](/pub/2005/02/17/3d_engine.html), and [profiling your application](/pub/2005/08/04/3d_engine.html).*
 
 This time, I'll discuss rotating and animating the view, SDL event and keyboard handling, and compensating for frame rate variations. As a bonus, I'll demonstrate some real-world refactoring, including a conversion from procedural to (weakly) object-oriented code. Before I start, however, there were a couple of issues discovered since the first article went live:
 

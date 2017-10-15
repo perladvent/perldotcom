@@ -1,18 +1,18 @@
 {
-   "tags" : [
-      "plucene-lucene-search"
-   ],
+   "description" : " For the past few months, my former employers and I have been working on a port of the Java Lucene search engine toolkit. On the February 3rd, Plucene was released to the world, implementing almost all of the functionality...",
    "slug" : "/pub/2004/02/19/plucene.html",
    "draft" : null,
-   "description" : " For the past few months, my former employers and I have been working on a port of the Java Lucene search engine toolkit. On the February 3rd, Plucene was released to the world, implementing almost all of the functionality...",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2004_02_19_plucene/111-plucene.gif",
-   "date" : "2004-02-19T00:00:00-08:00",
-   "categories" : "web",
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "Find What You Want with Plucene"
+   "date" : "2004-02-19T00:00:00-08:00",
+   "title" : "Find What You Want with Plucene",
+   "image" : null,
+   "categories" : "web",
+   "thumbnail" : "/images/_pub_2004_02_19_plucene/111-plucene.gif",
+   "tags" : [
+      "plucene-lucene-search"
+   ]
 }
 
 

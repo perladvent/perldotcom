@@ -1,14 +1,15 @@
 {
-   "categories" : "community",
-   "title" : "The Phalanx Project",
+   "slug" : "/pub/2005/01/13/phalanx.html",
+   "description" : "Imagine a city protected by a small army of soldiers. The city's future growth requires a larger force; so a few determined lieutenants go to nearby towns and enlist aid from their police departments. These forces will come to the...",
+   "draft" : null,
    "authors" : [
       "andy-lester"
    ],
-   "image" : null,
-   "thumbnail" : "/images/_pub_2005_01_13_phalanx/111-sure_quality.gif",
    "date" : "2005-01-20T00:00:00-08:00",
-   "description" : "Imagine a city protected by a small army of soldiers. The city's future growth requires a larger force; so a few determined lieutenants go to nearby towns and enlist aid from their police departments. These forces will come to the...",
-   "draft" : null,
+   "image" : null,
+   "title" : "The Phalanx Project",
+   "categories" : "community",
+   "thumbnail" : "/images/_pub_2005_01_13_phalanx/111-sure_quality.gif",
    "tags" : [
       "cpan-tests",
       "hoplies",
@@ -17,8 +18,7 @@
       "perl-testing",
       "phalanx",
       "ponie"
-   ],
-   "slug" : "/pub/2005/01/13/phalanx.html"
+   ]
 }
 
 
@@ -27,7 +27,7 @@ Imagine a city protected by a small army of soldiers. The city's future growth r
 
 This is the Phalanx project, but the city is Perl, our soldiers are automated tests, and the nearby towns are the modules of CPAN.
 
-Flashback to [OSCON 2003](http://conferences.oreillynet.com/os2003/). Larry Wall had just given his [7th annual State of the Onion](/pub/a/2003/07/16/soto2003.html) where he'd announced the [Ponie](http://www.poniecode.org/) project. Ponie is to be Perl 5.10, but running on the new Parrot virtual machine that forms the basis of Perl 6, instead of C.
+Flashback to [OSCON 2003](http://conferences.oreillynet.com/os2003/). Larry Wall had just given his [7th annual State of the Onion](/pub/2003/07/16/soto2003.html) where he'd announced the [Ponie](http://www.poniecode.org/) project. Ponie is to be Perl 5.10, but running on the new Parrot virtual machine that forms the basis of Perl 6, instead of C.
 
 I was talking with Leon Brocard about the massive amount of testing that would be necessary to test a new implementation of Perl. Everything we know, and all our assumptions, would change. How would we know that 2+2=4 all the time? How would we know that object inheritance works? Will XS modules work the way they should? We would need a huge test suite, more than Perl has now, to make sure Ponie really is still Perl 5. The CPAN would make a great source of real-world testing.
 

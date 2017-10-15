@@ -42,7 +42,7 @@ sub preprocess_args {
   $args->{tags} = split_tags($args->{tags});
 
   # categories are always in lowercase
-  $args->{categories} = lc $args->{categories};
+  $args->{categories} = $args->{categories} ? lc $args->{categories} : 'development';
 
   # date to datetime MM/DD/YYYY
   if ($args->{date} && $args->{date} =~ qr{(\d\d)/(\d\d)/(\d\d\d\d)}) {

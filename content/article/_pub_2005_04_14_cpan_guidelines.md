@@ -1,7 +1,11 @@
 {
    "draft" : null,
-   "description" : " When you are planning to release a module to CPAN, one of your first tasks is figure out what OS, Perl version(s), and other environments you will and will not support. Often, the answers will come from what you...",
+   "authors" : [
+      "rob-kinyon"
+   ],
    "slug" : "/pub/2005/04/14/cpan_guidelines.html",
+   "description" : " When you are planning to release a module to CPAN, one of your first tasks is figure out what OS, Perl version(s), and other environments you will and will not support. Often, the answers will come from what you...",
+   "thumbnail" : "/images/_pub_2005_04_14_cpan_guidelines/111-good_mods.gif",
    "tags" : [
       "compatibility",
       "cpan",
@@ -11,14 +15,10 @@
       "perl-porting",
       "writing-open-source-perl-code"
    ],
-   "authors" : [
-      "rob-kinyon"
-   ],
-   "title" : "Building Good CPAN Modules",
-   "categories" : "CPAN",
-   "date" : "2005-04-14T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : "/images/_pub_2005_04_14_cpan_guidelines/111-good_mods.gif"
+   "title" : "Building Good CPAN Modules",
+   "categories" : "cpan",
+   "date" : "2005-04-14T00:00:00-08:00"
 }
 
 
@@ -58,7 +58,7 @@ If you know that your module simply will not run in a certain environment, you s
 
 -   Perl versions/features
 
-    Check `$]` and `%INC` for this. `$]` holds the Perl version and `%INC` contains a list of loaded Perl modules so far. (See the [Threading section](/pub/a/2005/04/14/cpan_guidelines.html?page=2#threading) for an example.) If your module simply cannot be run in Perl before a certain version, make sure you have a `use 5.00#` (where `#` is the version you need) within your module. Additionally, [Module::Build](http://search.cpan.org/perldoc?Module::Build) allows you to specify a minimum Perl version in the `requires` option for the constructor.
+    Check `$]` and `%INC` for this. `$]` holds the Perl version and `%INC` contains a list of loaded Perl modules so far. (See the [Threading section](/pub/2005/04/14/cpan_guidelines.html?page=2#threading) for an example.) If your module simply cannot be run in Perl before a certain version, make sure you have a `use 5.00#` (where `#` is the version you need) within your module. Additionally, [Module::Build](http://search.cpan.org/perldoc?Module::Build) allows you to specify a minimum Perl version in the `requires` option for the constructor.
 
 -   Modules/libraries
 
@@ -189,7 +189,7 @@ If you depend on this counter being coordinated across every invocation of the `
             }
         }
 
-The best description that I've seen of what you need to do to port your application to a threaded works successfully is "[Where Wizards Fear to Tread](/pub/a/2002/06/11/threads.html)" on Perl 5.8 threads.
+The best description that I've seen of what you need to do to port your application to a threaded works successfully is "[Where Wizards Fear to Tread](/pub/2002/06/11/threads.html)" on Perl 5.8 threads.
 
 ##### Unicode
 
@@ -223,7 +223,7 @@ The `mod_perl` folks have an excellent set of documentation as to what's differe
 
 ##### Overloading
 
-It's very easy to create an overloaded class that cannot work with other overloaded classes. For example, if I'm using Overload::Num1 and Overload::Num2, I would expect `$num1 + $num2` to DWIM. Unfortunately, with most overloaded classes written as below, they won't. (For more information as to how this code works, please read [`overload`](http://perldoc.perl.org/overload.html), or the excellent article "[Overloading](/pub/a/2003/07/22/overloading.html).")
+It's very easy to create an overloaded class that cannot work with other overloaded classes. For example, if I'm using Overload::Num1 and Overload::Num2, I would expect `$num1 + $num2` to DWIM. Unfortunately, with most overloaded classes written as below, they won't. (For more information as to how this code works, please read [`overload`](http://perldoc.perl.org/overload.html), or the excellent article "[Overloading](/pub/2003/07/22/overloading.html).")
 
     sub add {
         my ($l, $r, $inv) = @_;

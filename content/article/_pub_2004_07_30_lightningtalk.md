@@ -1,20 +1,20 @@
 {
-   "image" : null,
-   "thumbnail" : "/images/_pub_2004_07_30_lightningtalk/111-talks.gif",
    "date" : "2004-07-30T00:00:00-08:00",
-   "categories" : "Community",
-   "authors" : [
-      "mark-fowler"
-   ],
+   "categories" : "community",
    "title" : "Giving Lightning Talks",
+   "image" : null,
    "tags" : [
       "lightning-talk",
       "oscon",
       "yapc"
    ],
+   "thumbnail" : "/images/_pub_2004_07_30_lightningtalk/111-talks.gif",
+   "description" : " After the keynotes, the most popular sessions at most Perl conferences tend to be the lightning talks. Each session consists of about 10 to 15 lightning talks &mdash; talks typically lasting individually no more than five minutes &mdash; back...",
    "slug" : "/pub/2004/07/30/lightningtalk.html",
-   "draft" : null,
-   "description" : " After the keynotes, the most popular sessions at most Perl conferences tend to be the lightning talks. Each session consists of about 10 to 15 lightning talks &mdash; talks typically lasting individually no more than five minutes &mdash; back..."
+   "authors" : [
+      "mark-fowler"
+   ],
+   "draft" : null
 }
 
 

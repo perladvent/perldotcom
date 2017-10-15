@@ -1,21 +1,21 @@
 {
-   "categories" : "Data",
-   "title" : "Making Dictionaries with Perl",
+   "draft" : null,
    "authors" : [
       "sean-m--burke"
    ],
-   "image" : null,
-   "thumbnail" : "/images/_pub_2004_03_25_dictionaries/111-dictionaries.gif",
-   "date" : "2004-03-25T00:00:00-08:00",
    "description" : " When you woke up this morning, the last thing you are likely to have thought is \"If only I had a dictionary!\" But there are thousands of languages on Earth that many people want to learn, but they can't,...",
-   "draft" : null,
+   "slug" : "/pub/2004/03/25/dictionaries.html",
+   "image" : null,
+   "title" : "Making Dictionaries with Perl",
+   "categories" : "data",
+   "date" : "2004-03-25T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2004_03_25_dictionaries/111-dictionaries.gif",
    "tags" : [
       "dictionaries",
       "languages",
       "linguistics",
       "rtf"
-   ],
-   "slug" : "/pub/2004/03/25/dictionaries.html"
+   ]
 }
 
 

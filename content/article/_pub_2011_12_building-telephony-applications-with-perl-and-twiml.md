@@ -1,15 +1,15 @@
 {
+   "tags" : [],
    "thumbnail" : null,
-   "image" : null,
    "date" : "2011-12-12T06:00:01-08:00",
-   "categories" : "Networking",
+   "categories" : "networking",
+   "image" : null,
    "title" : "Building Telephony Applications with Perl and TwiML",
+   "description" : "Scott Wiersdorf shows how to write a little bit of Perl to build an automated voice mail menu with Twilio's API.",
+   "slug" : "/pub/2011/12/building-telephony-applications-with-perl-and-twiml.html",
    "authors" : [
       "scott-wiersdorf"
    ],
-   "tags" : [],
-   "slug" : "/pub/2011/12/building-telephony-applications-with-perl-and-twiml.html",
-   "description" : "Scott Wiersdorf shows how to write a little bit of Perl to build an automated voice mail menu with Twilio's API.",
    "draft" : null
 }
 

@@ -1,29 +1,29 @@
 {
-   "draft" : null,
-   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
-   "slug" : "/pub/2000/12/begperl4.html",
-   "tags" : [
-      "cgi",
-      "scriptingg",
-      "security",
-      "web"
-   ],
    "authors" : [
       "doug-sheppard"
    ],
+   "draft" : null,
+   "slug" : "/pub/2000/12/begperl4.html",
+   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
    "title" : "Beginners Intro to Perl - Part 4",
+   "image" : null,
    "categories" : "development",
    "date" : "2000-12-06T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null
+   "thumbnail" : null,
+   "tags" : [
+      "cgi",
+      "scripting",
+      "security",
+      "web"
+   ]
 }
 
 
 
 *Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at:*
 
--   [A Beginner's Introduction to Perl 5.10](/pub/a/2008/04/23/a-beginners-introduction-to-perl-510.html)
--   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/a/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
+-   [A Beginner's Introduction to Perl 5.10](/pub/2008/04/23/a-beginners-introduction-to-perl-510.html)
+-   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
 -   [A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html)
 -   [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html)
 
@@ -42,7 +42,7 @@
 •<strong><a href="/pub/2000/11/begperl2.html">Part 2 of this series</a></strong><br />
 •<strong><a href="/pub/2000/11/begperl3.html">Part 3 of this series</a></strong><br />
 •<strong><a href="/pub/2000/12/begperl5.html">Part 5 of this series</a></strong><br />
-•<strong><a href="/pub/a/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
+•<strong><a href="/pub/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
 <br />
 •<a href="#cgi">What is CGI?</a><br />
 •<a href="#cgi_program">A Real CGI Program</a><br />
@@ -92,7 +92,7 @@ Let's write our first real CGI program. Instead of doing something complex, we'l
 
 If you've never used HTML, the pair of &lt;b&gt; and &lt;/b&gt; tags mean "begin bold" and "end bold", respectively, and the &lt;br&gt; tag means "line break." (A good paper reference to HTML is O'Reilly's *HTML & XHTML: The Definitive Guide*, and online, I like [the Web Design Group](http://www.htmlhelp.com/).)
 
-Install this program on your server and do a test run. (If you don't have a Web server of your own, we've put a copy online for you [here](/cgi-bin/backatcha.pl).) Here's a short list of what you do to install a CGI program:
+Install this program on your server and do a test run. (If you don't have a Web server of your own, we've put a copy online for you [here](/media/_pub_2000_12_begperl4/backatcha.pl).) Here's a short list of what you do to install a CGI program:
 
 1.  Make sure the program is placed where your Web server will recognize it as a CGI script. This may be a special `cgi-bin` directory or making sure the program's filename ends in `.pl` or `.cgi`. If you don't know where to place the program, your ISP or sysadmin should.
 2.  Make sure the program can be run by the server. If you are using a Unix system, you may have to give the Web-server user read and execute permission for the program. It's easiest to give these permissions to everybody by using `chmod filename 755`.
@@ -139,7 +139,7 @@ At this point, you should have a working copy of `backatcha.cgi` spitting out bl
     <INPUT TYPE=submit VALUE="Send form">
     lt;/FORM>
 
-Be sure to replace `putyourURLhere` with the actual URL of your copy of `backatcha.cgi`! If you want, you can use the [copy installed here](/cgi-bin/backatcha.pl) at Perl.com.
+Be sure to replace `putyourURLhere` with the actual URL of your copy of `backatcha.cgi`! If you want, you can use the [copy installed here](/media/_pub_2000_12_begperl4/backatcha.pl) at Perl.com.
 
 This is a simple form. It will show a text box where you can enter your favorite color and a "submit" button that sends your information to the server. Load this form in your browser and submit a favorite color. You should see this returned from the server:
 

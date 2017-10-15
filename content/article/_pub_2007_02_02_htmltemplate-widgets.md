@@ -1,14 +1,11 @@
 {
-   "categories" : "Web",
-   "title" : "Advanced HTML::Template: Widgets",
    "authors" : [
       "philipp-janert"
    ],
-   "thumbnail" : "/images/_pub_2007_02_02_htmltemplate-widgets/111-HTML_Frag.gif",
-   "image" : null,
-   "date" : "2007-02-01T00:00:00-08:00",
-   "description" : " My previous article, looked at extending HTML::Template through custom tags and filters. This article looks at ways to manage large, more complex pages, by bundling HTML::Template into something like GUI \"widgets\" (or \"controls\"). Imagine you have a basic page...",
    "draft" : null,
+   "description" : " My previous article, looked at extending HTML::Template through custom tags and filters. This article looks at ways to manage large, more complex pages, by bundling HTML::Template into something like GUI \"widgets\" (or \"controls\"). Imagine you have a basic page...",
+   "slug" : "/pub/2007/02/02/htmltemplate-widgets.html",
+   "thumbnail" : "/images/_pub_2007_02_02_htmltemplate-widgets/111-HTML_Frag.gif",
    "tags" : [
       "html-templating",
       "html-template",
@@ -16,12 +13,15 @@
       "web-templates",
       "widgets"
    ],
-   "slug" : "/pub/2007/02/02/htmltemplate-widgets.html"
+   "title" : "Advanced HTML::Template: Widgets",
+   "image" : null,
+   "categories" : "web",
+   "date" : "2007-02-01T00:00:00-08:00"
 }
 
 
 
-My previous article, looked at [extending `HTML::Template` through custom tags and filters](/pub/a/2006/11/30/html-template-filters.html). This article looks at ways to manage large, more complex pages, by bundling [`HTML::Template`](http://search.cpan.org/perldoc?HTML::Template) into something like GUI "widgets" (or "controls").
+My previous article, looked at [extending `HTML::Template` through custom tags and filters](/pub/2006/11/30/html-template-filters.html). This article looks at ways to manage large, more complex pages, by bundling [`HTML::Template`](http://search.cpan.org/perldoc?HTML::Template) into something like GUI "widgets" (or "controls").
 
 Imagine you have a basic page layout following the standard setup, with a header, a lefthand navbar, and the main body in the bottom right. The header and navbar are the same for all pages of the site, but of course the main body differs from page to page:
 

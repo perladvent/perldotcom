@@ -1,13 +1,14 @@
 {
-   "date" : "2003-09-11T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2003_09_10_bioinformatics/111-chromosome.gif",
-   "image" : null,
+   "slug" : "/pub/2003/09/10/bioinformatics.html",
+   "description" : " James D. Tisdall is the author of the soon-to-be-released Mastering Perl for Bioinformatics. For some time now, the use of Perl in biology has been standard practice. Perl remains the most popular language among biologists for a multitude of...",
    "authors" : [
       "james-d--tisdall"
    ],
+   "draft" : null,
+   "date" : "2003-09-11T00:00:00-08:00",
+   "categories" : "science",
+   "image" : null,
    "title" : "A Chromosome at a Time with Perl, Part 1",
-   "categories" : "Science",
-   "slug" : "/pub/2003/09/10/bioinformatics.html",
    "tags" : [
       "bioinformatics",
       "biological-sequence-data",
@@ -15,8 +16,7 @@
       "perl-for-bioinformatics",
       "tisdall"
    ],
-   "draft" : null,
-   "description" : " James D. Tisdall is the author of the soon-to-be-released Mastering Perl for Bioinformatics. For some time now, the use of Perl in biology has been standard practice. Perl remains the most popular language among biologists for a multitude of..."
+   "thumbnail" : "/images/_pub_2003_09_10_bioinformatics/111-chromosome.gif"
 }
 
 
@@ -59,8 +59,8 @@ And since this is elegant, simple code you've written, you may well make other c
 <tr class="odd">
 <td><div class="secondary">
 <h4 id="more-from-this-author">More from this author</h4>
-<p>• <a href="/pub/a/2001/11/16/perlbio2.html">Parsing Protein Domains with Perl</a><br />
-• <a href="/pub/a/2002/01/02/bioinf.html">Beginning Bioinformatics</a><br />
+<p>• <a href="/pub/2001/11/16/perlbio2.html">Parsing Protein Domains with Perl</a><br />
+• <a href="/pub/2002/01/02/bioinf.html">Beginning Bioinformatics</a><br />
 • <a href="http://www.oreilly.com/news/perlbio_1001.html">Why Biologists Want to Program Computers</a></p>
 </div></td>
 </tr>

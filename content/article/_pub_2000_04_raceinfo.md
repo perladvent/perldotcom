@@ -1,19 +1,19 @@
 {
-   "date" : "2000-05-02T00:00:00-08:00",
-   "image" : null,
    "thumbnail" : null,
-   "title" : "Program Repair Shop and Red Flags",
-   "authors" : [
-      "mark-jason-dominus"
-   ],
-   "categories" : "development",
-   "slug" : "/pub/2000/04/raceinfo.html",
    "tags" : [
       "briandfoy",
       "perl-conference"
    ],
+   "title" : "Program Repair Shop and Red Flags",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2000-05-02T00:00:00-08:00",
+   "draft" : null,
+   "authors" : [
+      "mark-jason-dominus"
+   ],
    "description" : "What's wrong with this picture? -> What's wrong with this picture? Reading the Input Computing Average and Total Times Sort Order Printing the Report Red Flags Get Rid of Array Size Variables Use Compound Data Structures Instead of Variable Families...",
-   "draft" : null
+   "slug" : "/pub/2000/04/raceinfo.html"
 }
 
 

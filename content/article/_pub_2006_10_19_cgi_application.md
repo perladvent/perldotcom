@@ -1,30 +1,30 @@
 {
-   "slug" : "/pub/2006/10/19/cgi_application.html",
+   "image" : null,
+   "title" : "Rapid Website Development with CGI::Application",
+   "categories" : "web",
+   "date" : "2006-10-19T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2006_10_19_cgi_application/111-cgiapps.gif",
    "tags" : [
       "cgi-application",
       "perl-frameworks",
       "perl-web-applications",
       "web-development"
    ],
-   "description" : " This article provides an update on the popular and mature CGI::Application framework for web applications. It assumes a basic understanding of the system, so reviewing the previous Perl.com article about CGI::Application may be helpful background reading. CGI::Application and Catalyst...",
    "draft" : null,
-   "date" : "2006-10-19T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2006_10_19_cgi_application/111-cgiapps.gif",
-   "title" : "Rapid Website Development with CGI::Application",
    "authors" : [
       "mark-stosberg"
    ],
-   "categories" : "web"
+   "description" : " This article provides an update on the popular and mature CGI::Application framework for web applications. It assumes a basic understanding of the system, so reviewing the previous Perl.com article about CGI::Application may be helpful background reading. CGI::Application and Catalyst...",
+   "slug" : "/pub/2006/10/19/cgi_application.html"
 }
 
 
 
-This article provides an update on the popular and mature [CGI::Application](http://www.cgi-app.org/) framework for web applications. It assumes a basic understanding of the system, so reviewing the [previous Perl.com article about CGI::Application](/pub/a/2001/06/05/cgi.html) may be helpful background reading.
+This article provides an update on the popular and mature [CGI::Application](http://www.cgi-app.org/) framework for web applications. It assumes a basic understanding of the system, so reviewing the [previous Perl.com article about CGI::Application](/pub/2001/06/05/cgi.html) may be helpful background reading.
 
 ### CGI::Application and Catalyst Compared
 
-You may recall the [Perl.com article on another MVC web framework, Catalyst](/pub/a/2005/06/02/catalyst.html). First, I want to clear up possible confusion by explaining how the CGI::Application and Catalyst relate.
+You may recall the [Perl.com article on another MVC web framework, Catalyst](/pub/2005/06/02/catalyst.html). First, I want to clear up possible confusion by explaining how the CGI::Application and Catalyst relate.
 
 With the many [plugins available for CGI::Application](http://www.cgi-app.org/?Plugins) and Catalyst, both [frameworks offer many of the same features](http://cgiapp.erlbaum.net/cgi-bin/cgi-app/index.cgi?CatalystCompared).
 

@@ -1,20 +1,20 @@
 {
+   "description" : " As it happens, no matter how much I write about Perl/Tk, there's always something left unsaid. A case in point is the topic of drag and drop, which didn't make it into our book, Mastering Perl/Tk. This article describes...",
    "slug" : "/pub/2001/12/11/perltk.html",
+   "authors" : [
+      "steve-lidie"
+   ],
+   "draft" : null,
+   "date" : "2001-12-11T00:00:00-08:00",
+   "categories" : "graphics",
+   "title" : "A Drag-and-Drop Primer for Perl/Tk",
+   "image" : null,
    "tags" : [
       "drag-drop-tk",
       "perl",
       "perl-tk"
    ],
-   "draft" : null,
-   "description" : " As it happens, no matter how much I write about Perl/Tk, there's always something left unsaid. A case in point is the topic of drag and drop, which didn't make it into our book, Mastering Perl/Tk. This article describes...",
-   "date" : "2001-12-11T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2001_12_11_perltk/111-dragndrop.gif",
-   "authors" : [
-      "steve-lidie"
-   ],
-   "title" : "A Drag-and-Drop Primer for Perl/Tk",
-   "categories" : "Graphics"
+   "thumbnail" : "/images/_pub_2001_12_11_perltk/111-dragndrop.gif"
 }
 
 

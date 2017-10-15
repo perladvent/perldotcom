@@ -1,17 +1,17 @@
 {
-   "date" : "2003-03-07T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2003_03_07_apocalypse6/111-apocalypse6.gif",
-   "image" : null,
-   "title" : "Apocalypse 6",
-   "authors" : [
-      "larry-wall"
-   ],
-   "categories" : "perl-6",
-   "slug" : "/pub/2003/03/07/apocalypse6.html",
    "tags" : [
       "perl-6-apocalypse-subroutines"
    ],
+   "date" : "2003-03-07T00:00:00-08:00",
+   "title" : "Apocalypse 6",
+   "image" : null,
+   "categories" : "perl-6",
+   "slug" : "/pub/2003/03/07/apocalypse6.html",
    "description" : " Editor's Note: this Apocalypse is out of date and remains here for historic reasons. See Synopsis 06 for the latest information. This is the Apocalypse on Subroutines. In Perl culture the term &quot;subroutine&quot; conveys the general notion of calling...",
+   "authors" : [
+      "larry-wall"
+   ],
    "draft" : null
 }
 

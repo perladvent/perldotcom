@@ -1,16 +1,16 @@
 {
-   "date" : "2001-11-28T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2001_11_28_request/111-perlrequest.gif",
-   "image" : null,
+   "tags" : [],
+   "date" : "2001-11-28T00:00:00-08:00",
    "title" : "Request Tracker",
-   "authors" : [
-      "robert-spier"
-   ],
+   "image" : null,
    "categories" : "apps",
    "slug" : "/pub/2001/11/28/request.html",
-   "tags" : [],
    "description" : " If you've ever had to do user support, then you'll be familiar with the following scenario: A question comes in from a user, and you write an e-mail reply. However, by the time you've hit \"send,\" another member of...",
-   "draft" : null
+   "draft" : null,
+   "authors" : [
+      "robert-spier"
+   ]
 }
 
 

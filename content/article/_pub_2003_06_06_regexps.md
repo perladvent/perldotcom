@@ -1,18 +1,18 @@
 {
-   "categories" : "Regular Expressions",
-   "authors" : [
-      "simon-cozens"
-   ],
    "title" : "Regexp Power",
    "image" : null,
-   "thumbnail" : null,
+   "categories" : "regular-expressions",
    "date" : "2003-06-06T00:00:00-08:00",
-   "draft" : null,
-   "description" : " Everyone knows that Perl works particularly well as a text processing language, and that it has a great many tools to help the programmer slice and dice text files. Most people know that Perl's regular expressions are the mainstay...",
+   "thumbnail" : null,
    "tags" : [
       "regexps-regular-expressions"
    ],
-   "slug" : "/pub/2003/06/06/regexps.html"
+   "authors" : [
+      "simon-cozens"
+   ],
+   "draft" : null,
+   "slug" : "/pub/2003/06/06/regexps.html",
+   "description" : " Everyone knows that Perl works particularly well as a text processing language, and that it has a great many tools to help the programmer slice and dice text files. Most people know that Perl's regular expressions are the mainstay..."
 }
 
 

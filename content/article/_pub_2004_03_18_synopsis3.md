@@ -1,20 +1,20 @@
 {
-   "draft" : null,
-   "description" : "Operator Renaming Several operators have been given new names to increase clarity and better Huffman-code the language: -> becomes ., like the rest of the world uses. The string concatenation . becomes ~. Think of it as \"stitching\" the two...",
+   "thumbnail" : "/images/_pub_2004_03_18_synopsis3/111-synopsis3.gif",
    "tags" : [
       "operators",
       "perl-6",
       "synopsis"
    ],
-   "slug" : "/pub/2004/03/18/synopsis3.html",
+   "date" : "2004-03-18T00:00:00-08:00",
+   "image" : null,
+   "title" : "Synopsis 3",
    "categories" : "perl-6",
+   "slug" : "/pub/2004/03/18/synopsis3.html",
+   "description" : "Operator Renaming Several operators have been given new names to increase clarity and better Huffman-code the language: -> becomes ., like the rest of the world uses. The string concatenation . becomes ~. Think of it as \"stitching\" the two...",
    "authors" : [
       "luke-palmer"
    ],
-   "title" : "Synopsis 3",
-   "thumbnail" : "/images/_pub_2004_03_18_synopsis3/111-synopsis3.gif",
-   "image" : null,
-   "date" : "2004-03-18T00:00:00-08:00"
+   "draft" : null
 }
 
 
@@ -139,7 +139,7 @@ Or:
                  <== grep { /^ \d+ $/ }
                  <== @data;
 
-Either form more clearly indicates the flow of data. See [Synopsis 6](/pub/a/2003/04/09/synopsis.html) for more of the (less-than-obvious) details on these two operators.
+Either form more clearly indicates the flow of data. See [Synopsis 6](/pub/2003/04/09/synopsis.html) for more of the (less-than-obvious) details on these two operators.
 
 ### <span id="Invocant_marker">Invocant Marker</span>
 

@@ -41,8 +41,8 @@
 ------------------------------------------------------------------------
 
 Forward to [Embrace Pattern Matching](/doc/FMTEYEWTK/style/slide14.html)
-Back to [Don't Overdo \`?:'](/doc/FMTEYEWTK/stylelide12.html)
-Up to [index](/doc/FMTEYEWTK/stylelide-index.html)
+Back to [Don't Overdo \`?:'](/doc/FMTEYEWTK/style/slide12.html)
+Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen
 All rights reserved.

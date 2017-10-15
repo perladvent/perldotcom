@@ -1,15 +1,4 @@
 {
-   "authors" : [
-      "rob-kinyon"
-   ],
-   "title" : "Making Sense of Subroutines",
-   "categories" : "development",
-   "date" : "2005-11-03T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2005_11_03_subroutines/111-subroutines.gif",
-   "draft" : null,
-   "description" : " Editor's Note: This article has a followup in Advanced Subroutine Techniques. A subroutine (or routine, function, procedure, macro, etc.) is, at its heart, a named chunk of work. It's shorthand that allows you to think about your problem in...",
-   "slug" : "/pub/2005/11/03/subroutines.html",
    "tags" : [
       "functional-perl-programming",
       "perl-fp",
@@ -18,12 +7,23 @@
       "perl-subs",
       "perl-tips",
       "perl-tutorial"
+   ],
+   "thumbnail" : "/images/_pub_2005_11_03_subroutines/111-subroutines.gif",
+   "date" : "2005-11-03T00:00:00-08:00",
+   "categories" : "development",
+   "title" : "Making Sense of Subroutines",
+   "image" : null,
+   "slug" : "/pub/2005/11/03/subroutines.html",
+   "description" : " Editor's Note: This article has a followup in Advanced Subroutine Techniques. A subroutine (or routine, function, procedure, macro, etc.) is, at its heart, a named chunk of work. It's shorthand that allows you to think about your problem in...",
+   "draft" : null,
+   "authors" : [
+      "rob-kinyon"
    ]
 }
 
 
 
-*Editor's Note: This article has a followup in [Advanced Subroutine Techniques](/pub/a/2006/02/23/advanced_subroutines.html).*
+*Editor's Note: This article has a followup in [Advanced Subroutine Techniques](/pub/2006/02/23/advanced_subroutines.html).*
 
 A subroutine (or routine, function, procedure, macro, etc.) is, at its heart, a named chunk of work. It's shorthand that allows you to think about your problem in bigger chunks. Bigger chunks means two things:
 

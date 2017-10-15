@@ -1,16 +1,16 @@
 {
-   "description" : "This week on perl5-porters (15-21 November 1999) Notes XSLoader.pm Threads Shared Interpreter threads (the current model) Cloned interpreter threads (upcoming in 5.005_63) chomp() Threading and Regexes Safe::Hole PREPARE Marshalling Modules Local Address in LWP local()izing select() and chdir() Wandering Environment...",
-   "draft" : null,
    "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991121.html",
-   "tags" : [],
-   "title" : "This Week on p5p 1999/11/21",
+   "description" : "This week on perl5-porters (15-21 November 1999) Notes XSLoader.pm Threads Shared Interpreter threads (the current model) Cloned interpreter threads (upcoming in 5.005_63) chomp() Threading and Regexes Safe::Hole PREPARE Marshalling Modules Local Address in LWP local()izing select() and chdir() Wandering Environment...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "categories" : "community",
-   "date" : "1999-11-21T00:00:00-08:00",
+   "draft" : null,
    "thumbnail" : null,
-   "image" : null
+   "tags" : [],
+   "date" : "1999-11-21T00:00:00-08:00",
+   "title" : "This Week on p5p 1999/11/21",
+   "image" : null,
+   "categories" : "community"
 }
 
 
@@ -137,7 +137,7 @@ David then suggested that someone extract the serializer-interface code from `ML
 
 ### <span id="Local_Address_in_LWP">Local Address in `LWP`</span>
 
-[A few weeks ago](../10/THISWEEK-19991031) Gisle Aas suggested having `IO::Socket` pay attention to the `LocalAddr` environment variable. This week, [Graham explained why this would be a bad idea](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00577.html).
+[A few weeks ago](/pub/1999/10/p5pdigest/THISWEEK-19991031.html) Gisle Aas suggested having `IO::Socket` pay attention to the `LocalAddr` environment variable. This week, [Graham explained why this would be a bad idea](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00577.html).
 
 ### <span id="localizing_select_and_chdir">`local()`izing `select()` and `chdir()`</span>
 

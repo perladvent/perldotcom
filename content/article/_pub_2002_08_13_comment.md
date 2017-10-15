@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "description" : " /* This is a Perl comment */ Commenting in Perl \"But what?\", I hear you think, \"Perl doesn't have multi-line comments!\" That's true. Perl doesn't have multiline comments. But why is that? What is wrong with them? Mostly, it...",
+   "title" : "Acme::Comment",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2002-08-13T00:00:00-08:00",
+   "thumbnail" : null,
    "tags" : [
       "commenting-multiline-comment-acme"
    ],
-   "slug" : "/pub/2002/08/13/comment.html",
-   "categories" : "development",
+   "draft" : null,
    "authors" : [
       "jos-boumans"
    ],
-   "title" : "Acme::Comment",
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2002-08-13T00:00:00-08:00"
+   "description" : " /* This is a Perl comment */ Commenting in Perl \"But what?\", I hear you think, \"Perl doesn't have multi-line comments!\" That's true. Perl doesn't have multiline comments. But why is that? What is wrong with them? Mostly, it...",
+   "slug" : "/pub/2002/08/13/comment.html"
 }
 
 
@@ -25,11 +25,11 @@
 
 "But what?", I hear you think, "Perl doesn't have multi-line comments!"
 
-That's true. Perl doesn't have multiline comments. But why is that? What is wrong with them? Mostly, it is because [Larry doesn't like them](http://www.Perl.com/pub/a/2001/05/03/wall.html#rfc%20005:%20multiline%20comments%20for%20Perl), and reasons that we can have the same effect with POD and Perl doesn't need Yet Another Comment Marker.
+That's true. Perl doesn't have multiline comments. But why is that? What is wrong with them? Mostly, it is because [Larry doesn't like them](http://www.Perl.com/pub/2001/05/03/wall.html#rfc%20005:%20multiline%20comments%20for%20Perl), and reasons that we can have the same effect with POD and Perl doesn't need Yet Another Comment Marker.
 
 To illustrate, here we are at YAPC::America::North 2002, held in beautiful St. Louis. The weather is warm, the sun is shining, the sights are pretty and the beer is cold. In short, it's all things we've come to love and expect of a Perl conference. It's thursday, the conference is winding down and [Siv](http://www.Perlguy.net/images/kernel.jpg) is having a barbeque at his house. So a few of us end up in a car, headed to the barbeque. Uri Guttman is driving -- you know, the [Stem guy](http://stemsystems.com) -- with myself riding shotgun, and Ann and Larry in the backseat.
 
-It's a friendly chatter and from one topic, it goes on to another. And at one point, Perl6 is being discussed. Ann is asking questions about the new operators, techniques and generally how shiny Perl6 will be. And there, Larry explains us new and wonderous things. Some already mentioned in [the apocalypses](http://www.Perl.com/pub/au/Wall_Larry), some still ideas waiting to become firm concepts. And granted it does sound good, very good... even if they are [taking away my beloved arrow operator](http://www.Perl.com/pub/a/2001/05/03/wall.html#rfc%20009:%20highlander%20variable%20types). Then, a question comes to mind, and I ask: "So Larry, tell me, does Perl 6 have multiline comments?"
+It's a friendly chatter and from one topic, it goes on to another. And at one point, Perl6 is being discussed. Ann is asking questions about the new operators, techniques and generally how shiny Perl6 will be. And there, Larry explains us new and wonderous things. Some already mentioned in [the apocalypses](http://www.Perl.com/authors/larry-wall), some still ideas waiting to become firm concepts. And granted it does sound good, very good... even if they are [taking away my beloved arrow operator](http://www.Perl.com/pub/2001/05/03/wall.html#rfc%20009:%20highlander%20variable%20types). Then, a question comes to mind, and I ask: "So Larry, tell me, does Perl 6 have multiline comments?"
 
 All I hear from the backseat is some grumbling and the 2 words: "use POD!";
 
@@ -138,7 +138,7 @@ Below are 5 styles of doing multi- or single-line comments in a language that `A
 -   A single line comment is indicated by preceding it with: `DO NOTE      THAT`
 -   `\/\/` is the way to do a one line comment in this language
 
-Contestants who answered all questions correct won a free subscription to the [Perl beginners mailing list](/pub/a/2001/05/29/tides.htm) at http://learn.perl.org, where they can share their knowledge with others!
+Contestants who answered all questions correct won a free subscription to the [Perl beginners mailing list](/pub/2001/05/29/tides.html) at http://learn.perl.org, where they can share their knowledge with others!
 
 Also, did you know, there were programming languages called: Hugo, Joy, Elastic, Clean and Parrot?
 

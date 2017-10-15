@@ -1,15 +1,15 @@
 {
-   "draft" : null,
    "description" : " Not too long ago, despite a relative dearth of free tuits, I decided that I had put off my investigation of mod_perl 2.0 for too long - it was time to really start kicking the tires and tinkering with...",
    "slug" : "/pub/2003/04/17/filters.html",
-   "tags" : [],
+   "draft" : null,
    "authors" : [
       "geoffrey-young"
    ],
-   "title" : "Filters in Apache 2.0",
-   "categories" : "web",
-   "date" : "2003-04-17T00:00:00-08:00",
+   "tags" : [],
    "thumbnail" : null,
+   "date" : "2003-04-17T00:00:00-08:00",
+   "categories" : "web",
+   "title" : "Filters in Apache 2.0",
    "image" : null
 }
 
@@ -88,7 +88,7 @@ As with Apache 1.3, mod\_cgi is still enabled the same way - in our case via the
 
 With the generic Apache bits out of the way, we can move on to the mod\_perl part, which isn't all that complex. While the `PerlSetVar` and `PerlAddVar` directives are exactly the same as they were in mod\_perl 1.0, mod\_perl 2.0 introduces a new directive - `PerlOutputFilterHandler` - which specifies the Perl output filter for the request. In our sample `httpd.conf`, the `Apache::Clean` output filter will be added after mod\_include, which inserts SSI processing after mod\_cgi. The really cool part about filters is that everything happens without any tricks or magic - getting all these independent modules to work in harmony in creating the server response is all perfectly normal, which is a huge improvement over Apache 1.3.
 
-In the interests of safety, one thing that you should note about our sample configuration is that it does not include the `entities` option. Because we're cleaning dynamic content, reducing entity tags (such as changing `&quot;` to `"`) would inadvertently remove any protection against Cross Site Scripting introduced by the generating script. For more information about Cross Site Scripting and how to protect against it, a good overview is provided in [this `perl.com` article](/pub/a/2002/02/20/css.html).
+In the interests of safety, one thing that you should note about our sample configuration is that it does not include the `entities` option. Because we're cleaning dynamic content, reducing entity tags (such as changing `&quot;` to `"`) would inadvertently remove any protection against Cross Site Scripting introduced by the generating script. For more information about Cross Site Scripting and how to protect against it, a good overview is provided in [this `perl.com` article](/pub/2002/02/20/css.html).
 
 ### Introducing mod\_perl 2.0
 

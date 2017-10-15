@@ -1,5 +1,5 @@
 {
-   "slug" : "/pub/2011/01/visualizing-music-with-sdl-and-perl.html",
+   "thumbnail" : null,
    "tags" : [
       "graphics",
       "music",
@@ -7,16 +7,16 @@
       "perl-5",
       "sdl"
    ],
-   "description" : "In this edited excerpt from the SDL Perl manual, lead developer Kartik\nThakore walks through a non-game application of SDL and Perl, building a\nmusic player with visualizations in just a few lines of code.",
-   "draft" : null,
    "date" : "2011-01-24T06:00:01-08:00",
    "image" : null,
-   "thumbnail" : null,
    "title" : "Visualizing Music with SDL and Perl",
+   "categories" : "graphics",
+   "slug" : "/pub/2011/01/visualizing-music-with-sdl-and-perl.html",
+   "description" : "In this edited excerpt from the SDL Perl manual, lead developer Kartik\nThakore walks through a non-game application of SDL and Perl, building a\nmusic player with visualizations in just a few lines of code.",
    "authors" : [
       "kartik-thakore"
    ],
-   "categories" : "Graphics"
+   "draft" : null
 }
 
 

@@ -1,18 +1,18 @@
 {
-   "draft" : null,
-   "description" : " It's easy to take hashes for granted in Perl. They are simple, fast, and they usually &quot;just work,&quot; so people never need to know or care about how they are implemented. Sometimes, though, it's interesting and rewarding to look...",
+   "title" : "How Hashes Really Work",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2002-10-01T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2002_10_01_hashes/111-hashes.gif",
    "tags" : [
       "hashes-hash"
    ],
-   "slug" : "/pub/2002/10/01/hashes.html",
-   "categories" : "development",
+   "draft" : null,
    "authors" : [
       "abhijit-menon-sen"
    ],
-   "title" : "How Hashes Really Work",
-   "thumbnail" : "/images/_pub_2002_10_01_hashes/111-hashes.gif",
-   "image" : null,
-   "date" : "2002-10-01T00:00:00-08:00"
+   "slug" : "/pub/2002/10/01/hashes.html",
+   "description" : " It's easy to take hashes for granted in Perl. They are simple, fast, and they usually &quot;just work,&quot; so people never need to know or care about how they are implemented. Sometimes, though, it's interesting and rewarding to look..."
 }
 
 

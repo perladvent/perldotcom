@@ -1,26 +1,26 @@
 {
-   "title" : "Using Perl to Enable the Disabled",
+   "slug" : "/pub/2003/08/28/pvoice.html",
+   "description" : " We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user...",
+   "draft" : null,
    "authors" : [
       "jouke-visser"
    ],
-   "categories" : "community",
-   "date" : "2003-08-23T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2003_08_28_pvoice/111-pvoice.gif",
-   "description" : " We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user...",
-   "draft" : null,
-   "slug" : "/pub/2003/08/28/pvoice.html",
    "tags" : [
       "disabled-speech",
       "jouke-visser",
       "perl",
       "pvoice"
-   ]
+   ],
+   "thumbnail" : "/images/_pub_2003_08_28_pvoice/111-pvoice.gif",
+   "date" : "2003-08-23T00:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
+   "title" : "Using Perl to Enable the Disabled"
 }
 
 
 
-*We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user interfaces (GUIs). And as far as I know, only two people in this world use Perl to make life easier for the disabled: [Jon Bjornstad](/pub/a/2001/08/27/bjornstad.html) and I. Some people think the way we use Perl is something special, but my story will show you that I just did what any other father, capable of writing software, would do for his child.*
+*We use Perl for all kinds of things. Web development, data munging, system administration, even bioinformatics; most of us have used Perl for one of these situations. A few people use Perl for building end-user applications with graphical user interfaces (GUIs). And as far as I know, only two people in this world use Perl to make life easier for the disabled: [Jon Bjornstad](/pub/2001/08/27/bjornstad.html) and I. Some people think the way we use Perl is something special, but my story will show you that I just did what any other father, capable of writing software, would do for his child.*
 
 ### The Past
 

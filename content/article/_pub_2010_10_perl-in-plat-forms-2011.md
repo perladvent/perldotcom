@@ -1,16 +1,16 @@
 {
+   "date" : "2010-10-29T14:25:51-08:00",
+   "image" : null,
+   "title" : "Perl in Plat_Forms 2011",
+   "categories" : "community",
+   "thumbnail" : null,
    "tags" : [],
+   "description" : "Thanks to Lars Dɪᴇᴄᴋᴏᴡ for sending along this notice about the Plat_Forms 2011 web development contest. Unlike other comparisons of programming languages (such as the great unmaintainable speed-tweakers micromeasurement contest and This Is Odiously Bad Empiricism), Plat_Forms features real teams...",
    "slug" : "/pub/2010/10/perl-in-plat-forms-2011.html",
    "draft" : null,
-   "description" : "Thanks to Lars Dɪᴇᴄᴋᴏᴡ for sending along this notice about the Plat_Forms 2011 web development contest. Unlike other comparisons of programming languages (such as the great unmaintainable speed-tweakers micromeasurement contest and This Is Odiously Bad Empiricism), Plat_Forms features real teams...",
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2010-10-29T14:25:51-08:00",
-   "categories" : "Community",
    "authors" : [
       "chromatic"
-   ],
-   "title" : "Perl in Plat_Forms 2011"
+   ]
 }
 
 

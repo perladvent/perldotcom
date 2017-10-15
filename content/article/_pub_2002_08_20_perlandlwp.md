@@ -1,21 +1,21 @@
 {
+   "description" : " Sean M. Burke is the author of Perl&nbsp;&amp;&nbsp;LWP Introduction LWP (short for \"Library for WWW in Perl\") is a popular group of Perl modules for accessing data on the Web. Like most Perl module-distributions, each of LWP's component modules...",
    "slug" : "/pub/2002/08/20/perlandlwp.html",
+   "authors" : [
+      "sean-m--burke"
+   ],
+   "draft" : null,
+   "thumbnail" : null,
    "tags" : [
       "library-for-www-in-perl",
       "lwp",
       "perl",
       "perl-and-lwp"
    ],
-   "description" : " Sean M. Burke is the author of Perl&nbsp;&amp;&nbsp;LWP Introduction LWP (short for \"Library for WWW in Perl\") is a popular group of Perl modules for accessing data on the Web. Like most Perl module-distributions, each of LWP's component modules...",
-   "draft" : null,
    "date" : "2002-08-20T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : null,
    "title" : "Web Basics with LWP",
-   "authors" : [
-      "sean-m--burke"
-   ],
-   "categories" : "Web"
+   "categories" : "web"
 }
 
 

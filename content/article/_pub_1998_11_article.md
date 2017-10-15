@@ -1,19 +1,19 @@
 {
-   "slug" : "/pub/1998/11/article.html",
+   "date" : "1998-11-17T00:00:00-08:00",
+   "image" : null,
+   "title" : "A Zero Cost Solution",
+   "categories" : "windows",
+   "thumbnail" : null,
    "tags" : [
       "task-management-system",
       "win32"
    ],
+   "slug" : "/pub/1998/11/article.html",
    "description" : " Creating a Task Tracking System For $0 in Licensing Fees, Hardware, and Software Costs CONEXANT (formerly Rockwell Semiconductor Systems) Supply Chain Management Planning and Execution Systems needed a way to keep track of in-house tasks. When associate departments requested...",
    "draft" : null,
-   "date" : "1998-11-17T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "title" : "A Zero Cost Solution",
    "authors" : [
       "sam-schulte"
-   ],
-   "categories" : "Windows"
+   ]
 }
 
 
@@ -71,4 +71,4 @@ And finally there is a Show All function, returning all records.
 <img src="/images/_pub_1998_11_article/showall.gif" alt="Show all screen" width="450" height="338" />
 **Show All screen**
 
-The program is currently running on [Gurusamy Sarathy's 5.004\_02 Win32 binary distribution](/CPAN-local/ports/win32/Standard/x86/) on a NT 4.0 server, and works great! It was fun to write, and I suspect I'll be fiddling with it, adding capabilties as the users request them, for some time to come. Big thanks to all the Perl community for helping to develop such a great tool for rapid application development, a tool easily learned, and very forgiving to us Perl newbies!
+The program is currently running on Gurusamy Sarathy's 5.004\_02 Win32 binary distribution on a NT 4.0 server, and works great! It was fun to write, and I suspect I'll be fiddling with it, adding capabilties as the users request them, for some time to come. Big thanks to all the Perl community for helping to develop such a great tool for rapid application development, a tool easily learned, and very forgiving to us Perl newbies!

@@ -1,20 +1,20 @@
 {
-   "description" : " London.pm technical meetings are always inspiring events with top notch speakers. At our most recent gathering Richard Clamp and Mark Fowler gave us \"Wax::On, Wax::Off - how to become a Perl sensei\"; Paul Mison showed us how to make...",
-   "draft" : null,
-   "slug" : "/pub/2001/10/23/damians.html",
+   "date" : "2001-10-23T00:00:00-08:00",
+   "categories" : "perl-6",
+   "title" : "Perl 6 : Not Just For Damians",
+   "image" : null,
    "tags" : [
       "damian-conway",
       "larry-wall",
       "perl-6"
    ],
-   "title" : "Perl 6 : Not Just For Damians",
+   "thumbnail" : "/images/_pub_2001_10_23_damians/111-damian.jpg",
+   "description" : " London.pm technical meetings are always inspiring events with top notch speakers. At our most recent gathering Richard Clamp and Mark Fowler gave us \"Wax::On, Wax::Off - how to become a Perl sensei\"; Paul Mison showed us how to make...",
+   "slug" : "/pub/2001/10/23/damians.html",
+   "draft" : null,
    "authors" : [
       "piers-cawley"
-   ],
-   "categories" : "perl-6",
-   "date" : "2001-10-23T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2001_10_23_damians/111-damian.jpg",
-   "image" : null
+   ]
 }
 
 
@@ -29,7 +29,7 @@ The reception his heroic effort received was... low key. Everyone was pleased to
 
 And then we all went for beer and/or Chinese food.
 
-Fast forward to last weekend. The Apocalypse was [up on the website](/pub/a/2001/10/02/apocalypse3.html) and Damian had just published his Exegesis when Simon Wistow (London.pm's official scapegoat) warned the mailing list that he had:
+Fast forward to last weekend. The Apocalypse was [up on the website](/pub/2001/10/02/apocalypse3.html) and Damian had just published his Exegesis when Simon Wistow (London.pm's official scapegoat) warned the mailing list that he had:
 
 > ... an impending sense of doom about Perl 6. The latest Apocalypse/Exegesis fill me with fear rather than wonder. I've got a horrible feeling that Perl 6 is trying to do too much at once.
 
@@ -85,7 +85,7 @@ I don't know about you, but closures are old friends now; another tool that gets
 
 Yeah, and Perl 5 doesn't give us anything that a Universal Turing Machine, Intercal, or Python don't. We use it because it 'fits our brains'. The Perl 6 redesign is all about improving that fit.
 
-### <span id="apocalypse 3 is mostly mere syntactic sugar">"</span>[Apocalypse 3](/pub/a/2001/10/02/apocalypse3.html) is mostly mere syntactic sugar"
+### <span id="apocalypse 3 is mostly mere syntactic sugar">"</span>[Apocalypse 3](/pub/2001/10/02/apocalypse3.html) is mostly mere syntactic sugar"
 
 You say that like it's a *bad* thing. Perl's creed has always been to make the easy things easy and the hard things possible. In many ways, Perl 6 is going further than that: making hard things easy. And Apocalypse 3 continues this trend.
 
@@ -324,9 +324,9 @@ But even if that particular magic wand never appears, Perl 6 is still going to g
 </tr>
 <tr class="even">
 <td><p>Related Articles</p>
-<p>• <a href="/pub/a/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
+<p>• <a href="/pub/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
 <br />
-• <a href="/pub/a/2001/10/03/exegesis3.html">Exegesis 3</a></p></td>
+• <a href="/pub/2001/10/03/exegesis3.html">Exegesis 3</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>

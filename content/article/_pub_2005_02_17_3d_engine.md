@@ -1,7 +1,11 @@
 {
    "description" : " This article is the third in a series aimed at building a full 3D engine in Perl. The first article started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The...",
-   "draft" : null,
    "slug" : "/pub/2005/02/17/3d_engine.html",
+   "authors" : [
+      "geoff-broadwell"
+   ],
+   "draft" : null,
+   "thumbnail" : null,
    "tags" : [
       "opengl-lighting",
       "opengl-tutorial",
@@ -12,21 +16,17 @@
       "perl-opengl",
       "perl-sdl"
    ],
-   "title" : "Building a 3D Engine in Perl, Part 3",
-   "authors" : [
-      "geoff-broadwell"
-   ],
-   "categories" : "Games",
    "date" : "2005-02-17T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null
+   "image" : null,
+   "title" : "Building a 3D Engine in Perl, Part 3",
+   "categories" : "games"
 }
 
 
 
-This article is the third in a series aimed at [building a full 3D engine in Perl](/pub/au/Broadwell_Geoff). The [first article](/pub/a/2004/12/01/3d_engine.html) started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The [second article](/pub/a/2004/12/29/3d_engine.html) followed with a discussion of time, view animation, SDL events, keyboard handling, and a nice chunk of refactoring.
+This article is the third in a series aimed at [building a full 3D engine in Perl](/authors/geoff-broadwell). The [first article](/pub/2004/12/01/3d_engine.html) started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The [second article](/pub/2004/12/29/3d_engine.html) followed with a discussion of time, view animation, SDL events, keyboard handling, and a nice chunk of refactoring.
 
-*Editor's note: see also the next article in the series, [profiling your application](/pub/a/2005/08/04/3d_engine.html).*
+*Editor's note: see also the next article in the series, [profiling your application](/pub/2005/08/04/3d_engine.html).*
 
 Later in this article, I'll discuss movement of the view position, continue the refactoring work by cleaning up `draw_view`, and begin to improve the look of our scene using OpenGL lighting and materials. Before I cover that, your feedback to the previous articles has included a couple of common requests: screenshots and help with porting issues. If you're having problems running SDL\_Perl and the [sample code](/media/_pub_2005_02_17_3d_engine/perl_opengl_3_examples.tar.gz) from these articles on your system, or might be able to help the Mac OS X and Win32 readers, take a look at the next section. Otherwise, skip down to the [Screenshots](#Screenshots) section, where the main article begins.
 
@@ -38,7 +38,7 @@ Some versions of SDL\_Perl require that the program load SDL::Constants to recog
 
 #### FreeBSD
 
-See the suggestions at the beginning of the [second article](/pub/a/2004/12/29/3d_engine.html).
+See the suggestions at the beginning of the [second article](/pub/2004/12/29/3d_engine.html).
 
 #### Mac OS X
 
@@ -46,7 +46,7 @@ I spent some time research the porting issues on Mac OS X but am as yet unable t
 
 #### Slackware
 
-According to comments by Federico (`ironfede`) in last month's [article discussion](/pub/a/2004/12/29/3d_engine.html?page=last#thread), Slackware ships with a version of SDL\_Perl that requires SDL::Constants. This is not an issue for the current version of the sample code, which I fixed as mentioned above in the [General](#General) issues paragraph.
+According to comments by Federico (`ironfede`) in last month's [article discussion](/pub/2004/12/29/3d_engine.html?page=last#thread), Slackware ships with a version of SDL\_Perl that requires SDL::Constants. This is not an issue for the current version of the sample code, which I fixed as mentioned above in the [General](#General) issues paragraph.
 
 #### Win32
 

@@ -1,16 +1,16 @@
 {
    "description" : " Notes Meta-Information 5.005_63 Released Development Continues on Ilya's Patches Regex Optimizations PREPARE XSLoader Change to xsubpp Path Location New Improved File::Find DB_File Locking Technique use Parameters in XS Module Initializations next in XS-invoked Perl subroutines -Dp improvement Log::Agent Getopt::Long...",
-   "draft" : null,
-   "tags" : [],
    "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991212.html",
-   "categories" : "community",
-   "title" : "This Week on p5p 1999/12/12",
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
+   "date" : "1999-12-12T00:00:00-08:00",
+   "title" : "This Week on p5p 1999/12/12",
    "image" : null,
+   "categories" : "community",
    "thumbnail" : null,
-   "date" : "1999-12-12T00:00:00-08:00"
+   "tags" : []
 }
 
 
@@ -42,8 +42,6 @@
 This report covers the week of the release of 5.005\_63, so traffic suddenly surged. Catching up by Sunday now looks unlikely, but I am getting closer.
 
 #### <span id="Meta_Information_">Meta-Information</span>
-
-The most recent report will always be available at [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

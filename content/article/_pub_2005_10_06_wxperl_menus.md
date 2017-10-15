@@ -1,12 +1,4 @@
 {
-   "thumbnail" : "/images/_pub_2005_10_06_wxperl_menus/111-gui.gif",
-   "image" : null,
-   "date" : "2005-10-06T00:00:00-08:00",
-   "categories" : "Graphics",
-   "authors" : [
-      "roberto-alamos"
-   ],
-   "title" : "Making Menus with wxPerl",
    "tags" : [
       "perl-gui",
       "perl-gui-programming",
@@ -15,14 +7,22 @@
       "wxperl",
       "wxwidgets"
    ],
-   "slug" : "/pub/2005/10/06/wxperl_menus.html",
+   "thumbnail" : "/images/_pub_2005_10_06_wxperl_menus/111-gui.gif",
+   "categories" : "graphics",
+   "image" : null,
+   "title" : "Making Menus with wxPerl",
+   "date" : "2005-10-06T00:00:00-08:00",
+   "authors" : [
+      "roberto-alamos"
+   ],
    "draft" : null,
+   "slug" : "/pub/2005/10/06/wxperl_menus.html",
    "description" : " In a previous article about wxPerl published on Perl.com, Jouke Visser taught the very basics of wxPerl programming. In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover..."
 }
 
 
 
-In a previous article about wxPerl published on Perl.com, Jouke Visser taught [the very basics of wxPerl programming](/pub/a/2001/09/12/wxtutorial1.html). In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover the creation, editing, and erasure of menus with the [Wx::Menu](http://search.cpan.org/perldoc?Wx::Menu) and Wx::MenuBar modules, and also will show examples of their use.
+In a previous article about wxPerl published on Perl.com, Jouke Visser taught [the very basics of wxPerl programming](/pub/2001/09/12/wxtutorial1.html). In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover the creation, editing, and erasure of menus with the [Wx::Menu](http://search.cpan.org/perldoc?Wx::Menu) and Wx::MenuBar modules, and also will show examples of their use.
 
 ### Conventions
 
@@ -555,5 +555,5 @@ I have covered almost all of the available methods in Wx::Menu and Wx::MenuBar. 
 
 -   [WxMenu tutorial](http://www.wxwidgets.org/manuals/2.4.2/wx262.htm) and [WxMenuBar tutorial](http://www.wxwidgets.org/manuals/2.4.2/wx263.htm) by Julian Smart, Robert Roebling, Vadim Zeitlin, Robin Dunn, et al.
 -   "[Adding a Menu Bar](http://www.bzzt.net/~wxwidgets/icpp_wx2.html#menubar)," by David Beech.
--   "[wxPerl: Another GUI for Perl](/pub/a/2001/09/12/wxtutorial1.html)," by Jouke Visser.
+-   "[wxPerl: Another GUI for Perl](/pub/2001/09/12/wxtutorial1.html)," by Jouke Visser.
 

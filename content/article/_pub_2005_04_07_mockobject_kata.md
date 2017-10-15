@@ -1,14 +1,8 @@
 {
-   "categories" : "testing",
-   "title" : "Perl Code Kata: Mocking Objects",
-   "authors" : [
-      "stevan-little"
-   ],
-   "image" : null,
-   "thumbnail" : null,
    "date" : "2005-04-07T00:00:00-08:00",
-   "description" : " The last Perl Code Kata was on DBD::Mock, a mock DBI driver which is useful for testing Perl DBI applications. This Kata delves once again into the world of mock objects, this time using the more general Test::MockObject module....",
-   "draft" : null,
+   "categories" : "testing",
+   "image" : null,
+   "title" : "Perl Code Kata: Mocking Objects",
    "tags" : [
       "mock-objects",
       "perl-code-kata",
@@ -17,12 +11,18 @@
       "perl-testing",
       "test-mockobject"
    ],
-   "slug" : "/pub/2005/04/07/mockobject_kata.html"
+   "thumbnail" : null,
+   "slug" : "/pub/2005/04/07/mockobject_kata.html",
+   "description" : " The last Perl Code Kata was on DBD::Mock, a mock DBI driver which is useful for testing Perl DBI applications. This Kata delves once again into the world of mock objects, this time using the more general Test::MockObject module....",
+   "draft" : null,
+   "authors" : [
+      "stevan-little"
+   ]
 }
 
 
 
-The last Perl Code Kata was on [DBD::Mock](http://search.cpan.org/perldoc?DBD::Mock), a mock DBI driver which is useful for [testing Perl DBI applications](/pub/a/2005/02/10/database_kata.html). This Kata delves once again into the world of mock objects, this time using the more general [Test::MockObject](http://search.cpan.org/perldoc?Test::MockObject) module.
+The last Perl Code Kata was on [DBD::Mock](http://search.cpan.org/perldoc?DBD::Mock), a mock DBI driver which is useful for [testing Perl DBI applications](/pub/2005/02/10/database_kata.html). This Kata delves once again into the world of mock objects, this time using the more general [Test::MockObject](http://search.cpan.org/perldoc?Test::MockObject) module.
 
 ### What are Mock Objects?
 

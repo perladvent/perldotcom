@@ -1,16 +1,16 @@
 {
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2012-04-24T06:00:01-08:00",
-   "categories" : "unicode",
+   "slug" : "/pub/2012/04/perlunicookbook-decode-argv-as-utf8.html",
+   "description" : "℞ 13: Decode program arguments as utf8 While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. The command-line arguments to your programs, available through @ARGV, may...",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "title" : "Perl Unicode Cookbook: Decode @ARGV as UTF-8",
+   "thumbnail" : null,
    "tags" : [],
-   "slug" : "/pub/2012/04/perlunicookbook-decode-argv-as-utf8.html",
-   "draft" : null,
-   "description" : "℞ 13: Decode program arguments as utf8 While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. The command-line arguments to your programs, available through @ARGV, may..."
+   "date" : "2012-04-24T06:00:01-08:00",
+   "image" : null,
+   "title" : "Perl Unicode Cookbook: Decode @ARGV as UTF-8",
+   "categories" : "unicode"
 }
 
 

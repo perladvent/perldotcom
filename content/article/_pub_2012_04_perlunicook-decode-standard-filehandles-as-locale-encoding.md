@@ -1,16 +1,16 @@
 {
-   "description" : "℞ 16: Declare STD{IN,OUT,ERR} to be in locale encoding Always convert to and from your desired encoding at the edges of your programs. This includes the standard filehandles STDIN, STDOUT, and STDERR. While it may be most common for modern...",
-   "draft" : null,
-   "slug" : "/pub/2012/04/perlunicook-decode-standard-filehandles-as-locale-encoding.html",
-   "tags" : [],
-   "title" : "Perl Unicode Cookbook: Decode Standard Filehandles as Locale Encoding",
    "authors" : [
       "tom-christiansen"
    ],
+   "draft" : null,
+   "slug" : "/pub/2012/04/perlunicook-decode-standard-filehandles-as-locale-encoding.html",
+   "description" : "℞ 16: Declare STD{IN,OUT,ERR} to be in locale encoding Always convert to and from your desired encoding at the edges of your programs. This includes the standard filehandles STDIN, STDOUT, and STDERR. While it may be most common for modern...",
    "categories" : "unicode",
+   "title" : "Perl Unicode Cookbook: Decode Standard Filehandles as Locale Encoding",
+   "image" : null,
    "date" : "2012-04-30T06:00:01-08:00",
-   "thumbnail" : null,
-   "image" : null
+   "tags" : [],
+   "thumbnail" : null
 }
 
 

@@ -1,15 +1,15 @@
 {
+   "title" : "This Week on p5p 2001/05/27",
+   "image" : null,
+   "categories" : "community",
    "date" : "2001-05-27T00:00:00-08:00",
    "thumbnail" : null,
-   "image" : null,
+   "tags" : [],
+   "draft" : null,
    "authors" : [
       "leon-brocard"
    ],
-   "title" : "This Week on p5p 2001/05/27",
-   "categories" : "community",
    "slug" : "/pub/2001/05/p5pdigest/THISWEEK-20010527.html",
-   "tags" : [],
-   "draft" : null,
    "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl5-porters-digest-subscribe@netthink.co.uk. Please send corrections and additions to perl-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. Changes and additions to the perl5-porters..."
 }
 

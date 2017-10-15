@@ -1,6 +1,12 @@
 {
-   "description" : " by Mike Friedman Good software design principles tell us that we should work to separate unrelated concerns. For example, the popular Model-View-Controller (MVC) pattern is common in web application designs. In MVC, separate modular components form a model, which...",
+   "authors" : [
+      "shlomi-fish",
+      "brian-d-foy",
+      "bob-free",
+      "mike-friedman"
+   ],
    "draft" : null,
+   "description" : " by Mike Friedman Good software design principles tell us that we should work to separate unrelated concerns. For example, the popular Model-View-Controller (MVC) pattern is common in web application designs. In MVC, separate modular components form a model, which...",
    "slug" : "/pub/2007/04/12/lightning-four.html",
    "tags" : [
       "aop",
@@ -12,17 +18,11 @@
       "test-counts",
       "test-count"
    ],
-   "title" : "Lightning Strikes Four Times",
-   "authors" : [
-      "shlomi-fish",
-      "brian-d-foy",
-      "bob-free",
-      "mike-friedman"
-   ],
-   "categories" : "development",
-   "date" : "2007-04-12T00:00:00-08:00",
    "thumbnail" : null,
-   "image" : null
+   "categories" : "development",
+   "image" : null,
+   "title" : "Lightning Strikes Four Times",
+   "date" : "2007-04-12T00:00:00-08:00"
 }
 
 

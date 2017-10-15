@@ -1,22 +1,22 @@
 {
+   "draft" : null,
+   "authors" : [
+      "robert-pratte"
+   ],
    "slug" : "/pub/2005/12/15/perl_prolog.html",
+   "description" : " Computing languages can be addictive; developers sometimes blame themselves for perceived inadequacies, making apologies for them. That is the case, at least, when one defends his or her language of choice against the criticism of another language's devotee. Regardless,...",
+   "title" : "Logic Programming with Perl and Prolog",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2005-12-15T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2005_12_15_perl_prolog/111-logic.gif",
    "tags" : [
       "ai-prolog",
       "graphviz",
       "perl",
       "perl-logic-programming",
       "prolog"
-   ],
-   "draft" : null,
-   "description" : " Computing languages can be addictive; developers sometimes blame themselves for perceived inadequacies, making apologies for them. That is the case, at least, when one defends his or her language of choice against the criticism of another language's devotee. Regardless,...",
-   "date" : "2005-12-15T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2005_12_15_perl_prolog/111-logic.gif",
-   "image" : null,
-   "authors" : [
-      "robert-pratte"
-   ],
-   "title" : "Logic Programming with Perl and Prolog",
-   "categories" : "development"
+   ]
 }
 
 
@@ -71,7 +71,7 @@ At this point, however, I am mostly interested in accessing these rules from Per
 
     my $prologDB = AI::Prolog->new( $prologRules );
 
-Now that I have loaded my Prolog database, I need to feed it some more information. I need to take my data, in Dot format, and translate it into something that my Prolog interpreter will understand. There are some modules out there that may be helpful, such as [DFA::Simple](/pub/a/2004/09/23/fsms.html), but since I can assume that my data will look a certain way--having written it from my other application--I will build my own simple parser. First, I am going to take a look at the data.
+Now that I have loaded my Prolog database, I need to feed it some more information. I need to take my data, in Dot format, and translate it into something that my Prolog interpreter will understand. There are some modules out there that may be helpful, such as [DFA::Simple](/pub/2004/09/23/fsms.html), but since I can assume that my data will look a certain way--having written it from my other application--I will build my own simple parser. First, I am going to take a look at the data.
 
 The visualization program created the diagram in Figure 1 from the code:
 

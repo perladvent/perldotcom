@@ -1,16 +1,16 @@
 {
-   "date" : "2012-10-01T06:00:01-08:00",
-   "thumbnail" : null,
-   "image" : null,
+   "draft" : null,
    "authors" : [
       "ron-savage"
    ],
-   "title" : "An Overview of Lexing and Parsing",
-   "categories" : "development",
+   "description" : "Perl programmers spend a lot of time reading, modifying, and writing data. When regular expressions aren't enough, turn to something more powerful: parsing.",
    "slug" : "/pub/2012/10/an-overview-of-lexing-and-parsing.html",
-   "tags" : [],
-   "draft" : null,
-   "description" : "Perl programmers spend a lot of time reading, modifying, and writing data. When regular expressions aren't enough, turn to something more powerful: parsing."
+   "title" : "An Overview of Lexing and Parsing",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2012-10-01T06:00:01-08:00",
+   "thumbnail" : null,
+   "tags" : []
 }
 
 
@@ -83,7 +83,7 @@ There are many situations where the only path to a solution requires a lexer and
 
     Given this "program", a renderer give effects to the author's *intention* by rendering an image:
 
-    ![](teamwork.svg)
+    ![](/images/_pub_2012_10_an-overview-of-lexing-and-parsing/teamwork.svg)
 
     What's required to do that? As above, *lex*, *parse*, *render*. Using Graphviz's `dot` command to carry out these tasks, we would run:
 

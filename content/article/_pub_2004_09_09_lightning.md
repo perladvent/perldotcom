@@ -1,19 +1,19 @@
 {
-   "categories" : "development",
    "authors" : [
       "simon-cozens",
       "mark-fowler",
       "ricardo-signes",
       "aaron-trevena"
    ],
-   "title" : "Lightning Articles",
-   "thumbnail" : "/images/_pub_2004_09_09_lightning/111-lightning_articles.gif",
-   "image" : null,
-   "date" : "2004-09-09T00:00:00-08:00",
    "draft" : null,
    "description" : " Simon Cozens Serendipity - it means those occasions when things come together to give you moments of inspiration. While preparing perl.com one week, I was editing an article on how to give lightning talks by Mark Fowler and at...",
-   "tags" : [],
-   "slug" : "/pub/2004/09/09/lightning.html"
+   "slug" : "/pub/2004/09/09/lightning.html",
+   "title" : "Lightning Articles",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2004-09-09T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2004_09_09_lightning/111-lightning_articles.gif",
+   "tags" : []
 }
 
 

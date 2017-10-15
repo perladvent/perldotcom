@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "tags" : [],
+   "title" : "Perl Unicode Cookbook: Convert non-ASCII Unicode Numerics",
+   "image" : null,
+   "categories" : "unicode",
+   "date" : "2012-05-21T06:00:01-08:00",
    "authors" : [
       "tom-christiansen"
    ],
-   "title" : "Perl Unicode Cookbook: Convert non-ASCII Unicode Numerics",
-   "categories" : "unicode",
-   "date" : "2012-05-21T06:00:01-08:00",
-   "image" : null,
-   "thumbnail" : null,
    "draft" : null,
-   "description" : "℞ 28: Convert non-ASCII Unicode numerics Unicode digits encompass far more than the ASCII characters 0 - 9. Unless you've used /a or /aa, \\d matches more than ASCII digits only. That's good! Unfortunately, Perl's implicit string-to-number conversion does not...",
    "slug" : "/pub/2012/05/perlunicookbook-convert-non-ascii-unicode-numerics.html",
-   "tags" : []
+   "description" : "℞ 28: Convert non-ASCII Unicode numerics Unicode digits encompass far more than the ASCII characters 0 - 9. Unless you've used /a or /aa, \\d matches more than ASCII digits only. That's good! Unfortunately, Perl's implicit string-to-number conversion does not..."
 }
 
 

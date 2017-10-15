@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001114.html",
-   "draft" : null,
-   "description" : " Notes stat vs. lstat Threads and POSIX PerlIO README.Solaris Locales Integer handling revisited =head3 Little fixes Various Notes You can subscribe to an e-mail version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and...",
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-11-14T00:00:00-08:00",
-   "categories" : "community",
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "This Week on p5p 2000/11/14"
+   "draft" : null,
+   "description" : " Notes stat vs. lstat Threads and POSIX PerlIO README.Solaris Locales Integer handling revisited =head3 Little fixes Various Notes You can subscribe to an e-mail version of this summary by sending an empty message to p5p-digest-subscribe@plover.com. Please send corrections and...",
+   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001114.html",
+   "tags" : [],
+   "thumbnail" : null,
+   "categories" : "community",
+   "image" : null,
+   "title" : "This Week on p5p 2000/11/14",
+   "date" : "2000-11-14T00:00:00-08:00"
 }
 
 

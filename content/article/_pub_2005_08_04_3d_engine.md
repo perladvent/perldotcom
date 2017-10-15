@@ -1,14 +1,5 @@
 {
-   "categories" : "Games",
-   "authors" : [
-      "geoff-broadwell"
-   ],
-   "title" : "Building a 3D Engine in Perl, Part 4",
-   "image" : null,
    "thumbnail" : null,
-   "date" : "2005-08-04T00:00:00-08:00",
-   "draft" : null,
-   "description" : " This article is the fourth in a series aimed at building a full 3D engine in Perl. The first article started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The...",
    "tags" : [
       "opengl-lighting",
       "opengl-tutorial",
@@ -19,12 +10,21 @@
       "perl-opengl",
       "perl-sdl"
    ],
-   "slug" : "/pub/2005/08/04/3d_engine.html"
+   "date" : "2005-08-04T00:00:00-08:00",
+   "image" : null,
+   "title" : "Building a 3D Engine in Perl, Part 4",
+   "categories" : "games",
+   "description" : " This article is the fourth in a series aimed at building a full 3D engine in Perl. The first article started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The...",
+   "slug" : "/pub/2005/08/04/3d_engine.html",
+   "draft" : null,
+   "authors" : [
+      "geoff-broadwell"
+   ]
 }
 
 
 
-This article is the fourth in a series aimed at [building a full 3D engine in Perl](/pub/au/Broadwell_Geoff). The [first article](/pub/a/2004/12/01/3d_engine.html) started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The [second article](/pub/a/2004/12/29/3d_engine.html) followed with a discussion of time, view animation, SDL events, keyboard handling, and a nice chunk of refactoring. The [third article](/pub/a/2005/02/17/3d_engine.html) continued with screenshots, movement of the viewpoint, simple OpenGL lighting, and subdivided box faces.
+This article is the fourth in a series aimed at [building a full 3D engine in Perl](/authors/geoff-broadwell). The [first article](/pub/2004/12/01/3d_engine.html) started with basic program structure and worked up to displaying a simple depth-buffered scene in an OpenGL window. The [second article](/pub/2004/12/29/3d_engine.html) followed with a discussion of time, view animation, SDL events, keyboard handling, and a nice chunk of refactoring. The [third article](/pub/2005/02/17/3d_engine.html) continued with screenshots, movement of the viewpoint, simple OpenGL lighting, and subdivided box faces.
 
 At the end of the last article, the engine was quite slow. This article shows how to locate the performance problem and what to do about it. Then it demonstrates how to apply the same new OpenGL technique a different way to create an on-screen frame rate counter. As usual, you can follow along with the code by downloading the [sample code](/media/_pub_2005_08_04_3d_engine/perl_opengl_examples_4.tar.gz).
 
@@ -452,7 +452,7 @@ With the font handling in place, and `draw_fps` called each frame to display the
 
 Oops. There's no frame rate display. Actually, it's there, just *very* faint. If you look very carefully (or turn your video card's gamma up very high), you can just make out the frame rate display near the top of the window, above the big white box on the right. There are (at least) two problems--the text is too dark and it's in the wrong place.
 
-The first problem is reminiscent of the dark scene in the [last article](/pub/a/2005/02/17/3d_engine.html), after enabling lighting but no lights. Come to think of it, there's not much reason to have lighting enabled just to display stats, but the last object rendered by `draw_view` left it on. To make sure lighting is off, I added a `set_lighting_2d` routine, which `draw_frame` now calls just before calling `draw_fps`:
+The first problem is reminiscent of the dark scene in the [last article](/pub/2005/02/17/3d_engine.html), after enabling lighting but no lights. Come to think of it, there's not much reason to have lighting enabled just to display stats, but the last object rendered by `draw_view` left it on. To make sure lighting is off, I added a `set_lighting_2d` routine, which `draw_frame` now calls just before calling `draw_fps`:
 
     sub set_lighting_2d
     {

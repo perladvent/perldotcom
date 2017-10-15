@@ -1,16 +1,16 @@
 {
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "1998-10-21T00:00:00-08:00",
-   "categories" : "community",
+   "draft" : null,
    "authors" : [
       "brent-michalski"
    ],
-   "title" : "Perl Rescues a Major Corporation",
-   "tags" : [],
    "slug" : "/pub/1998/10/brent.html",
-   "draft" : null,
-   "description" : null
+   "description" : null,
+   "image" : null,
+   "title" : "Perl Rescues a Major Corporation",
+   "categories" : "community",
+   "date" : "1998-10-21T00:00:00-08:00",
+   "thumbnail" : null,
+   "tags" : []
 }
 
 
@@ -52,12 +52,12 @@ The new Perl DMS system has the following features (and more):
 -   Users determine a files rights when they add a new document.
 
 **Figure 1** shows an example of the main screen that is the heart of the Perl DMS.
-<img src="graphics/image1.gif" alt="Perl Document Management System Screen Shot" width="450" height="337" />
+<img src="/images/_pub_1998_10_brent/image1.gif" alt="Perl Document Management System Screen Shot" width="450" height="337" />
 
 This screen shot shows that the DMS system is divided up into *categories* and *subcategories.* When a user clicks on a subcategory, they are taken to a screen that lists all of the documents that they have rights to. All of this is done dynamically by gathering the data from the NT system and the back-end database.
 
 **Figure 2** shows an example of what the user sees when they click a subcategory.
-<img src="graphics/image2.gif" alt="Perl Document Management System Screen Shot 2" width="450" height="337" />
+<img src="/images/_pub_1998_10_brent/image2.gif" alt="Perl Document Management System Screen Shot 2" width="450" height="337" />
 
 The user only sees the documents that they have rights to see. The rights are gathered from the NT system rights and are based upon what groups the user is a member of. If you grant a user new rights, they simply have to reload the page and the new documents they have rights to are instantly available.
 

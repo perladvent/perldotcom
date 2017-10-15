@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "image" : null,
    "date" : "2001-02-18T00:00:00-08:00",
-   "categories" : "community",
    "title" : "This Week on p6p 2001/02/18",
+   "image" : null,
+   "categories" : "community",
+   "thumbnail" : null,
+   "tags" : [],
+   "description" : " Notes Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. We looked at over 400 messages this week, about a quarter of which were to do with garbage collection. Again. I'm afraid this...",
+   "slug" : "/pub/2001/02/p6pdigest/THISWEEK-20010218.html",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
-   ],
-   "tags" : [],
-   "slug" : "/pub/2001/02/p6pdigest/THISWEEK-20010218.html",
-   "description" : " Notes Please send corrections and additions to perl6-thisweek-YYYYMM@simon-cozens.org where YYYYMM is the current year and month. We looked at over 400 messages this week, about a quarter of which were to do with garbage collection. Again. I'm afraid this...",
-   "draft" : null
+   ]
 }
 
 

@@ -1,12 +1,14 @@
 {
-   "thumbnail" : "/images/_pub_2006_12_21_using-java-classes/111-inline_java.gif",
-   "image" : null,
-   "date" : "2006-12-21T00:00:00-08:00",
-   "categories" : "development",
+   "slug" : "/pub/2006/12/21/using-java-classes.html",
+   "description" : " I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the Java Community...",
+   "draft" : null,
    "authors" : [
       "andrew-hanenkamp"
    ],
+   "date" : "2006-12-21T00:00:00-08:00",
+   "categories" : "development",
    "title" : "Using Java Classes in Perl",
+   "image" : null,
    "tags" : [
       "inline-java",
       "java-bindings",
@@ -14,9 +16,7 @@
       "jcr",
       "perl-bindings"
    ],
-   "slug" : "/pub/2006/12/21/using-java-classes.html",
-   "draft" : null,
-   "description" : " I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the Java Community..."
+   "thumbnail" : "/images/_pub_2006_12_21_using-java-classes/111-inline_java.gif"
 }
 
 
@@ -25,7 +25,7 @@ I started a new job recently to refocus my career from systems administration to
 
 ### Bringing the JCR to Perl
 
-The key to using JCR from Perl is `Inline::Java`. This library allows a Perl program to call Java methods with very little effort. For an introduction to Inline::Java, I suggest starting where I did, Phil Crow's 2003 [Bringing Java into Perl](/pub/a/2003/11/07/java.html) article on [Perl.com](http://Perl.com) about Inline::Java. I also relied heavily upon the documentation for [Inline::Java](http://search.cpan.org/dist/Inline-Java/Java.pod), which is very complete, if not exhaustive.
+The key to using JCR from Perl is `Inline::Java`. This library allows a Perl program to call Java methods with very little effort. For an introduction to Inline::Java, I suggest starting where I did, Phil Crow's 2003 [Bringing Java into Perl](/pub/2003/11/07/java.html) article on [Perl.com](http://Perl.com) about Inline::Java. I also relied heavily upon the documentation for [Inline::Java](http://search.cpan.org/dist/Inline-Java/Java.pod), which is very complete, if not exhaustive.
 
 To get started on using the JCR, I used the reference implementation, [Jackrabbit](http://jackrabbit.apache.org/). I downloaded the Jackrabbit JAR file, along with all the prerequisites, which I found on the Jackrabbit website under [First Hops](http://jackrabbit.apache.org/doc/firststeps.html). Then, I wrote a small script using `Inline::Java` to load the Java classes from Jackrabbit, create a repository, and then quit. I was able to take the First Hop with Jackrabbit in Perl as fast or faster than in Java:
 

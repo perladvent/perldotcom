@@ -1,19 +1,19 @@
 {
-   "date" : "2003-04-09T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2003_04_09_synopsis/111-synopsis.gif",
-   "title" : "Synopsis 6",
+   "slug" : "/pub/2003/04/09/synopsis.html",
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. This document summarizes Apocalypse 6, which covers subroutines and the new type system. Subroutines and Other Code...",
    "authors" : [
       "damian-conway",
       "allison-randal"
    ],
+   "draft" : null,
+   "date" : "2003-04-09T00:00:00-08:00",
+   "title" : "Synopsis 6",
+   "image" : null,
    "categories" : "perl-6",
-   "slug" : "/pub/2003/04/09/synopsis.html",
+   "thumbnail" : "/images/_pub_2003_04_09_synopsis/111-synopsis.gif",
    "tags" : [
       "perl-6-apocalypse"
-   ],
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. This document summarizes Apocalypse 6, which covers subroutines and the new type system. Subroutines and Other Code...",
-   "draft" : null
+   ]
 }
 
 

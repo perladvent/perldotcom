@@ -1,18 +1,18 @@
 {
-   "date" : "2003-01-16T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : "/images/_pub_2003_01_16_whatsnew/111-whats_new.gif",
    "title" : "What's new in Perl 5.8.0",
-   "authors" : [
-      "artur-bergman"
-   ],
-   "categories" : "Community",
-   "slug" : "/pub/2003/01/16/whatsnew.html",
+   "categories" : "community",
+   "date" : "2003-01-16T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2003_01_16_whatsnew/111-whats_new.gif",
    "tags" : [
       "5-8-0-upgrade-features"
    ],
+   "authors" : [
+      "artur-bergman"
+   ],
+   "draft" : null,
    "description" : " It's been nearly six months since the release of Perl 5.8.0, but many people still haven't upgraded to it. We'll take a look at some of the new features it provides and describe why you should investigate them yourself....",
-   "draft" : null
+   "slug" : "/pub/2003/01/16/whatsnew.html"
 }
 
 

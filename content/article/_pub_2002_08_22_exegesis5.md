@@ -1,18 +1,18 @@
 {
+   "categories" : "perl-6",
+   "title" : "Exegesis 5",
+   "image" : null,
+   "date" : "2002-08-22T00:00:00-08:00",
+   "tags" : [
+      "apocalypse-exegesis-regular-expressions"
+   ],
+   "thumbnail" : "/images/_pub_2002_08_22_exegesis5/111-exegesis5.gif",
+   "draft" : null,
    "authors" : [
       "damian-conway"
    ],
-   "title" : "Exegesis 5",
-   "categories" : "perl-6",
-   "date" : "2002-08-22T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2002_08_22_exegesis5/111-exegesis5.gif",
-   "image" : null,
-   "draft" : null,
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. Exegesis 5 What's the diff? Starting gently Lay it out for me Interpolate ye not ... The...",
    "slug" : "/pub/2002/08/22/exegesis5.html",
-   "tags" : [
-      "apocalypse-exegesis-regular-expressions"
-   ]
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 5 for the current design information. Exegesis 5 What's the diff? Starting gently Lay it out for me Interpolate ye not ... The..."
 }
 
 
@@ -22,32 +22,32 @@
 -   [Exegesis 5](#exegesis_5)
 -   [What's the diff?](#whats_the_diff)
 -   [Starting gently](#starting_gently)
--   [Lay it out for me](/pub/a%7Bcs.r.file%7D?page=2#lay_it_out_for_me)
--   [Interpolate ye not ...](/pub/a%7Bcs.r.file%7D?page=2#interpolate_ye_not)
--   [The incredible `$hunk`](/pub/a%7Bcs.r.file%7D?page=2#the_incredible_hunk)
--   [Modified modifiers](/pub/a%7Bcs.r.file%7D?page=2#modified_modifiers)
--   [Take no prisoners](/pub/a%7Bcs.r.file%7D?page=3#take_no_prisoners)
--   [Meanwhile, back at the `$hunk` ...](/pub/a%7Bcs.r.file%7D?page=3#meanwhile_back_at_the_hunk)
--   [This or nothing](/pub/a%7Bcs.r.file%7D?page=3#this_or_nothing)
--   [Failing with style](/pub/a%7Bcs.r.file%7D?page=3#failing_with_style)
--   [Home, home on the (line) range](/pub/a%7Bcs.r.file%7D?page=3#home_home_on_the_line_range)
--   [What's my line?](/pub/a%7Bcs.r.file%7D?page=3#whats_my_line)
--   [The final frontier](/pub/a%7Bcs.r.file%7D?page=3#the_final_frontier)
--   [Match-maker, match-maker ...](/pub/a%7Bcs.r.file%7D?page=3#matchmaker_matchmaker)
--   [A cleaner approach](/pub/a%7Bcs.r.file%7D?page=3#a_cleaner_approach)
--   [What's in a name?](/pub/a%7Bcs.r.file%7D?page=3#whats_in_a-name)
--   [Bad line! No match!](/pub/a%7Bcs.r.file%7D?page=3#bad_line_no_match)
--   [Thinking ahead](/pub/a%7Bcs.r.file%7D?page=4#thinking_ahead)
--   [What you match is what you get](/pub/a%7Bcs.r.file%7D?page=4#what_you_match_is_what_you_get)
--   [A hypothetical solution to a very real problem](/pub/a%7Bcs.r.file%7D?page=4#a_hypothetical_solution_to_a_very_real_problem)
--   [The nesting instinct](/pub/a%7Bcs.r.file%7D?page=4#the_nesting_instinct)
--   [Extracting the insertions](/pub/a%7Bcs.r.file%7D?page=4#extracting_the_insertions)
--   [Don't just match there; do something!](/pub/a%7Bcs.r.file%7D?page=4#dont_just_match_there_do_something!)
--   [Smarter alternatives](/pub/a%7Bcs.r.file%7D?page=4#smarter_alternatives)
--   [Rearranging the deck chairs](/pub/a%7Bcs.r.file%7D?page=5#rearranging_the_deckchairs)
--   [Deriving a benefit](/pub/a%7Bcs.r.file%7D?page=5#deriving_a_benefit)
--   [Different diffs](/pub/a%7Bcs.r.file%7D?page=5#different_diffs)
--   [Let's get cooking](/pub/a%7Bcs.r.file%7D?page=5#lets_get_cooking)
+-   [Lay it out for me](#lay_it_out_for_me)
+-   [Interpolate ye not ...](#interpolate_ye_not)
+-   [The incredible `$hunk`](#the_incredible_hunk)
+-   [Modified modifiers](#modified_modifiers)
+-   [Take no prisoners](#take_no_prisoners)
+-   [Meanwhile, back at the `$hunk` ...](#meanwhile_back_at_the_hunk)
+-   [This or nothing](#this_or_nothing)
+-   [Failing with style](#failing_with_style)
+-   [Home, home on the (line) range](#home_home_on_the_line_range)
+-   [What's my line?](#whats_my_line)
+-   [The final frontier](#the_final_frontier)
+-   [Match-maker, match-maker ...](#matchmaker_matchmaker)
+-   [A cleaner approach](#a_cleaner_approach)
+-   [What's in a name?](#whats_in_a-name)
+-   [Bad line! No match!](#bad_line_no_match)
+-   [Thinking ahead](#thinking_ahead)
+-   [What you match is what you get](#what_you_match_is_what_you_get)
+-   [A hypothetical solution to a very real problem](#a_hypothetical_solution_to_a_very_real_problem)
+-   [The nesting instinct](#the_nesting_instinct)
+-   [Extracting the insertions](#extracting_the_insertions)
+-   [Don't just match there; do something!](#dont_just_match_there_do_something!)
+-   [Smarter alternatives](#smarter_alternatives)
+-   [Rearranging the deck chairs](#rearranging_the_deckchairs)
+-   [Deriving a benefit](#deriving_a_benefit)
+-   [Different diffs](#different_diffs)
+-   [Let's get cooking](#lets_get_cooking)
 
 ------------------------------------------------------------------------
 

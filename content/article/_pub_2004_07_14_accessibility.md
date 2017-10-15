@@ -1,25 +1,25 @@
 {
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2004-07-15T00:00:00-08:00",
-   "categories" : "Graphics",
    "authors" : [
       "jouke-visser"
    ],
-   "title" : "Accessible Software",
+   "draft" : null,
+   "description" : " Last year Perl.com published an article about pVoice. You learned what pVoice is, why it was built, and where it was supposed to go. Maybe you wanted to do something for disabled people yourself, by writing something like a...",
+   "slug" : "/pub/2004/07/14/accessibility.html",
+   "thumbnail" : null,
    "tags" : [
       "accessible",
       "disabled",
       "pvoice"
    ],
-   "slug" : "/pub/2004/07/14/accessibility.html",
-   "draft" : null,
-   "description" : " Last year Perl.com published an article about pVoice. You learned what pVoice is, why it was built, and where it was supposed to go. Maybe you wanted to do something for disabled people yourself, by writing something like a..."
+   "image" : null,
+   "title" : "Accessible Software",
+   "categories" : "graphics",
+   "date" : "2004-07-15T00:00:00-08:00"
 }
 
 
 
-Last year Perl.com published an [article about pVoice](/pub/a/2003/08/28/pvoice.html). You learned what pVoice is, why it was built, and where it was supposed to go. Maybe you wanted to do something for disabled people yourself, by writing something like a mail client, a simple game like memory, or an instant-messaging client, but you didn't implement it because you felt it was too much work. In that case there's news for you.
+Last year Perl.com published an [article about pVoice](/pub/2003/08/28/pvoice.html). You learned what pVoice is, why it was built, and where it was supposed to go. Maybe you wanted to do something for disabled people yourself, by writing something like a mail client, a simple game like memory, or an instant-messaging client, but you didn't implement it because you felt it was too much work. In that case there's news for you.
 
 Part of pVoice was a set of modules that was actually the engine for the user interface. A few months ago I pulled those modules from the pVoice project and made them into a CPAN distribution. This distribution is called AAC::Pvoice. And no, they have nothing to do with Apple's digital audio format. They're all about Augmentative and Alternative Communication. Although, I like to think that the "C" stands for "Computing," which makes it into a better description of what those modules are for.
 

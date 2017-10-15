@@ -1,15 +1,15 @@
 {
+   "tags" : [],
+   "thumbnail" : null,
    "categories" : "development",
+   "image" : null,
+   "title" : "Red Flags Return",
+   "date" : "2000-11-28T00:00:00-08:00",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "title" : "Red Flags Return",
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-11-28T00:00:00-08:00",
    "draft" : null,
    "description" : "What's Wrong With This Picture? -> Astute readers had a number of comments about last week's Program Repair Shop and Red Flags article. Control Flow Puzzle In the article, I had a section of code that looked like this: $_...",
-   "tags" : [],
    "slug" : "/pub/2000/11/repair3x.html"
 }
 

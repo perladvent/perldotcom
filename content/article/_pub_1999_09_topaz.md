@@ -1,20 +1,20 @@
 {
-   "description" : " Introduction One of the more interesting talks at the O'Reilly 1999 Open Source Convention was by Chip Salzenberg, one of the core developers of Perl. He described his work on Topaz, a new effort to completely re-write the internals...",
-   "draft" : null,
+   "title" : "Topaz: Perl for the 22nd Century",
+   "image" : null,
+   "categories" : "community",
+   "date" : "1999-09-28T00:00:00-08:00",
+   "thumbnail" : null,
    "tags" : [
       "c",
       "internals",
       "systems-programming-languages"
    ],
-   "slug" : "/pub/1999/09/topaz.html",
-   "categories" : "community",
-   "title" : "Topaz: Perl for the 22nd Century",
    "authors" : [
       "chip-salzenberg"
    ],
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "1999-09-28T00:00:00-08:00"
+   "draft" : null,
+   "description" : " Introduction One of the more interesting talks at the O'Reilly 1999 Open Source Convention was by Chip Salzenberg, one of the core developers of Perl. He described his work on Topaz, a new effort to completely re-write the internals...",
+   "slug" : "/pub/1999/09/topaz.html"
 }
 
 

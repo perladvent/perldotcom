@@ -1,5 +1,8 @@
 {
-   "slug" : "/pub/2005/08/11/win32guitest.html",
+   "categories" : "windows",
+   "image" : null,
+   "title" : "Automated GUI Testing",
+   "date" : "2005-08-11T00:00:00-08:00",
    "tags" : [
       "gui-automation",
       "gui-testing",
@@ -11,16 +14,13 @@
       "windows-automation",
       "windows-scripting"
    ],
-   "description" : " You use Perl at work. Sometimes you are unhappy because there is one application you always have to click on and fill all those input boxes. It's very boring. Why not let Perl do that while you go grab...",
-   "draft" : null,
-   "date" : "2005-08-11T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2005_08_11_win32guitest/111-gui-testing.gif",
-   "image" : null,
-   "title" : "Automated GUI Testing",
    "authors" : [
       "george-nistorica"
    ],
-   "categories" : "windows"
+   "draft" : null,
+   "description" : " You use Perl at work. Sometimes you are unhappy because there is one application you always have to click on and fill all those input boxes. It's very boring. Why not let Perl do that while you go grab...",
+   "slug" : "/pub/2005/08/11/win32guitest.html"
 }
 
 

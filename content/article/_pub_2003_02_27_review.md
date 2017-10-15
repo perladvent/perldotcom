@@ -1,21 +1,21 @@
 {
-   "title" : "Genomic Perl",
+   "description" : " This is a book I have been looking forward to for a long time. Back when James Tisdall had just finished his Beginning Perl for Bioinformatics, I asked him to write an article about how to get into bioinf...",
+   "slug" : "/pub/2003/02/27/review.html",
    "authors" : [
       "simon-cozens"
    ],
-   "categories" : "Science",
-   "date" : "2003-02-27T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "description" : " This is a book I have been looking forward to for a long time. Back when James Tisdall had just finished his Beginning Perl for Bioinformatics, I asked him to write an article about how to get into bioinf...",
    "draft" : null,
-   "slug" : "/pub/2003/02/27/review.html",
+   "date" : "2003-02-27T00:00:00-08:00",
+   "title" : "Genomic Perl",
+   "image" : null,
+   "categories" : "science",
+   "thumbnail" : null,
    "tags" : []
 }
 
 
 
-This is a book I have been looking forward to for a long time. Back when James Tisdall had just finished his [Beginning Perl for Bioinformatics](http://www.oreilly.com/catalog/begperlbio/), I asked him to write an article about [how to get into bioinf](/pub/a/2002/01/02/bioinf.html) from a Perl programmer's perspective. With bioinformatics being a recently booming sphere and many scientists finding themselves in need of computer programmers to help them process their data, I thought it would be good if there was more information for programmers about the genomic side of things.
+This is a book I have been looking forward to for a long time. Back when James Tisdall had just finished his [Beginning Perl for Bioinformatics](http://www.oreilly.com/catalog/begperlbio/), I asked him to write an article about [how to get into bioinf](/pub/2002/01/02/bioinf.html) from a Perl programmer's perspective. With bioinformatics being a recently booming sphere and many scientists finding themselves in need of computer programmers to help them process their data, I thought it would be good if there was more information for programmers about the genomic side of things.
 
 Rex Dwyer has produced a book, [Genomic Perl](http://books.cambridge.org/052180177X.htm), which bridges the gap. As well as teaching basic Perl programming techniques to biologists, it introduces many useful genetic concepts to those already familiar with programming. Of course, as a programmer and not a biologist, I'm by no means qualified to assess the quality of that side of the book, but I certainly learned a lot from it.
 

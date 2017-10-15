@@ -1,21 +1,21 @@
 {
+   "authors" : [
+      "kendrew-lau"
+   ],
+   "draft" : null,
    "slug" : "/pub/2006/01/19/analyzing_html.html",
+   "description" : " Routine work is all around us every day, no matter if you like it or not. For a teacher on computing subjects, grading assignments can be such work. Certain computing assignments aim at practicing operating skills rather than creativity,...",
+   "thumbnail" : "/images/_pub_2006_01_19_analyzing_html/111-analyzing_html.gif",
    "tags" : [
       "html-assignments-perl-html",
       "parsing-html",
       "perl-assignments",
       "perl-parsing"
    ],
-   "draft" : null,
-   "description" : " Routine work is all around us every day, no matter if you like it or not. For a teacher on computing subjects, grading assignments can be such work. Certain computing assignments aim at practicing operating skills rather than creativity,...",
-   "date" : "2006-01-19T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2006_01_19_analyzing_html/111-analyzing_html.gif",
-   "image" : null,
-   "authors" : [
-      "kendrew-lau"
-   ],
    "title" : "Analyzing HTML with Perl",
-   "categories" : "Web"
+   "image" : null,
+   "categories" : "web",
+   "date" : "2006-01-19T00:00:00-08:00"
 }
 
 
@@ -236,4 +236,4 @@ I can simply run the program in the directory containing the HTML files, or spec
 
 I did not evaluate the time saved by the program against its developing effort. Anyway, the program makes the grading process more accurate and less prone to error, and it is more fun to spend time writing a Perl program and getting familiar with useful modules.
 
-In fact, there are many other modules that could have been used in the program to provide even more automation. Had I read Wasserman's article "[Automating Windows Applications with Win32::OLE](/pub/a/2005/04/21/win32ole.html)," the program would record the final score to an Excel file automatically. In addition, networking modules such as [`Mail::Internet`](http://search.cpan.org/perldoc?Mail::Internet), [`Mail::Mailer`](http://search.cpan.org/perldoc?Mail::Mailer), and [`Mail::Folder`](http://search.cpan.org/perldoc?Mail::Folder) could retrieve the assignment files from emails and send the feedback files to the students directly from the program.
+In fact, there are many other modules that could have been used in the program to provide even more automation. Had I read Wasserman's article "[Automating Windows Applications with Win32::OLE](/pub/2005/04/21/win32ole.html)," the program would record the final score to an Excel file automatically. In addition, networking modules such as [`Mail::Internet`](http://search.cpan.org/perldoc?Mail::Internet), [`Mail::Mailer`](http://search.cpan.org/perldoc?Mail::Mailer), and [`Mail::Folder`](http://search.cpan.org/perldoc?Mail::Folder) could retrieve the assignment files from emails and send the feedback files to the students directly from the program.

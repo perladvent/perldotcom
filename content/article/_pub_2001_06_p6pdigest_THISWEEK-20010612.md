@@ -1,16 +1,16 @@
 {
-   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to bwarnock@capita.com. The Perl 6 mailing lists saw 226 messages across 19 threads, with 40 authors...",
    "draft" : null,
-   "slug" : "/pub/2001/06/p6pdigest/THISWEEK-20010612.html",
-   "tags" : [],
-   "title" : "This Week in Perl 6 (3 - 9 June 2001)",
    "authors" : [
       "bryan-warnock"
    ],
+   "slug" : "/pub/2001/06/p6pdigest/THISWEEK-20010612.html",
+   "description" : " Notes You can subscribe to an email version of this summary by sending an empty message to perl6-digest-subscribe@netthink.co.uk. Please send corrections and additions to bwarnock@capita.com. The Perl 6 mailing lists saw 226 messages across 19 threads, with 40 authors...",
+   "title" : "This Week in Perl 6 (3 - 9 June 2001)",
+   "image" : null,
    "categories" : "community",
    "date" : "2001-06-12T00:00:00-08:00",
    "thumbnail" : null,
-   "image" : null
+   "tags" : []
 }
 
 
@@ -76,7 +76,7 @@ Because of (or to spite) last week's [coverage](/pub/2001/06/p6pdigest/THISWEEK-
 
 #### <span id="Perl_Assembly_Language_Clarification">Perl Assembly Language: Clarification</span>
 
-Two weeks ago, when discussing A.C. Yardley's [Assembly Language proposal](/pub/2001/05/p6pdigest/THISWEEK-20010526.html#Perl_Assembly_Standard), I mentioned the "very-low-level operations" of the Perl Virtual Machine itself.
+Two weeks ago, when discussing A.C. Yardley's Assembly Language proposal, I mentioned the "very-low-level operations" of the Perl Virtual Machine itself.
 
 The Perl Virtual Machine is, of course, far removed from any layers that are normally considered to be "very-low-level," and the Virtual Machine opcodes tend to be somewhat complex in what and how much they accomplish. "Very-low-level" wasn't intended as a description of the complexity on an absolute scale, but as a description of the atomicy of operations relative to the Virtual Machine itself. (Thanks go to John Porter for bringing it to my attention.)
 

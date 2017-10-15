@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "slug" : "/pub/2012/04/perlunicookbook-decode-argv-as-local-encoding.html",
-   "draft" : null,
-   "description" : "℞ 14: Decode program arguments as locale encoding While it may be most common in modern operating systems for your command-line arguments to be encoded as UTF-8, @ARGV may use other encodings. If you have configured your system with a...",
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2012-04-26T06:00:01-08:00",
-   "categories" : "unicode",
    "authors" : [
       "tom-christiansen"
    ],
-   "title" : "Perl Unicode Cookbook: Decode @ARGV as Local Encoding"
+   "draft" : null,
+   "description" : "℞ 14: Decode program arguments as locale encoding While it may be most common in modern operating systems for your command-line arguments to be encoded as UTF-8, @ARGV may use other encodings. If you have configured your system with a...",
+   "slug" : "/pub/2012/04/perlunicookbook-decode-argv-as-local-encoding.html",
+   "categories" : "unicode",
+   "image" : null,
+   "title" : "Perl Unicode Cookbook: Decode @ARGV as Local Encoding",
+   "date" : "2012-04-26T06:00:01-08:00",
+   "tags" : [],
+   "thumbnail" : null
 }
 
 

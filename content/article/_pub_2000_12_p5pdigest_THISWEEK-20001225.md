@@ -1,16 +1,16 @@
 {
-   "title" : "This Week on p5p 2000/12/24",
+   "description" : " Notes 5.6.1 Trial is out! Profiling Solaris and Sockets strtoul Language-sensitive editors Numeric conversion on HPUX Various Repository browser Dependency checker Unicode task use constant Updates Miscellany Notes You can subscribe to an email version of this summary by...",
+   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001225.html",
    "authors" : [
       "simon-cozens"
    ],
-   "categories" : "community",
-   "date" : "2000-12-27T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "description" : " Notes 5.6.1 Trial is out! Profiling Solaris and Sockets strtoul Language-sensitive editors Numeric conversion on HPUX Various Repository browser Dependency checker Unicode task use constant Updates Miscellany Notes You can subscribe to an email version of this summary by...",
    "draft" : null,
-   "slug" : "/pub/2000/12/p5pdigest/THISWEEK-20001225.html",
-   "tags" : []
+   "tags" : [],
+   "thumbnail" : null,
+   "date" : "2000-12-27T00:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
+   "title" : "This Week on p5p 2000/12/24"
 }
 
 
@@ -39,7 +39,7 @@ You'd think this week would be pretty quiet, but we saw the usual 300 or so mess
 
 ### <span id="561_trial_is_out">5.6.1 Trial is out!</span>
 
-The big news this week is that the long-awaited first trial release of Perl 5.6.1 is out, and available for download from CPAN: get the patch against 5.6.0 from your nearest CPAN [here.](/CPAN/authors/id/G/GS/GSAR/perl-5.6.1-TRIAL1.patch.gz) (Don't forget you'll also need to get the [5.6.0 source](/CPAN/authors/id/G/GS/GSAR/perl-5.6.0.tar.gz)as well)
+The big news this week is that the long-awaited first trial release of Perl 5.6.1 is out, and available for download from CPAN: get the patch against 5.6.0 from your nearest CPAN [here.](https://www.cpan.org/src/README.html) (Don't forget you'll also need to get the [5.6.0 source](https://www.cpan.org/src/README.html) as well)
 
 Please test it out thoroughly, run your favourite bugs through it and see if they've been fixed, and above all, **tell us** if it works or if itdoesn't. Use the `perlbug` utility to get in touch, and the `make  ok` or `make nok` Makefile targets to send build success and failure reports.
 

@@ -1,4 +1,9 @@
 {
+   "title" : "The e-smith Server and Gateway: a Perl Case Study",
+   "image" : null,
+   "categories" : "community",
+   "date" : "2001-02-20T00:00:00-08:00",
+   "thumbnail" : null,
    "tags" : [
       "cgi",
       "e-smith",
@@ -6,17 +11,12 @@
       "linux",
       "template"
    ],
-   "slug" : "/pub/2001/02/esmith.html",
-   "description" : " -> The e-smith server and gateway system is a Linux distribution designed for small to medium enterprises. It's intended to simplify the process of setting up Internet and file-sharing services and can be administered by a non-technical user with...",
-   "draft" : null,
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2001-02-20T00:00:00-08:00",
-   "categories" : "community",
-   "title" : "The e-smith Server and Gateway: a Perl Case Study",
    "authors" : [
       "kirrily---skud---robert"
-   ]
+   ],
+   "draft" : null,
+   "description" : " -> The e-smith server and gateway system is a Linux distribution designed for small to medium enterprises. It's intended to simplify the process of setting up Internet and file-sharing services and can be administered by a non-technical user with...",
+   "slug" : "/pub/2001/02/esmith.html"
 }
 
 

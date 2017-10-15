@@ -1,12 +1,5 @@
 {
    "thumbnail" : "/images/_pub_2005_07_07_navwidgets/111-menus.gif",
-   "image" : null,
-   "date" : "2005-07-07T00:00:00-08:00",
-   "categories" : "Web",
-   "title" : "Building Navigation Menus",
-   "authors" : [
-      "shlomi-fish"
-   ],
    "tags" : [
       "html-design",
       "html-menus",
@@ -14,9 +7,16 @@
       "html-widgets-navmenu",
       "perl-html-modules"
    ],
+   "date" : "2005-07-07T00:00:00-08:00",
+   "image" : null,
+   "title" : "Building Navigation Menus",
+   "categories" : "web",
    "slug" : "/pub/2005/07/07/navwidgets.html",
    "description" : " Navigation menus are a group of links given at one side of the page that allows users to navigate to different places of a website. Navigation menus allow site visitors to explore other pages of the site and to...",
-   "draft" : null
+   "draft" : null,
+   "authors" : [
+      "shlomi-fish"
+   ]
 }
 
 

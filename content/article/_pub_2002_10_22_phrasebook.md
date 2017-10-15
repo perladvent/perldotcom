@@ -1,18 +1,18 @@
 {
-   "slug" : "/pub/2002/10/22/phrasebook.html",
+   "date" : "2002-10-22T00:00:00-08:00",
+   "title" : "The Phrasebook Design Pattern",
+   "image" : null,
+   "categories" : "development",
+   "thumbnail" : "/images/_pub_2002_10_22_phrasebook/111-design_patterns.gif",
    "tags" : [
       "phrasebook-languages"
    ],
-   "draft" : null,
    "description" : " Have you ever written a Perl application that connects to a database? If so, then you probably faced a problem of having some code like: $statement = q(select isbn from book where title = 'Design Patterns'); $sth = $dbh-&gt;prepare($statement)...",
-   "date" : "2002-10-22T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2002_10_22_phrasebook/111-design_patterns.gif",
-   "image" : null,
+   "slug" : "/pub/2002/10/22/phrasebook.html",
    "authors" : [
       "rani-pinchuk"
    ],
-   "title" : "The Phrasebook Design Pattern",
-   "categories" : "development"
+   "draft" : null
 }
 
 

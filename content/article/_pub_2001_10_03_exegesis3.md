@@ -1,16 +1,16 @@
 {
-   "image" : null,
-   "thumbnail" : "/images/_pub_2001_10_03_exegesis3/111-exegesis.jpg",
    "date" : "2001-10-03T00:00:00-08:00",
    "categories" : "perl-6",
-   "authors" : [
-      "damian-conway"
-   ],
+   "image" : null,
    "title" : "Exegesis 3",
    "tags" : [],
+   "thumbnail" : "/images/_pub_2001_10_03_exegesis3/111-exegesis.jpg",
    "slug" : "/pub/2001/10/03/exegesis3.html",
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 3 for the current design information. Diamond lives (context-aware); Underscore space means concatenate; fat comma means pair; A pre-star will flatten; colon-equals will...",
    "draft" : null,
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 3 for the current design information. Diamond lives (context-aware); Underscore space means concatenate; fat comma means pair; A pre-star will flatten; colon-equals will..."
+   "authors" : [
+      "damian-conway"
+   ]
 }
 
 
@@ -24,7 +24,7 @@
 >
 > > -- Sade, "Smooth operator" (Perl 6 remix)
 
-In [Apocalypse 3](/pub/a/2001/10/02/apocalypse3.html), Larry describes the changes that Perl 6 will make to operators and their operations. As with all the Apocalypses, only the new and different are presented -- just remember that the vast majority of operator-related syntax and semantics will stay precisely as they are in Perl 5.
+In [Apocalypse 3](/pub/2001/10/02/apocalypse3.html), Larry describes the changes that Perl 6 will make to operators and their operations. As with all the Apocalypses, only the new and different are presented -- just remember that the vast majority of operator-related syntax and semantics will stay precisely as they are in Perl 5.
 
 ### <span id="for example..."></span>For example...
 
@@ -129,13 +129,13 @@ In Perl 5, it's not uncommon to see people using the `||=` operator to set up de
 </tr>
 <tr class="even">
 <td><p>Related Articles</p>
-<p>• <a href="/pub/a/2001/04/02/wall.html">Apocalypse 1</a><br />
+<p>• <a href="/pub/2001/04/02/wall.html">Apocalypse 1</a><br />
 <br />
-• <a href="/pub/a/2001/05/03/wall.html">Apocalypse 2</a><br />
+• <a href="/pub/2001/05/03/wall.html">Apocalypse 2</a><br />
 <br />
-• <a href="/pub/a/2001/05/08/exegesis2.html">Exegesis 2</a><br />
+• <a href="/pub/2001/05/08/exegesis2.html">Exegesis 2</a><br />
 <br />
-• <a href="/pub/a/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
+• <a href="/pub/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
 <br />
 </p></td>
 </tr>
@@ -243,7 +243,7 @@ Underscore is still a valid identifier character, so you need to be careful abou
         $name = getTitle _getName;      # getTitle(_getName())
         $name = getTitle_getName;       # getTitle_getName()
 
-In Perl 6, there's also a unary form of `_`. We'll get to that [a little later](/pub/a/2001/10/03/exegesis3.html?page=4#string%20'em%20up%20together).
+In Perl 6, there's also a unary form of `_`. We'll get to that [a little later](/pub/2001/10/03/exegesis3.html?page=4#string%20'em%20up%20together).
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 3](http://dev.perl.org/perl6/doc/design/syn/S03.html) for the current design information.*
 
 ### <span id="don't break the chain"></span>Don't break the chain
@@ -266,12 +266,12 @@ Having verified the file's suitability, we open it for reading and writing:
         my $fh = open $filepath : mode=>'rw' 
             or die "Something screwy with $filepath: $!";
 
-The `: mode=>'rw'` is an *adverbial modifier* on the `open`. We'll see more adverbs [shortly](/pub/a/2001/10/03/exegesis3.html?page=7#would%20you%20like%20an%20adverb%20with%20that).
+The `: mode=>'rw'` is an *adverbial modifier* on the `open`. We'll see more adverbs [shortly](/pub/2001/10/03/exegesis3.html?page=7#would%20you%20like%20an%20adverb%20with%20that).
 The `$!` variable is exactly what you think it is: a container for the last system error message. It's also considerably *more* than you think it is, since it's also taken over the roles of `$?` and `$@`, to become the One True Error Variable.
 
 ### <span id="applied laziness 101"></span>Applied laziness 101
 
-Contrary to earlier rumors, the "diamond" input operator is alive and well and living in Perl 6 (yes, the Perl Ministry of Truth is even now rewriting [Apocalypse 2](/pub/a/2001/05/03/wall.html) to correct the ... err ... "printing error" ... that announced `<>` would be purged from the language).
+Contrary to earlier rumors, the "diamond" input operator is alive and well and living in Perl 6 (yes, the Perl Ministry of Truth is even now rewriting [Apocalypse 2](/pub/2001/05/03/wall.html) to correct the ... err ... "printing error" ... that announced `<>` would be purged from the language).
 So we can happily proceed to read in four lines of data:
 
         my ($name, $vers, $status, $costs) = <$fh>;
@@ -428,7 +428,7 @@ and a scalar:
         $rest;
 
 The new hash slice syntax was explained in the previous Apocalypse/Exegesis, and the scalar is just a scalar, but what was the middle thing again?
-Well, `$data.{costs}` is just a regular Perl 6 access to the `'costs'` entry of the hash referred to by `$data`. That entry contains the array reference that was the result of splitting `$cost` [in `&load_data`](/pub/a/2001/10/03/exegesis3.html?page=3#and%20now%20for%20something%20completely%20the%20same%20(well,%20almost)).
+Well, `$data.{costs}` is just a regular Perl 6 access to the `'costs'` entry of the hash referred to by `$data`. That entry contains the array reference that was the result of splitting `$cost` [in `&load_data`](/pub/2001/10/03/exegesis3.html?page=3#and%20now%20for%20something%20completely%20the%20same%20(well,%20almost)).
 
 So to get the actual array itself, we can prefix the array reference with a `@` sigil (though, technically, we don't *have* to: in Perl 6 arrays and array references are interchangeable in scalar context).
 
@@ -440,7 +440,7 @@ Well ... evaluating a list in a string context does precisely that, so we could 
 
         "@{$data.{costs}}"    # evaluate array in string context
 
-But Perl 6 has another alternative to offer us -- the unary underscore operator. Binary underscore is [string concatenation](/pub/a/2001/10/03/exegesis3.html?page=2#(pre)fixing%20those%20filenames), so it shouldn't be too surprising that unary underscore is the stringification operator (think: concatenation with a null string). Prefixing any expression with an underscore forces it to be evaluated in string context:
+But Perl 6 has another alternative to offer us -- the unary underscore operator. Binary underscore is [string concatenation](/pub/2001/10/03/exegesis3.html?page=2#(pre)fixing%20those%20filenames), so it shouldn't be too surprising that unary underscore is the stringification operator (think: concatenation with a null string). Prefixing any expression with an underscore forces it to be evaluated in string context:
         _@{$data{costs}}     # evaluate array in string context
 
 Which, in this case, conveniently inserts the required spaces between the elements of the costs array.
@@ -478,7 +478,7 @@ So we could call `&load_data` in any of the following ways:
 
         load_data('weblog', 1);                     # positional (order matters)
 
-There are numerous other uses for pairs, one of which we'll see [shortly](/pub/a/2001/10/03/exegesis3.html?page=6#schwartzian%20pairs).
+There are numerous other uses for pairs, one of which we'll see [shortly](/pub/2001/10/03/exegesis3.html?page=6#schwartzian%20pairs).
 
 ### <span id="please queue for processing"></span>Please queue for processing
 
@@ -489,7 +489,7 @@ Having loaded the data, we go into a loop and iterate over each file's informati
 ### <span id="the xortwist"></span>The Xor-twist
 
 Then we toggle the "is active" status bit (the eighth bit) for each file. To flip that single bit without changing any of the other status bits, we bitwise-xor the status bitset against the bitstring `0000000010000000`. Each bit xor'd against a zero stays as it is (0 xor 0 --&gt; 0; 1 xor 0 --&gt; 1), while xor'ing the eighth bit against 1 complements it (0 xor 1 --&gt; 1; 1 xor 1 --&gt; 0).
-But because the caret has been appropriated as the Perl 6 [hyper-operator prefix](/pub/a/2001/10/03/exegesis3.html?page=2#substitute%20our%20vector,%20victor!), it will no longer be used as bitwise xor. Instead, binary tilde will be used:
+But because the caret has been appropriated as the Perl 6 [hyper-operator prefix](/pub/2001/10/03/exegesis3.html?page=2#substitute%20our%20vector,%20victor!), it will no longer be used as bitwise xor. Instead, binary tilde will be used:
 
         %data{$file}{stat} = %data{$file}{stat} ~ $is_active_bit;
 
@@ -653,13 +653,13 @@ Note that these new semantics for unary `+` are a little different from its role
         print  ($x + $y) * $z;        # in Perl 5 means: ( print($x+$y) ) * $z;
         print +($x + $y) * $z;        # in Perl 5 means: print( ($x+$y) * $z );
 
-To get the same effect in Perl 6, we'd use the [adverbial colon](/pub/a/2001/10/03/exegesis3.html?page=4#it%20is%20written...) instead:
+To get the same effect in Perl 6, we'd use the [adverbial colon](/pub/2001/10/03/exegesis3.html?page=4#it%20is%20written...) instead:
         print   ($x + $y) * $z;        # in Perl 6 means: ( print($x+$y) ) * $z;
         print : ($x + $y) * $z;        # in Perl 6 means: print( ($x+$y) * $z );
 
 ### <span id="schwartzian pairs"></span>Schwartzian pairs
 
-Another handy use for [pairs](/pub/a/2001/10/03/exegesis3.html?page=5#a%20parameter%20by%20any%20other%20name) is as a natural data structure for implementing the Schwartzian Transform. This caching technique is used when sorting a large list of values according to some expensive function on those values. Rather than writing:
+Another handy use for [pairs](/pub/2001/10/03/exegesis3.html?page=5#a%20parameter%20by%20any%20other%20name) is as a natural data structure for implementing the Schwartzian Transform. This caching technique is used when sorting a large list of values according to some expensive function on those values. Rather than writing:
         my @sorted = sort { expensive($a) <=> expensive($b) } @unsorted;
 
 and recomputing the same expensive function every time each value is compared during the sort, we can precompute the function on each value once. We then pass both the original value and its computed value to `sort`, use the computed value as the key on which to sort the list, but then return the original value as the result. Like this:
@@ -697,7 +697,7 @@ Note that we also used a hyper-multiplication (`^*`) to multiply each cost indiv
                      @costs;
 
 but spares us from the burden of yet another `map`.
-More importantly, because `@costs` is an [alias](/pub/a/2001/10/03/exegesis3.html?page=5#bound%20for%20glory) for `@%data{$file}{costs}`, when we assign the sorted list back to `@costs`, we're actually assigning it back into the appropriate sub-entry of `%data`.
+More importantly, because `@costs` is an [alias](/pub/2001/10/03/exegesis3.html?page=5#bound%20for%20glory) for `@%data{$file}{costs}`, when we assign the sorted list back to `@costs`, we're actually assigning it back into the appropriate sub-entry of `%data`.
 
 ### <span id="the sum of all our fears"></span>The ∑ of all our fears
 
@@ -792,7 +792,7 @@ Adverbs will probably become widely used for passing this type of "out-of-band" 
 ### <span id="would you like an adverb with that"></span>Would you like an adverb with that?
 
 OK, so now our `∑` operator can take a modifying filter. How exactly do we pass that filter to it?
-As described [earlier](/pub/a/2001/10/03/exegesis3.html?page=4#it%20is%20written...), the colon is used to introduce adverbial arguments into the argument list of a subroutine or operator. So to do a normal summation we write:
+As described [earlier](/pub/2001/10/03/exegesis3.html?page=4#it%20is%20written...), the colon is used to introduce adverbial arguments into the argument list of a subroutine or operator. So to do a normal summation we write:
 
         $sum = ∑ @costs;
 

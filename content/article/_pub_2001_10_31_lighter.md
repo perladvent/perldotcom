@@ -1,16 +1,16 @@
 {
+   "tags" : [],
    "thumbnail" : "/images/_pub_2001_10_31_lighter/111-perlcpan.jpg",
-   "image" : null,
    "date" : "2001-10-31T00:00:00-08:00",
-   "categories" : "CPAN",
+   "categories" : "cpan",
+   "image" : null,
+   "title" : "The Lighter Side of CPAN",
+   "slug" : "/pub/2001/10/31/lighter.html",
+   "description" : " Programming can be a stressful game. We sit at our machines, day in, day out, endlessly staring at a monitor fathoming where that last devious bug has buried itself. It's not surprising then that sometimes it gets to be...",
+   "draft" : null,
    "authors" : [
       "alex-gough"
-   ],
-   "title" : "The Lighter Side of CPAN",
-   "tags" : [],
-   "slug" : "/pub/2001/10/31/lighter.html",
-   "draft" : null,
-   "description" : " Programming can be a stressful game. We sit at our machines, day in, day out, endlessly staring at a monitor fathoming where that last devious bug has buried itself. It's not surprising then that sometimes it gets to be..."
+   ]
 }
 
 

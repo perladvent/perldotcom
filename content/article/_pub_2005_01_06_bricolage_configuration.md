@@ -1,14 +1,8 @@
 {
-   "categories" : "Web",
-   "authors" : [
-      "david-wheeler"
-   ],
+   "date" : "2005-01-06T00:00:00-08:00",
+   "categories" : "web",
    "title" : "Bricolage Configuration Directives",
    "image" : null,
-   "thumbnail" : null,
-   "date" : "2005-01-06T00:00:00-08:00",
-   "draft" : null,
-   "description" : " In my previous article, I provided a guided tour of the Bricolage installation process. If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as Mr. Popeil used to...",
    "tags" : [
       "bricolage",
       "bricolage-configuration",
@@ -18,12 +12,18 @@
       "cpan-installation",
       "mod-perl-installation"
    ],
-   "slug" : "/pub/2005/01/06/bricolage_configuration.html"
+   "thumbnail" : null,
+   "description" : " In my previous article, I provided a guided tour of the Bricolage installation process. If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as Mr. Popeil used to...",
+   "slug" : "/pub/2005/01/06/bricolage_configuration.html",
+   "draft" : null,
+   "authors" : [
+      "david-wheeler"
+   ]
 }
 
 
 
-In my previous article, I provided [a guided tour of the Bricolage installation process](/pub/a/2004/10/28/bricolage_installation.html "Installing Bricolage"). If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as [Mr. Popeil](http://www.com-www.com/weirdal/mrpopeil.html "Mr. Popeil") used to say, *"But wait, there's more!"*
+In my previous article, I provided [a guided tour of the Bricolage installation process](/pub/2004/10/28/bricolage_installation.html "Installing Bricolage"). If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as [Mr. Popeil](http://www.com-www.com/weirdal/mrpopeil.html "Mr. Popeil") used to say, *"But wait, there's more!"*
 
 Like many other applications, Bricolage comes with a runtime configuration file. This file, named *bricolage.conf*, lives in the *conf* subdirectory of your Bricolage root. It contains a list of settings that tell Bricolage how to find things, how to connect to the database, which optional features to include, and other good stuff. This article provides a guided tour of all of the configuration settings in *bricolage.conf* to enable you to configure things exactly the way you need them, so that you can manage your sites more effectively with Bricolage.
 

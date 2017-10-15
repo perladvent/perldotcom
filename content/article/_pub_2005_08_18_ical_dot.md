@@ -1,6 +1,5 @@
 {
-   "draft" : null,
-   "description" : " One of the attributes of a killer application is that it does something cool: it allows you to view or organize information in new and interesting ways, saves you time, or helps you win that auction bid. Yet one...",
+   "thumbnail" : "/images/_pub_2005_08_18_ical_dot/111-ical_graphs.gif",
    "tags" : [
       "calendar-visualization",
       "dot",
@@ -9,15 +8,16 @@
       "icalendar",
       "perl-glue-language"
    ],
+   "date" : "2005-08-18T00:00:00-08:00",
+   "image" : null,
+   "title" : "Parsing iCal Data",
+   "categories" : "science",
    "slug" : "/pub/2005/08/18/ical_dot.html",
-   "categories" : "Science",
+   "description" : " One of the attributes of a killer application is that it does something cool: it allows you to view or organize information in new and interesting ways, saves you time, or helps you win that auction bid. Yet one...",
    "authors" : [
       "robert-pratte"
    ],
-   "title" : "Parsing iCal Data",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2005_08_18_ical_dot/111-ical_graphs.gif",
-   "date" : "2005-08-18T00:00:00-08:00"
+   "draft" : null
 }
 
 

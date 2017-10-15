@@ -1,14 +1,14 @@
 {
-   "categories" : "Tooling",
-   "title" : "Affrus: An OS X Perl IDE",
+   "description" : " When I last reviewed a Perl IDE, ActiveState's Komodo, I was nearly convinced; the only problem was that I use Mac OS X. Now, Late Night Software, more commonly known for their AppleScript tools, have taken their Mac programming...",
+   "slug" : "/pub/2004/05/14/affrus.html",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "image" : null,
-   "thumbnail" : "/images/_pub_2004_05_14_affrus/111-affrus.gif",
    "date" : "2004-05-14T00:00:00-08:00",
-   "description" : " When I last reviewed a Perl IDE, ActiveState's Komodo, I was nearly convinced; the only problem was that I use Mac OS X. Now, Late Night Software, more commonly known for their AppleScript tools, have taken their Mac programming...",
-   "draft" : null,
+   "categories" : "tooling",
+   "title" : "Affrus: An OS X Perl IDE",
+   "image" : null,
    "tags" : [
       "affrus",
       "ide",
@@ -16,12 +16,12 @@
       "os-x-ide",
       "unix-editors"
    ],
-   "slug" : "/pub/2004/05/14/affrus.html"
+   "thumbnail" : "/images/_pub_2004_05_14_affrus/111-affrus.gif"
 }
 
 
 
-When I [last reviewed](/pub/a/2002/10/09/komodo.html) a Perl IDE, ActiveState's Komodo, I was nearly convinced; the only problem was that I use Mac OS X. Now, [Late Night Software](http://www.latenightsw.com/), more commonly known for their AppleScript tools, have taken their Mac programming experience and applied it to create [Affrus](http://www.latenightsw.com/affrus/index.html), a Perl IDE for the Mac. And I'm a little closer to being convinced.
+When I [last reviewed](/pub/2002/10/09/komodo.html) a Perl IDE, ActiveState's Komodo, I was nearly convinced; the only problem was that I use Mac OS X. Now, [Late Night Software](http://www.latenightsw.com/), more commonly known for their AppleScript tools, have taken their Mac programming experience and applied it to create [Affrus](http://www.latenightsw.com/affrus/index.html), a Perl IDE for the Mac. And I'm a little closer to being convinced.
 
 Affrus differs from Komodo in some substantial ways. Where Komodo couples its editor tightly with a Perl interpreter to allow background syntax checking and on-the-fly warnings highlighting, Affrus takes a more traditional, detached approach: syntax checks are performed on demand, with errors and warnings placed in a separate panel. Fans of `emacs`'s debugging modes will be happier to see this:
 

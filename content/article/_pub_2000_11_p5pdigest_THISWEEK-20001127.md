@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "description" : " Notes Regexp Engine SOCKS and Sockets for, map and grep Encode Licensing PERL5OPT Unicode on Big Iron Carp SvTEMP Locales and Floats Low-Hanging Fruit Miscellaneous Notes You can subscribe to an e-mail version of this summary by sending an...",
-   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001127.html",
+   "categories" : "community",
+   "title" : "This Week on p5p 2000/11/27",
+   "image" : null,
+   "date" : "2000-11-27T00:00:00-08:00",
    "tags" : [],
+   "thumbnail" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "This Week on p5p 2000/11/27",
-   "categories" : "community",
-   "date" : "2000-11-27T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null
+   "draft" : null,
+   "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001127.html",
+   "description" : " Notes Regexp Engine SOCKS and Sockets for, map and grep Encode Licensing PERL5OPT Unicode on Big Iron Carp SvTEMP Locales and Floats Low-Hanging Fruit Miscellaneous Notes You can subscribe to an e-mail version of this summary by sending an..."
 }
 
 

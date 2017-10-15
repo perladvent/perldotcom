@@ -1,16 +1,16 @@
 {
+   "image" : null,
+   "title" : "This Week on p5p 2000/07/09",
    "categories" : "community",
+   "date" : "2000-07-09T00:00:00-08:00",
+   "thumbnail" : null,
+   "tags" : [],
    "authors" : [
       "mark-jason-dominus"
    ],
-   "title" : "This Week on p5p 2000/07/09",
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-07-09T00:00:00-08:00",
    "draft" : null,
-   "description" : " Notes NEW! RDF Available Bug Database buildtoc use namespace Unicode Input Solution tr/a-z-0// Mutual use sprintf tests Complex Expressions in Formats Threading Failure Test Case What does changing PL_sh_path do? UNTIE Method Sarathy Fixes a Bug that Nobody Knew...",
-   "tags" : [],
-   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000709.html"
+   "slug" : "/pub/2000/07/p5pdigest/THISWEEK-20000709.html",
+   "description" : " Notes NEW! RDF Available Bug Database buildtoc use namespace Unicode Input Solution tr/a-z-0// Mutual use sprintf tests Complex Expressions in Formats Threading Failure Test Case What does changing PL_sh_path do? UNTIE Method Sarathy Fixes a Bug that Nobody Knew..."
 }
 
 
@@ -36,8 +36,6 @@
 #### <span id="NEW__RDF_Available">NEW! RDF Available</span>
 
 Starting with last week's report, you can get an RDF for each report by replacing the `.html` in the filename with `.rdf`.
-
-The current report will always be available from [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi). The RDF for the current report will always be available from [http://www.perl.com/p5pdigest.cgi?s=rdf](/p5pdigest.cgi?s=rdf).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

@@ -1,21 +1,21 @@
 {
-   "slug" : "/pub/2003/05/22/testing.html",
-   "tags" : [],
-   "draft" : null,
-   "description" : " Last time, we looked at writing a simple Apache output filter - Apache::Clean - using the mod_perl 2.0 API. How did I know that the filter I presented really worked? I wrote a test suite for it, one that...",
-   "date" : "2003-05-22T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
    "authors" : [
       "geoffrey-young"
    ],
+   "draft" : null,
+   "description" : " Last time, we looked at writing a simple Apache output filter - Apache::Clean - using the mod_perl 2.0 API. How did I know that the filter I presented really worked? I wrote a test suite for it, one that...",
+   "slug" : "/pub/2003/05/22/testing.html",
+   "thumbnail" : null,
+   "tags" : [],
    "title" : "Testing mod_perl 2.0",
-   "categories" : "web"
+   "image" : null,
+   "categories" : "web",
+   "date" : "2003-05-22T00:00:00-08:00"
 }
 
 
 
-[Last time](/pub/a/2003/04/17/filters.html), we looked at writing a simple Apache output filter - `Apache::Clean` - using the mod\_perl 2.0 API. How did I know that the filter I presented really worked? I wrote a test suite for it, one that exercised [the code](http://www.modperlcookbook.org/~geoff/perl.com/Apache-Clean-2.0.tar.gz) against a live Apache server using the `Apache-Test` testing framework.
+[Last time](/pub/2003/04/17/filters.html), we looked at writing a simple Apache output filter - `Apache::Clean` - using the mod\_perl 2.0 API. How did I know that the filter I presented really worked? I wrote a test suite for it, one that exercised [the code](http://www.modperlcookbook.org/~geoff/perl.com/Apache-Clean-2.0.tar.gz) against a live Apache server using the `Apache-Test` testing framework.
 
 Writing a series of tests that executes against a live Apache server has become much simpler since the advent of `Apache-Test`. Although `Apache-Test`, as part of the [Apache HTTP Test Project](http://httpd.apache.org/test/), is generic enough to be used with virtually any version of Apache (with or without mod\_perl enabled), it comes bundled with mod\_perl 2.0, making it the tool of choice for writing tests for your mod\_perl 2.0 modules.
 
@@ -25,7 +25,7 @@ There are many advantages to writing tests. For instance, maintaining the test s
 
 Of course, these benefits come from having *any* testing environment, and are not limited to just `Apache-Test`. The particular advantage that `Apache-Test` brings to the table is the ease at which it puts a whole, pristine, and isolated Apache server at your disposal, allowing you to test and exercise your code in a live environment with a minimum of effort. No more `Apache::FakeRequest`, no more `httpd.conf` configurations strewn across development environments or corrupted with proof-of-concept handlers that keep you busy following non-bugs for half a day. No more mess, no more tears.
 
-If you have ever used tools like `Test.pm` or `Test::More` as the basis for testing your modules, then you already know most of what using `Apache-Test` is going to look like. In fact, `Apache-Test` uses `Test.pm` under the hood, so the layout and syntax are similar. If you have never written a test before, (and shame on you)then [An Introduction to Testing](/pub/a/2001/12/04/testing.html) provides a nice overview of testing with Perl. For the most part, though, `Apache-Test` is really simple enough that you should be able to follow along here without any trouble or previous knowledge.
+If you have ever used tools like `Test.pm` or `Test::More` as the basis for testing your modules, then you already know most of what using `Apache-Test` is going to look like. In fact, `Apache-Test` uses `Test.pm` under the hood, so the layout and syntax are similar. If you have never written a test before, (and shame on you)then [An Introduction to Testing](/pub/2001/12/04/testing.html) provides a nice overview of testing with Perl. For the most part, though, `Apache-Test` is really simple enough that you should be able to follow along here without any trouble or previous knowledge.
 
 Leveraging the `Apache-Test` framework requires only a few steps - generating the test harness, configuring Apache to your specific needs, and writing the tests - each of which is relatively straightforward.
 
@@ -47,7 +47,7 @@ The first step to using `Apache-Test` is to tweak the `Makefile.PL` for your mod
     Writing Apache/Clean/MANIFEST
       
 
-`h2xs` generates the necessary structure for our module, namely the `Clean.pm` template and the `Makefile.PL`, as well as the `t/` subdirectory where our tests and supporting files will eventually live. You can take some extra steps and shuffle the distribution around a bit (such as removing `t/1.t` and putting everything into `Apache-Clean/` instead of `Apache/Clean/`) but it is not required. Once you have the module layout sorted out and have replaced the generated `Clean.pm` stub with [the actual `Clean.pm` filter](/pub/a/2003/04/17/filters.html) from before, it's time to start preparing the basic test harness.
+`h2xs` generates the necessary structure for our module, namely the `Clean.pm` template and the `Makefile.PL`, as well as the `t/` subdirectory where our tests and supporting files will eventually live. You can take some extra steps and shuffle the distribution around a bit (such as removing `t/1.t` and putting everything into `Apache-Clean/` instead of `Apache/Clean/`) but it is not required. Once you have the module layout sorted out and have replaced the generated `Clean.pm` stub with [the actual `Clean.pm` filter](/pub/2003/04/17/filters.html) from before, it's time to start preparing the basic test harness.
 
 To begin, we need to modify the `Makefile.PL` significantly. The end result should look something like:
 

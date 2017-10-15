@@ -1,15 +1,15 @@
 {
    "draft" : null,
-   "description" : "℞ 17: Make ﬁle I/O default to utf8 If you've ever had the misfortune of seeing the Unicode warning \"wide character in print\", you may have realized that something forgot to set the appropriate Unicode-capable encoding on a filehandle somewhere...",
-   "slug" : "/pub/2012/05/perlunicook-make-file-io-default-to-utf-8.html",
-   "tags" : [],
    "authors" : [
       "tom-christiansen"
    ],
-   "title" : "Perl Unicode Cookbook: Make File I/O Default to UTF-8",
+   "description" : "℞ 17: Make ﬁle I/O default to utf8 If you've ever had the misfortune of seeing the Unicode warning \"wide character in print\", you may have realized that something forgot to set the appropriate Unicode-capable encoding on a filehandle somewhere...",
+   "slug" : "/pub/2012/05/perlunicook-make-file-io-default-to-utf-8.html",
    "categories" : "unicode",
-   "date" : "2012-05-01T06:00:01-08:00",
+   "title" : "Perl Unicode Cookbook: Make File I/O Default to UTF-8",
    "image" : null,
+   "date" : "2012-05-01T06:00:01-08:00",
+   "tags" : [],
    "thumbnail" : null
 }
 

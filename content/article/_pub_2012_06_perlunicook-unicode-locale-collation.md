@@ -1,16 +1,16 @@
 {
-   "date" : "2012-06-05T06:00:01-08:00",
    "thumbnail" : null,
+   "tags" : [],
    "image" : null,
    "title" : "Perl Unicode Cookbook: Unicode Locale Collation",
+   "categories" : "unicode",
+   "date" : "2012-06-05T06:00:01-08:00",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "categories" : "unicode",
-   "slug" : "/pub/2012/06/perlunicook-unicode-locale-collation.html",
-   "tags" : [],
    "description" : "℞ 37: Unicode locale collation As you've already seen, Unicode-aware sorting respects Unicode character properties. You can't sort by codepoint and expect to get accurate results, not even if you stick with pure ASCII. The world is a complicated place....",
-   "draft" : null
+   "slug" : "/pub/2012/06/perlunicook-unicode-locale-collation.html"
 }
 
 

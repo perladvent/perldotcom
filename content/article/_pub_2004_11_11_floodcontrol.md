@@ -1,21 +1,21 @@
 {
-   "image" : null,
-   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
-   "date" : "2004-11-11T00:00:00-08:00",
-   "categories" : "science",
+   "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular...",
+   "slug" : "/pub/2004/11/11/floodcontrol.html",
    "authors" : [
       "vladi-belperchinov-shabanski"
    ],
-   "title" : "Implementing Flood Control",
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
    "tags" : [
       "algorithm-floodcontrol",
       "event-processing",
       "flood-control",
       "vladi-belperchinov-shabanski"
    ],
-   "slug" : "/pub/2004/11/11/floodcontrol.html",
-   "draft" : null,
-   "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular..."
+   "date" : "2004-11-11T00:00:00-08:00",
+   "image" : null,
+   "title" : "Implementing Flood Control",
+   "categories" : "science"
 }
 
 

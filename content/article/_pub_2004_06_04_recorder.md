@@ -1,21 +1,21 @@
 {
-   "categories" : "Web",
-   "title" : "Web Testing with HTTP::Recorder",
+   "description" : " HTTP::Recorder is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces WWW::Mechanize scripts by default (see WWW::Mechanize by Andy Lester), but provides functionality to use your own custom logger. Why Use...",
+   "slug" : "/pub/2004/06/04/recorder.html",
+   "draft" : null,
    "authors" : [
       "linda-julien"
    ],
-   "thumbnail" : "/images/_pub_2004_06_04_recorder/111-httprec.gif",
-   "image" : null,
-   "date" : "2004-06-04T00:00:00-08:00",
-   "description" : " HTTP::Recorder is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces WWW::Mechanize scripts by default (see WWW::Mechanize by Andy Lester), but provides functionality to use your own custom logger. Why Use...",
-   "draft" : null,
    "tags" : [
       "proxy",
       "recorder",
       "testing",
       "web"
    ],
-   "slug" : "/pub/2004/06/04/recorder.html"
+   "thumbnail" : "/images/_pub_2004_06_04_recorder/111-httprec.gif",
+   "date" : "2004-06-04T00:00:00-08:00",
+   "categories" : "web",
+   "title" : "Web Testing with HTTP::Recorder",
+   "image" : null
 }
 
 
@@ -103,7 +103,7 @@ The control panel won't automatically refresh , but if you create `HTTP::Recorde
 
 #### Updating Scripts as They're Recorded
 
-You can record many things, and then turn the recordings into scripts later, or you can make changes and additions as you go by editing the script in the [Control Panel](/pub/a/2004/06/04/recorder.html?page=1#control_panel).
+You can record many things, and then turn the recordings into scripts later, or you can make changes and additions as you go by editing the script in the [Control Panel](/pub/2004/06/04/recorder.html?page=1#control_panel).
 
 For example, if you record filling in this form and clicking the Submit button:
 

@@ -1,16 +1,16 @@
 {
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2000-11-07T00:00:00-08:00",
-   "categories" : "community",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "This Week on p5p 2000/11/07",
-   "tags" : [],
    "slug" : "/pub/2000/11/p5pdigest/THISWEEK-20001107.html",
-   "draft" : null,
-   "description" : " Notes Error number parsing VMS hackery The (f)crypt of mystery Yet more self-ties Rsync vs. FTP'ing the patches Changes to README.aix The Regex Stack Problem Things nobody's fixed Craig Berry Various Notes You can subscribe to an email version..."
+   "description" : " Notes Error number parsing VMS hackery The (f)crypt of mystery Yet more self-ties Rsync vs. FTP'ing the patches Changes to README.aix The Regex Stack Problem Things nobody's fixed Craig Berry Various Notes You can subscribe to an email version...",
+   "thumbnail" : null,
+   "tags" : [],
+   "title" : "This Week on p5p 2000/11/07",
+   "image" : null,
+   "categories" : "community",
+   "date" : "2000-11-07T00:00:00-08:00"
 }
 
 

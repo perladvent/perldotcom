@@ -1,18 +1,18 @@
 {
-   "title" : "Improving mod_perl Sites' Performance: Part 5",
+   "description" : "Sharing Memory As we have learned in the previous article, sharing memory helps us save memory with mod_perl, giving us a huge speed increase; but we pay the price with a big memory footprint. I presented a few techniques to...",
+   "slug" : "/pub/2002/12/04/mod_perl.html",
+   "draft" : null,
    "authors" : [
       "stas-bekman"
    ],
-   "categories" : "web",
-   "date" : "2002-12-04T00:00:00-08:00",
-   "image" : null,
    "thumbnail" : null,
-   "description" : "Sharing Memory As we have learned in the previous article, sharing memory helps us save memory with mod_perl, giving us a huge speed increase; but we pay the price with a big memory footprint. I presented a few techniques to...",
-   "draft" : null,
-   "slug" : "/pub/2002/12/04/mod_perl.html",
    "tags" : [
       "mod-perl-shared-memory"
-   ]
+   ],
+   "date" : "2002-12-04T00:00:00-08:00",
+   "title" : "Improving mod_perl Sites' Performance: Part 5",
+   "image" : null,
+   "categories" : "web"
 }
 
 

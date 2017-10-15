@@ -1,6 +1,9 @@
 {
-   "draft" : null,
-   "description" : "Using Module::Build, using Swing from Perl, turning modules into scripts, adding mocks to test fixtures-it's time for more Perl lightning articles!",
+   "date" : "2006-07-13T00:00:00-08:00",
+   "title" : "Still More Perl Lightning Articles",
+   "image" : null,
+   "categories" : "development",
+   "thumbnail" : "/images/_pub_2006_07_13_lightning-articles/111-perl-lit-art.gif",
    "tags" : [
       "java-swing",
       "mock-objects",
@@ -15,17 +18,14 @@
       "test-mockobject-extends"
    ],
    "slug" : "/pub/2006/07/13/lightning-articles.html",
-   "categories" : "development",
+   "description" : "Using Module::Build, using Swing from Perl, turning modules into scripts, adding mocks to test fixtures-it's time for more Perl lightning articles!",
    "authors" : [
       "chromatic",
       "phil-crow",
       "josh-mcadams",
       "steven-schubiger"
    ],
-   "title" : "Still More Perl Lightning Articles",
-   "thumbnail" : "/images/_pub_2006_07_13_lightning-articles/111-perl-lit-art.gif",
-   "image" : null,
-   "date" : "2006-07-13T00:00:00-08:00"
+   "draft" : null
 }
 
 

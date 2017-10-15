@@ -1,16 +1,16 @@
 {
-   "image" : null,
-   "thumbnail" : null,
    "date" : "2012-04-09T06:00:01-08:00",
    "categories" : "unicode",
+   "image" : null,
+   "title" : "Perl Unicode Cookbook: Characters and Their Numbers",
+   "tags" : [],
+   "thumbnail" : null,
+   "slug" : "/pub/2012/04/perlunicook-chars-and-their-nums.html",
+   "description" : "℞ 4: Characters and their numbers Do you need to translate a codepoint to a character or a character to its codepoint? The ord and chr functions work transparently on all codepoints, not just on ASCII alone&mdash;nor in fact, not...",
    "authors" : [
       "tom-christiansen"
    ],
-   "title" : "Perl Unicode Cookbook: Characters and Their Numbers",
-   "tags" : [],
-   "slug" : "/pub/2012/04/perlunicook-chars-and-their-nums.html",
-   "draft" : null,
-   "description" : "℞ 4: Characters and their numbers Do you need to translate a codepoint to a character or a character to its codepoint? The ord and chr functions work transparently on all codepoints, not just on ASCII alone&mdash;nor in fact, not..."
+   "draft" : null
 }
 
 

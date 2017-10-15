@@ -1,14 +1,14 @@
 {
-   "categories" : "community",
-   "title" : "The Evolution of ePayment Services at UB",
+   "slug" : "/pub/2004/12/09/epayment.html",
+   "description" : " In the summer of 2001, the State University of New York at Buffalo (UB) hired a new Provost. She surveyed various school services and came up with a short list of must-do projects. Given the level of competition in...",
    "authors" : [
       "jim-brandt"
    ],
-   "thumbnail" : "/images/_pub_2004_12_09_epayment/111-success.gif",
-   "image" : null,
-   "date" : "2004-12-09T00:00:00-08:00",
-   "description" : " In the summer of 2001, the State University of New York at Buffalo (UB) hired a new Provost. She surveyed various school services and came up with a short list of must-do projects. Given the level of competition in...",
    "draft" : null,
+   "date" : "2004-12-09T00:00:00-08:00",
+   "categories" : "community",
+   "title" : "The Evolution of ePayment Services at UB",
+   "image" : null,
    "tags" : [
       "inline-java",
       "perl-billing",
@@ -17,7 +17,7 @@
       "perl-success-stories",
       "university-of-new-york-at-buffalo"
    ],
-   "slug" : "/pub/2004/12/09/epayment.html"
+   "thumbnail" : "/images/_pub_2004_12_09_epayment/111-success.gif"
 }
 
 

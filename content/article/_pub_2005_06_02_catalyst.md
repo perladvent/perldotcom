@@ -1,5 +1,11 @@
 {
    "slug" : "/pub/2005/06/02/catalyst.html",
+   "description" : " Web frameworks are an area of significant interest at the moment. Now that we've all learned the basics of web programming, we're ready to get the common stuff out of the way to concentrate on the task at hand;...",
+   "authors" : [
+      "jesse-sheidlower"
+   ],
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2005_06_02_catalyst/111-catalyst.gif",
    "tags" : [
       "catalyst",
       "minimojo",
@@ -10,16 +16,10 @@
       "perl-web-framework",
       "perl-wiki"
    ],
-   "draft" : null,
-   "description" : " Web frameworks are an area of significant interest at the moment. Now that we've all learned the basics of web programming, we're ready to get the common stuff out of the way to concentrate on the task at hand;...",
    "date" : "2005-06-02T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : "/images/_pub_2005_06_02_catalyst/111-catalyst.gif",
-   "authors" : [
-      "jesse-sheidlower"
-   ],
    "title" : "Catalyst",
-   "categories" : "Web"
+   "categories" : "web"
 }
 
 
@@ -32,7 +32,7 @@ Catalyst is a new MVC framework for Perl. It is currently under rapid developmen
 
 #### Inspirations
 
-Catalyst grew out of Maypole, an MVC framework developed by Simon Cozens (and discussed last year on Perl.com; see "[Rapid Web Application Development with Maypole](/pub/a/2004/04/15/maypole.html)," for example). Maypole works well for typical CRUD (Create, Retrieve, Update, Delete) databases on the Web. It includes a variety of useful methods and prewritten templates and template macros that make it very easy to set up a powerful web database. However, it focuses so strongly on CRUD that it is less flexible for other tasks. One of the goals of Catalyst is to provide a framework well suited for any web-related project.
+Catalyst grew out of Maypole, an MVC framework developed by Simon Cozens (and discussed last year on Perl.com; see "[Rapid Web Application Development with Maypole](/pub/2004/04/15/maypole.html)," for example). Maypole works well for typical CRUD (Create, Retrieve, Update, Delete) databases on the Web. It includes a variety of useful methods and prewritten templates and template macros that make it very easy to set up a powerful web database. However, it focuses so strongly on CRUD that it is less flexible for other tasks. One of the goals of Catalyst is to provide a framework well suited for any web-related project.
 
 [Ruby on Rails](http://www.rubyonrails.org/) was another inspiration; this popular system has done much to promote interest in the Ruby programming language. Features we borrowed from RoR are the use of helper scripts to generate application components and the ability to have multiple controllers in a single application. Both RoR and Struts allow the use of forwarding within applications, which also proved useful for Catalyst.
 

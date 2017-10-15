@@ -1,23 +1,23 @@
 {
-   "categories" : "development",
-   "title" : "Bless My Referents",
+   "draft" : null,
    "authors" : [
       "damian-conway"
    ],
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "1999-09-16T00:00:00-08:00",
    "description" : " Introduction Damian Conway is the author of the newly released Object Oriented Perl, the first of a new series of Perl books from Manning. Object-oriented programming in Perl is easy. Forget the heavy theory and the sesquipedalian jargon: classes...",
-   "draft" : null,
-   "tags" : [],
-   "slug" : "/pub/1999/09/refererents.html"
+   "slug" : "/pub/1999/09/refererents.html",
+   "title" : "Bless My Referents",
+   "image" : null,
+   "categories" : "development",
+   "date" : "1999-09-16T00:00:00-08:00",
+   "thumbnail" : null,
+   "tags" : []
 }
 
 
 
 ### Introduction
 
-*Damian Conway is the author of the newly released [Object Oriented Perl](/pub/p/Object_Oriented_Perl), the first of a new series of Perl books from Manning.*
+*Damian Conway is the author of the newly released [Object Oriented Perl](https://www.manning.com/books/object-oriented-perl), the first of a new series of Perl books from Manning.*
 
 Object-oriented programming in Perl is easy. Forget the heavy theory and the sesquipedalian jargon: classes in Perl are just regular packages, objects are just variables, methods are just subroutines. The syntax and semantics are a little different from regular Perl, but the basic building blocks are completely familiar.
 

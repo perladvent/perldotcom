@@ -1,14 +1,14 @@
 {
    "slug" : "/pub/2000/04/p5pdigest/THISWEEK-20000423.html",
-   "tags" : [],
-   "draft" : null,
    "description" : " Notes Meta-Information Brief Update p5p to become Refereed? perlretut and perlrequick Threading Hilarity Line Disciplines Older Discussion of Disciplines Big Line Numbers Pseudohash Field Names, Hash Performance, and map Performance C with Embedded Perl `Unreachable' code. sprintf Precision SDF...",
-   "date" : "2000-04-23T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
+   "thumbnail" : null,
+   "tags" : [],
+   "date" : "2000-04-23T00:00:00-08:00",
+   "image" : null,
    "title" : "This Week on p5p 2000/04/23",
    "categories" : "community"
 }
@@ -34,8 +34,6 @@
 ### <span id="Notes">Notes</span>
 
 #### <span id="Meta_Information_">Meta-Information</span>
-
-The most recent report will always be available at [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

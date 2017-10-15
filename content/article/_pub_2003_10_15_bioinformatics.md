@@ -1,14 +1,4 @@
 {
-   "categories" : "science",
-   "title" : "A Chromosome at a Time with Perl, Part 2",
-   "authors" : [
-      "james-d--tisdall"
-   ],
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2003-10-15T00:00:00-08:00",
-   "description" : " James D. Tisdall is the author of the recently released Mastering Perl for Bioinformatics. In my previous article, A Chromosome at a Time with Perl, Part I, I showed you some programming \"tricks\" that help you avoid the trap...",
-   "draft" : null,
    "tags" : [
       "bioinformatics",
       "bioperl",
@@ -19,14 +9,24 @@
       "perl-and-bioinformatics",
       "subroutines"
    ],
-   "slug" : "/pub/2003/10/15/bioinformatics.html"
+   "thumbnail" : null,
+   "date" : "2003-10-15T00:00:00-08:00",
+   "categories" : "science",
+   "image" : null,
+   "title" : "A Chromosome at a Time with Perl, Part 2",
+   "slug" : "/pub/2003/10/15/bioinformatics.html",
+   "description" : " James D. Tisdall is the author of the recently released Mastering Perl for Bioinformatics. In my previous article, A Chromosome at a Time with Perl, Part I, I showed you some programming \"tricks\" that help you avoid the trap...",
+   "draft" : null,
+   "authors" : [
+      "james-d--tisdall"
+   ]
 }
 
 
 
 *James D. Tisdall is the author of the recently released* [Mastering Perl for Bioinformatics](http://www.oreilly.com/catalog/mperlbio/index.html?CMP=IL7015)*.*
 
-In my previous article, [A Chromosome at a Time with Perl, Part I](/pub/a/2003/09/10/bioinformatics.html), I showed you some programming "tricks" that help you avoid the trap of using up all your main memory when coding for very long strings, such as chromosomes and entire genomes.
+In my previous article, [A Chromosome at a Time with Perl, Part I](/pub/2003/09/10/bioinformatics.html), I showed you some programming "tricks" that help you avoid the trap of using up all your main memory when coding for very long strings, such as chromosomes and entire genomes.
 
 The basic approach involved improving your code's running time by limiting the amount of memory space the program uses. The tricks discussed were calling subroutines with references as arguments, and searching for a pattern in a very large file by keeping only a small "window" of the file in memory at any one time, in a buffer.
 

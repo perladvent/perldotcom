@@ -1,15 +1,15 @@
 {
-   "image" : null,
+   "tags" : [],
    "thumbnail" : null,
    "date" : "1999-11-30T00:00:00-08:00",
    "categories" : "development",
+   "image" : null,
    "title" : "Sins of Perl Revisited",
+   "slug" : "/pub/1999/11/sins.html",
+   "description" : "Sins of Perl Revisited -> Sins of Perl Revisited Implicit Behaviors and Hidden Context Dependencies To Paren || ! To Paren? Global Variables References vs. Non-references No Prototypes No Compiler Support for I/O or Regex Objects Haphazard Exception Model New...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "tags" : [],
-   "slug" : "/pub/1999/11/sins.html",
-   "description" : "Sins of Perl Revisited -> Sins of Perl Revisited Implicit Behaviors and Hidden Context Dependencies To Paren || ! To Paren? Global Variables References vs. Non-references No Prototypes No Compiler Support for I/O or Regex Objects Haphazard Exception Model New...",
    "draft" : null
 }
 
@@ -29,7 +29,7 @@
 
 ------------------------------------------------------------------------
 
-Long ago, back in the Perl 4 days, Tom Christiansen wrote an article called [The Seven Deadly Sins of Perl](/pub/language/versus/perl.html), describing the biggest problems in the Perl language at the time. A few years later, he went over the list again to see how well the problems had been addressed by Perl 5. That was in 1996; I think it's time for another update. Where are we now?
+Long ago, back in the Perl 4 days, Tom Christiansen wrote an article called [The Seven Deadly Sins of Perl](/doc/FMTEYEWTK/versus/perl.html), describing the biggest problems in the Perl language at the time. A few years later, he went over the list again to see how well the problems had been addressed by Perl 5. That was in 1996; I think it's time for another update. Where are we now?
 
 Tom's original Seven Sins:
 

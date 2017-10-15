@@ -1,21 +1,21 @@
 {
-   "categories" : "Community",
+   "date" : "2001-06-12T00:00:00-08:00",
+   "image" : null,
    "title" : "The Beginner's Attitude of Perl: What Attitude?",
+   "categories" : "community",
+   "thumbnail" : "/images/_pub_2001_06_12_anti_begin/111-perl-attitude.jpg",
+   "tags" : [],
+   "slug" : "/pub/2001/06/12/anti_begin.html",
+   "description" : "A recent article here, Turning the Tides of Perl's Attitude Toward Beginners,\" described places on the Internet where beginners could get help without fear of being flamed mercilessly by insensitive, elitist Perl experts. Experienced programmers, in short, must be more...",
    "authors" : [
       "robert-kiesling"
    ],
-   "thumbnail" : "/images/_pub_2001_06_12_anti_begin/111-perl-attitude.jpg",
-   "image" : null,
-   "date" : "2001-06-12T00:00:00-08:00",
-   "description" : "A recent article here, Turning the Tides of Perl's Attitude Toward Beginners,\" described places on the Internet where beginners could get help without fear of being flamed mercilessly by insensitive, elitist Perl experts. Experienced programmers, in short, must be more...",
-   "draft" : null,
-   "tags" : [],
-   "slug" : "/pub/2001/06/12/anti_begin.html"
+   "draft" : null
 }
 
 
 
-A recent article here, [Turning the Tides of Perl's Attitude Toward Beginners](/pub/a/2001/05/29/tides.html)," described places on the Internet where beginners could get help without fear of being flamed mercilessly by insensitive, elitist Perl experts. Experienced programmers, in short, must be more patient with newbies.
+A recent article here, [Turning the Tides of Perl's Attitude Toward Beginners](/pub/2001/05/29/tides.html)," described places on the Internet where beginners could get help without fear of being flamed mercilessly by insensitive, elitist Perl experts. Experienced programmers, in short, must be more patient with newbies.
 
 The article's undertone seemed to scold programmers for not being good role models for the young, not having their photographs on Corn Flakes boxes and not helping build strong bodies 12 different ways.
 

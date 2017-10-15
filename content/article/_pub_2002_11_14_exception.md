@@ -1,16 +1,16 @@
 {
-   "draft" : null,
-   "description" : " The main goal of this article is to discuss in detail about exception handling in Perl and how to implement it using Error.pm. On our way, we'll be touching upon the advantages of using exception-handling over traditional error-handling mechanisms,...",
-   "slug" : "/pub/2002/11/14/exception.html",
+   "categories" : "development",
+   "title" : "Object Oriented Exception Handling in Perl",
+   "image" : null,
+   "date" : "2002-11-14T00:00:00-08:00",
    "tags" : [],
+   "thumbnail" : "/images/_pub_2002_11_14_exception/111-error.gif",
+   "draft" : null,
    "authors" : [
       "arun-udaya-shankar"
    ],
-   "title" : "Object Oriented Exception Handling in Perl",
-   "categories" : "development",
-   "date" : "2002-11-14T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2002_11_14_exception/111-error.gif",
-   "image" : null
+   "description" : " The main goal of this article is to discuss in detail about exception handling in Perl and how to implement it using Error.pm. On our way, we'll be touching upon the advantages of using exception-handling over traditional error-handling mechanisms,...",
+   "slug" : "/pub/2002/11/14/exception.html"
 }
 
 

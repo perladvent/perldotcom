@@ -1,20 +1,20 @@
 {
-   "description" : " A couple of months ago, I was approached by a company that I had done some work for previously, and was asked to build them a search engine to index about 200MB of HTML. However, some fairly strict rules...",
-   "draft" : null,
+   "thumbnail" : null,
    "tags" : [
       "array",
       "perl",
       "search"
    ],
-   "slug" : "/pub/2001/04/10/engine.html",
-   "categories" : "data",
+   "date" : "2001-04-10T00:00:00-08:00",
+   "image" : null,
    "title" : "Designing a Search Engine",
+   "categories" : "data",
+   "slug" : "/pub/2001/04/10/engine.html",
+   "description" : " A couple of months ago, I was approached by a company that I had done some work for previously, and was asked to build them a search engine to index about 200MB of HTML. However, some fairly strict rules...",
+   "draft" : null,
    "authors" : [
       "pete-sergeant"
-   ],
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2001-04-10T00:00:00-08:00"
+   ]
 }
 
 

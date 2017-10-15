@@ -1,19 +1,19 @@
 {
-   "authors" : [
-      "tom-christiansen"
-   ],
-   "title" : "What's Wrong with sort and How to Fix It",
    "categories" : "unicode",
-   "date" : "2011-08-31T06:00:01-08:00",
+   "title" : "What's Wrong with sort and How to Fix It",
    "image" : null,
-   "thumbnail" : null,
-   "draft" : null,
-   "description" : "In this excerpt from Programming Perl 4e, Tom Christiansen demonstrates that, in a Unicode world, sorting correctly can be trickier than you think.",
-   "slug" : "/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html",
+   "date" : "2011-08-31T06:00:01-08:00",
    "tags" : [
       "sorting",
       "unicode"
-   ]
+   ],
+   "thumbnail" : null,
+   "draft" : null,
+   "authors" : [
+      "tom-christiansen"
+   ],
+   "description" : "In this excerpt from Programming Perl 4e, Tom Christiansen demonstrates that, in a Unicode world, sorting correctly can be trickier than you think.",
+   "slug" : "/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html"
 }
 
 

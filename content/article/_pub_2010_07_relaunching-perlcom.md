@@ -1,20 +1,20 @@
 {
-   "description" : "Welcome to the new Perl.com!  It's a great time to program Perl, and our\nintent is that Perl.com can show off our language, libraries, and\ncommunity.",
-   "draft" : null,
    "tags" : [
       "perl",
       "site",
       "tpf"
    ],
-   "slug" : "/pub/2010/07/relaunching-perlcom.html",
+   "thumbnail" : null,
+   "date" : "2010-07-21T19:06:29-08:00",
    "categories" : "perldotcom",
+   "image" : null,
    "title" : "Relaunching Perl.com",
+   "description" : "Welcome to the new Perl.com!  It's a great time to program Perl, and our\nintent is that Perl.com can show off our language, libraries, and\ncommunity.",
+   "slug" : "/pub/2010/07/relaunching-perlcom.html",
    "authors" : [
       "chromatic"
    ],
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2010-07-21T19:06:29-08:00"
+   "draft" : null
 }
 
 

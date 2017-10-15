@@ -1,25 +1,25 @@
 {
-   "categories" : "web",
+   "slug" : "/pub/2002/03/22/modperl.html",
+   "description" : " Introduction In the previous article, I've shown quite amazing Web performance reports from companies that have deployed mod_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod_perl...",
+   "draft" : null,
    "authors" : [
       "stas-bekman"
    ],
+   "date" : "2002-03-22T00:00:00-08:00",
+   "categories" : "web",
    "title" : "mod_perl in 30 minutes",
    "image" : null,
-   "thumbnail" : "/images/_pub_2002_03_22_modperl/111-intro_modperl.gif",
-   "date" : "2002-03-22T00:00:00-08:00",
-   "draft" : null,
-   "description" : " Introduction In the previous article, I've shown quite amazing Web performance reports from companies that have deployed mod_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod_perl...",
    "tags" : [
       "mod-perl"
    ],
-   "slug" : "/pub/2002/03/22/modperl.html"
+   "thumbnail" : "/images/_pub_2002_03_22_modperl/111-intro_modperl.gif"
 }
 
 
 
 ### <span id="introduction">Introduction</span>
 
-In the [previous article](/pub/a/2002/02/26/whatismodperl.html), I've shown quite amazing Web performance reports from companies that have deployed mod\_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod\_perl as well. In fact, getting started with mod\_perl shouldn't take you more than 30 minutes -- the time it takes to compile and configure the server on a decent machine and get it running.
+In the [previous article](/pub/2002/02/26/whatismodperl.html), I've shown quite amazing Web performance reports from companies that have deployed mod\_perl heavily. You might be surprised but you can quite easily get similarly amazing results if you move your service to mod\_perl as well. In fact, getting started with mod\_perl shouldn't take you more than 30 minutes -- the time it takes to compile and configure the server on a decent machine and get it running.
 
 In this article I'll show step-by-step installation and configuration scenarios, and chances are you will be able to run the basic statically compiled mod\_perl setup without reading any other documents. Of course, you will want and need to read the documentation later, but I think you will agree with me that it's ultimately cool to be able to get your feet wet without knowing much about the new technology up-front.
 

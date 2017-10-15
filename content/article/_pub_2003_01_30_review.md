@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "tags" : [],
    "date" : "2003-01-30T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : null,
+   "title" : "Embedding Perl in HTML with Mason",
+   "categories" : "web",
+   "slug" : "/pub/2003/01/30/review.html",
+   "description" : " Disclaimer: As you know, each month I try to review a recently published Perl book, and I aim to cover all the majors as they come out. The book that's fallen onto my desk for review this month is...",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
-   ],
-   "title" : "Embedding Perl in HTML with Mason",
-   "categories" : "Web",
-   "slug" : "/pub/2003/01/30/review.html",
-   "tags" : [],
-   "draft" : null,
-   "description" : " Disclaimer: As you know, each month I try to review a recently published Perl book, and I aim to cover all the majors as they come out. The book that's fallen onto my desk for review this month is..."
+   ]
 }
 
 

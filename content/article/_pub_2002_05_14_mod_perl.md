@@ -1,18 +1,18 @@
 {
-   "description" : " Introduction This article is the third in our series talking about the essential Perl basics that you should know before starting to program for mod_perl. Variables Globally, Lexically Scoped and Fully Qualified You will hear a lot about namespaces,...",
    "draft" : null,
-   "slug" : "/pub/2002/05/14/mod_perl.html",
-   "tags" : [
-      "mod-perl-perl-do-require-use-lexical-global"
-   ],
-   "title" : "The Perl You Need To Know - Part 3",
    "authors" : [
       "stas-bekman"
    ],
+   "slug" : "/pub/2002/05/14/mod_perl.html",
+   "description" : " Introduction This article is the third in our series talking about the essential Perl basics that you should know before starting to program for mod_perl. Variables Globally, Lexically Scoped and Fully Qualified You will hear a lot about namespaces,...",
+   "image" : null,
+   "title" : "The Perl You Need To Know - Part 3",
    "categories" : "web",
    "date" : "2002-05-15T00:00:00-08:00",
    "thumbnail" : null,
-   "image" : null
+   "tags" : [
+      "mod-perl-perl-do-require-use-lexical-global"
+   ]
 }
 
 
@@ -69,12 +69,12 @@ The phrase \`\`lexical variable'' is a bit of a misnomer, as we are really talki
 </colgroup>
 <tbody>
 <tr class="odd">
-<td><img src="/images/pixel-hub.gif" alt=" " width="200" height="2" /><br />
+<td>
 
-<a href="http://conferences.oreilly.com/oscon/"><img src="/images/os2002/oscon-sidebar.gif" alt="O&#39;Reilly Open Source Convention -- July 22-26, San Diego, CA." width="143" height="78" /></a>
+<a href="http://conferences.oreilly.com/oscon/">O&#39;Reilly Open Source Convention -- July 22-26, San Diego, CA.</a>
 <p><strong>From the Frontiers of Research to the Heart of the Enterprise</strong></p>
 <p><a href="http://conferences.oreillynet.com/cs/os2002/view/e_sess/3032">mod_perl 2.0, the Next Generation</a> Stas Bekman will provide an overview of what's new in mod_perl 2.0 and what else is planned for the future in his talk at the upcoming <a href="http://conferences.oreillynet.com/os2002/">O'Reilly Open Source Convention</a>, this July 22-26, in San Diego.</p>
-<img src="/images/pixel-hub.gif" alt=" " width="200" height="2" /></td>
+</td>
 </tr>
 </tbody>
 </table>
@@ -227,15 +227,15 @@ Before we proceed, let's define what we mean by *module*, *library* and *program
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="http://perl.com/pub/a/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<p><a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
 <br />
-<a href="/pub/a/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
+<a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />
-<a href="/pub/a/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
+<a href="/pub/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
 <br />
-<a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
 <br />
-<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>

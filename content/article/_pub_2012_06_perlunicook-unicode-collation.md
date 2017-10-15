@@ -1,15 +1,15 @@
 {
-   "description" : "℞ 35: Unicode collation Sorting&mdash;even pure ASCII&mdash;seems easy, at least if you know the alphabet song. Yet even something this simple gets complicated if you sort merely by codepoint. You get numbers coming in the midst of letters. You get...",
-   "draft" : null,
-   "tags" : [],
-   "slug" : "/pub/2012/06/perlunicook-unicode-collation.html",
-   "categories" : "unicode",
-   "title" : "Perl Unicode Cookbook: Unicode Collation",
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
+   "draft" : null,
+   "slug" : "/pub/2012/06/perlunicook-unicode-collation.html",
+   "description" : "℞ 35: Unicode collation Sorting&mdash;even pure ASCII&mdash;seems easy, at least if you know the alphabet song. Yet even something this simple gets complicated if you sort merely by codepoint. You get numbers coming in the midst of letters. You get...",
    "thumbnail" : null,
+   "tags" : [],
+   "image" : null,
+   "title" : "Perl Unicode Cookbook: Unicode Collation",
+   "categories" : "unicode",
    "date" : "2012-06-01T06:00:01-08:00"
 }
 

@@ -1,12 +1,5 @@
 {
-   "image" : null,
    "thumbnail" : null,
-   "date" : "2001-02-27T00:00:00-08:00",
-   "categories" : "data",
-   "title" : "DBIx::Recordset VS DBI",
-   "authors" : [
-      "terrence-monroe-brannon"
-   ],
    "tags" : [
       "database",
       "dbi",
@@ -14,9 +7,16 @@
       "interface",
       "perl"
    ],
-   "slug" : "/pub/2001/02/dbix.html",
+   "title" : "DBIx::Recordset VS DBI",
+   "image" : null,
+   "categories" : "data",
+   "date" : "2001-02-27T00:00:00-08:00",
+   "authors" : [
+      "terrence-monroe-brannon"
+   ],
+   "draft" : null,
    "description" : " Problems Using DBI at Application-Level Intolerance to Table and Data Mutation Error-Prone and Tedious Query Construction Manual and Complex Mapping of Database Data to Perl Data Structures Succint CGI-SQL Interaction (Database Control via ``CGI One-Liners'') Control and Monitoring of...",
-   "draft" : null
+   "slug" : "/pub/2001/02/dbix.html"
 }
 
 
@@ -39,6 +39,7 @@
 
 [Conclusion](#conclusion)
 [Acknowledgements](#acknowledgements)
+
 ### Introduction
 
 Writing this article was pure hell. No, actually, writing most of it was quite fun - it was just when I had to write the functional equivalent of my DBIx::Recordset code in DBI that I began to sweat profusely. It was only when I had finished writing the mountain of DBI code to do the same thing as my molehill of DBIx::Recordset that I could heave a sigh of relief. Since starting to use DBIx::Recordset, I have been loath to work on projects where the required database API was DBI. While it may seem like a play on words, it is crucial to understand that DBI is the standard database interface for Perl but it should not be the interface for most Perl applications requiring database functionality.
@@ -139,7 +140,7 @@ while ($href=$set-&gt;Next())</code></pre></td>
 
 In DBI, database record retrieval is manual, complex and in most cases intolerant to table mutation. By manual, we mean that performing the query does not automatically map the query results onto any native Perl data structures. By complex, we mean that DBI can return the data in a multiplicity of ways: array, array reference and hash reference.
 
-In DBIx::Recordset, however, retrieval of selected recordsets can be [(3)](#3) automatic, simple and field-mutation tolerant. By automatic, we mean that requesting the records leads to an automatic tie of the result set to a hash.[(4)](4) No functions need be called for this transfer to take place. The retrieval process is simple because the only way to receive results is via a hash reference. Because DBIx::Recordset returns a hash, fields are referred to by name as opposed to position. This strategy is robust to all table mutations.
+In DBIx::Recordset, however, retrieval of selected recordsets can be [(3)](#3) automatic, simple and field-mutation tolerant. By automatic, we mean that requesting the records leads to an automatic tie of the result set to a hash.[(4)](#4) No functions need be called for this transfer to take place. The retrieval process is simple because the only way to receive results is via a hash reference. Because DBIx::Recordset returns a hash, fields are referred to by name as opposed to position. This strategy is robust to all table mutations.
 
 Having seen DBIx::Recordset's solution to some of the more troublesome aspects of DBI use, we now move on to explore the wealth of application-level benefits that DBIx::Recordset offers in the following areas:
 

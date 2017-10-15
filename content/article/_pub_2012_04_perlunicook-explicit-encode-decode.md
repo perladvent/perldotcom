@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2012-04-23T06:00:01-08:00",
-   "categories" : "unicode",
-   "title" : "Perl Unicode Cookbook: Explicit encode/decode",
+   "slug" : "/pub/2012/04/perlunicook-explicit-encode-decode.html",
+   "description" : "℞ 12: Explicit encode/decode While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. On rare occasions, such as a database read, you may be given encoded...",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
    "tags" : [],
-   "slug" : "/pub/2012/04/perlunicook-explicit-encode-decode.html",
-   "description" : "℞ 12: Explicit encode/decode While the standard Perl Unicode preamble makes Perl's filehandles use UTF-8 encoding by default, filehandles aren't the only sources and sinks of data. On rare occasions, such as a database read, you may be given encoded...",
-   "draft" : null
+   "thumbnail" : null,
+   "date" : "2012-04-23T06:00:01-08:00",
+   "categories" : "unicode",
+   "title" : "Perl Unicode Cookbook: Explicit encode/decode",
+   "image" : null
 }
 
 

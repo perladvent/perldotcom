@@ -1,18 +1,18 @@
 {
-   "slug" : "/pub/2003/10/31/openguides.html",
-   "tags" : [
-      "wiki-openguides"
-   ],
-   "draft" : null,
    "description" : " First, a disclaimer. I'm not a wiki celebrity. I don't look good in StudlyCaps. I'm not part of the wiki culture — I've never contributed to Ward's Wiki, never used TWiki, am baffled by MoinMoin, and every time I...",
-   "date" : "2003-10-31T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2003_10_31_openguides/111-openguides.gif",
+   "slug" : "/pub/2003/10/31/openguides.html",
+   "draft" : null,
    "authors" : [
       "kake-pugh"
    ],
+   "thumbnail" : "/images/_pub_2003_10_31_openguides/111-openguides.gif",
+   "tags" : [
+      "wiki-openguides"
+   ],
+   "date" : "2003-10-31T00:00:00-08:00",
    "title" : "Open Guides",
-   "categories" : "Community"
+   "image" : null,
+   "categories" : "community"
 }
 
 

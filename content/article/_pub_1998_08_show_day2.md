@@ -1,16 +1,16 @@
 {
-   "slug" : "/pub/1998/08/show/day2.html",
-   "tags" : [],
    "draft" : null,
-   "description" : null,
-   "date" : "1998-08-19T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
    "authors" : [
       "brent-michalski"
    ],
+   "description" : null,
+   "slug" : "/pub/1998/08/show/day2.html",
+   "thumbnail" : null,
+   "tags" : [],
    "title" : "Day 2: Perl Mongers at The Conference",
-   "categories" : "Community"
+   "image" : null,
+   "categories" : "community",
+   "date" : "1998-08-19T00:00:00-08:00"
 }
 
 

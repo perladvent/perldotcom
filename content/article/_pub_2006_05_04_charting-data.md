@@ -1,6 +1,11 @@
 {
+   "authors" : [
+      "alex-gough"
+   ],
    "draft" : null,
    "description" : " I have an odd job: I'm the only programmer for about 500 miles. I look after experiments on a remote Antarctic research station and look after the data they produce. As well as the scientific stuff knocking about, we...",
+   "slug" : "/pub/2006/05/04/charting-data.html",
+   "thumbnail" : "/images/_pub_2006_05_04_charting-data/111-antarctic.gif",
    "tags" : [
       "antarctic-perl",
       "antarctic-research",
@@ -10,14 +15,9 @@
       "perl-graphs",
       "perl-programming"
    ],
-   "slug" : "/pub/2006/05/04/charting-data.html",
-   "categories" : "Graphics",
-   "authors" : [
-      "alex-gough"
-   ],
    "title" : "Charting Data at the Bottom of the World",
    "image" : null,
-   "thumbnail" : "/images/_pub_2006_05_04_charting-data/111-antarctic.gif",
+   "categories" : "graphics",
    "date" : "2006-05-04T00:00:00-08:00"
 }
 

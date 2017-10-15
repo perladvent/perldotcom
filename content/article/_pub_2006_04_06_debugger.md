@@ -1,12 +1,14 @@
 {
-   "thumbnail" : "/images/_pub_2006_04_06_debugger/111-unravelling-code.gif",
-   "image" : null,
-   "date" : "2006-04-06T00:00:00-08:00",
-   "categories" : "Debugging",
+   "draft" : null,
    "authors" : [
       "daniel-allen"
    ],
+   "description" : " Many people who work with Perl code never touch the debugger. My goal in this article is to provide reasoned argument for adding the Perl debugger to your set of tools, as well as pointers on how to do...",
+   "slug" : "/pub/2006/04/06/debugger.html",
+   "categories" : "debugging",
    "title" : "Unraveling Code with the Debugger",
+   "image" : null,
+   "date" : "2006-04-06T00:00:00-08:00",
    "tags" : [
       "bug-fixing",
       "debugging",
@@ -15,9 +17,7 @@
       "perl-maintenance",
       "tracing"
    ],
-   "slug" : "/pub/2006/04/06/debugger.html",
-   "draft" : null,
-   "description" : " Many people who work with Perl code never touch the debugger. My goal in this article is to provide reasoned argument for adding the Perl debugger to your set of tools, as well as pointers on how to do..."
+   "thumbnail" : "/images/_pub_2006_04_06_debugger/111-unravelling-code.gif"
 }
 
 
@@ -234,4 +234,4 @@ This article has barely scratched the surface of the debugger's capabilities; it
 
 [perldoc perldebug](http://search.cpan.org/dist/perl/pod/perldebug.pod)
 
-[Perl Debugger Quick Reference](/pub/a/2004/11/24/debugger_ref.html)
+[Perl Debugger Quick Reference](/pub/2004/11/24/debugger_ref.html)

@@ -1,7 +1,9 @@
 {
-   "description" : "The first Rakudo Star release is out, making Perl 6 available to a wider range of users.  Welcome to the new era of Perl.",
-   "draft" : null,
-   "slug" : "/pub/2010/07/welcome-rakudo-star.html",
+   "title" : "Welcome Rakudo Star",
+   "image" : null,
+   "categories" : "perl-6",
+   "date" : "2010-07-29T06:00:01-08:00",
+   "thumbnail" : null,
    "tags" : [
       "announcements",
       "perl",
@@ -9,14 +11,12 @@
       "perl-6",
       "rakudo"
    ],
-   "title" : "Welcome Rakudo Star",
    "authors" : [
       "chromatic"
    ],
-   "categories" : "Perl-6",
-   "date" : "2010-07-29T06:00:01-08:00",
-   "image" : null,
-   "thumbnail" : null
+   "draft" : null,
+   "slug" : "/pub/2010/07/welcome-rakudo-star.html",
+   "description" : "The first Rakudo Star release is out, making Perl 6 available to a wider range of users.  Welcome to the new era of Perl."
 }
 
 

@@ -1,20 +1,20 @@
 {
+   "date" : "2001-03-13T00:00:00-08:00",
+   "categories" : "web",
+   "image" : null,
+   "title" : "Creating Modular Web Pages With EmbPerl",
    "tags" : [
       "embperl",
       "epl",
       "html"
    ],
-   "slug" : "/pub/2001/03/embperl.html",
-   "draft" : null,
-   "description" : " Table of Contents Getting Started Hello World Web Site Global Variables Modular Files Modular File Inheritance Subroutines in EmbperlObject Conclusions This tutorial is intended as a complement to the Embperl documentation, not a replacement. We assume a basic familiarity...",
    "thumbnail" : null,
-   "image" : null,
-   "date" : "2001-03-13T00:00:00-08:00",
-   "categories" : "web",
+   "description" : " Table of Contents Getting Started Hello World Web Site Global Variables Modular Files Modular File Inheritance Subroutines in EmbperlObject Conclusions This tutorial is intended as a complement to the Embperl documentation, not a replacement. We assume a basic familiarity...",
+   "slug" : "/pub/2001/03/embperl.html",
    "authors" : [
       "neil-gunton"
    ],
-   "title" : "Creating Modular Web Pages With EmbPerl"
+   "draft" : null
 }
 
 

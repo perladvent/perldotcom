@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-11-07T00:00:00-08:00",
-   "categories" : "development",
+   "draft" : null,
    "authors" : [
       "doug-sheppard"
    ],
-   "title" : "Beginner's Introduction to Perl - Part 2",
-   "tags" : [],
+   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular...",
    "slug" : "/pub/2000/11/begperl2.html",
-   "draft" : null,
-   "description" : " Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular..."
+   "image" : null,
+   "title" : "Beginner's Introduction to Perl - Part 2",
+   "categories" : "development",
+   "date" : "2000-11-07T00:00:00-08:00",
+   "thumbnail" : null,
+   "tags" : []
 }
 
 
@@ -35,7 +35,7 @@
 •<strong><a href="/pub/2000/11/begperl3.html">Part 3 of this series</a></strong><br />
 •<strong><a href="/pub/2000/12/begperl4.html">Part 4 of this series</a></strong><br />
 •<strong><a href="/pub/2000/12/begperl5.html">Part 5 of this series</a></strong><br />
-•<strong><a href="/pub/a/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
+•<strong><a href="/pub/2001/01/begperl6.html">Part 6 of this series</a></strong><br />
 <br />
 •<a href="#comparison%20operators">Comparison operators</a><br />
 •<a href="#while%20and%20until"><code>while</code> and <code>until</code></a><br />

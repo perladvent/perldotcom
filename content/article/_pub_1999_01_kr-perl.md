@@ -1,16 +1,16 @@
 {
-   "categories" : "development",
-   "title" : "Success in Migrating from C to Perl",
+   "slug" : "/pub/1999/01/kr-perl.html",
+   "description" : null,
    "authors" : [
       "kim-ryan"
    ],
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "1999-01-19T00:00:00-08:00",
-   "description" : null,
    "draft" : null,
+   "thumbnail" : null,
    "tags" : [],
-   "slug" : "/pub/1999/01/kr-perl.html"
+   "date" : "1999-01-19T00:00:00-08:00",
+   "image" : null,
+   "title" : "Success in Migrating from C to Perl",
+   "categories" : "development"
 }
 
 

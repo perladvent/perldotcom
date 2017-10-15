@@ -1,16 +1,16 @@
 {
    "categories" : "unicode",
+   "image" : null,
    "title" : "Perl Unicode Cookbook: Case-insensitive Comparisons",
+   "date" : "2012-05-09T06:00:01-08:00",
+   "tags" : [],
+   "thumbnail" : null,
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2012-05-09T06:00:01-08:00",
-   "description" : "℞ 21: Unicode case-insensitive comparisons Unicode is more than an expanded character set. Unicode is a set of rules about how characters behave and a set of properties about each character. Comparing strings for equivalence often requires normalizing them to...",
-   "draft" : null,
-   "tags" : [],
-   "slug" : "/pub/2012/05/perlunicook-case-insensitive-comparisons.html"
+   "slug" : "/pub/2012/05/perlunicook-case-insensitive-comparisons.html",
+   "description" : "℞ 21: Unicode case-insensitive comparisons Unicode is more than an expanded character set. Unicode is a set of rules about how characters behave and a set of properties about each character. Comparing strings for equivalence often requires normalizing them to..."
 }
 
 

@@ -1,20 +1,20 @@
 {
-   "categories" : "Community",
+   "slug" : "/pub/2004/05/19/allison.html",
+   "description" : " This week, perl.com has the pleasure of interviewing Allison Randal, one of the key figures in the Perl community. Allison has been active in the Perl 6 design process since its inception, and is the President of the Perl...",
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "An Interview with Allison Randal",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2004_05_19_allison/111-people_behind_perl.gif",
-   "date" : "2004-05-21T00:00:00-08:00",
    "draft" : null,
-   "description" : " This week, perl.com has the pleasure of interviewing Allison Randal, one of the key figures in the Perl community. Allison has been active in the Perl 6 design process since its inception, and is the President of the Perl...",
    "tags" : [
       "allison-randal",
       "perl-foundation",
       "tpf"
    ],
-   "slug" : "/pub/2004/05/19/allison.html"
+   "thumbnail" : "/images/_pub_2004_05_19_allison/111-people_behind_perl.gif",
+   "date" : "2004-05-21T00:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
+   "title" : "An Interview with Allison Randal"
 }
 
 

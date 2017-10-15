@@ -1,7 +1,14 @@
 {
    "description" : "Mod_perlservice? What is That? Mod_perlservice is a cool, new way to do remoting - sharing data between server and client processes - with Perl and Apache. Let's start by breaking that crazy name apart: mod + perl + service. Mod...",
-   "draft" : null,
    "slug" : "/pub/2004/11/18/mod_perlservice.html",
+   "authors" : [
+      "michael-collins"
+   ],
+   "draft" : null,
+   "date" : "2004-11-18T00:00:00-08:00",
+   "categories" : "networking",
+   "title" : "Cross-Language Remoting with mod_perlservice",
+   "image" : null,
    "tags" : [
       "michael-w-collins",
       "mod-perl",
@@ -9,14 +16,7 @@
       "perl-remoting",
       "perl-server"
    ],
-   "title" : "Cross-Language Remoting with mod_perlservice",
-   "authors" : [
-      "michael-collins"
-   ],
-   "categories" : "Networking",
-   "date" : "2004-11-18T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null
+   "thumbnail" : null
 }
 
 

@@ -1,6 +1,10 @@
 {
-   "draft" : null,
+   "slug" : "/pub/2006/03/02/ajax_and_perl.html",
    "description" : " If you're even remotely connected to web development, you can't have failed to have heard of Ajax at some point in the last year. It probably sounded like the latest buzzword and was one of those things you stuck...",
+   "authors" : [
+      "dominic-mitchell"
+   ],
+   "draft" : null,
    "tags" : [
       "ajax",
       "cgi-ajax",
@@ -9,15 +13,11 @@
       "perl-web-programming",
       "rest-and-perl"
    ],
-   "slug" : "/pub/2006/03/02/ajax_and_perl.html",
-   "categories" : "web",
-   "authors" : [
-      "dominic-mitchell"
-   ],
-   "title" : "Using Ajax from Perl",
-   "image" : null,
    "thumbnail" : "/images/_pub_2006_03_02_ajax_and_perl/111-cgi_ajax.gif",
-   "date" : "2006-03-02T00:00:00-08:00"
+   "date" : "2006-03-02T00:00:00-08:00",
+   "categories" : "web",
+   "image" : null,
+   "title" : "Using Ajax from Perl"
 }
 
 
@@ -43,7 +43,7 @@ After changing it to something more suitable, hit the Save button and the screen
 <img src="/images/_pub_2006_03_02_ajax_and_perl/flickr3.png" alt="Finished editing the photo title" width="363" height="64" />
 *Figure 3. Finished editing the photo title*
 
-Behind the scenes, Flickr uses JavaScript to make a separate call back to the server to update the details. It does so by using something called [XMLHttpRequest](http://www.xml.com/pub/a/2005/02/09/xml-http-request.html). You'll hear a lot about this as you explore Ajax.
+Behind the scenes, Flickr uses JavaScript to make a separate call back to the server to update the details. It does so by using something called [XMLHttpRequest](http://www.xml.com/pub/2005/02/09/xml-http-request.html). You'll hear a lot about this as you explore Ajax.
 
 Flickr lets you edit most of the details of your photo without having to go to a separate edit page. It's a very simple enhancement, but one that makes the whole application much easier to use. It's well worth getting to know these sorts of techniques in order to spice up your own applications. It's also worth pointing out that they are *enhancements*. If you have JavaScript turned off, Flickr will still let you edit the photo details. You just have to use a separate edit screen and a round trip to the server. Using Ajax lets you streamline your users' experience.
 

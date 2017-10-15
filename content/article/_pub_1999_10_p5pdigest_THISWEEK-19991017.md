@@ -1,16 +1,16 @@
 {
+   "tags" : [],
+   "thumbnail" : null,
+   "date" : "1999-10-17T00:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
    "title" : "This Week on p5p 1999/10/17",
+   "description" : "(11-17 October 1999) -> Introduction New Development Release 5.005_62 Unicode Character Classes Module Bundling and the proposed import pragma use fields allows overlapping member names PREPARE functions and my Class $foo declarations goto Out of Conditional Bug Regex Range Bug...",
+   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991017.html",
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
-   ],
-   "categories" : "community",
-   "date" : "1999-10-17T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null,
-   "description" : "(11-17 October 1999) -> Introduction New Development Release 5.005_62 Unicode Character Classes Module Bundling and the proposed import pragma use fields allows overlapping member names PREPARE functions and my Class $foo declarations goto Out of Conditional Bug Regex Range Bug...",
-   "draft" : null,
-   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991017.html",
-   "tags" : []
+   ]
 }
 
 
@@ -97,7 +97,7 @@ I wanted to include hot links to the relevant messages in the archive, but the a
 
 ### <span id="devel500506">New Development Release 5.005\_62</span>
 
-Sarathy announced the release of development version 5.005\_62. It is available from [CPAN](/CPAN/src/perl5.005_62.tar.gz).
+Sarathy announced the release of development version 5.005\_62. It is available from [CPAN](http://www.cpan.org/src/5.0/perl-5.6.2.tar.gz).
 
 Changes since 5.005\_61 include:
 
@@ -202,7 +202,7 @@ This touched off a number of interesting discussions:
     >
     > to get all the symbols that were exported into `MyCompany::CGIBundle` re-exported into their own namespace.
 
-    I had written a module something like this back in February, so I decided that put it on CPAN. It is now available at [ModuleBundle-0.01d](/CPAN/authors/id/MJD/ModuleBundle-0.01.tar.gz). Nick Ing-Simmons also pointed out that his `Tk::widgets` module does something similar: `use TK::widgets qw(Text       Entry Canvas)` is equivalent to:
+    I had written a module something like this back in February, so I decided that put it on CPAN. It is now available as ModuleBundle. Nick Ing-Simmons also pointed out that his `Tk::widgets` module does something similar: `use TK::widgets qw(Text       Entry Canvas)` is equivalent to:
 
          use Tk::Text ();
          use Tk::Entry ();

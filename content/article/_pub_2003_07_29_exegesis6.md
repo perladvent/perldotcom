@@ -6,17 +6,17 @@
       "perl-6",
       "subroutines"
    ],
-   "slug" : "/pub/2003/07/29/exegesis6.html",
-   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. As soon as she walked through my door I knew her type: she was an argument waiting...",
-   "draft" : null,
-   "image" : null,
    "thumbnail" : "/images/_pub_2003_07_29_exegesis6/111-exegesis_6.gif",
-   "date" : "2003-07-29T00:00:00-08:00",
    "categories" : "perl-6",
+   "image" : null,
    "title" : "Exegesis 6",
+   "date" : "2003-07-29T00:00:00-08:00",
+   "draft" : null,
    "authors" : [
       "damian-conway"
-   ]
+   ],
+   "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 6 for the current design information. As soon as she walked through my door I knew her type: she was an argument waiting...",
+   "slug" : "/pub/2003/07/29/exegesis6.html"
 }
 
 

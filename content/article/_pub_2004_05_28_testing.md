@@ -1,20 +1,20 @@
 {
-   "draft" : null,
+   "slug" : "/pub/2004/05/28/testing.html",
    "description" : "Recently, Perl trainer and former perl.com editor Mark-Jason Dominus revived his Quiz of the Week mailing list; every week, subscribers are sent a Perl task of either \"regular\" or \"expert\" level. There are no prizes, but the submitted solutions are...",
+   "draft" : null,
+   "authors" : [
+      "simon-cozens"
+   ],
+   "date" : "2004-05-28T00:00:00-08:00",
+   "categories" : "community",
+   "title" : "Return of Quiz of the Week",
+   "image" : null,
    "tags" : [
       "qotw",
       "quiz",
       "recipes"
    ],
-   "slug" : "/pub/2004/05/28/testing.html",
-   "categories" : "Community",
-   "authors" : [
-      "simon-cozens"
-   ],
-   "title" : "Return of Quiz of the Week",
-   "thumbnail" : "/images/_pub_2004_05_28_testing/111-quiz.gif",
-   "image" : null,
-   "date" : "2004-05-28T00:00:00-08:00"
+   "thumbnail" : "/images/_pub_2004_05_28_testing/111-quiz.gif"
 }
 
 

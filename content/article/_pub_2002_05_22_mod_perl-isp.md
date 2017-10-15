@@ -1,18 +1,18 @@
 {
-   "description" : "Introduction In this article we will talk about the nuances of providing mod_perl services and present a few ISPs that successfully provide them. You installed mod_perl on your box at home, and you fell in love with it. So now...",
-   "draft" : null,
-   "slug" : "/pub/2002/05/22/mod_perl-isp.html",
+   "date" : "2002-05-22T00:00:00-08:00",
+   "categories" : "web",
+   "title" : "Finding a mod_perl ISP... or Becoming One",
+   "image" : null,
    "tags" : [
       "mod-perl-isp"
    ],
-   "title" : "Finding a mod_perl ISP... or Becoming One",
+   "thumbnail" : null,
+   "description" : "Introduction In this article we will talk about the nuances of providing mod_perl services and present a few ISPs that successfully provide them. You installed mod_perl on your box at home, and you fell in love with it. So now...",
+   "slug" : "/pub/2002/05/22/mod_perl-isp.html",
+   "draft" : null,
    "authors" : [
       "stas-bekman"
-   ],
-   "categories" : "web",
-   "date" : "2002-05-22T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null
+   ]
 }
 
 
@@ -127,17 +127,17 @@ Here are the specifics of this company:
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="http://perl.com/pub/a/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
+<p><a href="http://perl.com/pub/2002/05/14/mod_perl.html">The Perl You Need To Know - Part 3</a><br />
 <br />
-<a href="http://perl.com/pub/a/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
+<a href="http://perl.com/pub/2002/05/07/mod_perl.html">The Perl You Need To Know - Part 2</a><br />
 <br />
-<a href="/pub/a/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
+<a href="/pub/2002/04/23/mod_perl.html">The Perl You Need To Know</a><br />
 <br />
-<a href="/pub/a/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
+<a href="/pub/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
 <br />
-<a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
 <br />
-<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>

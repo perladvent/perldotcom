@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "slug" : "/pub/2001/11/15/creatingrss.html",
-   "description" : " Even if you haven't heard of the RSS acronym before, you're likely to have used RSS in the past. Whether through the slashboxes at slashdot or our own news summary at use.perl.org, the premise remains the same - RSS,...",
-   "draft" : null,
-   "image" : null,
-   "thumbnail" : "/images/_pub_2001_11_15_creatingrss/111-perlrss2.gif",
-   "date" : "2001-11-15T00:00:00-08:00",
    "categories" : "web",
+   "image" : null,
    "title" : "Create RSS channels from HTML news sites",
+   "date" : "2001-11-15T00:00:00-08:00",
+   "tags" : [],
+   "thumbnail" : "/images/_pub_2001_11_15_creatingrss/111-perlrss2.gif",
+   "draft" : null,
    "authors" : [
       "chris-ball"
-   ]
+   ],
+   "description" : " Even if you haven't heard of the RSS acronym before, you're likely to have used RSS in the past. Whether through the slashboxes at slashdot or our own news summary at use.perl.org, the premise remains the same - RSS,...",
+   "slug" : "/pub/2001/11/15/creatingrss.html"
 }
 
 
@@ -40,7 +40,7 @@ Let's jump in to the code. After declaring our use of the modules we're going to
 
     use XML::RSS;
 
-.. we're ready to create each of the objects we'll be using with each module. Note that while `LWP::Simple` uses a procedural interface, both `HTML::TokeParser` and `XML::RSS` have Object-Oriented interfaces. If you aren't used to OO in Perl, [Simon Cozens](/pub/au/Cozens_Simon)' recent [article](/pub/a/2001/11/07/ooperl.html) on Object-Oriented Perl might be a great help.
+.. we're ready to create each of the objects we'll be using with each module. Note that while `LWP::Simple` uses a procedural interface, both `HTML::TokeParser` and `XML::RSS` have Object-Oriented interfaces. If you aren't used to OO in Perl, [Simon Cozens](/authors/simon-cozens)' recent [article](/pub/2001/11/07/ooperl.html) on Object-Oriented Perl might be a great help.
 
 
     # First - LWP::Simple.  Download the page using get();.

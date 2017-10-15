@@ -1,18 +1,18 @@
 {
+   "draft" : null,
+   "authors" : [
+      "stas-bekman"
+   ],
+   "description" : " As you have seen from my previous articles, mod_perl enabled Apache consists of two main components: Perl modules and Apache itself. While installing Apache without root privileges is easy, one should know how to install Perl modules in a...",
+   "slug" : "/pub/2002/04/10/mod_perl.html",
+   "thumbnail" : "/images/_pub_2002_04_10_mod_perl/111-mod_perl.gif",
    "tags" : [
       "mod-perl-superuser-root"
    ],
-   "slug" : "/pub/2002/04/10/mod_perl.html",
-   "description" : " As you have seen from my previous articles, mod_perl enabled Apache consists of two main components: Perl modules and Apache itself. While installing Apache without root privileges is easy, one should know how to install Perl modules in a...",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2002_04_10_mod_perl/111-mod_perl.gif",
    "image" : null,
-   "date" : "2002-04-10T00:00:00-08:00",
-   "categories" : "web",
    "title" : "Installing mod_perl without superuser privileges",
-   "authors" : [
-      "stas-bekman"
-   ]
+   "categories" : "web",
+   "date" : "2002-04-10T00:00:00-08:00"
 }
 
 
@@ -134,9 +134,9 @@ I see:
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<p><a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
 <br />
-<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -404,9 +404,9 @@ If you want to continue working with `CPAN` \*without\* quitting the shell, then
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<p><a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
 <br />
-<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>

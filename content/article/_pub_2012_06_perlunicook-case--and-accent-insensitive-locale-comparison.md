@@ -1,16 +1,16 @@
 {
    "description" : "℞ 40: Case- and accent-insensitive locale comparisons You now know how to compare Unicode strings while ignoring case and accent differences. This approach uses the standard Unicode collation algorithm. To perform a similar comparison while respecting a speciﬁc locale's rules,...",
-   "draft" : null,
    "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-locale-comparison.html",
-   "tags" : [],
-   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Locale Comparisons",
    "authors" : [
       "tom-christiansen"
    ],
-   "categories" : "unicode",
+   "draft" : null,
    "date" : "2012-06-11T06:00:01-08:00",
-   "thumbnail" : null,
-   "image" : null
+   "categories" : "unicode",
+   "image" : null,
+   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Locale Comparisons",
+   "tags" : [],
+   "thumbnail" : null
 }
 
 

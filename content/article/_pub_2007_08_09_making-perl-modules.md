@@ -1,6 +1,4 @@
 {
-   "draft" : null,
-   "description" : " Perl software development can occur at several levels. When first developing the idea for an application, a Perl developer may start with a short program to flesh out the necessary algorithms. After that, the next step might be to...",
    "tags" : [
       "cpan",
       "modules",
@@ -9,15 +7,17 @@
       "perl-distribution",
       "perl-reuse"
    ],
+   "thumbnail" : null,
+   "date" : "2007-08-07T00:00:00-08:00",
+   "categories" : "cpan",
+   "image" : null,
+   "title" : "Making Perl Reusable with Modules",
    "slug" : "/pub/2007/08/09/making-perl-modules.html",
-   "categories" : "CPAN",
+   "description" : " Perl software development can occur at several levels. When first developing the idea for an application, a Perl developer may start with a short program to flesh out the necessary algorithms. After that, the next step might be to...",
+   "draft" : null,
    "authors" : [
       "andy-sylvester"
-   ],
-   "title" : "Making Perl Reusable with Modules",
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2007-08-07T00:00:00-08:00"
+   ]
 }
 
 
@@ -465,5 +465,5 @@ Here are some other good resources on creating Perl modules:
 Here are some good resources for using Perl testing modules like `Test::Simple` and `Test::More`:
 
 -   [Test::Tutorial](http://search.cpan.org/perldoc?Test::Tutorial) gives the basics of using `Test:Simple` and `Test::More`.
--   [An Introduction to Testing](/pub/a/2001/12/04/testing.html) presents the benefits of developing tests and code at the same time, and provides a variety of examples.
+-   [An Introduction to Testing](/pub/2001/12/04/testing.html) presents the benefits of developing tests and code at the same time, and provides a variety of examples.
 

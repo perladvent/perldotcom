@@ -1,15 +1,15 @@
 {
-   "title" : "Beginners Intro to Perl - Part 6",
+   "slug" : "/pub/2001/01/begperl6.html",
+   "description" : "Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular Expressions...",
+   "draft" : null,
    "authors" : [
       "doug-sheppard"
    ],
-   "categories" : "development",
    "date" : "2001-01-09T00:00:00-08:00",
+   "title" : "Beginners Intro to Perl - Part 6",
    "image" : null,
+   "categories" : "development",
    "thumbnail" : null,
-   "description" : "Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's Introduction to Regular Expressions...",
-   "draft" : null,
-   "slug" : "/pub/2001/01/begperl6.html",
    "tags" : [
       "debugging",
       "security",
@@ -22,8 +22,8 @@
 
 *Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at:*
 
--   [A Beginner's Introduction to Perl 5.10](/pub/a/2008/04/23/a-beginners-introduction-to-perl-510.html)
--   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/a/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
+-   [A Beginner's Introduction to Perl 5.10](/pub/2008/04/23/a-beginners-introduction-to-perl-510.html)
+-   [A Beginner's Introduction to Files and Strings with Perl 5.10](/pub/2008/05/07/beginners-introduction-to-perl-510-part-2.html)
 -   [A Beginner's Introduction to Regular Expressions with Perl 5.10](http://news.oreilly.com/2008/06/a-beginners-introduction-to-pe.html)
 -   [A Beginner's Introduction to Perl Web Programming](http://broadcast.oreilly.com/2008/09/a-beginners-introduction-to-pe.html)
 

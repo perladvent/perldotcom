@@ -1,20 +1,20 @@
 {
-   "date" : "2001-06-27T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2001_06_27_ctoperl/111-perlc.jpg",
-   "authors" : [
-      "mark-jason-dominus"
-   ],
-   "title" : "Why Not Translate Perl to C?",
-   "categories" : "Perl Internals",
-   "slug" : "/pub/2001/06/27/ctoperl.html",
    "tags" : [
       "c",
       "compile",
       "perl"
    ],
-   "draft" : null,
-   "description" : "People often have the idea that automatically translating Perl to C and then compiling the C will make their Perl programs run faster, because \"C is much faster than Perl.\" This article explains why this strategy is unlikely to work...."
+   "thumbnail" : "/images/_pub_2001_06_27_ctoperl/111-perlc.jpg",
+   "date" : "2001-06-27T00:00:00-08:00",
+   "categories" : "perl-internals",
+   "image" : null,
+   "title" : "Why Not Translate Perl to C?",
+   "slug" : "/pub/2001/06/27/ctoperl.html",
+   "description" : "People often have the idea that automatically translating Perl to C and then compiling the C will make their Perl programs run faster, because \"C is much faster than Perl.\" This article explains why this strategy is unlikely to work....",
+   "authors" : [
+      "mark-jason-dominus"
+   ],
+   "draft" : null
 }
 
 

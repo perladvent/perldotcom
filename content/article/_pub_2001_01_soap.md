@@ -1,16 +1,16 @@
 {
+   "description" : "Quick Start with SOAP -> Table of Contents Quick Start with SOAPWriting a CGI-based ServerClientPassing ValuesAutodispatchingObjects accessError handlingService dispatch (different services on one server)Types and NamesConclusion Part 2 of this series SOAP (Simple Object Access Protocol) is a way for...",
+   "slug" : "/pub/2001/01/soap.html",
    "authors" : [
       "paul-kulchenko"
    ],
-   "title" : "Quick Start with SOAP",
-   "categories" : "web",
-   "date" : "2001-01-29T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
    "draft" : null,
-   "description" : "Quick Start with SOAP -> Table of Contents Quick Start with SOAPWriting a CGI-based ServerClientPassing ValuesAutodispatchingObjects accessError handlingService dispatch (different services on one server)Types and NamesConclusion Part 2 of this series SOAP (Simple Object Access Protocol) is a way for...",
-   "slug" : "/pub/2001/01/soap.html",
-   "tags" : []
+   "tags" : [],
+   "thumbnail" : null,
+   "date" : "2001-01-29T00:00:00-08:00",
+   "categories" : "web",
+   "image" : null,
+   "title" : "Quick Start with SOAP"
 }
 
 
@@ -79,7 +79,7 @@ Here's a simple CGI-based SOAP server (hibye.cgi):
 <td><hr />
 <br />
 <strong></strong>
-<p><a href="/pub/au/Kulchenko_Paul">Paul Kulchenko</a> is a featured speaker at the upcoming O'Reilly Open Source Convention in San Diego, CA, July 23 - 27, 2001. Take this opportunity to rub elbows with open source leaders while relaxing in the beautiful setting of the beach-front Sheraton San Diego Hotel and Marina. For more information, visit our <a href="http://conferences.oreilly.com/oscon/">conference home page</a>. You can register online.</p>
+<p>Paul Kulchenko is a featured speaker at the upcoming O'Reilly Open Source Convention in San Diego, CA, July 23 - 27, 2001. Take this opportunity to rub elbows with open source leaders while relaxing in the beautiful setting of the beach-front Sheraton San Diego Hotel and Marina. For more information, visit our <a href="http://conferences.oreilly.com/oscon/">conference home page</a>. You can register online.</p>
 <hr />
 <br />
 </td>

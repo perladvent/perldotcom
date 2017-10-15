@@ -1,15 +1,15 @@
 {
-   "categories" : "Community",
+   "tags" : [],
+   "thumbnail" : null,
+   "categories" : "community",
+   "image" : null,
+   "title" : "Day 3: Core Perl Developers at Work and Play",
+   "date" : "1998-08-20T00:00:00-08:00",
    "authors" : [
       "brent-michalski"
    ],
-   "title" : "Day 3: Core Perl Developers at Work and Play",
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "1998-08-20T00:00:00-08:00",
    "draft" : null,
    "description" : null,
-   "tags" : [],
    "slug" : "/pub/1998/08/show/day3.html"
 }
 

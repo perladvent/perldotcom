@@ -1,29 +1,25 @@
 {
-   "draft" : null,
    "description" : " Table of Contents &nbsp;&nbsp;&#149;&nbsp;Unicode - Perl goes&nbsp;&nbsp;&nbsp;&nbsp;international! &nbsp;&nbsp;&#149; Better Building &nbsp;&nbsp;&#149; Improved Compiler &nbsp;&nbsp;&#149; Version Tuples &nbsp;&nbsp;&#149; Lexical Warnings &nbsp;&nbsp;&#149; Lvaluable Subroutines &nbsp;&nbsp;&#149; Weak References &nbsp;&nbsp;&#149; POSIX Character&nbsp;&nbsp;&nbsp;&nbsp;Classes &nbsp;&nbsp;&#149; Miscellaneous Bits `Darn it, who spiked my coffee with water?!'...",
    "slug" : "/pub/2000/04/whatsnew.html",
-   "tags" : [
-      "unicode"
-   ],
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "What's New in 5.6.0.",
-   "categories" : "community",
+   "thumbnail" : null,
+   "tags" : [
+      "unicode"
+   ],
    "date" : "2000-04-18T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : null
+   "title" : "What's New in 5.6.0.",
+   "categories" : "community"
 }
 
 
 
-<img src="/universal/images/blank.gif" width="0" height="3" />
 **Table of Contents**
-<img src="http://www.webreview.com/universal/images/blank.gif" width="0" height="3" />
-<img src="/universal/images/blank.gif" width="0" height="1" />
   • [Unicode - Perl goes](#Unicode_Perl_goes_internationa)
     [international!](#Unicode_Perl_goes_internationa)
-<img src="/universal/images/blank.gif" width="0" height="1" />
   • [Better Building](#Better_Building)
   • [Improved Compiler](#Improved_Compiler)
   • [Version Tuples](#Version_Tuples)
@@ -33,7 +29,6 @@
   • [POSIX Character](#POSIX_Character_Classes)
     [Classes](#POSIX_Character_Classes)
   • [Miscellaneous Bits](#Miscellaneous_Bits)
-<embed src="/universal/images/blank.gif%22" width="1" height="1" />
 
 > *\`Darn it, who spiked my coffee with water?!'* - lwall
 
@@ -248,7 +243,7 @@ While there isn't a `bin()` function to match `hex()` and `oct()`, you can actua
 Whereas `my` declares lexical variables, [our](#item_our) declares global variables - it's a cleaner and hopefully more intuitive replacement for `use vars`.
 
 **<span id="item_File">File Globbing</span>**  
-The glob operator (`<*>` and `glob`) used to be processed by spawning a shell; that was problematic for operating systems that didn't have a standard shell, and anyway had the overhead of creating a new process. It's now implemented by calling the standard [File::Glob|File::Glob](/File/Glob%7CFile/Glob.html) module on demand.
+The glob operator (`<*>` and `glob`) used to be processed by spawning a shell; that was problematic for operating systems that didn't have a standard shell, and anyway had the overhead of creating a new process. It's now implemented by calling the standard [File::Glob](https://metacpan.org/pod/File::Glob) module on demand.
 
 **<span id="item_Bug">Bug Fixes</span>**  
 Most of the bugs, surprises and unpleasantries from 5.005 have been cleared up; recently there's been quite a blitz on the security of the utilities that come with Perl, safer handling of temporary files, and tons of work on debugger, but most of the work of the past year has been clearing up the issues that you've reported to perl5-porters in the interim. Keep them coming - it's only by reporting them that they get fixed.

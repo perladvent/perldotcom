@@ -1,16 +1,16 @@
 {
-   "title" : "This Week on p5p 1999/12/19",
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991219.html",
+   "description" : " Notes Meta-Information More 5.005_63 Results $^H and %^H Perl RPMs Development Continues on Ilya's Patches Change to xsubpp Closed Filhandle in Signal Handler pad_findlex Needs to be Recursive Conversion Specifier Bug The Trivial Test eof() at the Beginning of...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "categories" : "community",
-   "date" : "1999-12-19T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "description" : " Notes Meta-Information More 5.005_63 Results $^H and %^H Perl RPMs Development Continues on Ilya's Patches Change to xsubpp Closed Filhandle in Signal Handler pad_findlex Needs to be Recursive Conversion Specifier Bug The Trivial Test eof() at the Beginning of...",
    "draft" : null,
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991219.html",
-   "tags" : []
+   "tags" : [],
+   "thumbnail" : null,
+   "date" : "1999-12-19T00:00:00-08:00",
+   "categories" : "community",
+   "image" : null,
+   "title" : "This Week on p5p 1999/12/19"
 }
 
 
@@ -37,8 +37,6 @@
 ### <span id="Notes">Notes</span>
 
 #### <span id="Meta_Information_">Meta-Information</span>
-
-The most recent report will always be available at [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

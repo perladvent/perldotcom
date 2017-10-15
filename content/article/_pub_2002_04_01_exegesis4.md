@@ -1,15 +1,15 @@
 {
+   "thumbnail" : "/images/_pub_2002_04_01_exegesis4/111-exegesis4.gif",
    "tags" : [
       "apocalypse-exegesis-control-flow"
    ],
+   "date" : "2002-04-02T00:00:00-08:00",
+   "image" : null,
+   "title" : "Exegesis 4",
+   "categories" : "perl-6",
    "slug" : "/pub/2002/04/01/exegesis4.html",
    "description" : " Editor's note: this document is out of date and remains here for historic interest. See Synopsis 4 for the current design information. And I'd se-ell my-y so-oul for flow of con-tro-ol ... over Perl - The Motels, \"Total Control\"...",
    "draft" : null,
-   "thumbnail" : "/images/_pub_2002_04_01_exegesis4/111-exegesis4.gif",
-   "image" : null,
-   "date" : "2002-04-02T00:00:00-08:00",
-   "categories" : "perl-6",
-   "title" : "Exegesis 4",
    "authors" : [
       "damian-conway"
    ]
@@ -21,7 +21,7 @@
 
 **<span id="item_And_I%27d_se%2Dell_my%2Dy_so%2Doul_for_flow_of_con">*And I'd se-ell my-y so-oul for flow of con-tro-ol ... over Perl*</span>**
 **<span id="item_%2D%2D_The_Motels%2C_%22Total_Control%22_%28Perl_6">-- The Motels, "Total Control" (Perl 6 remix)</span>**
-In [Apocalypse 4](/pub/a/2002/01/15/apo4.html), Larry explains the fundamental changes to flow and block control in Perl 6. The changes bring fully integrated exceptions; a powerful new switch statement; a coherent mechanism for polymorphic matching; a greatly enhanced `for` loop; and unification of blocks, subroutines and closures.
+In [Apocalypse 4](/pub/2002/01/15/apo4.html), Larry explains the fundamental changes to flow and block control in Perl 6. The changes bring fully integrated exceptions; a powerful new switch statement; a coherent mechanism for polymorphic matching; a greatly enhanced `for` loop; and unification of blocks, subroutines and closures.
 
 Let's dive right in.
 
@@ -110,11 +110,11 @@ To create those classes, the `class` keyword is used. For example:
 </tr>
 <tr class="even">
 <td><p>Related Articles</p>
-<p><a href="/pub/a/2002/01/15/apo4.html">Apocalypse 4</a><br />
-<a href="/pub/a/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
-<a href="/pub/a/2001/10/03/exegesis3.html">Exegesis 3</a><br />
-<a href="/pub/a/2001/05/03/wall.html">Apocalypse 2</a><br />
-<a href="/pub/a/2001/05/08/exegesis2.html">Exegesis 2</a></p></td>
+<p><a href="/pub/2002/01/15/apo4.html">Apocalypse 4</a><br />
+<a href="/pub/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
+<a href="/pub/2001/10/03/exegesis3.html">Exegesis 3</a><br />
+<a href="/pub/2001/05/03/wall.html">Apocalypse 2</a><br />
+<a href="/pub/2001/05/08/exegesis2.html">Exegesis 2</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -343,7 +343,7 @@ Alternatively, you can explicitly tell Perl not to automatically `break` at the 
             when /[02468]$/  { warn "$_ is even"; }
         }
 
-In Perl 6, a `continue` means: "continue executing from the next statement after the current `when`, rather than jumping out of the surrounding `given`." It has nothing to do with the old Perl 5 `continue` block, which in Perl 6 becomes [`NEXT`](/pub/a%7Bcs.r.file%7D?page=5#onwards%20and%20backwards).
+In Perl 6, a `continue` means: "continue executing from the next statement after the current `when`, rather than jumping out of the surrounding `given`." It has nothing to do with the old Perl 5 `continue` block, which in Perl 6 becomes [`NEXT`](#onwards%20and%20backwards).
 
 The "topic" that `given` creates can also be aliased to a name of our own choosing (though it's *always* aliased to `$_` no matter what else we may do). To give the topic a more meaningful name, we just need to use the "topical arrow:"
 
@@ -464,7 +464,7 @@ If a `when` is given a hash, then it uses the current topic as a key in the hash
 
         when defined %var{$_}   { return %var{""} = %var{$_} }
 
-But, of course, it's much easier just to redefine Truth, so that any literal zero value stored in `%var` is no longer false. See [below](/pub/a%7Bcs.r.file%7D?page=5#cache%20and%20return).
+But, of course, it's much easier just to redefine Truth, so that any literal zero value stored in `%var` is no longer false. See [below](#cache%20and%20return).
 
 Finally, if the `$data` isn't a literal, then a `"previous"`, or a variable name, it must be an invalid token, so the default alternative in the switch statement throws an `Err::BadData` exception:
 
@@ -743,7 +743,7 @@ except that its parameter list doesn't require parentheses. That implies:
 
     The postfix version of `when` does have one interesting feature. Since it governs a statement, rather than a block, it does not provide the block-`when`'s automatic "`break` to the end of my topicalizing block" behavior. In this instance, it makes no difference since the `last` would do that anyway.
 
-    The final alternative -- pushing the token onto the stack -- is simply a regular Perl `push` command. The only interesting feature is that it calls the [`get_data`](/pub/a%7Bcs.r.file%7D?page=2#it's%20a%20given) subroutine to pre-translate the token if necessary. It also specifies a `use fatal` so that `get_data` will fail by an throwing exception, rather than returning `undef`.
+    The final alternative -- pushing the token onto the stack -- is simply a regular Perl `push` command. The only interesting feature is that it calls the [`get_data`](#it's%20a%20given) subroutine to pre-translate the token if necessary. It also specifies a `use fatal` so that `get_data` will fail by an throwing exception, rather than returning `undef`.
 
     The loop tries each of these possibilities in turn. And "tries" is the operative word here, because either the application of operations or the pushing of data onto the stack may fail, resulting in an exception. To prevent that exception from propagating all the way back to the main program and terminating it, the various alternatives are placed in a `try` block.
 
@@ -995,7 +995,7 @@ except that its parameter list doesn't require parentheses. That implies:
             fail Err::BadData : msg=>"Too many operands"
                 if @stack > 1;
 
-    If everything is OK, then we simply pop the one remaining value off the stack and make sure it will evaluate true (even if its value is zero or `undef`) by setting its `true` property. This avoids the potential bug [discussed earlier](/pub/a%7Bcs.r.file%7D?page=3#still%20other%20whens).
+    If everything is OK, then we simply pop the one remaining value off the stack and make sure it will evaluate true (even if its value is zero or `undef`) by setting its `true` property. This avoids the potential bug [discussed earlier](#still%20other%20whens).
 
     Finally, we record it in `%var` under the key `'$n'` (i.e. as the *n*-th result), and return it:
 
@@ -1119,7 +1119,7 @@ except that its parameter list doesn't require parentheses. That implies:
 
     Err...`err`???
 
-    In [Apocalypse 3](/pub/a/2001/10/02/apocalypse3.html), Larry introduced the `//` operator, which is like a `||` that tests its left operand for definedness rather than truth.
+    In [Apocalypse 3](/pub/2001/10/02/apocalypse3.html), Larry introduced the `//` operator, which is like a `||` that tests its left operand for definedness rather than truth.
 
     What he didn't mention (but which you probably guessed) was that there is also the low-precedence version of `//`. Its name is `err`:
 

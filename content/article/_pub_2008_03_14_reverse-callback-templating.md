@@ -1,26 +1,26 @@
 {
+   "description" : " Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, pipeline and callback...",
+   "slug" : "/pub/2008/03/14/reverse-callback-templating.html",
+   "draft" : null,
    "authors" : [
       "james-robson"
    ],
-   "title" : "Reverse Callback Templating",
-   "categories" : "Tooling",
-   "date" : "2008-03-14T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "draft" : null,
-   "description" : " Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, pipeline and callback...",
-   "slug" : "/pub/2008/03/14/reverse-callback-templating.html",
    "tags" : [
       "mvc",
       "presentation",
       "template-recall",
       "templating"
-   ]
+   ],
+   "thumbnail" : null,
+   "date" : "2008-03-14T00:00:00-08:00",
+   "categories" : "tooling",
+   "title" : "Reverse Callback Templating",
+   "image" : null
 }
 
 
 
-Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, *pipeline* and *callback* (as noted by Perrin Harkins in [Choosing a Templating System](/pub/a/2001/08/21/templating.html)). [HTML::Template](http://search.cpan.org/perldoc?HTML::Template) and [Template Toolkit](http://www.template-toolkit.org/) are in the pipeline category. Their templates consist of simple presentation logic in the form of loops and conditionals and template variables. The Perl program does its work, then loads and renders the appropriate template, as if data were flowing through a pipeline. [Mason](http://www.masonhq.com/) and [Embperl](http://perl.apache.org/embperl/) fall into the callback category. They mix code in with the template markup, and the template "calls back" to Perl when it encounters program logic.
+Programmers have long recognized that separating code logic from presentation is good. The Perl community has produced many fine systems for doing just this. While there are many systems, they largely fall within two execution models, *pipeline* and *callback* (as noted by Perrin Harkins in [Choosing a Templating System](/pub/2001/08/21/templating.html)). [HTML::Template](http://search.cpan.org/perldoc?HTML::Template) and [Template Toolkit](http://www.template-toolkit.org/) are in the pipeline category. Their templates consist of simple presentation logic in the form of loops and conditionals and template variables. The Perl program does its work, then loads and renders the appropriate template, as if data were flowing through a pipeline. [Mason](http://www.masonhq.com/) and [Embperl](http://perl.apache.org/embperl/) fall into the callback category. They mix code in with the template markup, and the template "calls back" to Perl when it encounters program logic.
 
 A third execution model exists: the *reverse callback* model. Template and code files are separate, just like in the pipeline approach. Instead of using a mini-language to handle display logic, however, the template consists of named sections. Perl executes and calls a specific section of the template at the appropriate time, rendering it. Effectively, this is the opposite of the callback method, which wraps Perl logic around portions (or sections) of a template in a single file. Reverse callback uses Perl statements to load, or call, specific portions of the the template. This approach has a few distinct advantages.
 

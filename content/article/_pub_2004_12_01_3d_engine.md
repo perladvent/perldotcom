@@ -1,4 +1,9 @@
 {
+   "date" : "2004-12-01T00:00:00-08:00",
+   "image" : null,
+   "title" : "Building a 3D Engine in Perl",
+   "categories" : "games",
+   "thumbnail" : "/images/_pub_2004_12_01_3d_engine/111-3d_engine.gif",
    "tags" : [
       "geoff-broadwell",
       "opengl-tutorial",
@@ -8,24 +13,19 @@
       "perl-opengl",
       "perl-sdl"
    ],
-   "slug" : "/pub/2004/12/01/3d_engine.html",
-   "draft" : null,
    "description" : " This article is the first in a series aimed at building a full 3D engine. It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design...",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2004_12_01_3d_engine/111-3d_engine.gif",
-   "date" : "2004-12-01T00:00:00-08:00",
-   "categories" : "Games",
+   "slug" : "/pub/2004/12/01/3d_engine.html",
    "authors" : [
       "geoff-broadwell"
    ],
-   "title" : "Building a 3D Engine in Perl"
+   "draft" : null
 }
 
 
 
 This article is the first in a series aimed at building a full 3D engine. It could be the underlying technology for a video game, the visualization system for a scientific application, the walkthrough program for an architectural design suite, or whatever.
 
-*Editor's note: see also the rest of the series, [events and keyboard handling](/pub/a/2004/12/29/3d_engine.html), [lighting and movement](/pub/a/2005/02/17/3d_engine.html), and [profiling your application](/pub/a/2005/08/04/3d_engine.html).*
+*Editor's note: see also the rest of the series, [events and keyboard handling](/pub/2004/12/29/3d_engine.html), [lighting and movement](/pub/2005/02/17/3d_engine.html), and [profiling your application](/pub/2005/08/04/3d_engine.html).*
 
 First, I'll set some goals and ground rules to help guide the design. I'm all for agile programming, but even the most agile development process needs some basic goals at the outset:
 

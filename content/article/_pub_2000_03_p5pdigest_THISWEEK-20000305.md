@@ -1,16 +1,16 @@
 {
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-03-05T00:00:00-08:00",
-   "categories" : "community",
+   "slug" : "/pub/2000/03/p5pdigest/THISWEEK-20000305.html",
+   "description" : " Notes Meta-Information Brief Update Module Warnings POD Changes Race conditions in statndard Perl utilities open Calls not checked in perldoc Big Flame Wars Chip and Jarkko Quit Templates in pack and unpack use strict in the core modules Various...",
    "authors" : [
       "mark-jason-dominus"
    ],
-   "title" : "This Week on p5p 2000/03/05",
-   "tags" : [],
-   "slug" : "/pub/2000/03/p5pdigest/THISWEEK-20000305.html",
    "draft" : null,
-   "description" : " Notes Meta-Information Brief Update Module Warnings POD Changes Race conditions in statndard Perl utilities open Calls not checked in perldoc Big Flame Wars Chip and Jarkko Quit Templates in pack and unpack use strict in the core modules Various..."
+   "date" : "2000-03-05T00:00:00-08:00",
+   "title" : "This Week on p5p 2000/03/05",
+   "image" : null,
+   "categories" : "community",
+   "thumbnail" : null,
+   "tags" : []
 }
 
 
@@ -35,8 +35,6 @@ Well, my apologies to everyone for the long absence. I'm going to try to send ou
 This means that if you think I missed something of importance, I would be more grateful than ever if you would bring it to my attention.
 
 #### <span id="Meta_Information_">Meta-Information</span>
-
-The most recent report will always be available at [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

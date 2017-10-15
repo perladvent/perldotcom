@@ -1,17 +1,17 @@
 {
-   "image" : null,
    "thumbnail" : "/images/_pub_2002_04_23_mod_perl/111-book_reviews.gif",
-   "date" : "2002-04-23T00:00:00-08:00",
-   "categories" : "web",
-   "title" : "The Perl You Need To Know",
-   "authors" : [
-      "stas-bekman"
-   ],
    "tags" : [
       "mod-perl-perl-global-variables"
    ],
+   "date" : "2002-04-23T00:00:00-08:00",
+   "title" : "The Perl You Need To Know",
+   "image" : null,
+   "categories" : "web",
    "slug" : "/pub/2002/04/23/mod_perl.html",
    "description" : " Introduction Before I delve into the details of mod_perl programming, it's probably a good idea to review some important Perl basics. You will discover these invaluable when you start coding for mod_perl. I will start with pure Perl notes...",
+   "authors" : [
+      "stas-bekman"
+   ],
    "draft" : null
 }
 
@@ -189,12 +189,12 @@ Now in packages that want to use the configuration variables I have either to us
 </colgroup>
 <tbody>
 <tr class="odd">
-<td><img src="/images/pixel-hub.gif" alt=" " width="200" height="2" /><br />
+<td>
 
-<a href="http://conferences.oreilly.com/oscon/"><img src="/images/os2002/oscon-sidebar.gif" alt="O&#39;Reilly Open Source Convention -- July 22-26, San Diego, CA." width="143" height="78" /></a>
+<a href="http://conferences.oreilly.com/oscon/">O&#39;Reilly Open Source Convention -- July 22-26, San Diego, CA.</a>
 <p><strong>From the Frontiers of Research to the Heart of the Enterprise</strong></p>
 <p><a href="http://conferences.oreillynet.com/cs/os2002/view/e_sess/3032">mod_perl 2.0, the Next Generation</a> Stas Bekman will provide an overview of what's new in mod_perl 2.0 and what else is planned for the future in his talk at the upcoming <a href="http://conferences.oreillynet.com/os2002/">O'Reilly Open Source Convention</a>, this July 22-26, in San Diego.</p>
-<img src="/images/pixel-hub.gif" alt=" " width="200" height="2" /></td>
+</td>
 </tr>
 </tbody>
 </table>
@@ -327,11 +327,11 @@ When using a regular expression that contains an interpolated Perl variable, if 
 </tr>
 <tr class="even">
 <td><p>Previously in the Series</p>
-<p><a href="/pub/a/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
+<p><a href="/pub/2002/04/10/mod_perl.html">Installing mod_perl without superuser privileges</a><br />
 <br />
-<a href="/pub/a/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
+<a href="/pub/2002/03/22/modperl.html">mod_perl in 30 minutes</a><br />
 <br />
-<a href="/pub/a/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
+<a href="/pub/2002/02/26/whatismodperl.html">Why mod_perl?</a></p></td>
 </tr>
 <tr class="odd">
 <td></td>

@@ -1,19 +1,19 @@
 {
-   "slug" : "/pub/2004/04/15/maypole.html",
-   "tags" : [
-      "maypole",
-      "mvc"
-   ],
-   "draft" : null,
-   "description" : " You have a database. You have a web server. You have a deadline. Whether it's bringing up an e-commerce storefront for a new venture, implementing a new front-end to HR's employee database, or even providing a neat way to...",
-   "date" : "2004-04-22T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2004_04_15_maypole/111-apocalypse12.gif",
-   "image" : null,
    "authors" : [
       "simon-cozens"
    ],
+   "draft" : null,
+   "description" : " You have a database. You have a web server. You have a deadline. Whether it's bringing up an e-commerce storefront for a new venture, implementing a new front-end to HR's employee database, or even providing a neat way to...",
+   "slug" : "/pub/2004/04/15/maypole.html",
    "title" : "Rapid Web Application Deployment with Maypole",
-   "categories" : "web"
+   "image" : null,
+   "categories" : "web",
+   "date" : "2004-04-22T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2004_04_15_maypole/111-apocalypse12.gif",
+   "tags" : [
+      "maypole",
+      "mvc"
+   ]
 }
 
 
@@ -29,8 +29,8 @@ Extremely quickly, and with very little Perl coding required. I've used Maypole 
 Maypole's flexibility stems from three fundamentals:
 
 -   [Clear separation of concerns](#Separation_of_concerns)
--   [Intelligent defaults](maypole.html?page=2#Sensible_defaults)
--   [Ease of extensibility](maypole.html?page=2#Ease_of_Extensibility)
+-   [Intelligent defaults](/pub/2004/04/15/maypole.html#Sensible_defaults)
+-   [Ease of extensibility](/pub/2004/04/15/maypole.html#Ease_of_Extensibility)
 
 To demonstrate these three principles, we're going to look at a bread-and-butter web application -- an online shop's product catalogue -- and see how quickly we can put it together with Maypole.
 
@@ -125,7 +125,7 @@ Now we use a Perl module that I wrote to help put together Maypole driver classe
 
 We tell `ISellIt` to go connect to the database and work out the tables and columns in our application. In addition, because we haven't changed any class defaults, it's assumed that we're going to use `Class::DBI` and Template Toolkit. We could have said that we want to use `Apache::MVC` with `DBIx::SearchBuilder` and `HTML::Mason`, but we don't.
 
-Maypole's `Class::DBI`-based class uses [`Class::DBI::Loader`](http://search.cpan.org/perldoc?Class::DBI::Loader) to investigate the structure of the database, and then map the `product` table onto a `ISellIt::Product` class, and so on. You can read more about how `Class::DBI`'s table-class mapping works in [Tony's article about it](http://www.perl.com/pub/a/2002/11/27/classdbi.html).
+Maypole's `Class::DBI`-based class uses [`Class::DBI::Loader`](http://search.cpan.org/perldoc?Class::DBI::Loader) to investigate the structure of the database, and then map the `product` table onto a `ISellIt::Product` class, and so on. You can read more about how `Class::DBI`'s table-class mapping works in [Tony's article about it](http://www.perl.com/pub/2002/11/27/classdbi.html).
 
 ```
     ISellIt->config->{uri_base} = "http://localhost/isellit";

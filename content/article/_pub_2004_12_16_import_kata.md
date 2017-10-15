@@ -1,14 +1,4 @@
 {
-   "categories" : "testing",
-   "title" : "Perl Code Kata: Testing Imports",
-   "authors" : [
-      "chromatic"
-   ],
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2004-12-16T00:00:00-08:00",
-   "description" : "Want to get better at Perl? This short exercise helps you understand how modules import symbols into namespaces.",
-   "draft" : null,
    "tags" : [
       "code-kata",
       "exporting",
@@ -18,12 +8,22 @@
       "perl-modules",
       "perl-testing"
    ],
-   "slug" : "/pub/2004/12/16/import_kata.html"
+   "thumbnail" : null,
+   "date" : "2004-12-16T00:00:00-08:00",
+   "categories" : "testing",
+   "image" : null,
+   "title" : "Perl Code Kata: Testing Imports",
+   "slug" : "/pub/2004/12/16/import_kata.html",
+   "description" : "Want to get better at Perl? This short exercise helps you understand how modules import symbols into namespaces.",
+   "draft" : null,
+   "authors" : [
+      "chromatic"
+   ]
 }
 
 
 
-[Perl Taint Test Kata](/pub/a/2004/10/21/taint_testing_kata.html) introduced the idea of Perl Test Kata, small exercises designed to improve your understanding of Perl and your ability to write test-driven code. This article is the second in the series.
+[Perl Taint Test Kata](/pub/2004/10/21/taint_testing_kata.html) introduced the idea of Perl Test Kata, small exercises designed to improve your understanding of Perl and your ability to write test-driven code. This article is the second in the series.
 
 ### Import Testing Kata
 

@@ -1,14 +1,11 @@
 {
-   "categories" : "development",
+   "description" : " The following ten tips come from Perl Best Practices, a new book of Perl coding and development guidelines by Damian Conway. 1. Design the Module's Interface First The most important aspect of any module is not how it implements...",
+   "slug" : "/pub/2005/07/14/bestpractices.html",
    "authors" : [
       "damian-conway"
    ],
-   "title" : "Ten Essential Development Practices",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2005_07_14_bestpractices/111-best_practices.gif",
-   "date" : "2005-07-14T00:00:00-08:00",
    "draft" : null,
-   "description" : " The following ten tips come from Perl Best Practices, a new book of Perl coding and development guidelines by Damian Conway. 1. Design the Module's Interface First The most important aspect of any module is not how it implements...",
+   "thumbnail" : "/images/_pub_2005_07_14_bestpractices/111-best_practices.gif",
    "tags" : [
       "maintainable-perl",
       "perl-best-practices",
@@ -17,7 +14,10 @@
       "perl-style",
       "serious-perl"
    ],
-   "slug" : "/pub/2005/07/14/bestpractices.html"
+   "date" : "2005-07-14T00:00:00-08:00",
+   "title" : "Ten Essential Development Practices",
+   "image" : null,
+   "categories" : "development"
 }
 
 

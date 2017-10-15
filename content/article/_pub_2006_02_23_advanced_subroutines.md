@@ -1,26 +1,26 @@
 {
-   "date" : "2006-02-23T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : "/images/_pub_2006_02_23_advanced_subroutines/111-adv_subroutines.gif",
-   "authors" : [
-      "rob-kinyon"
-   ],
-   "title" : "Advanced Subroutine Techniques",
    "categories" : "development",
-   "slug" : "/pub/2006/02/23/advanced_subroutines.html",
+   "title" : "Advanced Subroutine Techniques",
+   "image" : null,
+   "date" : "2006-02-23T00:00:00-08:00",
    "tags" : [
       "perl-code-reuse",
       "perl-functions",
       "perl-subroutines",
       "perl-tutorial"
    ],
+   "thumbnail" : "/images/_pub_2006_02_23_advanced_subroutines/111-adv_subroutines.gif",
+   "authors" : [
+      "rob-kinyon"
+   ],
    "draft" : null,
-   "description" : " In \"Making Sense of Subroutines,\" I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful...."
+   "description" : " In \"Making Sense of Subroutines,\" I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful....",
+   "slug" : "/pub/2006/02/23/advanced_subroutines.html"
 }
 
 
 
-In "[Making Sense of Subroutines](/pub/a/2005/11/03/subroutines.html)," I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful.
+In "[Making Sense of Subroutines](/pub/2005/11/03/subroutines.html)," I wrote about what subroutines are and why you want to use them. This article expands on that topic, discussing some of the more common techniques for subroutines to make them even more useful.
 
 Several of these techniques are advanced, but you can use each one by itself without understanding the others. Furthermore, not every technique is useful in every situation. As with all techniques, consider these as tools in your toolbox, not things you have to do every time you open your editor.
 

@@ -1,15 +1,11 @@
 {
+   "description" : " Around Easter last year, I finished writing the second edition of Advanced Perl Programming, a task that had been four years in the making. The aim of this new edition was to reflect the way that Perl programming had...",
+   "slug" : "/pub/2006/01/26/more_advanced_perl.html",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "title" : "More Advancements in Perl Programming",
-   "categories" : "development",
-   "date" : "2006-01-26T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2006_01_26_more_advanced_perl/111-advanced.gif",
-   "image" : null,
-   "draft" : null,
-   "description" : " Around Easter last year, I finished writing the second edition of Advanced Perl Programming, a task that had been four years in the making. The aim of this new edition was to reflect the way that Perl programming had...",
-   "slug" : "/pub/2006/01/26/more_advanced_perl.html",
    "tags" : [
       "advanced-perl",
       "html-parsing",
@@ -26,7 +22,11 @@
       "perl-testing",
       "perl-xs",
       "poe"
-   ]
+   ],
+   "date" : "2006-01-26T00:00:00-08:00",
+   "title" : "More Advancements in Perl Programming",
+   "image" : null,
+   "categories" : "development"
 }
 
 

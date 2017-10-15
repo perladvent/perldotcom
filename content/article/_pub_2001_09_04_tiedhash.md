@@ -1,18 +1,18 @@
 {
-   "categories" : "data",
    "authors" : [
       "dave-cross"
    ],
+   "draft" : null,
+   "slug" : "/pub/2001/09/04/tiedhash.html",
+   "description" : " Introduction In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl Objects have...",
+   "categories" : "data",
    "title" : "Changing Hash Behaviour with tie",
-   "thumbnail" : "/images/_pub_2001_09_04_tiedhash/111-hashtie.jpg",
    "image" : null,
    "date" : "2001-09-04T00:00:00-08:00",
-   "draft" : null,
-   "description" : " Introduction In my experience, hashes are just about the most useful built-in datatype that Perl has. They are useful for so many things - from simple lookup tables to complex data structures. And, of course, most Perl Objects have...",
    "tags" : [
       "tied-hash-behaviour"
    ],
-   "slug" : "/pub/2001/09/04/tiedhash.html"
+   "thumbnail" : "/images/_pub_2001_09_04_tiedhash/111-hashtie.jpg"
 }
 
 
@@ -133,9 +133,9 @@ So far, so good. But it hasn't really achieved much. The hash `%hash` is now a t
 
 This is standard for a Perl object, but notice that we've loaded the Tie::Hash module (with `use Tie::Hash`) and have told our package to inherit behavior from Tie::StdHash by putting Tie::StdHash in the `@ISA` package variable.
 
-If we stopped there, our Tie::Hash::FixedKeys package would have the same behavior as a standard Perl hash. This is because each time Perl tried to find one of the tie interface methods (like [`FETCH`](/pub/a/2001/09/04/tiedhash.html#item_FETCH) or [`STORE`](/pub/a/2001/09/04/tiedhash.html#item_STORE)) in our package it would fail and would call the version found in our parent class, Tie::StdHash.
+If we stopped there, our Tie::Hash::FixedKeys package would have the same behavior as a standard Perl hash. This is because each time Perl tried to find one of the tie interface methods (like [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) or [`STORE`](/pub/2001/09/04/tiedhash.html#item_STORE)) in our package it would fail and would call the version found in our parent class, Tie::StdHash.
 
-At this point we can start to change the standard hash behavior by simply overriding the methods that we want to change. We'll start by implementing the [`TIEHASH`](/pub/a/2001/09/04/tiedhash.html#item_TIEHASH) method differently.
+At this point we can start to change the standard hash behavior by simply overriding the methods that we want to change. We'll start by implementing the [`TIEHASH`](/pub/2001/09/04/tiedhash.html#item_TIEHASH) method differently.
 
 
         sub TIEHASH {
@@ -152,7 +152,7 @@ At this point we can start to change the standard hash behavior by simply overri
 
         }
 
-The [`TIEHASH`](/pub/a/2001/09/04/tiedhash.html#item_TIEHASH) function is passed the name of the class as its first parameter, so we `shift` that into `$class` in the first line. The rest of the parameters in `@_` are whatever extra parameters have been passed into the `tie` call. In the example of how to use our proposed class at the start of this article, we passed it the list of valid keys. Therefore, we take this list of keys and (using a hash slice) we initialize a hash so that it has `undef` as the value for each of these keys. Finally, we take a reference to this hash, bless it into the required class and return the reference.
+The [`TIEHASH`](/pub/2001/09/04/tiedhash.html#item_TIEHASH) function is passed the name of the class as its first parameter, so we `shift` that into `$class` in the first line. The rest of the parameters in `@_` are whatever extra parameters have been passed into the `tie` call. In the example of how to use our proposed class at the start of this article, we passed it the list of valid keys. Therefore, we take this list of keys and (using a hash slice) we initialize a hash so that it has `undef` as the value for each of these keys. Finally, we take a reference to this hash, bless it into the required class and return the reference.
 
 It's worth pointing out here, the one caveat about using Tie::StdHash. In order to use the default behavior, your new class *must* be based on a hash reference and this hash must contain *only* real hash data. We couldn't, for example, invent a key called `_keys` that would contain a list of valid key names as, for example, this key would be shown if the user called the `keys` method.
 
@@ -177,9 +177,9 @@ At this point we have a hash that has values (of `undef`) for each of the allowe
 
         }
 
-The three parameters passed to the [`STORE`](/pub/a/2001/09/04/tiedhash.html#item_STORE) method are a reference to the tied object, and a new key/value pair. We need the [`STORE`](/pub/a/2001/09/04/tiedhash.html#item_STORE) method to prevent new keys being added to the underlying hash, and we achieve that by checking that the given key exists before setting the value. Note that as our underlying object is a real hash, we can check this simply by using the `exists` function. If the key doesn't exist we give the user a friendly warning and return from the method without changing the hash.
+The three parameters passed to the [`STORE`](/pub/2001/09/04/tiedhash.html#item_STORE) method are a reference to the tied object, and a new key/value pair. We need the [`STORE`](/pub/2001/09/04/tiedhash.html#item_STORE) method to prevent new keys being added to the underlying hash, and we achieve that by checking that the given key exists before setting the value. Note that as our underlying object is a real hash, we can check this simply by using the `exists` function. If the key doesn't exist we give the user a friendly warning and return from the method without changing the hash.
 
-We have now prevented the hash from growing by adding keys, but it is still possible to remove keys from the hash (and our [`STORE`](/pub/a/2001/09/04/tiedhash.html#item_STORE) implementation would prevent them from being set once they had been removed), so we also need to override the implementation of [`DELETE`](/pub/a/2001/09/04/tiedhash.html#item_DELETE).
+We have now prevented the hash from growing by adding keys, but it is still possible to remove keys from the hash (and our [`STORE`](/pub/2001/09/04/tiedhash.html#item_STORE) implementation would prevent them from being set once they had been removed), so we also need to override the implementation of [`DELETE`](/pub/2001/09/04/tiedhash.html#item_DELETE).
 
 
         sub DELETE {
@@ -207,7 +207,7 @@ There's one other way to affect the keys in our hash. Code like this:
 
         %hash = ();
 
-will cause the [`CLEAR`](/pub/a/2001/09/04/tiedhash.html#item_CLEAR) method to be called. The default behavior for this method is to remove all of the data from the hash. We need to replace this with a method that will reset all of the values to `undef` without changing the keys in any way.
+will cause the [`CLEAR`](/pub/2001/09/04/tiedhash.html#item_CLEAR) method to be called. The default behavior for this method is to remove all of the data from the hash. We need to replace this with a method that will reset all of the values to `undef` without changing the keys in any way.
 
 
         sub CLEAR {
@@ -226,7 +226,7 @@ And that's all that we need to do. All of the other functionality of a standard 
 
 Let's look at another example. This module came about from a discussion on Perlmonks a couple of months ago. Someone asked whether it was possible to match hash keys approximately. I suggested that a hash that matched keys as regular expressions might solve their problem and wrote the first draft of this module. I'm grateful to Jeff Pinyan, who made some suggestions for improvements to the module.
 
-In order to make this change to the behavior of the hash, we need to override the behavior of the [`FETCH`](/pub/a/2001/09/04/tiedhash.html#item_FETCH), [`EXISTS`](/pub/a/2001/09/04/tiedhash.html#item_EXISTS) and [`DELETE`](/pub/a/2001/09/04/tiedhash.html#item_DELETE) methods. Here's the [`FETCH`](/pub/a/2001/09/04/tiedhash.html#item_FETCH) method.
+In order to make this change to the behavior of the hash, we need to override the behavior of the [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH), [`EXISTS`](/pub/2001/09/04/tiedhash.html#item_EXISTS) and [`DELETE`](/pub/2001/09/04/tiedhash.html#item_DELETE) methods. Here's the [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) method.
 
 
       sub FETCH {
@@ -259,9 +259,9 @@ In order to make this change to the behavior of the hash, we need to override th
 
 Knowing what we know about tied objects, this is pretty simple to follow. We start by getting the reference to the tied object (which will be a hash reference) and the required key. We then check to see whether the key is a reference to a precompiled regular expression (which would have been compiled with `qr//`. If the key *isn't* a regex, then we start by checking whether the key exists in the hash. If it does, we return the associated value. If the key isn't found, then we assume that it is a regex to search for. At this point we compile the regex as if it isn't already precompiled (this gives us a preforamnce boost as we could potentially need to match the regex against all of the keys in the hash). Finally, we check each key in the hash in turn against the regex and if it matches, then we return the associated value. If there are no matches we simply `return`.
 
-At this point you may realize that it's possible for more than one key to match a regex and you may suggest that it would be nice for [`FETCH`](/pub/a/2001/09/04/tiedhash.html#item_FETCH) to return *all* matches as if it was called in scalar context. This is a nice idea, but in current versions of Perl the syntax `$hash{$key}` *always* calls [`FETCH`](/pub/a/2001/09/04/tiedhash.html#item_FETCH) in scalar context (and the syntax `@hash{@keys}` calls [`FETCH`](/pub/a/2001/09/04/tiedhash.html#item_FETCH) once in scalar context for each element of `@keys`) so this won't work. To get round this, you can use the slightly kludgey syntax `@vals = tied(%hash)-`FETCH($pattern)&gt; and the version of the module on CPAN supports this.
+At this point you may realize that it's possible for more than one key to match a regex and you may suggest that it would be nice for [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) to return *all* matches as if it was called in scalar context. This is a nice idea, but in current versions of Perl the syntax `$hash{$key}` *always* calls [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) in scalar context (and the syntax `@hash{@keys}` calls [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) once in scalar context for each element of `@keys`) so this won't work. To get round this, you can use the slightly kludgey syntax `@vals = tied(%hash)-`FETCH($pattern)&gt; and the version of the module on CPAN supports this.
 
-The [`EXISTS`](/pub/a/2001/09/04/tiedhash.html#item_EXISTS) method uses similar processing, but in this case we return 1 if the key is found instead of the associated value.
+The [`EXISTS`](/pub/2001/09/04/tiedhash.html#item_EXISTS) method uses similar processing, but in this case we return 1 if the key is found instead of the associated value.
 
 
       sub EXISTS {
@@ -290,7 +290,7 @@ The [`EXISTS`](/pub/a/2001/09/04/tiedhash.html#item_EXISTS) method uses similar 
 
       }
 
-The [`DELETE`](/pub/a/2001/09/04/tiedhash.html#item_DELETE) method is somewhat different. In this case, we can delete *all* matching key/value pairs, which we do with the following code:
+The [`DELETE`](/pub/2001/09/04/tiedhash.html#item_DELETE) method is somewhat different. In this case, we can delete *all* matching key/value pairs, which we do with the following code:
 
 
 

@@ -1,13 +1,9 @@
 {
    "date" : "2007-09-21T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null,
    "title" : "PDF Processing with Perl",
-   "authors" : [
-      "detlef-groth"
-   ],
-   "categories" : "CPAN",
-   "slug" : "/pub/2007/09/20/pdf-processing-with-perl.html",
+   "image" : null,
+   "categories" : "cpan",
+   "thumbnail" : null,
    "tags" : [
       "creating-pdfs",
       "pdf",
@@ -15,6 +11,10 @@
       "pdf-reuse"
    ],
    "description" : " Adobe's PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document...",
+   "slug" : "/pub/2007/09/20/pdf-processing-with-perl.html",
+   "authors" : [
+      "detlef-groth"
+   ],
    "draft" : null
 }
 

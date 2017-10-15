@@ -1,15 +1,11 @@
 {
+   "description" : " Over the years of doing various levels of web-based programming, I've come feel like Dante taking a trip through the nine circles of web programmer hell. There are certain things we must endure over and over, from project to...",
+   "slug" : "/pub/2005/11/17/handel.html",
    "authors" : [
       "christopher-h--laco"
    ],
-   "title" : "Building E-Commerce Sites with Handel",
-   "categories" : "Web",
-   "date" : "2005-11-17T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2005_11_17_handel/111-ecommerce.gif",
-   "image" : null,
    "draft" : null,
-   "description" : " Over the years of doing various levels of web-based programming, I've come feel like Dante taking a trip through the nine circles of web programmer hell. There are certain things we must endure over and over, from project to...",
-   "slug" : "/pub/2005/11/17/handel.html",
+   "thumbnail" : "/images/_pub_2005_11_17_handel/111-ecommerce.gif",
    "tags" : [
       "catalyst",
       "e-commerce",
@@ -17,7 +13,11 @@
       "perl-catalyst",
       "perl-web-frameworks",
       "perl-web-programming"
-   ]
+   ],
+   "date" : "2005-11-17T00:00:00-08:00",
+   "title" : "Building E-Commerce Sites with Handel",
+   "image" : null,
+   "categories" : "web"
 }
 
 
@@ -76,7 +76,7 @@ This should have created an `sqlite` v3 database in your working directory. Reme
 
 #### Creating the Application
 
-If you haven't used or even heard about Catalyst yet, now is probably a good time to read Jesse Sheidlower's article [introducing the Catalyst MVC framework](/pub/a/2005/06/02/catalyst.html). Because Handel isn't bound to any specific front-end GUI, you need to use other tools to interact with the data. For the purposes of this introduction, Catalyst will provide the front-end web interface for use.
+If you haven't used or even heard about Catalyst yet, now is probably a good time to read Jesse Sheidlower's article [introducing the Catalyst MVC framework](/pub/2005/06/02/catalyst.html). Because Handel isn't bound to any specific front-end GUI, you need to use other tools to interact with the data. For the purposes of this introduction, Catalyst will provide the front-end web interface for use.
 
 To create the new web application, simply call *catalyst.pl*, passing it the name of the new application. Make sure to do this in the directory in which you wish to have the new application's directory created.
 
@@ -277,7 +277,7 @@ Cart, orders, checkout. Oh my!
 
 The shopping cart code base includes the usual actions: add, update, delete, and empty, as well as the ability to save the cart's contents and restore a saved cart back into the current cart. To try it out, you need to add something to the cart!
 
-Download the [test products page](/2005/11/17/examples/products.html) and load it in a browser of your choice (Figure 2).
+Download the [test products page](/media/_pub_2005_11_17_handel/products.html) and load it in a browser of your choice (Figure 2).
 
 <img src="/images/_pub_2005_11_17_handel/products.gif" alt="Product Page Screenshot" width="500" height="353" />
 *Figure 2. The product page*

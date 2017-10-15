@@ -1,16 +1,16 @@
 {
-   "description" : "When JT Smith ported his web game The Lacuna Expanse to a board game, he used Perl to create the board game itself. Here's how he built the web service behind The Game Crafter.",
-   "draft" : null,
-   "slug" : "/pub/2012/12/consuming-restful-services-with-perl.html",
+   "thumbnail" : null,
    "tags" : [],
+   "date" : "2012-12-31T06:00:01-08:00",
+   "image" : null,
    "title" : "Consuming RESTful Services with Perl",
+   "categories" : "web",
+   "slug" : "/pub/2012/12/consuming-restful-services-with-perl.html",
+   "description" : "When JT Smith ported his web game The Lacuna Expanse to a board game, he used Perl to create the board game itself. Here's how he built the web service behind The Game Crafter.",
    "authors" : [
       "jt-smith"
    ],
-   "categories" : "Web",
-   "date" : "2012-12-31T06:00:01-08:00",
-   "thumbnail" : null,
-   "image" : null
+   "draft" : null
 }
 
 

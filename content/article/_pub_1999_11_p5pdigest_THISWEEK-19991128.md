@@ -1,16 +1,16 @@
 {
-   "description" : " Notes New Meta-Information Thread Model Discussion Discussion of Line Disciplines Continues Shadow Passwords Bugs in NT Perl Sockets? Run Out of File Descriptors Lexical Variable Leak Control-Backslash Bitwise Operators Taint Bug? next Outside a Block Quiet List Various Notes...",
-   "draft" : null,
-   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991128.html",
-   "tags" : [],
-   "title" : "This Week on p5p 1999/11/28",
    "authors" : [
       "mark-jason-dominus"
    ],
+   "draft" : null,
+   "description" : " Notes New Meta-Information Thread Model Discussion Discussion of Line Disciplines Continues Shadow Passwords Bugs in NT Perl Sockets? Run Out of File Descriptors Lexical Variable Leak Control-Backslash Bitwise Operators Taint Bug? next Outside a Block Quiet List Various Notes...",
+   "slug" : "/pub/1999/11/p5pdigest/THISWEEK-19991128.html",
+   "title" : "This Week on p5p 1999/11/28",
+   "image" : null,
    "categories" : "community",
    "date" : "1999-11-28T00:00:00-08:00",
    "thumbnail" : null,
-   "image" : null
+   "tags" : []
 }
 
 
@@ -35,8 +35,6 @@
 This report is very late, because I was in London from 26--29 November, and then when I got back I had to finish preparing class materials for a class I was teaching in Chicago from 6--8 December, and when I got back from *that* I had to prepare class materials for a class I was teaching in New York from 14--16 December. Then I had to recover. Now I'm going to try to catch up on reports. My apologies for the delay.
 
 #### <span id="New_Meta_Information_">New Meta-Information</span>
-
-The most recent report will always be available at [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

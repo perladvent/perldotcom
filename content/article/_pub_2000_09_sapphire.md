@@ -1,16 +1,16 @@
 {
-   "tags" : [],
-   "slug" : "/pub/2000/09/sapphire.html",
-   "description" : " Table of Contents Design Principles So, uh, what is it? Where did it get? What else can be done? What can't be done? Structure of a Sapphire The future of Sapphire Reflections through a Sapphire Naming languages after stones...",
    "draft" : null,
-   "thumbnail" : null,
-   "image" : null,
-   "date" : "2000-09-19T00:00:00-08:00",
-   "categories" : "Perl Internals",
-   "title" : "Sapphire",
    "authors" : [
       "simon-cozens"
-   ]
+   ],
+   "description" : " Table of Contents Design Principles So, uh, what is it? Where did it get? What else can be done? What can't be done? Structure of a Sapphire The future of Sapphire Reflections through a Sapphire Naming languages after stones...",
+   "slug" : "/pub/2000/09/sapphire.html",
+   "title" : "Sapphire",
+   "image" : null,
+   "categories" : "perl-internals",
+   "date" : "2000-09-19T00:00:00-08:00",
+   "thumbnail" : null,
+   "tags" : []
 }
 
 
@@ -119,7 +119,7 @@ Now you can choose whether your macros should be expanded by flipping on `-DEXPA
         #define EXPAND_HERE
         #include <sv.h>
 
-Then if `EXPAND_MACROS` was defined, the function definitions would all be provided in one place; if macros were not expanded, `sv_inline.c` would define no functions. The function prototypes would be extracted automatically with [C::Scan](/C/Scan.html).
+Then if `EXPAND_MACROS` was defined, the function definitions would all be provided in one place; if macros were not expanded, `sv_inline.c` would define no functions. The function prototypes would be extracted automatically with [C::Scan](https://metacpan.org/pod/C::Scan).
 
 With the state of compiler optimization these days, it's likely that turning everything into macros makes no significant speed difference. In which case, it's best to turn on `EXPAND_MACROS` to assist with source-level debuggers which cannot read macros. However, you can't tell until you benchmark, and the \`\`optional expansion'' method gives you a nice easy way to do that.
 

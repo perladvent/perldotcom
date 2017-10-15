@@ -1,4 +1,9 @@
 {
+   "date" : "2005-03-17T00:00:00-08:00",
+   "title" : "Symbol Table Manipulation",
+   "image" : null,
+   "categories" : "data",
+   "thumbnail" : "/images/_pub_2005_03_17_symtables/111-syboltbl_trix.gif",
    "tags" : [
       "dynamic-variable-names",
       "global-variables",
@@ -6,17 +11,12 @@
       "symbol-tables",
       "symbolic-references"
    ],
+   "description" : " Having almost achieved the state of perfect laziness, one of my favorite modules is Class::DBI::mysql. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This...",
    "slug" : "/pub/2005/03/17/symtables.html",
    "draft" : null,
-   "description" : " Having almost achieved the state of perfect laziness, one of my favorite modules is Class::DBI::mysql. It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This...",
-   "thumbnail" : "/images/_pub_2005_03_17_symtables/111-syboltbl_trix.gif",
-   "image" : null,
-   "date" : "2005-03-17T00:00:00-08:00",
-   "categories" : "data",
    "authors" : [
       "phil-crow"
-   ],
-   "title" : "Symbol Table Manipulation"
+   ]
 }
 
 

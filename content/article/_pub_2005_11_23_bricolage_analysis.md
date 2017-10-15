@@ -1,27 +1,27 @@
 {
-   "date" : "2005-11-23T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
+   "description" : " Previous Perl.com articles have reviewed where Bricolage fits into the universe of content management systems and worked through Bricolage installation and Bricolage configuration. Now it's time to go through the steps required to model the structure of an existing...",
+   "slug" : "/pub/2005/11/23/bricolage_analysis.html",
+   "draft" : null,
    "authors" : [
       "david-wheeler"
    ],
+   "date" : "2005-11-23T00:00:00-08:00",
    "title" : "Document Modeling with Bricolage",
+   "image" : null,
    "categories" : "data",
-   "slug" : "/pub/2005/11/23/bricolage_analysis.html",
+   "thumbnail" : null,
    "tags" : [
       "bricolage",
       "cms-workflow",
       "content-management",
       "document-modeling",
       "open-source-cms"
-   ],
-   "draft" : null,
-   "description" : " Previous Perl.com articles have reviewed where Bricolage fits into the universe of content management systems and worked through Bricolage installation and Bricolage configuration. Now it's time to go through the steps required to model the structure of an existing..."
+   ]
 }
 
 
 
-Previous Perl.com articles have reviewed [where Bricolage fits into the universe of content management systems](/pub/a/2004/08/27/bricolage.html) and worked through [Bricolage installation](/pub/a/2004/10/28/bricolage_installation.html) and [Bricolage configuration](/pub/a/2005/01/06/bricolage_configuration.html). Now it's time to go through the steps required to model the structure of an existing web page in Bricolage. Part of the motivation for the redesign of the [Bricolage website](http://www.bricolage.cc/ "Visit the Bricolage website") last summer was to create good examples of document types and templates for use in Bricolage itself. You can take advantage of that work by analyzing a page on the current Bricolage site to determine how to break it down into its basic elements.
+Previous Perl.com articles have reviewed [where Bricolage fits into the universe of content management systems](/pub/2004/08/27/bricolage.html) and worked through [Bricolage installation](/pub/2004/10/28/bricolage_installation.html) and [Bricolage configuration](/pub/2005/01/06/bricolage_configuration.html). Now it's time to go through the steps required to model the structure of an existing web page in Bricolage. Part of the motivation for the redesign of the [Bricolage website](http://www.bricolage.cc/ "Visit the Bricolage website") last summer was to create good examples of document types and templates for use in Bricolage itself. You can take advantage of that work by analyzing a page on the current Bricolage site to determine how to break it down into its basic elements.
 
 First, here's a brief introduction to document types in Bricolage.
 
@@ -166,7 +166,7 @@ Now it's time for the building blocks. You defined several elements in your anal
 
 First create the Related Image element (Figure 8). The Key Name field uniquely identifies the element throughout Bricolage, while the burner determines the kind of templates that will be used to format Related Image elements. Be sure to select the Related Media element type! This is useful for many things, including giving templates the ability to easily get a handle on an element, as well as providing the file name for templates based on this element. It's generally a good idea to make the key name the same as the element name, but lowercased and with spaces replaced with underscores (uppercase letters and spaces are not allowed in key names).
 
-The Burner pulldown list allows selection of the *burner* that will be used to format the element. As mentioned in the [Bricolage introduction article](/pub/a/2004/08/27/bricolage.html "Content Management with Bricolage"), Bricolage currently supports three templating systems for formatting content: [Mason](http://www.masonhq.com/ "Mason HQ"), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit home"), and [HTML::Template](http://html-template.sourceforge.net/ "HTML::Template home") (but with [PHP](http://www.php.net/ "PHP?") support arriving in the forthcoming Bricolage 1.10, due out in September; stay tuned!). The Bricolage objects that push stories through the templates in a particular output channel are *burners*, ostensibly because they "burn" files to disk (but rumor has it that the name *really* came about when the original developer of the Mason burner wanted to write a `burn_one()` method). I've selected Mason for this example because all of the Bricolage site templates use Mason.
+The Burner pulldown list allows selection of the *burner* that will be used to format the element. As mentioned in the [Bricolage introduction article](/pub/2004/08/27/bricolage.html "Content Management with Bricolage"), Bricolage currently supports three templating systems for formatting content: [Mason](http://www.masonhq.com/ "Mason HQ"), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit home"), and [HTML::Template](http://html-template.sourceforge.net/ "HTML::Template home") (but with [PHP](http://www.php.net/ "PHP?") support arriving in the forthcoming Bricolage 1.10, due out in September; stay tuned!). The Bricolage objects that push stories through the templates in a particular output channel are *burners*, ostensibly because they "burn" files to disk (but rumor has it that the name *really* came about when the original developer of the Mason burner wanted to write a `burn_one()` method). I've selected Mason for this example because all of the Bricolage site templates use Mason.
 
 <img src="/images/_pub_2005_11_23_bricolage_analysis/custom_fields.jpg" alt="Element custom field definition" width="385" height="267" />
 *Figure 9. The fields subelements defined for the Related Image element*

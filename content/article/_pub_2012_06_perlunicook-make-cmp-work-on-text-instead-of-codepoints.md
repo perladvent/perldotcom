@@ -1,16 +1,16 @@
 {
-   "draft" : null,
    "description" : "℞ 38: Making cmp work on text instead of codepoints Even with Perl 5.12's \"unicode_strings\" feature, some of Perl's core operations do not perform as expected on Unicode strings by default. For example, how is the cmp operator to know...",
    "slug" : "/pub/2012/06/perlunicook-make-cmp-work-on-text-instead-of-codepoints.html",
-   "tags" : [],
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "title" : "Perl Unicode Cookbook: Make cmp Work on Text instead of Codepoints",
-   "categories" : "unicode",
-   "date" : "2012-06-07T06:00:01-08:00",
+   "tags" : [],
    "thumbnail" : null,
-   "image" : null
+   "date" : "2012-06-07T06:00:01-08:00",
+   "categories" : "unicode",
+   "image" : null,
+   "title" : "Perl Unicode Cookbook: Make cmp Work on Text instead of Codepoints"
 }
 
 

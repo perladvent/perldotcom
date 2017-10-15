@@ -1,23 +1,23 @@
 {
-   "date" : "2002-11-27T00:00:00-08:00",
-   "thumbnail" : "/images/_pub_2002_11_27_classdbi/111-class_dbi.gif",
-   "image" : null,
+   "description" : " Several articles on Perl.com, including the recent Phrasebook Design Pattern, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's DBIx::Recordset article attempted to show how code dealing with databases can be made...",
+   "slug" : "/pub/2002/11/27/classdbi.html",
    "authors" : [
       "tony-bowden"
    ],
-   "title" : "Class::DBI",
-   "categories" : "data",
-   "slug" : "/pub/2002/11/27/classdbi.html",
+   "draft" : null,
+   "thumbnail" : "/images/_pub_2002_11_27_classdbi/111-class_dbi.gif",
    "tags" : [
       "database-class-poop-class-dbi"
    ],
-   "draft" : null,
-   "description" : " Several articles on Perl.com, including the recent Phrasebook Design Pattern, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's DBIx::Recordset article attempted to show how code dealing with databases can be made..."
+   "date" : "2002-11-27T00:00:00-08:00",
+   "image" : null,
+   "title" : "Class::DBI",
+   "categories" : "data"
 }
 
 
 
-Several articles on Perl.com, including the recent [Phrasebook Design Pattern](/pub/a/2002/10/22/phrasebook.html), have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's [DBIx::Recordset](/pub/a/2001/02/dbix.html) article attempted to show how code dealing with databases can be made simpler, and more maintainable. In this article, I will try to show how `Class::DBI` can make this easier still.
+Several articles on Perl.com, including the recent [Phrasebook Design Pattern](/pub/2002/10/22/phrasebook.html), have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's [DBIx::Recordset](/pub/2001/02/dbix.html) article attempted to show how code dealing with databases can be made simpler, and more maintainable. In this article, I will try to show how `Class::DBI` can make this easier still.
 
 `Class::DBI` prizes laziness and simplicity. Its goal is to make simple database interactions trivial, while leaving the hard ones possible. For many simple applications, it replaces the need for writing SQL entirely. On the other hand, it doesn't force you to build complex data structures to specify a complex query; if you really need the power or expressiveness of raw SQL, then it gets out of your way and lets you drop back to that.
 

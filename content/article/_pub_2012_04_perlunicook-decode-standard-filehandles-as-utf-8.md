@@ -1,16 +1,16 @@
 {
-   "categories" : "unicode",
+   "thumbnail" : null,
+   "tags" : [],
+   "image" : null,
    "title" : "Perl Unicode Cookbook: Decode Standard Filehandles as UTF-8",
+   "categories" : "unicode",
+   "date" : "2012-04-27T06:00:01-08:00",
+   "draft" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "image" : null,
-   "thumbnail" : null,
-   "date" : "2012-04-27T06:00:01-08:00",
-   "description" : "℞ 15: Declare STD{IN,OUT,ERR} to be UTF-8 Always convert to and from your desired encoding at the edges of your programs. This includes the standard filehandles STDIN, STDOUT, and STDERR. As documented in perldoc perlrun, the PERL_UNICODE environment variable or...",
-   "draft" : null,
-   "tags" : [],
-   "slug" : "/pub/2012/04/perlunicook-decode-standard-filehandles-as-utf-8.html"
+   "slug" : "/pub/2012/04/perlunicook-decode-standard-filehandles-as-utf-8.html",
+   "description" : "℞ 15: Declare STD{IN,OUT,ERR} to be UTF-8 Always convert to and from your desired encoding at the edges of your programs. This includes the standard filehandles STDIN, STDOUT, and STDERR. As documented in perldoc perlrun, the PERL_UNICODE environment variable or..."
 }
 
 

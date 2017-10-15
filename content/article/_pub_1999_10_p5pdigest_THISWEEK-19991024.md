@@ -1,16 +1,16 @@
 {
-   "description" : "(18-24 October 1999) -> $^O STOP blocks and the broken compiler Blank lines in POD PERL_HEADER environment variable Out of date modules in Perl distribution Enhanced UNIVERSAL::isa sort improvements glob case-sensitivity reftype function New perlthread man page Win32 and fork()...",
-   "draft" : null,
-   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991024.html",
-   "tags" : [],
-   "title" : "This Week on p5p 1999/10/24",
    "authors" : [
       "mark-jason-dominus"
    ],
+   "draft" : null,
+   "slug" : "/pub/1999/10/p5pdigest/THISWEEK-19991024.html",
+   "description" : "(18-24 October 1999) -> $^O STOP blocks and the broken compiler Blank lines in POD PERL_HEADER environment variable Out of date modules in Perl distribution Enhanced UNIVERSAL::isa sort improvements glob case-sensitivity reftype function New perlthread man page Win32 and fork()...",
+   "tags" : [],
+   "thumbnail" : null,
    "categories" : "community",
-   "date" : "1999-10-17T00:00:00-08:00",
    "image" : null,
-   "thumbnail" : null
+   "title" : "This Week on p5p 1999/10/24",
+   "date" : "1999-10-17T00:00:00-08:00"
 }
 
 
@@ -196,7 +196,7 @@ Actually the real birthday was on 17 October, 1994, but there is an error in `pe
 
 ### <span id="Unicode_Character_Classes_Revisi">Unicode Character Classes Revisited</span>
 
-[Last week there was discussion of use of Unicode properties to define regex character classes](./THISWEEK-19991017.html#charclasses). People interested should also consider reading the [Unicode Regular Expression Guidelines](http://www.unicode.org/unicode/reports/tr18/).
+[Last week there was discussion of use of Unicode properties to define regex character classes](/pub/1999/10/p5pdigest/THISWEEK-19991017.html#charclasses). People interested should also consider reading the [Unicode Regular Expression Guidelines](http://www.unicode.org/unicode/reports/tr18/).
 
 ### <span id="Sarathy_says_Yikes_again">Sarathy says \`Yikes' again</span>
 

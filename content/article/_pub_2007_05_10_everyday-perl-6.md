@@ -1,21 +1,21 @@
 {
-   "title" : "Everyday Perl 6",
+   "description" : " Perl 6 will soon be here. How will programming in Perl 6 be different from programming in Perl 5 for your average Perl programmer? The answer is: very different yet very much the same. A Perl 6 program viewed...",
+   "slug" : "/pub/2007/05/10/everyday-perl-6.html",
    "authors" : [
       "jonathan-scott-duff"
    ],
-   "categories" : "perl-6",
-   "date" : "2007-05-10T00:00:00-08:00",
-   "image" : null,
-   "thumbnail" : null,
-   "description" : " Perl 6 will soon be here. How will programming in Perl 6 be different from programming in Perl 5 for your average Perl programmer? The answer is: very different yet very much the same. A Perl 6 program viewed...",
    "draft" : null,
-   "slug" : "/pub/2007/05/10/everyday-perl-6.html",
    "tags" : [
       "parrot",
       "perl-5",
       "perl-6",
       "pugs"
-   ]
+   ],
+   "thumbnail" : null,
+   "date" : "2007-05-10T00:00:00-08:00",
+   "categories" : "perl-6",
+   "image" : null,
+   "title" : "Everyday Perl 6"
 }
 
 
@@ -181,7 +181,7 @@ There is yet a third way to write a parameterized block that's more verbose but 
 
 You can still write subroutines the way you always have in Perl 5, but Perl 6 allows you to specify a "signature" that describes how many parameters to pass to the subroutine, which parameters are optional, which parameters are positional, which are named, what the default values are for unpassed parameters, which parameters copy the value that is passed, which parameters alias the variable, etc.
 
-For more information on subroutines in Perl 6, see [Synopsis 06](http://dev.perl.org/perl6/doc/design/syn/S06.html) and Phil Crow's recent article [The Beauty of Perl 6 Parameter Passing](/pub/a/2007/03/01/perl-6-parameter-passing.html).
+For more information on subroutines in Perl 6, see [Synopsis 06](http://dev.perl.org/perl6/doc/design/syn/S06.html) and Phil Crow's recent article [The Beauty of Perl 6 Parameter Passing](/pub/2007/03/01/perl-6-parameter-passing.html).
 
 #### Variable Typing
 

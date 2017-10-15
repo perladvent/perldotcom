@@ -1,21 +1,21 @@
 {
-   "description" : " In the previous hidden treasures article, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core....",
-   "draft" : null,
-   "tags" : [],
    "slug" : "/pub/2003/06/19/treasures.html",
-   "categories" : "Perl Internals",
-   "title" : "Hidden Treasures of the Perl Core, part II",
+   "description" : " In the previous hidden treasures article, we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core....",
    "authors" : [
       "casey-west"
    ],
+   "draft" : null,
    "thumbnail" : null,
+   "tags" : [],
+   "date" : "2003-06-19T00:00:00-08:00",
+   "title" : "Hidden Treasures of the Perl Core, part II",
    "image" : null,
-   "date" : "2003-06-19T00:00:00-08:00"
+   "categories" : "perl-internals"
 }
 
 
 
-In the [previous hidden treasures article](/pub/a/2003/05/29/treasures.html), we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core.
+In the [previous hidden treasures article](/pub/2003/05/29/treasures.html), we looked at some easy-to-use (but not well-known) modules in the Perl Core. In this article, we dig deeper to uncover some of the truly precious and unique gems in the Perl Core.
 
 <span id="constant">`constant`</span>
 -------------------------------------

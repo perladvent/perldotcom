@@ -1,16 +1,16 @@
 {
+   "thumbnail" : null,
+   "tags" : [],
+   "title" : "Beginner's Introduction to Perl - Part 3",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2000-11-20T00:00:00-08:00",
+   "draft" : null,
    "authors" : [
       "doug-sheppard"
    ],
-   "title" : "Beginner's Introduction to Perl - Part 3",
-   "categories" : "development",
-   "date" : "2000-11-20T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null,
-   "draft" : null,
-   "description" : "s/// and m// -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's...",
    "slug" : "/pub/2000/11/begperl3.html",
-   "tags" : []
+   "description" : "s/// and m// -> Editor's note: this venerable series is undergoing updates. You might be interested in the newer versions, available at: A Beginner's Introduction to Perl 5.10 A Beginner's Introduction to Files and Strings with Perl 5.10 A Beginner's..."
 }
 
 

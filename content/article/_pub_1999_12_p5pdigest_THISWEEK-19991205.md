@@ -1,16 +1,16 @@
 {
-   "categories" : "community",
-   "title" : "This Week on p5p 1999/12/05",
+   "description" : " Notes Meta-Information m//g in List Context eof() at the Beginning of the Input Shadow Passwords Continue Perl, EBCDIC, and Unicode lock Keyword Safe::Hole Change to xsubpp Euphoria Talarian SmartSockets perlxstut and perlxs Additions Reset umasks Mailling List Archives Unavailable...",
+   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991205.html",
+   "draft" : null,
    "authors" : [
       "mark-jason-dominus"
    ],
-   "image" : null,
+   "tags" : [],
    "thumbnail" : null,
    "date" : "1999-12-05T00:00:00-08:00",
-   "description" : " Notes Meta-Information m//g in List Context eof() at the Beginning of the Input Shadow Passwords Continue Perl, EBCDIC, and Unicode lock Keyword Safe::Hole Change to xsubpp Euphoria Talarian SmartSockets perlxstut and perlxs Additions Reset umasks Mailling List Archives Unavailable...",
-   "draft" : null,
-   "tags" : [],
-   "slug" : "/pub/1999/12/p5pdigest/THISWEEK-19991205.html"
+   "categories" : "community",
+   "image" : null,
+   "title" : "This Week on p5p 1999/12/05"
 }
 
 
@@ -40,8 +40,6 @@
 I'm still catching up from my three consecutive trips. I hope to be back on schedule by Sunday.
 
 #### <span id="Meta_Information_">Meta-Information</span>
-
-The most recent report will always be available at [http://www.perl.com/p5pdigest.cgi](/p5pdigest.cgi).
 
 You can subscribe to an email version of this summary by sending an empty message to [`p5p-digest-subscribe@plover.com`.](mailto:p5p-digest-subscribe@plover.com)
 

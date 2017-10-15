@@ -1,19 +1,19 @@
 {
-   "date" : "1999-08-30T00:00:00-08:00",
-   "thumbnail" : null,
-   "image" : null,
+   "description" : " This talk was delivered by Larry Wall on August 23, 1999 at the Perl Conference 3.0 in Monterey, CA. (Note: most of the pictures this year were images of molecules that I animated using a program called RasMol, along...",
+   "slug" : "/pub/1999/08/onion/talk1.html",
    "authors" : [
       "larry-wall"
    ],
-   "title" : "3rd State of the Onion",
+   "draft" : null,
+   "date" : "1999-08-30T00:00:00-08:00",
    "categories" : "community",
-   "slug" : "/pub/1999/08/onion/talk1.html",
+   "image" : null,
+   "title" : "3rd State of the Onion",
    "tags" : [
       "larry-wall",
       "state-of-the-onion"
    ],
-   "draft" : null,
-   "description" : " This talk was delivered by Larry Wall on August 23, 1999 at the Perl Conference 3.0 in Monterey, CA. (Note: most of the pictures this year were images of molecules that I animated using a program called RasMol, along..."
+   "thumbnail" : null
 }
 
 
@@ -24,13 +24,13 @@ This talk was delivered by [Larry Wall](http://www.wall.org/~larry) on August 23
 
 ------------------------------------------------------------------------
 
-Two years ago, in my [first](/pub/conference/1997/wall/keynote.html) State of the Onion speech, I used sounds.
+Two years ago, in my [first](/pub/1997/wall/keynote.html) State of the Onion speech, I used sounds.
 
 *\[I play \`\`[You will be absorbed](/media/_pub_1999_08_onion_talk1/absorbed.au).''\]*
 
 Last year, in my [second](/pub/1998/08/show/onion.html) State of the Onion speech, I used pictures.
 
-[<img src="/images/_pub_1999_08_onion_talk1/hap2.gif" alt="Happy face" width="315" height="240" />](graphics/hap.gif)
+[<img src="/images/_pub_1999_08_onion_talk1/hap2.gif" alt="Happy face" width="315" height="240" />](/images/_pub_1999_08_onion_talk1/hap.gif)
 
 Those of you who heard or read that speech will recall that I threatened to use smellovision this year. So guess what.
 

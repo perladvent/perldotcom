@@ -1,18 +1,18 @@
 {
-   "categories" : "Windows",
-   "title" : "A Perl Hacker's Foray into .NET",
+   "description" : " No, I haven't sold out; I haven't gone over to the dark side; I haven't been bought. I'm one of the last people to be using closed-source software by choice. But one of the traits of any self-respecting hacker...",
+   "slug" : "/pub/2002/03/19/dotnet.html",
+   "draft" : null,
    "authors" : [
       "simon-cozens"
    ],
-   "thumbnail" : "/images/_pub_2002_03_19_dotnet/111-perl_dotnet.gif",
-   "image" : null,
    "date" : "2002-03-19T00:00:00-08:00",
-   "description" : " No, I haven't sold out; I haven't gone over to the dark side; I haven't been bought. I'm one of the last people to be using closed-source software by choice. But one of the traits of any self-respecting hacker...",
-   "draft" : null,
+   "title" : "A Perl Hacker's Foray into .NET",
+   "image" : null,
+   "categories" : "windows",
+   "thumbnail" : "/images/_pub_2002_03_19_dotnet/111-perl_dotnet.gif",
    "tags" : [
       "net-clr-c"
-   ],
-   "slug" : "/pub/2002/03/19/dotnet.html"
+   ]
 }
 
 
@@ -89,7 +89,7 @@ What can Perl learn from C\#? That's an interesting question, especially as the 
 
 We'll start with an easy one, since Larry has already said that something like this will already be in Perl 6: To avoid versioning clashes and interface incompatibilities, .NET has the concept of "strong names." Assemblies -- the C\# equivalent of Java's `jar` files -- have metadata containing their name, version number, md5sum and cryptographic signature, meaning you can be sure you're always going to get the definitions and behavior you'd expect from any third-party code you run. More generally, assemblies support arbitrary metadata that you can use to annotate their contents.
 
-This approach to versioning and metadata in Perl 6 was highlighted in Larry's [State of the Onion](/pub/a/2001/07/25/onion.html) talk this year, and is also the solution used by JavaScript 2.0, as described by Waldemar Horwat at his [LL1 presentation](/pub/a/2001/11/21/lightweight.html), so it seems to be the way the language world is going.
+This approach to versioning and metadata in Perl 6 was highlighted in Larry's [State of the Onion](/pub/2001/07/25/onion.html) talk this year, and is also the solution used by JavaScript 2.0, as described by Waldemar Horwat at his [LL1 presentation](/pub/2001/11/21/lightweight.html), so it seems to be the way the language world is going.
 
 #### Properties
 
@@ -205,7 +205,7 @@ And just to show you we're not messing you around:
 
 Mono isn't a particularly quick runtime, nor is it particularly complete, but it has a large number of hackers improving its base classes every day. It runs a large percentage of the .NET executables I throw at it, and the `mcs` compiler can now compile itself, so you can do all your development using open source tools.
 
-Another option, once it appears, is Microsoft's [Rotor](http://www.oreillynet.com/pub/a/dotnet/2002/03/04/rotor.html) project, a shared source CLR and compiler suite. Rotor aims to be the ECMA standard implementation of the .NET Framework; Microsoft has submitted the Framework for standardization, but in typical style, its own implementations add extra functionality not part of the standard. Oh, and in case the words "shared source" haven't jumped out at you yet, do not even *consider* looking at Rotor if you may work on Mono at some point. However, for the casual user, its comprehensive implementation means it will be a better short-term choice for .NET experimentation - again, once it's released.
+Another option, once it appears, is Microsoft's [Rotor](http://www.oreillynet.com/pub/dotnet/2002/03/04/rotor.html) project, a shared source CLR and compiler suite. Rotor aims to be the ECMA standard implementation of the .NET Framework; Microsoft has submitted the Framework for standardization, but in typical style, its own implementations add extra functionality not part of the standard. Oh, and in case the words "shared source" haven't jumped out at you yet, do not even *consider* looking at Rotor if you may work on Mono at some point. However, for the casual user, its comprehensive implementation means it will be a better short-term choice for .NET experimentation - again, once it's released.
 
 ### CLR Architecture
 

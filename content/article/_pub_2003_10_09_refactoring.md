@@ -1,4 +1,5 @@
 {
+   "thumbnail" : "/images/_pub_2003_10_09_refactoring/111-refactoring.gif",
    "tags" : [
       "faster",
       "optimization",
@@ -7,17 +8,16 @@
       "refactoring-techniques",
       "speed"
    ],
-   "slug" : "/pub/2003/10/09/refactoring.html",
-   "description" : " About a year ago, a person asked the Fun With Perl mailing list about some code they had written to do database queries. It's important to note that this person was posting from an .it address; why will become...",
-   "draft" : null,
-   "thumbnail" : "/images/_pub_2003_10_09_refactoring/111-refactoring.gif",
-   "image" : null,
-   "date" : "2003-10-09T00:00:00-08:00",
-   "categories" : "development",
    "title" : "A Refactoring Example",
+   "image" : null,
+   "categories" : "development",
+   "date" : "2003-10-09T00:00:00-08:00",
    "authors" : [
       "michael-schwern"
-   ]
+   ],
+   "draft" : null,
+   "description" : " About a year ago, a person asked the Fun With Perl mailing list about some code they had written to do database queries. It's important to note that this person was posting from an .it address; why will become...",
+   "slug" : "/pub/2003/10/09/refactoring.html"
 }
 
 
