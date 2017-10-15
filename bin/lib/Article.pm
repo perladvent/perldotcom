@@ -41,6 +41,9 @@ sub preprocess_args {
   $args->{authors} = split_authors($args->{authors});
   $args->{tags} = split_tags($args->{tags});
 
+  # categories are always in lowercase
+  $args->{categories} = lc $args->{categories};
+
   # date to datetime MM/DD/YYYY
   if ($args->{date} && $args->{date} =~ qr{(\d\d)/(\d\d)/(\d\d\d\d)}) {
     $args->{date} = "$3-$1-${2}T00:00:00-08:00";
