@@ -206,7 +206,7 @@ sub to_markdown {
   my ($self) = @_;
 
   my ($html, $mkdn, $err) = ($self->{html});
-  run [qw(pandoc -f html -t markdown)], \$html, \$mkdn, \$err;
+  run [qw(pandoc -f html -t markdown_github)], \$html, \$mkdn, \$err;
   unless ($mkdn) {
     warn 'failed to convert to markdown: ' . ($err||'unknown error');
     return;
