@@ -120,7 +120,9 @@ sub copy_internal_links {
   my $dom = Mojo::DOM58->new($self->{html});
   $dom->find('a')->each(sub {
       my $href = $_->attr('href');
-      return if !$href || $href =~ qr/^(?:http|mailto|#)/i;
+      # skip external, intra-page and intra-site links
+      return if !$href || $href =~ qr/^(?:ftp|http|mailto|#)/i ||
+        $href =~ /\.html$/;
 
       if (-f "perl.com$href") {
         my $media = path "perl.com$href";
