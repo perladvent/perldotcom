@@ -30,14 +30,6 @@
         }
         var div = document.getElementById("toplinks");
         div.innerHTML = '<div class="toplinksheader">LATEST COMMUNITY ARTICLES</div>' + ul + links.join('') + '</ul>';
-
-        // inject css
-        head = document.getElementsByTagName('head')[0];
-        css_link = document.createElement('link');
-        css_link.setAttribute('rel','stylesheet');
-        css_link.setAttribute('type','text/css');
-        css_link.setAttribute('href','/widgets/toplinks/toplinks.css');
-        head.appendChild(css_link);
       }
       else {
         console.log("Error requesting " + url);
