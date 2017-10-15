@@ -1,31 +1,24 @@
 {
-   "tags" : [],
+   "thumbnail" : null,
    "image" : null,
-   "categories" : "unicode",
-   "draft" : null,
    "date" : "2012-04-19T06:00:01-08:00",
+   "categories" : "unicode",
    "title" : "Perl Unicode Cookbook: Custom Named Characters",
-   "slug" : "/pub/2012/04/perlunicook-custom-named-characters.html",
    "authors" : [
       "tom-christiansen"
    ],
-   "thumbnail" : null,
-   "description" : "℞ 10: Custom named characters As several other recipes demonstrate, the charnames pragma offers considerable power to use and manipulate Unicode characters by their names. Its :alias option allows you to give your own lexically scoped nicknames to existing characters,..."
+   "tags" : [],
+   "slug" : "/pub/2012/04/perlunicook-custom-named-characters.html",
+   "description" : "℞ 10: Custom named characters As several other recipes demonstrate, the charnames pragma offers considerable power to use and manipulate Unicode characters by their names. Its :alias option allows you to give your own lexically scoped nicknames to existing characters,...",
+   "draft" : null
 }
 
 
 
-
-
-℞ 10: Custom named characters {#Custom-named-characters}
+℞ 10: Custom named characters
 -----------------------------
 
-As several other recipes demonstrate, the
-[charnames](http://perldoc.perl.org/charnames.html) pragma offers
-considerable power to use and manipulate Unicode characters by their
-names. Its `:alias` option allows you to give your own lexically scoped
-nicknames to existing characters, or even to give unnamed private-use
-characters useful names:
+As several other recipes demonstrate, the [charnames](http://perldoc.perl.org/charnames.html) pragma offers considerable power to use and manipulate Unicode characters by their names. Its `:alias` option allows you to give your own lexically scoped nicknames to existing characters, or even to give unnamed private-use characters useful names:
 
      use charnames ":full", ":alias" => {
          ecute => "LATIN SMALL LETTER E WITH ACUTE",
@@ -35,24 +28,14 @@ characters useful names:
      "\N{ecute}"
      "\N{APPLE LOGO}"
 
-You may even override existing names (lexically, of course) with
-different characters.
+You may even override existing names (lexically, of course) with different characters.
 
-This feature has some limitations. For best effect, aliases should hew
-to the rules of ASCII identifiers and must not resemble regex
-quantifiers. You can only alias one character at a time; other options
-exist to give a character sequence an alias.
+This feature has some limitations. For best effect, aliases should hew to the rules of ASCII identifiers and must not resemble regex quantifiers. You can only alias one character at a time; other options exist to give a character sequence an alias.
 
-As always, the documentation of the `charnames` pragma offers more
-details.
+As always, the documentation of the `charnames` pragma offers more details.
 
-Previous: [℞ 9: Unicode Named Character
-Sequences](/media/_pub_2012_04_perlunicook-custom-named-characters/perlunicook-unicode-named-character-sequences.html)
+Previous: [℞ 9: Unicode Named Character Sequences](/pub/2012/04/perlunicook-unicode-named-character-sequences.html)
 
-Series Index: [The Standard
-Preamble](/media/_pub_2012_04_perlunicook-custom-named-characters/perlunicook-standard-preamble.html)
+Series Index: [The Standard Preamble](/pub/2012/04/perlunicook-standard-preamble.html)
 
-Next: [℞ 11: Names of CJK
-Codepoints](/media/_pub_2012_04_perlunicook-custom-named-characters/perlunicook-names-of-cjk-codepoints.html)
-
-
+Next: [℞ 11: Names of CJK Codepoints](/pub/2012/04/perlunicook-names-of-cjk-codepoints.html)

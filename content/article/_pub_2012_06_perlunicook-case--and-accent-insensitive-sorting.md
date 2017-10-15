@@ -1,53 +1,35 @@
 {
-   "date" : "2012-06-04T06:00:01-08:00",
-   "draft" : null,
-   "image" : null,
-   "categories" : "unicode",
-   "tags" : [],
    "description" : "℞ 36: Case- and accent-insensitive Unicode sort The Unicode Collation Algorithm defines several levels of collation strength by which you can specify certain character properties as relevant or irrelevant to the collation ordering. In simple terms, you can use collation...",
-   "thumbnail" : null,
+   "draft" : null,
+   "tags" : [],
+   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-sorting.html",
+   "categories" : "unicode",
+   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Sorting",
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/06/perlunicook-case--and-accent-insensitive-sorting.html",
-   "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Sorting"
+   "image" : null,
+   "thumbnail" : null,
+   "date" : "2012-06-04T06:00:01-08:00"
 }
 
 
 
-
-
-℞ 36: Case- *and* accent-insensitive Unicode sort {#Case--and-accent-insensitive-Unicode-sort}
+℞ 36: Case- *and* accent-insensitive Unicode sort
 -------------------------------------------------
 
-The [Unicode Collation Algorithm](http://www.unicode.org/reports/tr10/)
-defines several levels of collation strength by which you can specify
-certain character properties as relevant or irrelevant to the collation
-ordering. In simple terms, you can use collation strength to tell a
-UCA-aware sort to ignore case or diacritics.
+The [Unicode Collation Algorithm](http://www.unicode.org/reports/tr10/) defines several levels of collation strength by which you can specify certain character properties as relevant or irrelevant to the collation ordering. In simple terms, you can use collation strength to tell a UCA-aware sort to ignore case or diacritics.
 
-In Perl, use the
-[Unicode::Collate](http://search.cpan.org/perldoc?Unicode::Collate)
-module to perform your sorting. To sort Unicode strings while ignoring
-case and diacritics—to examine only the basic characters— use a
-collation strength of level 1:
+In Perl, use the [Unicode::Collate](http://search.cpan.org/perldoc?Unicode::Collate) module to perform your sorting. To sort Unicode strings while ignoring case and diacritics—to examine only the basic characters— use a collation strength of level 1:
 
      use Unicode::Collate;
      my $col = Unicode::Collate->new(level => 1);
      my @list = $col->sort(@old_list);
 
-Level 2 adds diacritic comparisons to the ordering algorithm. Level 3
-adds case ordering. Level 4 adds a tiebreaking comparison of probably
-more detail than most people will ever care to know. Level 4 is the
-default.
+Level 2 adds diacritic comparisons to the ordering algorithm. Level 3 adds case ordering. Level 4 adds a tiebreaking comparison of probably more detail than most people will ever care to know. Level 4 is the default.
 
-Previous: [℞ 35: Unicode
-Collation](/media/_pub_2012_06_perlunicook-case--and-accent-insensitive-sorting/perlunicook-unicode-collation.html)
+Previous: [℞ 35: Unicode Collation](/pub/2012/06/perlunicook-unicode-collation.html)
 
-Series Index: [The Standard
-Preamble](/media/_pub_2012_06_perlunicook-case--and-accent-insensitive-sorting/perlunicook-standard-preamble.html)
+Series Index: [The Standard Preamble](/pub/2012/04/perlunicook-standard-preamble.html)
 
-Next: [℞ 37: Unicode Locale
-Collation](/media/_pub_2012_06_perlunicook-case--and-accent-insensitive-sorting/perlunicook-unicode-locale-collation.html)
-
-
+Next: [℞ 37: Unicode Locale Collation](/pub/2012/06/perlunicook-unicode-locale-collation.html)

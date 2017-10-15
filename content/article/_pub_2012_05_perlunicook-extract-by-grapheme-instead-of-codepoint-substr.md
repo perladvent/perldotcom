@@ -1,36 +1,26 @@
 {
+   "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (substr)",
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/05/perlunicook-extract-by-grapheme-instead-of-codepoint-substr.html",
-   "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (substr)",
-   "description" : "℞ 31: Extract by grapheme instead of by codepoint (substr) The Unicode Standard Annex #29 discusses the boundaries between grapheme clusters&mdash;what users might perceive as \"characters\". The CPAN module Unicode::GCString allows you to treat a Unicode string as a sequence...",
-   "thumbnail" : null,
-   "draft" : null,
-   "image" : null,
    "categories" : "unicode",
-   "tags" : [],
-   "date" : "2012-05-25T06:00:01-08:00"
+   "date" : "2012-05-25T06:00:01-08:00",
+   "image" : null,
+   "thumbnail" : null,
+   "description" : "℞ 31: Extract by grapheme instead of by codepoint (substr) The Unicode Standard Annex #29 discusses the boundaries between grapheme clusters&mdash;what users might perceive as \"characters\". The CPAN module Unicode::GCString allows you to treat a Unicode string as a sequence...",
+   "draft" : null,
+   "slug" : "/pub/2012/05/perlunicook-extract-by-grapheme-instead-of-codepoint-substr.html",
+   "tags" : []
 }
 
 
 
-
-
-℞ 31: Extract by grapheme instead of by codepoint (substr) {#Extract-by-grapheme-instead-of-by-codepoint-substr-}
+℞ 31: Extract by grapheme instead of by codepoint (substr)
 ----------------------------------------------------------
 
-The [Unicode Standard Annex \#29](http://www.unicode.org/reports/tr29/)
-discusses the boundaries between grapheme clusters—what users might
-perceive as "characters". The CPAN module
-[Unicode::GCString](http://search.cpan.org/perldoc?Unicode::GCString)
-allows you to treat a Unicode string as a sequence of these grapheme
-clusters.
+The [Unicode Standard Annex \#29](http://www.unicode.org/reports/tr29/) discusses the boundaries between grapheme clusters—what users might perceive as "characters". The CPAN module [Unicode::GCString](http://search.cpan.org/perldoc?Unicode::GCString) allows you to treat a Unicode string as a sequence of these grapheme clusters.
 
-While you may [use `\X` to extract graphemes within a
-regex](/media/_pub_2012_05_perlunicook-extract-by-grapheme-instead-of-codepoint-substr/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html),
-`Unicode::GCString` provides a `substr()` method to extract a series of
-grapheme clusters:
+While you may [use `\X` to extract graphemes within a regex](/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html), `Unicode::GCString` provides a `substr()` method to extract a series of grapheme clusters:
 
      # cpan -i Unicode::GCString
      use Unicode::GCString;
@@ -38,16 +28,10 @@ grapheme clusters:
      my $gcs        = Unicode::GCString->new($str);
      my $first_five = $gcs->substr(0, 5);
 
-The module also provides an iterator interface to grapheme clusters
-within a string.
+The module also provides an iterator interface to grapheme clusters within a string.
 
-Previous: [℞ 30: Extract by Grapheme Instead of Codepoint
-(regex)](/media/_pub_2012_05_perlunicook-extract-by-grapheme-instead-of-codepoint-substr/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html)
+Previous: [℞ 30: Extract by Grapheme Instead of Codepoint (regex)](/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html)
 
-Series Index: [The Standard
-Preamble](/media/_pub_2012_05_perlunicook-extract-by-grapheme-instead-of-codepoint-substr/perlunicook-standard-preamble.html)
+Series Index: [The Standard Preamble](/pub/2012/04/perlunicook-standard-preamble.html)
 
-Next: [℞ 32: Reverse String by
-Grapheme](/media/_pub_2012_05_perlunicook-extract-by-grapheme-instead-of-codepoint-substr/perlunicook-reverse-string-by-grapheme.html)
-
-
+Next: [℞ 32: Reverse String by Grapheme](/pub/2012/05/perlunicook-reverse-string-by-grapheme.html)

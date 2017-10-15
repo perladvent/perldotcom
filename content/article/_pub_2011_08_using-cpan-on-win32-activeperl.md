@@ -1,56 +1,33 @@
 {
    "date" : "2011-08-03T06:00:01-08:00",
-   "draft" : null,
-   "categories" : "Windows",
    "image" : null,
-   "tags" : [],
-   "description" : "Christian Walde demonstrates that even ActivePerl users on Windows can use CPAN-out of the box.",
    "thumbnail" : null,
    "authors" : [
       "chromatic"
    ],
    "title" : "Using CPAN on Win32 ActivePerl",
-   "slug" : "/pub/2011/08/using-cpan-on-win32-activeperl.html"
+   "categories" : "Windows",
+   "slug" : "/pub/2011/08/using-cpan-on-win32-activeperl.html",
+   "tags" : [],
+   "draft" : null,
+   "description" : "Christian Walde demonstrates that even ActivePerl users on Windows can use CPAN-out of the box."
 }
-
-
 
 
 
 or *easier than tying your shoelaces*
 
-Most of you know [ActivePerl](http://www.activestate.com/activeperl),
-the commercial Perl distribution provided to the community for free by
-[ActiveState](http://www.activestate.com/). In the beginning, ActivePerl
-did not bundle a C compiler. As Windows does not include a compiler,
-much of the CPAN was inaccessible to Windows users—any dependency on an
-XS module would fail. ActiveState instead provided a repository of
-binary PPM packages so that users could avoid the need to install and
-configure a C compiler.
+Most of you know [ActivePerl](http://www.activestate.com/activeperl), the commercial Perl distribution provided to the community for free by [ActiveState](http://www.activestate.com/). In the beginning, ActivePerl did not bundle a C compiler. As Windows does not include a compiler, much of the CPAN was inaccessible to Windows users—any dependency on an XS module would fail. ActiveState instead provided a repository of binary PPM packages so that users could avoid the need to install and configure a C compiler.
 
-So began a rumor, and so the rumor became lore, that "ActivePerl Does
-Not Do CPAN."
+So began a rumor, and so the rumor became lore, that "ActivePerl Does Not Do CPAN."
 
-As wrong as that preconception had been (and a clever hacker could use
-MSVC or MinGW with ActivePerl), that rumor became even more wrong on 26
-August 2009, when ActiveState delivered Perl 5.10.1 with a bundled C
-compiler. Even though Windows does not support *all* POSIX features,
-using CPAN with ActivePerl on Windows is almost as nice as using CPAN on
-a Unix-like system:
+As wrong as that preconception had been (and a clever hacker could use MSVC or MinGW with ActivePerl), that rumor became even more wrong on 26 August 2009, when ActiveState delivered Perl 5.10.1 with a bundled C compiler. Even though Windows does not support *all* POSIX features, using CPAN with ActivePerl on Windows is almost as nice as using CPAN on a Unix-like system:
 
--   Download and install
-    [ActivePerl](http://www.activestate.com/activeperl/downloads)
-    (5.12.4 and 5.14.1 are available at the time of this writing) with
-    the default options
+-   Download and install [ActivePerl](http://www.activestate.com/activeperl/downloads) (5.12.4 and 5.14.1 are available at the time of this writing) with the default options
 -   Open a command line window ( Start &gt; Run &gt; cmd )
 -   Run `cpan`
 
-That's it. That's only one extra step over running on Linux. For proof,
-here's the output of my first run of the `cpan` command (edited for
-brevity) and an installation of
-[local::lib](http://search.cpan.org/perldoc?local::lib) and
-[cpanminus](http://search.cpan.org/perldoc?App::cpanminus) (yes, they
-work too):
+That's it. That's only one extra step over running on Linux. For proof, here's the output of my first run of the `cpan` command (edited for brevity) and an installation of [local::lib](http://search.cpan.org/perldoc?local::lib) and [cpanminus](http://search.cpan.org/perldoc?App::cpanminus) (yes, they work too):
 
     D:\>cpan
 
@@ -134,5 +111,3 @@ work too):
     D:\>
 
 Happy hacking!
-
-

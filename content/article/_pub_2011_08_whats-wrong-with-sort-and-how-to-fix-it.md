@@ -1,81 +1,45 @@
 {
-   "tags" : [
-      "sorting",
-      "unicode"
-   ],
-   "categories" : "unicode",
-   "image" : null,
-   "draft" : null,
-   "date" : "2011-08-31T06:00:01-08:00",
-   "slug" : "/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html",
-   "title" : "What's Wrong with sort and How to Fix It",
    "authors" : [
       "tom-christiansen"
    ],
+   "title" : "What's Wrong with sort and How to Fix It",
+   "categories" : "unicode",
+   "date" : "2011-08-31T06:00:01-08:00",
+   "image" : null,
    "thumbnail" : null,
-   "description" : "In this excerpt from Programming Perl 4e, Tom Christiansen demonstrates that, in a Unicode world, sorting correctly can be trickier than you think."
+   "draft" : null,
+   "description" : "In this excerpt from Programming Perl 4e, Tom Christiansen demonstrates that, in a Unicode world, sorting correctly can be trickier than you think.",
+   "slug" : "/pub/2011/08/whats-wrong-with-sort-and-how-to-fix-it.html",
+   "tags" : [
+      "sorting",
+      "unicode"
+   ]
 }
 
 
 
+*By now, you may have read [Considerations on Using Unicode Properly in Modern Perl Applications](http://stackoverflow.com/questions/6162484/why-does-modern-perl-avoid-utf-8-by-default/6163129#6163129). Still think doing things correctly is easy? Tom Christiansen demonstrates that even sorting can be trickier than you think.*
 
+**NOTE**: The following is an excerpt from the draft manuscript of *Programming Perl*, 4ᵗʰ edition
 
-*By now, you may have read [Considerations on Using Unicode Properly in
-Modern Perl
-Applications](http://stackoverflow.com/questions/6162484/why-does-modern-perl-avoid-utf-8-by-default/6163129#6163129).
-Still think doing things correctly is easy? Tom Christiansen
-demonstrates that even sorting can be trickier than you think.*
+Calling `sort` without a comparison function is quite often the wrong thing to do, even on plain text. That's because if you use a bare sort, you can get really strange results. It's not just Perl either: almost all programming languages work this way, even the shell command. You might be surprised to find that with this sort of nonsense sort, ‹B› comes before ‹a› not after it, ‹é› comes before ‹ｄ›, and ‹ﬀ› comes after ‹zz›. There's no end to such silliness, either; see the default sort tables at the end of this article to see what I mean.
 
-**NOTE**: The following is an excerpt from the draft manuscript of
-*Programming Perl*, 4ᵗʰ edition
+There are situations when a bare `sort` is appropriate, but fewer than you think. One scenario is when every string you're sorting contains nothing but the 26 lowercase (or uppercase, but not both) Latin letters from ‹a-z›, without any whitespace or punctuation.
 
-Calling `sort` without a comparison function is quite often the wrong
-thing to do, even on plain text. That's because if you use a bare sort,
-you can get really strange results. It's not just Perl either: almost
-all programming languages work this way, even the shell command. You
-might be surprised to find that with this sort of nonsense sort, ‹B›
-comes before ‹a› not after it, ‹é› comes before ‹ｄ›, and ‹ﬀ› comes
-after ‹zz›. There's no end to such silliness, either; see the default
-sort tables at the end of this article to see what I mean.
+Another occasion when a simple, unadorned `sort` is appropriate is when you have no other goal but to iterate in an order that is merely repeatable, even if that order should happen to be completely arbitrary. In other words, yes, it's garbage, but it's the same garbage this time as it was last time. That's because the default `sort` resorts to an unmediated `cmp` operator, which has the "predictable garbage" characteristics I just mentioned.
 
-There are situations when a bare `sort` is appropriate, but fewer than
-you think. One scenario is when every string you're sorting contains
-nothing but the 26 lowercase (or uppercase, but not both) Latin letters
-from ‹a-z›, without any whitespace or punctuation.
-
-Another occasion when a simple, unadorned `sort` is appropriate is when
-you have no other goal but to iterate in an order that is merely
-repeatable, even if that order should happen to be completely arbitrary.
-In other words, yes, it's garbage, but it's the same garbage this time
-as it was last time. That's because the default `sort` resorts to an
-unmediated `cmp` operator, which has the "predictable garbage"
-characteristics I just mentioned.
-
-The last situation is much less frequent than the first two. It requires
-that the things you're sorting be special‐purpose, dedicated binary keys
-whose bit sequences have with excruciating care been arranged to sort in
-some prescribed fashion. This is also the strategy for any reasonable
-use of the `cmp` operator.
+The last situation is much less frequent than the first two. It requires that the things you're sorting be special‐purpose, dedicated binary keys whose bit sequences have with excruciating care been arranged to sort in some prescribed fashion. This is also the strategy for any reasonable use of the `cmp` operator.
 
 **So what's wrong with `sort` anyway?**
 ---------------------------------------
 
-I know, I know. I can hear everyone saying, "But it's called `sort`, so
-how could that ever be wrong?" Sure it's called `sort`, but you still
-have to know how to use it to get useful results out. ***Probably the
-most surprising thing about `sort` is that it does not by default do an
-alphabetic, an alphanumeric, or a numeric sort.*** What it actually does
-is something else altogether, and that something else is of surprisingly
-limited usefulness.
+I know, I know. I can hear everyone saying, "But it's called `sort`, so how could that ever be wrong?" Sure it's called `sort`, but you still have to know how to use it to get useful results out. ***Probably the most surprising thing about `sort` is that it does not by default do an alphabetic, an alphanumeric, or a numeric sort.*** What it actually does is something else altogether, and that something else is of surprisingly limited usefulness.
 
-Imagine you have an array of records. It does you virtually no good to
-write:
+Imagine you have an array of records. It does you virtually no good to write:
 
     @sorted_recs = sort @recs;
 
-Because Perl's `cmp` operator does only a bit comparison not an
-alphabetic one, it does nearly as little good to write your record sort
-this way:
+Because Perl's `cmp` operator does only a bit comparison not an alphabetic one, it does nearly as little good to write your record sort this way:
 
     @srecs = sort {
         $b->{AGE}      <=>  $b->{AGE}
@@ -83,21 +47,9 @@ this way:
         $a->{SURNAME}  cmp  $b->{SURNAME}
     } @recs;
 
-The problem is that that `cmp` for the record's `SURNAME` field is *not*
-an alphabetic comparison. It's merely a code point comparison. That
-means it works like C's `strcmp` function or Java's `String.compareTo`
-method. Although commonly referred to as a "lexicographic" comparison,
-this is a gross misnomer: it's about as far away from the way *real*
-lexicographers sort dictionary entries as you can get without flipping a
-coin.
+The problem is that that `cmp` for the record's `SURNAME` field is *not* an alphabetic comparison. It's merely a code point comparison. That means it works like C's `strcmp` function or Java's `String.compareTo` method. Although commonly referred to as a "lexicographic" comparison, this is a gross misnomer: it's about as far away from the way *real* lexicographers sort dictionary entries as you can get without flipping a coin.
 
-Fortunately, you don't have to come up with your own algorithm for
-dictionary sorting, because Perl provides a standard class to do this
-for you:
-[Unicode::Collate](http://search.cpan.org/perldoc?Unicode::Collate).
-Don't let the name throw you, because while it was first invented for
-Unicode, it works great on regular ASCII text, too, and does a better
-job at making lexicographers happy than a plain old `sort` ever manages.
+Fortunately, you don't have to come up with your own algorithm for dictionary sorting, because Perl provides a standard class to do this for you: [Unicode::Collate](http://search.cpan.org/perldoc?Unicode::Collate). Don't let the name throw you, because while it was first invented for Unicode, it works great on regular ASCII text, too, and does a better job at making lexicographers happy than a plain old `sort` ever manages.
 
 If you have code that purports to sort text that looks like this:
 
@@ -108,9 +60,7 @@ Then all you have to get a dictionary sort is write instead:
     use Unicode::Collate;
     @sorted_lines = Unicode::Collate::->new->sort(@lines);
 
-For structured records, like those with ages and surnames in them, you
-have to be a bit fancier. One way to fix it would be to use the class's
-own `cmp` operator instead of the built‐in one.
+For structured records, like those with ages and surnames in them, you have to be a bit fancier. One way to fix it would be to use the class's own `cmp` operator instead of the built‐in one.
 
     use Unicode::Collate;
     my $collator = Unicode::Collate::->new();
@@ -120,14 +70,7 @@ own `cmp` operator instead of the built‐in one.
         $collator->cmp( $a->{SURNAME}, $b->{SURNAME} )
     } @recs;
 
-However, that makes a fairly expensive method call for every possible
-comparison. Because Perl's adaptive merge sort algorithm usually runs in
-*O(n* · log *n)* time given *n* items, and because each comparison
-requires two different computed keys, that can be a lot of duplicate
-effort. Our sorting class therefore provide a convenient `getSortKey`
-method that calculates a special binary key which you can cache and
-later pass to the normal `cmp` operator on your own. This trick lets you
-use `cmp` yet get a truly alphabetic sort out of it for a change.
+However, that makes a fairly expensive method call for every possible comparison. Because Perl's adaptive merge sort algorithm usually runs in *O(n* · log *n)* time given *n* items, and because each comparison requires two different computed keys, that can be a lot of duplicate effort. Our sorting class therefore provide a convenient `getSortKey` method that calculates a special binary key which you can cache and later pass to the normal `cmp` operator on your own. This trick lets you use `cmp` yet get a truly alphabetic sort out of it for a change.
 
 Here is a simple but sufficient example of how to do that:
 
@@ -147,22 +90,13 @@ Here is a simple but sufficient example of how to do that:
         $a->{SURNAME_key}  cmp  $b->{SURNAME_key}
     } @recs;
 
-That's what I meant about very carefully preparing a mediated sort key
-that contains the precomputed binary key.
+That's what I meant about very carefully preparing a mediated sort key that contains the precomputed binary key.
 
 ### **English Card Catalogue Sorts**
 
-The simple code just demonstrated assumes you want to sort names the
-same way you do regular text. That isn't a good assumption, however.
-Many countries, languages, institutions, and sometimes even librarians
-have their own notions about how a card catalogue or a phonebook ought
-to be sorted.
+The simple code just demonstrated assumes you want to sort names the same way you do regular text. That isn't a good assumption, however. Many countries, languages, institutions, and sometimes even librarians have their own notions about how a card catalogue or a phonebook ought to be sorted.
 
-For example, in the English language, surnames with Scottish patronymics
-starting with ‹Mc› or ‹Mac›, like *MacKinley* and *McKinley*, not only
-count as completely identical synonyms for sorting purposes, they go
-before any other surname that begins with ‹M›, and so precede surnames
-like *Mables* or *Machado*.
+For example, in the English language, surnames with Scottish patronymics starting with ‹Mc› or ‹Mac›, like *MacKinley* and *McKinley*, not only count as completely identical synonyms for sorting purposes, they go before any other surname that begins with ‹M›, and so precede surnames like *Mables* or *Machado*.
 
 Yes, really.
 
@@ -175,27 +109,13 @@ That means that the following names are sorted correctly -- for English:
     Machado, José
     Macon, Bacon
 
-Yes, it's true. Check out your local large English‐language bookseller
-or library -- presuming you can find one. If you do, best make sure to
-blow the dust off first.
+Yes, it's true. Check out your local large English‐language bookseller or library -- presuming you can find one. If you do, best make sure to blow the dust off first.
 
 ### **Sorting Spanish Names**
 
-It's a good thing those names follow English rules for sorting names. If
-this were Spanish, we would have to deal with double‐barrelled surnames,
-where the patronym sorts before the matronym, which in turn sorts before
-any given names. That means that if Señor Machado's full name were, like
-the poet's, *Antonio Cipriano José María y Francisco de Santa Ana
-Machado y Ruiz*, then you would have to sort him with the other
-*Machados* but then consider *Ruiz* before *Antonio* if there were any
-other *Machados*. Similarly, the poet *Federico del Sagrado Corazón de
-Jesús García Lorca* sorts before the writer *Gabriel José de la
-Concordia García Márquez*.
+It's a good thing those names follow English rules for sorting names. If this were Spanish, we would have to deal with double‐barrelled surnames, where the patronym sorts before the matronym, which in turn sorts before any given names. That means that if Señor Machado's full name were, like the poet's, *Antonio Cipriano José María y Francisco de Santa Ana Machado y Ruiz*, then you would have to sort him with the other *Machados* but then consider *Ruiz* before *Antonio* if there were any other *Machados*. Similarly, the poet *Federico del Sagrado Corazón de Jesús García Lorca* sorts before the writer *Gabriel José de la Concordia García Márquez*.
 
-On the other hand, if your records are not full multifield hashes but
-only simple text that don't happen to be surnames, your task is a lot
-simpler, since now all you have to is get the `cmp` operator to behave
-sensibly. That you can do easily enough this way:
+On the other hand, if your records are not full multifield hashes but only simple text that don't happen to be surnames, your task is a lot simpler, since now all you have to is get the `cmp` operator to behave sensibly. That you can do easily enough this way:
 
     use Unicode::Collate;
     @sorted_text = Unicode::Collate::->new->sort(@text);
@@ -215,8 +135,7 @@ Imagine you had this list of German‐language authors:
         Bobrowski
     };
 
-If you just sorted them with an unmediated `sort `operator, you would
-get this utter nonsense:
+If you just sorted them with an unmediated `sort `operator, you would get this utter nonsense:
 
     Bobrowski
     Bodmer
@@ -252,11 +171,7 @@ Or even this still completely nonsensical answer:
     Brant
     Böttcher
 
-The crucial point to all that is that *it's text not binary*, so not
-only can you never judge what its bit patterns hold just by eyeballing
-it, more importantly, it has special rules to make it sort
-alphabetically (some might say sanely), an ordering no naïve code‐point
-sort will never come even close to getting right, especially on Unicode.
+The crucial point to all that is that *it's text not binary*, so not only can you never judge what its bit patterns hold just by eyeballing it, more importantly, it has special rules to make it sort alphabetically (some might say sanely), an ordering no naïve code‐point sort will never come even close to getting right, especially on Unicode.
 
 The correct ordering is:
 
@@ -281,11 +196,7 @@ gives you: a correctly sorted list of those Germans' names.
 
 Hold on, though.
 
-**Correct in what language?** In English, yes, the order given is now
-correct. But considering that these authors wrote in the German
-language, it is quite conceivable that you should be following the rules
-for ordering German names **in German**, not in English. That produces
-this ordering:
+**Correct in what language?** In English, yes, the order given is now correct. But considering that these authors wrote in the German language, it is quite conceivable that you should be following the rules for ordering German names **in German**, not in English. That produces this ordering:
 
     Bobrowski
     Bodmer
@@ -297,11 +208,7 @@ this ordering:
     Brandis
     Brant
 
-How come *Böttcher* now came before *Borchert*? Because *Böttcher* is
-supposed to be the same as *Boettcher*. In a German phonebook or other
-German list of German names, things like ‹ö› and ‹oe› are considered
-synonyms, which is not at all how it works in English. To get the German
-phonebook sort, you merely have to modify your constructor this way:
+How come *Böttcher* now came before *Borchert*? Because *Böttcher* is supposed to be the same as *Boettcher*. In a German phonebook or other German list of German names, things like ‹ö› and ‹oe› are considered synonyms, which is not at all how it works in English. To get the German phonebook sort, you merely have to modify your constructor this way:
 
     use Unicode::Collate::Locale;
     @sorted_germans = Unicode::Collate::Locale::
@@ -344,14 +251,7 @@ Here are most of the Latin letters, ordered using the default `sort`:
 >     Ｊ Ｋ Ｌ Ｍ Ｎ Ｏ Ｐ Ｑ Ｒ Ｓ Ｔ Ｕ Ｖ Ｗ Ｘ Ｙ Ｚ ａ ｂ ｃ ｄ ｅ ｆ ｇ ｈ ｉ
 >     ｊ ｋ ｌ ｍ ｎ ｏ ｐ ｑ ｒ ｓ ｔ ｕ ｖ ｗ ｘ ｙ ｚ
 
-As you can see, those letters are scattered all over the place. Sure,
-it's not completely random, but it's not useful either, because it is
-full of arbitrary placement that makes no alphabetical sense. That's
-because it is not an alphabetic sort at all. However, with the special
-kind of sort I've just shown you above, the ones that call the `sort`
-method from the `Unicode::Collate` class, you do get an alphabetic sort.
-Using that method, the Latin letters I just showed you now come out in
-alphabetical order, which is like this:
+As you can see, those letters are scattered all over the place. Sure, it's not completely random, but it's not useful either, because it is full of arbitrary placement that makes no alphabetical sense. That's because it is not an alphabetic sort at all. However, with the special kind of sort I've just shown you above, the ones that call the `sort` method from the `Unicode::Collate` class, you do get an alphabetic sort. Using that method, the Latin letters I just showed you now come out in alphabetical order, which is like this:
 
 >     a ａ A Ａ ª ᵃ ᴬ á Á à À ă Ă ắ Ắ ằ Ằ ẵ Ẵ ẳ Ẳ â Â ấ Ấ ầ Ầ ẫ Ẫ ẩ Ẩ ǎ Ǎ å Å 
 >     Å ǻ Ǻ ä Ä ǟ Ǟ ã Ã ȧ Ȧ ǡ Ǡ ą Ą ā Ā ả Ả ȁ Ȁ ȃ Ȃ ạ Ạ ặ Ặ ậ Ậ ḁ Ḁ æ Æ ᴭ ǽ Ǽ 
@@ -385,23 +285,8 @@ Isn't that much nicer?
 
 ### **Romani Ite Domum**
 
-In case you're wondering what that last row of distinctly un‐Roman Latin
-letters might possibly be, they're called respectively
-[*ezh*](http://en.wikipedia.org/wiki/Ezh_(letter)) ʒ,
-[*yogh*](http://en.wikipedia.org/wiki/Yogh) ȝ,
-[*thorn*](http://en.wikipedia.org/wiki/Thorn_(letter)) þ, and
-[*wynn*](http://en.wikipedia.org/wiki/Wynn) ƿ. They had to go somewhere,
-so they ended up getting stuck after ‹z›
+In case you're wondering what that last row of distinctly un‐Roman Latin letters might possibly be, they're called respectively [*ezh*](http://en.wikipedia.org/wiki/Ezh_(letter)) ʒ, [*yogh*](http://en.wikipedia.org/wiki/Yogh) ȝ, [*thorn*](http://en.wikipedia.org/wiki/Thorn_(letter)) þ, and [*wynn*](http://en.wikipedia.org/wiki/Wynn) ƿ. They had to go somewhere, so they ended up getting stuck after ‹z›
 
-Some are still used in certain non‐English (but still Latin) alphabets
-today, such as Icelandic, and even though you probably won't bump into
-them in contemporary English texts, you might see some if you're reading
-the original texts of famous medieval English poems like *Beowulf*, *Sir
-Gawain and the Green Knight*, or *Brut*.
+Some are still used in certain non‐English (but still Latin) alphabets today, such as Icelandic, and even though you probably won't bump into them in contemporary English texts, you might see some if you're reading the original texts of famous medieval English poems like *Beowulf*, *Sir Gawain and the Green Knight*, or *Brut*.
 
-The last of those, *Brut*, was written by a fellow named *Laȝamon*, a
-name whose third letter is a yogh. Famous though he was, I wouldn't
-suggest changing your name to ‹Laȝamon› in his honor, as I doubt the
-phone company would be amused.
-
-
+The last of those, *Brut*, was written by a fellow named *Laȝamon*, a name whose third letter is a yogh. Famous though he was, I wouldn't suggest changing your name to ‹Laȝamon› in his honor, as I doubt the phone company would be amused.

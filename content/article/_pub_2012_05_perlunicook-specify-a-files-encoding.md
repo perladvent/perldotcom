@@ -1,34 +1,24 @@
 {
+   "slug" : "/pub/2012/05/perlunicook-specify-a-files-encoding.html",
+   "tags" : [],
+   "draft" : null,
+   "description" : "℞ 19: Open ﬁle with speciﬁc encoding While setting the default Unicode encoding for IO is sensible, sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to open...",
+   "date" : "2012-05-04T06:00:01-08:00",
+   "image" : null,
+   "thumbnail" : null,
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/05/perlunicook-specify-a-files-encoding.html",
    "title" : "Perl Unicode Cookbook: Specify a File's Encoding",
-   "description" : "℞ 19: Open ﬁle with speciﬁc encoding While setting the default Unicode encoding for IO is sensible, sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to open...",
-   "thumbnail" : null,
-   "draft" : null,
-   "tags" : [],
-   "image" : null,
-   "categories" : "unicode",
-   "date" : "2012-05-04T06:00:01-08:00"
+   "categories" : "unicode"
 }
 
 
 
-
-
-℞ 19: Open ﬁle with speciﬁc encoding {#Open-file-with-specific-encoding}
+℞ 19: Open ﬁle with speciﬁc encoding
 ------------------------------------
 
-While [setting the default Unicode encoding for IO is
-sensible](/media/_pub_2012_05_perlunicook-specify-a-files-encoding/perlunicook-make-file-io-default-to-utf-8.html),
-sometimes the default encoding is not correct. In this case, specify the
-encoding for a filehandle manually in the mode option to
-[open](http://perldoc.perl.org/functions/open.html) or with the
-[binmode](http://perldoc.perl.org/functions/binmode.html) operator.
-Perl's IO layers will handle encoding and decoding for you. This is the
-normal way to deal with encoded text, not by calling low-level
-functions.
+While [setting the default Unicode encoding for IO is sensible](/pub/2012/05/perlunicook-make-file-io-default-to-utf-8.html), sometimes the default encoding is not correct. In this case, specify the encoding for a filehandle manually in the mode option to [open](http://perldoc.perl.org/functions/open.html) or with the [binmode](http://perldoc.perl.org/functions/binmode.html) operator. Perl's IO layers will handle encoding and decoding for you. This is the normal way to deal with encoded text, not by calling low-level functions.
 
 To specify the encoding of a filehandle opened for input:
 
@@ -50,18 +40,10 @@ To specify the encoding of a filehandle opened for output:
          # ...
          print $out_file "some text\n";
 
-More layers than just the encoding can be speciﬁed here. For example,
-the incantation `":raw :encoding(UTF-16LE) :crlf"` includes implicit
-CRLF handling. See [PerlIO](http://perldoc.perl.org/PerlIO.html) for
-more details.
+More layers than just the encoding can be speciﬁed here. For example, the incantation `":raw :encoding(UTF-16LE) :crlf"` includes implicit CRLF handling. See [PerlIO](http://perldoc.perl.org/PerlIO.html) for more details.
 
-Previous: [℞ 18: Make All I/O Default to
-UTF-8](/media/_pub_2012_05_perlunicook-specify-a-files-encoding/perlunicook-make-all-io-default-to-utf-8.html)
+Previous: [℞ 18: Make All I/O Default to UTF-8](/pub/2012/05/perlunicook-make-all-io-default-to-utf-8.html)
 
-Series Index: [The Standard
-Preamble](/media/_pub_2012_05_perlunicook-specify-a-files-encoding/perlunicook-standard-preamble.html)
+Series Index: [The Standard Preamble](/pub/2012/04/perlunicook-standard-preamble.html)
 
-Next: [℞ 20: Unicode
-Casing](/media/_pub_2012_05_perlunicook-specify-a-files-encoding/perl-unicook-unicode-casing.html)
-
-
+Next: [℞ 20: Unicode Casing](/pub/2012/05/perl-unicook-unicode-casing.html)

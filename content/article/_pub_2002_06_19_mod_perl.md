@@ -1,64 +1,40 @@
 {
+   "draft" : null,
+   "description" : " In this article we will talk about tools that we need before we can start working on the performance of our service. Essential Tools In order to improve performance, we need measurement tools. The main tool categories are benchmarking...",
    "tags" : [
       "mod-perl-benchmarking-test"
    ],
-   "image" : null,
-   "categories" : "web",
-   "draft" : null,
-   "date" : "2002-06-19T00:00:00-08:00",
-   "title" : "Improving mod_perl Sites' Performance: Part 2",
    "slug" : "/pub/2002/06/19/mod_perl.html",
+   "categories" : "web",
    "authors" : [
       "stas-bekman"
    ],
+   "title" : "Improving mod_perl Sites' Performance: Part 2",
+   "image" : null,
    "thumbnail" : null,
-   "description" : " In this article we will talk about tools that we need before we can start working on the performance of our service. Essential Tools In order to improve performance, we need measurement tools. The main tool categories are benchmarking..."
+   "date" : "2002-06-19T00:00:00-08:00"
 }
 
 
 
+*In this article we will talk about tools that we need before we can start working on the performance of our service.*
 
+<span id="essential_tools">Essential Tools</span>
+-------------------------------------------------
 
-*In this article we will talk about tools that we need before we can
-start working on the performance of our service.*
+In order to improve performance, we need measurement tools. The main tool categories are benchmarking and code profiling.
 
-[Essential Tools]{#essential_tools}
------------------------------------
+It's important to understand that, in a large number of the benchmarking tests that we will execute, we will not look at the absolute result numbers but the relation between two or more result sets. The purpose of the benchmarks is to try to show which coding approach is preferable. You shouldn't try to compare the **absolute** results presented in the articles with those that you get while running the same benchmarks on your machine, since you won't have the exact hardware and software setup anyway. This kind of comparison would be misleading. If you compare the relative results from the tests running on your machine, then you will do the right thing.
 
-In order to improve performance, we need measurement tools. The main
-tool categories are benchmarking and code profiling.
+### <span id="benchmarking_applications">Benchmarking Applications</span>
 
-It's important to understand that, in a large number of the benchmarking
-tests that we will execute, we will not look at the absolute result
-numbers but the relation between two or more result sets. The purpose of
-the benchmarks is to try to show which coding approach is preferable.
-You shouldn't try to compare the **absolute** results presented in the
-articles with those that you get while running the same benchmarks on
-your machine, since you won't have the exact hardware and software setup
-anyway. This kind of comparison would be misleading. If you compare the
-relative results from the tests running on your machine, then you will
-do the right thing.
+How much faster is mod\_perl than mod\_cgi (aka plain Perl/CGI)? There are many ways to benchmark the two. I'll present a few examples and numbers below. Check out the `benchmark` directory of the mod\_perl distribution for more examples.
 
-### [Benchmarking Applications]{#benchmarking_applications}
+There is no need to write a special benchmark though. If you want to impress your boss or colleagues, then just take some heavy CGI script you have (e.g. a script that crunches some data and prints the results to STDOUT), open two xterms and call the same script in mod\_perl mode in one xterm and in mod\_cgi mode in the other. You can use `lwp-get` from the `LWP` package to emulate the browser. The `benchmark` directory of the mod\_perl distribution includes such an example.
 
-How much faster is mod\_perl than mod\_cgi (aka plain Perl/CGI)? There
-are many ways to benchmark the two. I'll present a few examples and
-numbers below. Check out the `benchmark` directory of the mod\_perl
-distribution for more examples.
+#### <span id="benchmarking_perl_code">Benchmarking Perl Code</span>
 
-There is no need to write a special benchmark though. If you want to
-impress your boss or colleagues, then just take some heavy CGI script
-you have (e.g. a script that crunches some data and prints the results
-to STDOUT), open two xterms and call the same script in mod\_perl mode
-in one xterm and in mod\_cgi mode in the other. You can use `lwp-get`
-from the `LWP` package to emulate the browser. The `benchmark` directory
-of the mod\_perl distribution includes such an example.
-
-#### [Benchmarking Perl Code]{#benchmarking_perl_code}
-
-If you are going to write your own benchmarking utility, then use the
-`Benchmark` module and the `Time::HiRes` module where you need better
-time precision (&lt;10msec).
+If you are going to write your own benchmarking utility, then use the `Benchmark` module and the `Time::HiRes` module where you need better time precision (&lt;10msec).
 
 An example of the `Benchmark.pm` module usage:
 
@@ -75,9 +51,7 @@ An example of the `Benchmark.pm` module usage:
       % perl benchmark.pl
       timethis 1000: 25 wallclock secs (24.93 usr +  0.00 sys = 24.93 CPU)
 
-If you want to get the benchmark results in microseconds, then you will
-have to use the `Time::HiRes` module. Its usage is similar to
-`Benchmark`'s.
+If you want to get the benchmark results in microseconds, then you will have to use the `Time::HiRes` module. Its usage is similar to `Benchmark`'s.
 
       use Time::HiRes qw(gettimeofday tv_interval);
       my $start_time = [ gettimeofday ];
@@ -86,11 +60,9 @@ have to use the `Time::HiRes` module. Its usage is similar to
       my $elapsed = tv_interval($start_time,$end_time);
       print "The sub took $elapsed seconds."
 
-#### [Benchmarking a Graphic Hits Counter with Persistent DB Connections]{#benchmarking_a_graphic_hits_counter_with_persistent_db_connections}
+#### <span id="benchmarking_a_graphic_hits_counter_with_persistent_db_connections">Benchmarking a Graphic Hits Counter with Persistent DB Connections</span>
 
-Here are the numbers from Michael Parker's mod\_perl presentation at the
-Perl Conference (Aug, 98). The script is a standard hits counter, but it
-logs the counts into a mysql relational DataBase:
+Here are the numbers from Michael Parker's mod\_perl presentation at the Perl Conference (Aug, 98). The script is a standard hits counter, but it logs the counts into a mysql relational DataBase:
 
         Benchmark: timing 100 iterations of cgi, perl...  [rate 1:28]
         
@@ -107,24 +79,15 @@ logs the counts into a mysql relational DataBase:
         cgi: 6494 secs (34.87 usr 26.68 sys = 61.55 cpu) 
         perl: 299 secs (32.51 usr 23.98 sys = 56.49 cpu)
 
-We don't know what server configurations were used for these tests, but
-I guess the numbers speak for themselves.
+We don't know what server configurations were used for these tests, but I guess the numbers speak for themselves.
 
-The source code of the script was available online, but, sadly, isn't
-anymore. However, you can reproduce the same performance speedup with
-pretty much any CGI script written in Perl.
+The source code of the script was available online, but, sadly, isn't anymore. However, you can reproduce the same performance speedup with pretty much any CGI script written in Perl.
 
-#### [Benchmarking Response Times With ApacheBench]{#benchmarking_response_times_with_apachebench}
+#### <span id="benchmarking_response_times_with_apachebench">Benchmarking Response Times With ApacheBench</span>
 
-ApacheBench (**ab**) is a tool for benchmarking your Apache HTTP server.
-It is designed to give you an idea of the performance that your current
-Apache installation can give. In particular, it shows you how many
-requests per second your Apache server is capable of serving. The **ab**
-tool comes bundled with the Apache source distribution.
+ApacheBench (**ab**) is a tool for benchmarking your Apache HTTP server. It is designed to give you an idea of the performance that your current Apache installation can give. In particular, it shows you how many requests per second your Apache server is capable of serving. The **ab** tool comes bundled with the Apache source distribution.
 
-Let's try it. We will simulate 10 users concurrently requesting a light
-script at `www.example.com/perl/test.pl`. Each simulated user makes 10
-requests.
+Let's try it. We will simulate 10 users concurrently requesting a light script at `www.example.com/perl/test.pl`. Each simulated user makes 10 requests.
 
       % ./ab -n 100 -c 10 www.example.com/perl/test.pl
 
@@ -148,41 +111,22 @@ The results are:
       Processing:    13    67    71
       Total:         13    67    74
 
-We can see that under load of 10 concurrent users our server is capable
-of processing 140 requests per second. Of course, this benchmark is
-correct only when the script under test is used. We can also learn about
-the average processing time, which in this case was 67 milliseconds.
-Other numbers reported by `ab` may or may not be of interest to you.
+We can see that under load of 10 concurrent users our server is capable of processing 140 requests per second. Of course, this benchmark is correct only when the script under test is used. We can also learn about the average processing time, which in this case was 67 milliseconds. Other numbers reported by `ab` may or may not be of interest to you.
 
-For example, if we believe that the script *perl/test.pl* is not
-efficient, then we will try to improve it and run the benchmark again to
-see whether we have any improvement in performance.
+For example, if we believe that the script *perl/test.pl* is not efficient, then we will try to improve it and run the benchmark again to see whether we have any improvement in performance.
 
-#### [Benchmarking Response Times With httperf]{#benchmarking_response_times_with_httperf}
+#### <span id="benchmarking_response_times_with_httperf">Benchmarking Response Times With httperf</span>
 
-httperf is a utility written by David Mosberger. Just like ApacheBench,
-it measures the performance of the Web server.
+httperf is a utility written by David Mosberger. Just like ApacheBench, it measures the performance of the Web server.
 
 A sample command line is shown below:
 
       httperf --server hostname --port 80 --uri /test.html \
        --rate 150 --num-conn 27000 --num-call 1 --timeout 5
 
-This command causes httperf to use the Web server on the host with IP
-name `hostname`, running at port 80. The Web page being retrieved is
-*/test.html* and, in this simple test, the same page is retrieved
-repeatedly. The rate at which requests are issued is 150 per second. The
-test involves initiating a total of 27,000 TCP connections and on each
-connection one HTTP call is performed. A call consists of sending a
-request and receiving a reply.
+This command causes httperf to use the Web server on the host with IP name `hostname`, running at port 80. The Web page being retrieved is */test.html* and, in this simple test, the same page is retrieved repeatedly. The rate at which requests are issued is 150 per second. The test involves initiating a total of 27,000 TCP connections and on each connection one HTTP call is performed. A call consists of sending a request and receiving a reply.
 
-The timeout option defines the number of seconds that the client is
-willing to wait to hear back from the server. If this timeout expires,
-then the tool considers the corresponding call to have failed. Note that
-with a total of 27,000 connections and a rate of 150 per second, the
-total test duration will be approximately 180 seconds (27,000/150),
-independently of what load the server can actually sustain. Here is a
-result that one might get:
+The timeout option defines the number of seconds that the client is willing to wait to hear back from the server. If this timeout expires, then the tool considers the corresponding call to have failed. Note that with a total of 27,000 connections and a rate of 150 per second, the total test duration will be approximately 180 seconds (27,000/150), independently of what load the server can actually sustain. Here is a result that one might get:
 
          Total: connections 27000 requests 26701 replies 26701 test-duration 179.996 s
         
@@ -204,24 +148,16 @@ result that one might get:
          Errors: total 299 client-timo 299 socket-timo 0 connrefused 0 connreset 0
          Errors: fd-unavail 0 addrunavail 0 ftab-full 0 other 0
 
-#### [Benchmarking Response Times With http\_load]{#benchmarking_response_times_with_http_load}
+#### <span id="benchmarking_response_times_with_http_load">Benchmarking Response Times With http\_load</span>
 
-`http_load` is yet another utility that does Web server load testing. It
-can simulate a 33.6 modem connection (*-throttle*) and allows you to
-provide a file with a list of URLs, which we be fetched randomly. You
-can specify how many parallel connections to run using the *-parallel N*
-option, or you can specify the number of requests to generate per second
-with *-rate N* option. Finally, you can tell the utility when to stop by
-specifying either the test time length (*-seconds N*) or the total
-number of fetches (*-fetches N*).
+`http_load` is yet another utility that does Web server load testing. It can simulate a 33.6 modem connection (*-throttle*) and allows you to provide a file with a list of URLs, which we be fetched randomly. You can specify how many parallel connections to run using the *-parallel N* option, or you can specify the number of requests to generate per second with *-rate N* option. Finally, you can tell the utility when to stop by specifying either the test time length (*-seconds N*) or the total number of fetches (*-fetches N*).
 
 A sample run with the file *urls* including:
 
       http://www.example.com/foo/
       http://www.example.com/bar/
 
-We ask to generate three requests per second and run for only two
-seconds. Here is the generated output:
+We ask to generate three requests per second and run for only two seconds. Here is the generated output:
 
       % ./http_load -rate 3 -seconds 2 urls
       http://www.example.com/foo/: check-connect SUCCEEDED, ignoring
@@ -235,35 +171,19 @@ seconds. Here is the generated output:
       msecs/connect: 1.805 mean, 5.24 max, 0.79 min
       msecs/first-response: 291.289 mean, 560.338 max, 34.349 min
 
-So you can see that it has reported 2.5 requests per second. Of course,
-for the real test you will want to load the server heavily and run the
-test for a longer time to get more reliable results.
+So you can see that it has reported 2.5 requests per second. Of course, for the real test you will want to load the server heavily and run the test for a longer time to get more reliable results.
 
-Note that when you provide a file with a list of URLs make sure that you
-don't have empty lines in it. If you do, then the utility won't work,
-complaining:
+Note that when you provide a file with a list of URLs make sure that you don't have empty lines in it. If you do, then the utility won't work, complaining:
 
       ./http_load: unknown protocol -
 
-#### [Benchmarking Response Times With crashme Script]{#benchmarking_response_times_with_the_crashme_script}
+#### <span id="benchmarking_response_times_with_the_crashme_script">Benchmarking Response Times With crashme Script</span>
 
-This is another crashme suite originally written by Michael Schilli (and
-was located at <http://www.linux-magazin.de> site, but now the link has
-gone). I made a few modifications, mostly adding `my()` operators. I
-also allowed it to accept more than one url to test, since sometimes you
-want to test more than one script.
+This is another crashme suite originally written by Michael Schilli (and was located at <http://www.linux-magazin.de> site, but now the link has gone). I made a few modifications, mostly adding `my()` operators. I also allowed it to accept more than one url to test, since sometimes you want to test more than one script.
 
-The tool provides the same results as **ab** above but it also allows
-you to set the timeout value, so requests will fail if not served within
-the time out period. You also get values for **Latency** (seconds per
-request) and **Throughput** (requests per second). It can do a complete
-simulation of your favorite Netscape browser :) and give you a better
-picture.
+The tool provides the same results as **ab** above but it also allows you to set the timeout value, so requests will fail if not served within the time out period. You also get values for **Latency** (seconds per request) and **Throughput** (requests per second). It can do a complete simulation of your favorite Netscape browser :) and give you a better picture.
 
-I have noticed while running these two benchmarking suites, that **ab**
-gave me results from two and a half to three times better. Both suites
-were run on the same machine, with the same load and the same
-parameters, but the implementations were different.
+I have noticed while running these two benchmarking suites, that **ab** gave me results from two and a half to three times better. Both suites were run on the same machine, with the same load and the same parameters, but the implementations were different.
 
 Sample output:
 
@@ -418,20 +338,13 @@ And the code:
         write;
       }
 
-#### [Benchmarking PerlHandlers]{#benchmarking_perlhandlers}
+#### <span id="benchmarking_perlhandlers">Benchmarking PerlHandlers</span>
 
-The `Apache::Timeit` module does `PerlHandler` Benchmarking. With the
-help of this module you can log the time taken to process the request,
-just like you'd use the `Benchmark` module to benchmark a regular Perl
-script. Of course, you can extend this module to perform more advanced
-processing like putting the results into a database for a later
-processing. But all it takes is adding this configuration directive
-inside *httpd.conf*:
+The `Apache::Timeit` module does `PerlHandler` Benchmarking. With the help of this module you can log the time taken to process the request, just like you'd use the `Benchmark` module to benchmark a regular Perl script. Of course, you can extend this module to perform more advanced processing like putting the results into a database for a later processing. But all it takes is adding this configuration directive inside *httpd.conf*:
 
       PerlFixupHandler Apache::Timeit
 
-Since scripts running under `Apache::Registry` are running inside the
-PerlHandler these are benchmarked as well.
+Since scripts running under `Apache::Registry` are running inside the PerlHandler these are benchmarked as well.
 
 An example of the lines which show up in the *error\_log* file:
 
@@ -440,28 +353,25 @@ An example of the lines which show up in the *error\_log* file:
       timing request for /perl/setupenvoff.pl:
         0 wallclock secs ( 0.03 usr +  0.00 sys =  0.03 CPU)
 
-The `Apache::Timeit` package is a part of the *Apache-Perl-contrib*
-files collection available from CPAN.
+The `Apache::Timeit` package is a part of the *Apache-Perl-contrib* files collection available from CPAN.
 
-[References]{#references}
--------------------------
+<span id="references">References</span>
+---------------------------------------
 
--   The mod\_perl site's URL:\
+-   The mod\_perl site's URL:
     <http://perl.apache.org>
--   httperf -- webserver Benchmarking tool\
+-   httperf -- webserver Benchmarking tool
     <http://www.hpl.hp.com/personal/David_Mosberger/httperf.html>
--   http\_load -- another webserver Benchmarking tool\
+-   http\_load -- another webserver Benchmarking tool
     <http://www.acme.com/software/http_load/>
--   Apache-Perl-contrib package\
+-   Apache-Perl-contrib package
     <http://perl.apache.org/dist/contrib/>
--   `Time::HiRes`\
-    <http://search.cpan.org/search?dist=Time-HiRes>\
+-   `Time::HiRes`
+    <http://search.cpan.org/search?dist=Time-HiRes>
     and `Benchmark` is a part of the Core Perl
--   `LWP` (libwww-perl)\
+-   `LWP` (libwww-perl)
     <http://search.cpan.org/search?dist=libwww-perl>
 
 ------------------------------------------------------------------------
 
 Return to [Perl.com](/)
-
-

@@ -1,44 +1,34 @@
 {
-   "thumbnail" : null,
    "description" : " Why Gates? In a perfect world we wouldn't do things we should not. However the world is not like this; people do forbidden things sometimes. This also applies to computer systems used by more than one person. Almost everyone...",
-   "title" : "Elements of Access Control",
-   "slug" : "/pub/2008/02/13/elements-of-access-control.html",
-   "authors" : [
-      "vladi-belperchinov-shabanski"
-   ],
-   "date" : "2008-02-13T00:00:00-08:00",
+   "draft" : null,
    "tags" : [
       "access-control",
       "privacy",
       "security",
       "software-development"
    ],
+   "slug" : "/pub/2008/02/13/elements-of-access-control.html",
    "categories" : "Security",
+   "title" : "Elements of Access Control",
+   "authors" : [
+      "vladi-belperchinov-shabanski"
+   ],
    "image" : null,
-   "draft" : null
+   "thumbnail" : null,
+   "date" : "2008-02-13T00:00:00-08:00"
 }
-
-
 
 
 
 ### Why Gates?
 
-In a perfect world we wouldn't do things we should not. However the
-world is not like this; people do forbidden things sometimes. This also
-applies to computer systems used by more than one person. Almost
-everyone has tried to read someone else's email, view accounting
-department salary reports, or something else, or access otherwise hidden
-data.
+In a perfect world we wouldn't do things we should not. However the world is not like this; people do forbidden things sometimes. This also applies to computer systems used by more than one person. Almost everyone has tried to read someone else's email, view accounting department salary reports, or something else, or access otherwise hidden data.
 
 I know *you* have never done this, but many people have.
 
 ### In Construction
 
-The simplest way to allow or forbid a user account to do something is to
-check if the account is in a list of permitted accounts somewhere. If
-you assume that everything is forbidden unless explicitly allowed, the
-access function can be as simple as:
+The simplest way to allow or forbid a user account to do something is to check if the account is in a list of permitted accounts somewhere. If you assume that everything is forbidden unless explicitly allowed, the access function can be as simple as:
 
       # access_check() return 1 or undef
       sub access_check
@@ -59,20 +49,9 @@ access function can be as simple as:
 
       # only "User 23 allowed" will be printed
 
-Usually access control can be almost as simple as this function. Using
-user IDs for access control is simple, but tends to be hard to maintain.
-The problem appears with systems with many users or with public systems
-where new users may be created at any point. Access lists may become
-very large for each operation, which needs access controls.
+Usually access control can be almost as simple as this function. Using user IDs for access control is simple, but tends to be hard to maintain. The problem appears with systems with many users or with public systems where new users may be created at any point. Access lists may become very large for each operation, which needs access controls.
 
-One solution to this problem is *access groups*. Each user may be a
-member of several groups. The access check will pass if the user is a
-member of a group with permission for the required operation. This
-middle level in the access check isolates users from the access check
-directly. It also helps the system's design--you can associate preset
-access groups with all controlled operations at their point of creation.
-Subsequently created users only need to be attached to one or more of
-those groups:
+One solution to this problem is *access groups*. Each user may be a member of several groups. The access check will pass if the user is a member of a group with permission for the required operation. This middle level in the access check isolates users from the access check directly. It also helps the system's design--you can associate preset access groups with all controlled operations at their point of creation. Subsequently created users only need to be attached to one or more of those groups:
 
       # mimic real system environment:
       # %ALL_USER_GROUPS represents "storage" that contains all
@@ -125,9 +104,7 @@ those groups:
 
 ### Storage
 
-Probably the most popular storage for system data nowadays is the SQL
-database. Here is a simple example of how to store users, groups, and
-mapping between them. Three tables are required:
+Probably the most popular storage for system data nowadays is the SQL database. Here is a simple example of how to store users, groups, and mapping between them. Three tables are required:
 
       SQL CREATE statements:
 
@@ -193,11 +170,7 @@ Users in this example are attached to those groups:
 
 ### Run-Time
 
-Applications apply access control after user login. You can combine it
-with the login procedure--for example to allow only specific group of
-users to connect on weekends. Even so, the access check occurs only
-after the login succeeds, that is, when the username and password are
-correct.
+Applications apply access control after user login. You can combine it with the login procedure--for example to allow only specific group of users to connect on weekends. Even so, the access check occurs only after the login succeeds, that is, when the username and password are correct.
 
 A simple approach for loading required access info is:
 
@@ -212,19 +185,9 @@ A simple approach for loading required access info is:
 
     All access checks for operations happen after this point.
 
-The run-time storage for a user's groups can be simple hash. It can be
-either global or inside the user session object, depending on your
-system design. I've used a global hash here for simplicity of the
-examples, but if you copy and paste this code, remember that it is
-*mandatory* for you to clear and recreate this global hash for every
-request right after the login or user session changes! You can also use
-some kind of session object to drop all user data at the end of the
-session, but this is just an option, not the only correct or possible
-way.
+The run-time storage for a user's groups can be simple hash. It can be either global or inside the user session object, depending on your system design. I've used a global hash here for simplicity of the examples, but if you copy and paste this code, remember that it is *mandatory* for you to clear and recreate this global hash for every request right after the login or user session changes! You can also use some kind of session object to drop all user data at the end of the session, but this is just an option, not the only correct or possible way.
 
-(Also, a truly robust system would store a well-hashed version of the
-password, not the literal password, but that's a story for a different
-article.)
+(Also, a truly robust system would store a well-hashed version of the password, not the literal password, but that's a story for a different article.)
 
       #!/usr/bin/perl
       use strict;
@@ -330,18 +293,14 @@ or
 
 ### Access Instructions
 
-The next problem is how to define which groups can perform specific
-operations. Where this information is static (most cases), you can store
-group lists in configuration (text) files:
+The next problem is how to define which groups can perform specific operations. Where this information is static (most cases), you can store group lists in configuration (text) files:
 
       LOGIN: 2
       EDIT:  1
 
-That is, the EDIT operation needs group 1 (admin) and LOGIN needs group
-2 (all users).
+That is, the EDIT operation needs group 1 (admin) and LOGIN needs group 2 (all users).
 
-Another example is to allow only administrators to log in during
-weekends:
+Another example is to allow only administrators to log in during weekends:
 
       # all users for mon-fri
       LOGIN_WEEKDAYS: 2
@@ -349,34 +308,26 @@ weekends:
       # only admin for sat-sun
       LOGIN_WEEKENDS: 1
 
-Administrators will be in both groups (1, 2), so they will be able to
-log in anytime. All regular users cannot login on weekends.
+Administrators will be in both groups (1, 2), so they will be able to log in anytime. All regular users cannot login on weekends.
 
-This group list includes a moderators group. It could be useful to allow
-moderators do their job on weekends as well, implying an `OR` operation:
+This group list includes a moderators group. It could be useful to allow moderators do their job on weekends as well, implying an `OR` operation:
 
       # only admin or moderators for sat-sun
       LOGIN_WEEKENDS: 1, 3
 
 This named set of groups is a *policy*.
 
-For now, there's only one level in the policy and an `OR` operation
-between groups in a list. Real-world policies may be more complex.
-However there is no need to overdesign this. Even large systems may work
-with just one more level. Here's an `AND` operation:
+For now, there's only one level in the policy and an `OR` operation between groups in a list. Real-world policies may be more complex. However there is no need to overdesign this. Even large systems may work with just one more level. Here's an `AND` operation:
 
       LOGIN_WEEKENDS: 1+3, 4, 1+5+9
 
-This policy will match (allowing login on weekend days) only for users
-in the following groups:
+This policy will match (allowing login on weekend days) only for users in the following groups:
 
          1 AND 3
       OR 4
       OR 1 AND 5 AND 9
 
-The login procedure must match the `LOGIN_WEEKENDS` policy before
-allowing user to continue with other operations. Thus, you need a
-procedure for reading policy configuration files:
+The login procedure must match the `LOGIN_WEEKENDS` policy before allowing user to continue with other operations. Thus, you need a procedure for reading policy configuration files:
 
       our %ACCESS_POLICY;
 
@@ -408,8 +359,7 @@ procedure for reading policy configuration files:
         return [ map { [ split /[\s\+]+/ ] } split /[\s,]+/, $policy ];
       }
 
-For the `LOGIN_WEEKENDS` policy, the resulting value in `%ACCESS_POLICY`
-will be:
+For the `LOGIN_WEEKENDS` policy, the resulting value in `%ACCESS_POLICY` will be:
 
       $ACCESS_POLICY{ 'LOGIN_WEEKENDS' } =>
 
@@ -419,8 +369,7 @@ will be:
                       [ '1', '5', '9' ]
                     ];
 
-To match this policy, a user must be in every groups listed in any of
-the inner lists:
+To match this policy, a user must be in every groups listed in any of the inner lists:
 
       sub check_policy
       {
@@ -498,26 +447,16 @@ This scheme may seem complete, but it lacks one thing.
 
 ### Data Fences
 
-In a multiuser system there is always some kind of ownership on the data
-stored in the database. This means that each user must see only those
-parts of the data that his user groups own.
+In a multiuser system there is always some kind of ownership on the data stored in the database. This means that each user must see only those parts of the data that his user groups own.
 
-This ownership problem solution is separate from the policy scheme. Each
-row must have one or more fields filled with groups that have access to
-the data. Any SQL statements for reading data must also check for this
-field:
+This ownership problem solution is separate from the policy scheme. Each row must have one or more fields filled with groups that have access to the data. Any SQL statements for reading data must also check for this field:
 
       my $rg  = join ',', grep { $USER_GROUPS{ $_ } } keys %USER_GROUPS;
       my $ug  = join ',', grep { $USER_GROUPS{ $_ } } keys %USER_GROUPS;
       my $sql = "SELECT * FROM TABLE_NAME
                  WHERE READ_GROUP IN ( $rg ) AND UPDATE_GROUP IN ( $ug )";
 
-The result set will contain only rows with read and update groups inside
-the current user's group set. Sometimes you may need all of rows with
-the same read group for display, even though some of those rows have
-update restrictions the user does not meet. This case will use only the
-`READ_GROUP` field for select and will cut off users when they try to
-update the record without permission:
+The result set will contain only rows with read and update groups inside the current user's group set. Sometimes you may need all of rows with the same read group for display, even though some of those rows have update restrictions the user does not meet. This case will use only the `READ_GROUP` field for select and will cut off users when they try to update the record without permission:
 
       my $rg  = join ',', grep { $USER_GROUPS{ $_ } } keys %USER_GROUPS;
       my $sql = "SELECT * FROM TABLE_NAME WHERE READ_GROUP IN ( $rg )";
@@ -528,8 +467,7 @@ update the record without permission:
 
       die "Edit access denied" unless check_access( $hr->{ 'UPDATE_GROUP' } );
 
-When access checks are explicitly after `SELECT` statements it is
-possible to store full policy strings inside `CHAR` fields:
+When access checks are explicitly after `SELECT` statements it is possible to store full policy strings inside `CHAR` fields:
 
       $hr = $sth->fetchrow_hashref();
 
@@ -548,10 +486,4 @@ possible to store full policy strings inside `CHAR` fields:
 
 ### In the Middle of Nowhere
 
-This access control scheme is simple and usable as described. It does
-not cover all possible cases of access control, but every application
-has its own unique needs. In certain cases, you can push some of these
-access controls to lower levels -- your database, for example --
-depending on your needs. Good luck with building your own great wall!
-
-
+This access control scheme is simple and usable as described. It does not cover all possible cases of access control, but every application has its own unique needs. In certain cases, you can push some of these access controls to lower levels -- your database, for example -- depending on your needs. Good luck with building your own great wall!

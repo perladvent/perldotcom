@@ -1,55 +1,31 @@
 {
+   "date" : "2002-11-27T00:00:00-08:00",
+   "thumbnail" : "/images/_pub_2002_11_27_classdbi/111-class_dbi.gif",
+   "image" : null,
    "authors" : [
       "tony-bowden"
    ],
-   "slug" : "/pub/2002/11/27/classdbi.html",
    "title" : "Class::DBI",
-   "description" : " Several articles on Perl.com, including the recent Phrasebook Design Pattern, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's DBIx::Recordset article attempted to show how code dealing with databases can be made...",
-   "thumbnail" : "/images/_pub_2002_11_27_classdbi/111-class_dbi.gif",
-   "draft" : null,
    "categories" : "data",
-   "image" : null,
+   "slug" : "/pub/2002/11/27/classdbi.html",
    "tags" : [
       "database-class-poop-class-dbi"
    ],
-   "date" : "2002-11-27T00:00:00-08:00"
+   "draft" : null,
+   "description" : " Several articles on Perl.com, including the recent Phrasebook Design Pattern, have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's DBIx::Recordset article attempted to show how code dealing with databases can be made..."
 }
 
 
 
+Several articles on Perl.com, including the recent [Phrasebook Design Pattern](/pub/a/2002/10/22/phrasebook.html), have discussed the problems faced when writing Perl code that interacts with a database. Terrence Brannon's [DBIx::Recordset](/pub/a/2001/02/dbix.html) article attempted to show how code dealing with databases can be made simpler, and more maintainable. In this article, I will try to show how `Class::DBI` can make this easier still.
 
+`Class::DBI` prizes laziness and simplicity. Its goal is to make simple database interactions trivial, while leaving the hard ones possible. For many simple applications, it replaces the need for writing SQL entirely. On the other hand, it doesn't force you to build complex data structures to specify a complex query; if you really need the power or expressiveness of raw SQL, then it gets out of your way and lets you drop back to that.
 
-Several articles on Perl.com, including the recent [Phrasebook Design
-Pattern](/pub/a/2002/10/22/phrasebook.html), have discussed the problems
-faced when writing Perl code that interacts with a database. Terrence
-Brannon's [DBIx::Recordset](/pub/a/2001/02/dbix.html) article attempted
-to show how code dealing with databases can be made simpler, and more
-maintainable. In this article, I will try to show how `Class::DBI` can
-make this easier still.
+The easiest way to see `Class::DBI` in action is to build a simple application with it. In this article, I'll build a tool for performing analysis on my telephone bill.
 
-`Class::DBI` prizes laziness and simplicity. Its goal is to make simple
-database interactions trivial, while leaving the hard ones possible. For
-many simple applications, it replaces the need for writing SQL entirely.
-On the other hand, it doesn't force you to build complex data structures
-to specify a complex query; if you really need the power or
-expressiveness of raw SQL, then it gets out of your way and lets you
-drop back to that.
+[Data::BT::PhoneBill](http://search.cpan.org/author/TMTM/Data-BT-PhoneBill-0.94/) (available from CPAN), provides a simple interface to a phone bill downloaded from the BT Web site. So, armed with this module, and a few recent phonebills, let's store these details in a database, and see how to extract useful information from them.
 
-The easiest way to see `Class::DBI` in action is to build a simple
-application with it. In this article, I'll build a tool for performing
-analysis on my telephone bill.
-
-[Data::BT::PhoneBill](http://search.cpan.org/author/TMTM/Data-BT-PhoneBill-0.94/)
-(available from CPAN), provides a simple interface to a phone bill
-downloaded from the BT Web site. So, armed with this module, and a few
-recent phonebills, let's store these details in a database, and see how
-to extract useful information from them.
-
-`Class::DBI` works on the basis that each table in your database has a
-corresponding class. Although each class could set up its own connection
-information, it's a better idea to encapsulate that connection in one
-class, and have all the others inherit from that. So, we set up our
-database, and create the base class for our application:
+`Class::DBI` works on the basis that each table in your database has a corresponding class. Although each class could set up its own connection information, it's a better idea to encapsulate that connection in one class, and have all the others inherit from that. So, we set up our database, and create the base class for our application:
 
       package My::PhoneBill::DBI;
 
@@ -59,10 +35,7 @@ database, and create the base class for our application:
 
       1;
 
-We simply inherit from `Class::DBI` and use the '`set_db`' method to set
-up the connection information for our database. That's all we need in
-this class for now, so next we set up our table for storing the phone
-call information:
+We simply inherit from `Class::DBI` and use the '`set_db`' method to set up the connection information for our database. That's all we need in this class for now, so next we set up our table for storing the phone call information:
 
       CREATE TABLE call (
         callid      MEDIUMINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -87,9 +60,7 @@ For this, we set up a corresponding class:
 
       1;
 
-We inherit our connection information from our base class, and then
-specify what table we're dealing with, and what its columns are. Now we
-have enough to populate the table.
+We inherit our connection information from our base class, and then specify what table we're dealing with, and what its columns are. Now we have enough to populate the table.
 
 So, we create a simple, "*populate\_phone\_bill*" script:
 
@@ -113,15 +84,9 @@ So, we create a simple, "*populate\_phone\_bill*" script:
         });
       }
 
-The `create()` call runs the SQL to `INSERT` the row for each call. As
-we're using `Class::DBI`, and have defined our primary key column to be
-`AUTO_INCREMENT`, we don't need to specify a value for that column. On
-databases that support sequences, we could also inform `Class::DBI` what
-sequence should be used to provide the primary key.
+The `create()` call runs the SQL to `INSERT` the row for each call. As we're using `Class::DBI`, and have defined our primary key column to be `AUTO_INCREMENT`, we don't need to specify a value for that column. On databases that support sequences, we could also inform `Class::DBI` what sequence should be used to provide the primary key.
 
-Now that we have a table populated with calls, we can begin to run
-queries against it. Let's write a simple script that reports on all the
-calls to a specified number:
+Now that we have a table populated with calls, we can begin to run queries against it. Let's write a simple script that reports on all the calls to a specified number:
 
       #!/usr/bin/perl
       
@@ -139,23 +104,16 @@ calls to a specified number:
       }
       printf "Total: %d calls, %d pence\n", scalar @calls, $total_cost;
 
-Here we can see that `Class::DBI` provides a '`search`' method for us to
-use. We supply a hash of column/value pairs, and we get back all the
-records that matched. Each result is an instance of the `Call` class,
-and each has an accessor method corresponding to each column. (It's also
-a mutator method, so we can update that record, but we're only reporting
-at this stage).
+Here we can see that `Class::DBI` provides a '`search`' method for us to use. We supply a hash of column/value pairs, and we get back all the records that matched. Each result is an instance of the `Call` class, and each has an accessor method corresponding to each column. (It's also a mutator method, so we can update that record, but we're only reporting at this stage).
 
-So, if we want to see how often we're calling the Speaking Clock, then
-we run
+So, if we want to see how often we're calling the Speaking Clock, then we run
 
       > perl calls_to 123
       2002-09-17 11:06:00 - 5 secs, 8.5 pence
       2002-10-19 21:20:00 - 8 secs, 8.5 pence
       Total: 2 calls, 17 pence
 
-Similarly, if we want to see all the calls on a given date, then we
-could have a '`calls_on`' script:
+Similarly, if we want to see all the calls on a given date, then we could have a '`calls_on`' script:
 
       #!/usr/bin/perl
       
@@ -182,26 +140,14 @@ Running it gives:
       ...
       Total: 7 calls, 92 pence
 
-As promised, we've written a database application without writing any
-SQL. OK, so we haven't really done anything very complicated yet, but
-even for this simplistic use `Class::DBI` makes our life much easier.
+As promised, we've written a database application without writing any SQL. OK, so we haven't really done anything very complicated yet, but even for this simplistic use `Class::DBI` makes our life much easier.
 
-[Building a Phone Book]{#building_a_phone_book}
------------------------------------------------
+<span id="building_a_phone_book">Building a Phone Book</span>
+-------------------------------------------------------------
 
-I used to have a good memory for phone numbers. But Nokia, Ericsson, et
-al, have conspired against me. By giving my cell phone a built-in
-address book, they ensured that the part of my brain responsible for
-remembering 10 or 11 digit numbers would gradually atrophy. Now, when I
-look at the output of '`calls_on`', I have no idea who "028 9024 4222"
-represents. So, let's build an address book that can store this
-information, and then change our reports to use it.
+I used to have a good memory for phone numbers. But Nokia, Ericsson, et al, have conspired against me. By giving my cell phone a built-in address book, they ensured that the part of my brain responsible for remembering 10 or 11 digit numbers would gradually atrophy. Now, when I look at the output of '`calls_on`', I have no idea who "028 9024 4222" represents. So, let's build an address book that can store this information, and then change our reports to use it.
 
-The first thing we should do is arrange our information a little better.
-We'll take the `number` and `destination` columns, and move them to a
-"recipient" table, to which we'll add a `name` column. "Destination"
-doesn't make as much sense when associated with the number, rather than
-the call, so we'll rename it to "location".
+The first thing we should do is arrange our information a little better. We'll take the `number` and `destination` columns, and move them to a "recipient" table, to which we'll add a `name` column. "Destination" doesn't make as much sense when associated with the number, rather than the call, so we'll rename it to "location".
 
       CREATE TABLE recipient (
         recipid  MEDIUMINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -273,16 +219,11 @@ Then we can modify our script that populates the database:
         });
       }
 
-This time we need to create the `Recipient` first, so we can link to it
-from the `Call`. But we don't want to create a new `Recipient` for each
-call - if we've ever rang this person before, there'll already be an
-entry in the recipient table: so we use `find_or_create` to give us back
-the existing entry if it's there, or else create a new one.
+This time we need to create the `Recipient` first, so we can link to it from the `Call`. But we don't want to create a new `Recipient` for each call - if we've ever rang this person before, there'll already be an entry in the recipient table: so we use `find_or_create` to give us back the existing entry if it's there, or else create a new one.
 
 With the table repopulated we can return to our reporting scripts.
 
-Our `calls_on` script now fails as we can can't ask a call for its
-'number'. So, we change it to:
+Our `calls_on` script now fails as we can can't ask a call for its 'number'. So, we change it to:
 
       #!/usr/bin/perl
       
@@ -309,17 +250,13 @@ However, running it doesn't really give us what we want:
       ...
       Total: 7 calls, 92 pence
 
-Instead of getting the phone number, we now get the ID from the
-recipient table, which is just an auto-incrementing value.
+Instead of getting the phone number, we now get the ID from the recipient table, which is just an auto-incrementing value.
 
-To turn this into a sensible value, we add the following line to the
-`Call` class:
+To turn this into a sensible value, we add the following line to the `Call` class:
 
       __PACKAGE__->has_a(recipient => 'My::PhoneBill::Recipient');
 
-This tells it that the recipient method doesn't just return a simple
-value, but that that value should be automatically turned into an
-instance of the Recipient class.
+This tells it that the recipient method doesn't just return a simple value, but that that value should be automatically turned into an instance of the Recipient class.
 
 Of course, calls\_on still won't be correct:
 
@@ -344,27 +281,20 @@ And now everything is working perfectly again:
       ...
       Total: 7 calls, 92 pence
 
-The `calls_to` script is slightly trickier, as the initial search is now
-on the recipient rather than the call.
+The `calls_to` script is slightly trickier, as the initial search is now on the recipient rather than the call.
 
 So, we change the initial search to:
 
       my ($recipient) = My::PhoneBill::Recipient->search(number => $number)
         or die "No calls to $number\n";
 
-Then we need to get all the calls to that recipient. For this, we need
-to inform `Recipient` of the relationship with calls. Unlike the `has_a`
-we just set up in the `Call` class, the recipient table doesn't store
-any value concerned with the call table that could be inflated on
-demand. Instead we need to add a `has_many` declaration to Recipient:
+Then we need to get all the calls to that recipient. For this, we need to inform `Recipient` of the relationship with calls. Unlike the `has_a` we just set up in the `Call` class, the recipient table doesn't store any value concerned with the call table that could be inflated on demand. Instead we need to add a `has_many` declaration to Recipient:
 
       __PACKAGE__->has_many(calls => 'My::PhoneBill::Call');
 
-This creates a new method `calls` for each Recipient object, returning a
-list of `Call` objects whose `recipient` method is our primary key.
+This creates a new method `calls` for each Recipient object, returning a list of `Call` objects whose `recipient` method is our primary key.
 
-So, having found our recipient in the `calls_to` script, we can simply
-ask:
+So, having found our recipient in the `calls_to` script, we can simply ask:
 
       my @calls = $recipient->calls;
 
@@ -421,8 +351,7 @@ This lets us associate a number to a name:
       > perl add_phone_number 123 "Speaking Clock"
       OK. 123 is Speaking Clock
 
-And now with a tiny change to our calls\_on script we can output the
-name where known:
+And now with a tiny change to our calls\_on script we can output the name where known:
 
         printf "%s) %s - %d secs, %.1f pence\n",
           $call->calltime, $call->recipient->name || $call->recipient->number,
@@ -435,47 +364,37 @@ name where known:
       ...
       Total: 7 calls, 92 pence
 
-To allow the `calls_to` script to work if we give it either a name or a
-number, we can use:
+To allow the `calls_to` script to work if we give it either a name or a number, we can use:
 
       my $recipient = My::PhoneBill::Recipient->search(name => $number)
                    || My::PhoneBill::Recipient->search(number => $number)
                    || die "No calls to $number\n";
 
-However, as we've called search in scalar context, rather than the
-normal list context, we get back an interator rather than an individual
-`Recipient` object. As one name may map to multiple numbers, we need to
-iterate over each of these in turn:
+However, as we've called search in scalar context, rather than the normal list context, we get back an interator rather than an individual `Recipient` object. As one name may map to multiple numbers, we need to iterate over each of these in turn:
 
         my @calls;
         while (my $recip = $recipient->next) {
           push @calls, $recip->calls;
         }
 
-(Printing individual totals for each number is left as an exercise for
-the reader.)
+(Printing individual totals for each number is left as an exercise for the reader.)
 
       > perl calls_to "Speaking Clock"
       2002-09-17 11:06:00 - 5 secs, 8.5 pence
       2002-10-19 21:20:00 - 8 secs, 8.5 pence
       Total: 2 calls, 17 pence
 
-[Working With Other Modules]{#working_with_other_modules}
----------------------------------------------------------
+<span id="working_with_other_modules">Working With Other Modules</span>
+-----------------------------------------------------------------------
 
-Sometimes the information we store in the database can be used to work
-with non-`Class::DBI` modules. For example, if we wanted to format the
-dates of our calls differently, we might like to turn them into
-`Date::Simple` objects. Again, `Class::DBI` makes this easy.
+Sometimes the information we store in the database can be used to work with non-`Class::DBI` modules. For example, if we wanted to format the dates of our calls differently, we might like to turn them into `Date::Simple` objects. Again, `Class::DBI` makes this easy.
 
 In the `Call` class, we again use `has_a` to declare this relationship:
 
       __PACKAGE__->has_a(recipient => 'My::PhoneBill::Recipient');
      *__PACKAGE__->has_a(calldate  => 'Date::Simple');
 
-Now, when we fetch the `calldate` it is automatically inflated to a
-`Date::Simple` object. So, we can change the output of `calls_to` to
-print the date in a nicer format:
+Now, when we fetch the `calldate` it is automatically inflated to a `Date::Simple` object. So, we can change the output of `calls_to` to print the date in a nicer format:
 
       printf "%s %s - %d secs, %.1f pence\n",
         $call->calldate->format("%d %b"), $call->calltime,
@@ -486,51 +405,29 @@ print the date in a nicer format:
       19 Oct 21:20:00 - 8 secs, 8.5 pence
       Total: 2 calls, 17 pence
 
-`Class::DBI` assumes that any non-`Class::DBI` class is inflated through
-a `new` method, and can be deflated through stringification. As both of
-these are true for `Date::Simple`, we didn't need to do anything more.
-If this is not the case - for example, if you wanted to use
-`Time::Piece` instead of `Date::Simple` - you need to tell `Class::DBI`
-how to do the inflating and deflating as the value goes in and comes out
-of the database.
+`Class::DBI` assumes that any non-`Class::DBI` class is inflated through a `new` method, and can be deflated through stringification. As both of these are true for `Date::Simple`, we didn't need to do anything more. If this is not the case - for example, if you wanted to use `Time::Piece` instead of `Date::Simple` - you need to tell `Class::DBI` how to do the inflating and deflating as the value goes in and comes out of the database.
 
       __PACKAGE__->has_a(calldate => 'Time::Piece',
         inflate => sub { Time::Piece->strptime(shift, "%Y-%m-%d") },
         deflate => 'ymd'
       );
 
-Deflating a `Time::Piece` object back to an ISO date string suitable for
-MySQL is quite simple: you can just call its `ymd()` method. Thus we can
-specify this as a string. Inflating is more difficult, as it requires a
-two argument call to `strptime()`. Thus we need to specify this as a
-subroutine reference. When inflating, this is called with the value from
-the database as its one and only argument. Thus, we can pass that to
-`Time::Piece`'s `strptime` method, specifying the format to instantiate
-from.
+Deflating a `Time::Piece` object back to an ISO date string suitable for MySQL is quite simple: you can just call its `ymd()` method. Thus we can specify this as a string. Inflating is more difficult, as it requires a two argument call to `strptime()`. Thus we need to specify this as a subroutine reference. When inflating, this is called with the value from the database as its one and only argument. Thus, we can pass that to `Time::Piece`'s `strptime` method, specifying the format to instantiate from.
 
-Using `Time::Piece` instead of `Date::Time` requires one further change
-to to our output script:
+Using `Time::Piece` instead of `Date::Time` requires one further change to to our output script:
 
       printf "%s %s - %d secs, %.1f pence\n",
      *  $call->calldate->strftime("%d %b"), $call->calltime,
         $call->duration, $call->cost;
 
-[MOST CALLED NUMBERS]{#most_called_numbers}
--------------------------------------------
+<span id="most_called_numbers">MOST CALLED NUMBERS</span>
+---------------------------------------------------------
 
-BT provide a service that allows you to save money on 10 numbers of your
-choice. So it would be useful if we were able to find out which numbers
-we spend the most money calling. We'll assume that any number we've only
-ever called once isn't worth adding to our list, as it was probably a
-one-off call. Thus we want the 10 numbers with the highest spend that
-have had more than one call.
+BT provide a service that allows you to save money on 10 numbers of your choice. So it would be useful if we were able to find out which numbers we spend the most money calling. We'll assume that any number we've only ever called once isn't worth adding to our list, as it was probably a one-off call. Thus we want the 10 numbers with the highest spend that have had more than one call.
 
-As we said earlier, `Class::DBI` doesn't attempt to provide a syntax to
-express any arbitrary SQL, so there's no way of asking directly for this
-information. Instead, we'll try a simple approach.
+As we said earlier, `Class::DBI` doesn't attempt to provide a syntax to express any arbitrary SQL, so there's no way of asking directly for this information. Instead, we'll try a simple approach.
 
-Firstly we'll add a method to the `Recipient` class to tell us the total
-we've spent on calls to that number:
+Firstly we'll add a method to the `Recipient` class to tell us the total we've spent on calls to that number:
 
       use List::Util 'sum';
 
@@ -556,23 +453,15 @@ Then we can create a `top_ten` script:
           $recip->total_spend;
       }
 
-This is very slow, however, once you have more than a few hundred calls
-stored in your database. This is mainly because we're sorting based on a
-method call. Replacing the sort above with a Schwartzian Transform
-speeds everything up significantly:
+This is very slow, however, once you have more than a few hundred calls stored in your database. This is mainly because we're sorting based on a method call. Replacing the sort above with a Schwartzian Transform speeds everything up significantly:
 
       my @sorted = map $_->[0],
         sort { $b->[1] <=> $a->[1] }
         map [ $_, $_->total_spend ], @regulars;
 
-Now, until the database gets significantly bigger, this is probably fast
-enough - especially as you probably won't be running the script very
-often.
+Now, until the database gets significantly bigger, this is probably fast enough - especially as you probably won't be running the script very often.
 
-However, if this isn't enough, then we can always drop back to SQL. Of
-course, when we need to optimize for speed, we usually lose something
-else - in this case, portability. In this example, we're using MySQL, so
-I would add the relevant MySQL-specific query to *Recipient.pm*:
+However, if this isn't enough, then we can always drop back to SQL. Of course, when we need to optimize for speed, we usually lose something else - in this case, portability. In this example, we're using MySQL, so I would add the relevant MySQL-specific query to *Recipient.pm*:
 
       __PACKAGE__->set_sql(top_ten => qq{
         SELECT recipient.recipid,
@@ -595,16 +484,9 @@ Then we can set up a method that returns the relevant objects for these:
         return $class->sth_to_objects($sth);
       }
 
-Any SQL set up using `set_sql` can be retrieved as a readily prepared
-DBI statement handle by prepending its name with `sql_` - thus we fetch
-back this `top_ten` using `my $sth = $class->sql_top_ten`;
+Any SQL set up using `set_sql` can be retrieved as a readily prepared DBI statement handle by prepending its name with `sql_` - thus we fetch back this `top_ten` using `my $sth = $class->sql_top_ten`;
 
-Although we could happily execute this and then call any of the
-traditional DBI commands (`fetchrow_array` etc.), we can also take a
-shortcut. As one of the columns being returned from our query is the
-primary key of the Recipient, we can simply feed the results into the
-underlying method in `Class::DBI` that allows searches to return a list
-of objects, `sth_to_objects`.
+Although we could happily execute this and then call any of the traditional DBI commands (`fetchrow_array` etc.), we can also take a shortcut. As one of the columns being returned from our query is the primary key of the Recipient, we can simply feed the results into the underlying method in `Class::DBI` that allows searches to return a list of objects, `sth_to_objects`.
 
 So, our script becomes simply:
 
@@ -615,9 +497,4 @@ So, our script becomes simply:
           $recip->total_spend;
       }
 
-As we have seen, `Class::DBI` makes it possible to perform many of the
-common database tasks completely trivially - without writing a single
-line of SQL. But, when you really need it, it's fairly easy to write the
-SQL that you need and execute it.
-
-
+As we have seen, `Class::DBI` makes it possible to perform many of the common database tasks completely trivially - without writing a single line of SQL. But, when you really need it, it's fairly easy to write the SQL that you need and execute it.

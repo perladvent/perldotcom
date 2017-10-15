@@ -1,39 +1,28 @@
 {
    "draft" : null,
+   "description" : "℞ 26: Custom character properties Match Unicode Properties in Regex explained that ever Unicode character has one or more properties, specified by the Unicode consortium. You may extend these rule to define your own properties such that Perl can use...",
    "tags" : [],
-   "image" : null,
+   "slug" : "/pub/2012/05/perlunicookbook-custom-character-properties.html",
    "categories" : "unicode",
-   "date" : "2012-05-17T06:00:01-08:00",
    "authors" : [
       "tom-christiansen"
    ],
-   "slug" : "/pub/2012/05/perlunicookbook-custom-character-properties.html",
    "title" : "Perl Unicode Cookbook: Custom Character Properties",
-   "description" : "℞ 26: Custom character properties Match Unicode Properties in Regex explained that ever Unicode character has one or more properties, specified by the Unicode consortium. You may extend these rule to define your own properties such that Perl can use...",
-   "thumbnail" : null
+   "image" : null,
+   "thumbnail" : null,
+   "date" : "2012-05-17T06:00:01-08:00"
 }
 
 
 
-
-
-℞ 26: Custom character properties {#Custom-character-properties}
+℞ 26: Custom character properties
 ---------------------------------
 
-[Match Unicode Properties in
-Regex](/media/_pub_2012_05_perlunicookbook-custom-character-properties/perlunicook-match-unicode-properties-in-regex.html)
-explained that ever Unicode character has one or more properties,
-specified by the Unicode consortium. You may extend these rule to define
-your own properties such that Perl can use them.
+[Match Unicode Properties in Regex](/pub/2012/05/perlunicook-match-unicode-properties-in-regex.html) explained that ever Unicode character has one or more properties, specified by the Unicode consortium. You may extend these rule to define your own properties such that Perl can use them.
 
-A custom property is a function given a name beginning with `In` or `Is`
-which returns a string conforming to a special format. The
-["User-Defined Character Properties" section of perldoc
-perlunicode](http://perldoc.perl.org/perlunicode.html#User-Defined-Character-Properties)
-describes this format in more detail.
+A custom property is a function given a name beginning with `In` or `Is` which returns a string conforming to a special format. The ["User-Defined Character Properties" section of perldoc perlunicode](http://perldoc.perl.org/perlunicode.html#User-Defined-Character-Properties) describes this format in more detail.
 
-To deﬁne at compile-time your own custom character properties for use in
-regexes:
+To deﬁne at compile-time your own custom character properties for use in regexes:
 
      # using private-use characters
      sub In_Tengwar { "E000\tE07F\n" }
@@ -49,13 +38,8 @@ regexes:
 
      if (/\p{Is_GraecoRoman_Title}/ { ... }
 
-Previous: [℞ 25: Match Unicode Properties in
-Regex](/media/_pub_2012_05_perlunicookbook-custom-character-properties/perlunicook-match-unicode-properties-in-regex.html)
+Previous: [℞ 25: Match Unicode Properties in Regex](/pub/2012/05/perlunicook-match-unicode-properties-in-regex.html)
 
-Series Index: [The Standard
-Preamble](/media/_pub_2012_05_perlunicookbook-custom-character-properties/perlunicook-standard-preamble.html)
+Series Index: [The Standard Preamble](/pub/2012/04/perlunicook-standard-preamble.html)
 
-Next: [℞ 27: Unicode
-Normalization](/media/_pub_2012_05_perlunicookbook-custom-character-properties/perlunicookbook-unicode-normalization.html)
-
-
+Next: [℞ 27: Unicode Normalization](/pub/2012/05/perlunicookbook-unicode-normalization.html)

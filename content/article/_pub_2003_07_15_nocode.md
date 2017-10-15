@@ -1,59 +1,33 @@
 {
-   "image" : null,
-   "categories" : "web",
-   "tags" : [
-      "template-database-sql-dbi"
-   ],
-   "draft" : null,
    "date" : "2003-07-15T00:00:00-08:00",
-   "slug" : "/pub/2003/07/15/nocode.html",
+   "thumbnail" : "/images/_pub_2003_07_15_nocode/111-nocode.gif",
+   "image" : null,
    "title" : "How to Avoid Writing Code",
    "authors" : [
       "kake-pugh"
    ],
-   "thumbnail" : "/images/_pub_2003_07_15_nocode/111-nocode.gif",
-   "description" : " One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it's also one of the most ubiquitous. Perl programmers being lazy, there..."
+   "categories" : "web",
+   "slug" : "/pub/2003/07/15/nocode.html",
+   "tags" : [
+      "template-database-sql-dbi"
+   ],
+   "description" : " One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it's also one of the most ubiquitous. Perl programmers being lazy, there...",
+   "draft" : null
 }
 
 
 
+One of the most boring programming tasks in the world has to be pulling data out of a database and displaying it on a web site. Yet it's also one of the most ubiquitous. Perl programmers being lazy, there are tools to help make boring programming tasks less painful, and two of these tools, `Class::DBI` and the `Template` Toolkit, create a whole which is far more drudgery-destroying than its parts.
 
+Both these tools can do more complicated stuff than that described in this article, but my aim is to motivate people who may not have tried them out to give them a go and see how much work they can save you for even simple tasks.
 
-\
-One of the most boring programming tasks in the world has to be pulling
-data out of a database and displaying it on a web site. Yet it's also
-one of the most ubiquitous. Perl programmers being lazy, there are tools
-to help make boring programming tasks less painful, and two of these
-tools, `Class::DBI` and the `Template` Toolkit, create a whole which is
-far more drudgery-destroying than its parts.
-
-Both these tools can do more complicated stuff than that described in
-this article, but my aim is to motivate people who may not have tried
-them out to give them a go and see how much work they can save you for
-even simple tasks.
-
-I've assumed that you know the basics of designing a database--why you
-have several tables and `JOIN` them rather than putting everything in
-the same table. I've also assumed that you're not allergic to reading
-documentation, so I'm going to spend more space on saying *why* I use
-particular features of the modules rather than explaining exactly *how*
-they work.
+I've assumed that you know the basics of designing a database--why you have several tables and `JOIN` them rather than putting everything in the same table. I've also assumed that you're not allergic to reading documentation, so I'm going to spend more space on saying *why* I use particular features of the modules rather than explaining exactly *how* they work.
 
 ### Synergy
 
-The reason that `Class::DBI` and the `Template` Toolkit work so well
-together is simple. `Template` Toolkit templates can call methods on
-objects passed to them--so there's no need to explicitly pull every
-column out of the database before you process the template--and
-`Class::DBI` saves you the bother of writing methods to retrieve
-database columns. You're essentially going straight from the database to
-HTML with only a very small amount of Perl in the middle.
+The reason that `Class::DBI` and the `Template` Toolkit work so well together is simple. `Template` Toolkit templates can call methods on objects passed to them--so there's no need to explicitly pull every column out of the database before you process the template--and `Class::DBI` saves you the bother of writing methods to retrieve database columns. You're essentially going straight from the database to HTML with only a very small amount of Perl in the middle.
 
-Suppose you're writing a web application to store details of books and
-their authors, and reviews of the books by users of the site. You'd like
-to have a page that displays all the books in your database and, for
-each book, offers links to all the reviews already written. With
-suitably set-up classes you can write a couple of lines of Perl:
+Suppose you're writing a web application to store details of books and their authors, and reviews of the books by users of the site. You'd like to have a page that displays all the books in your database and, for each book, offers links to all the reviews already written. With suitably set-up classes you can write a couple of lines of Perl:
 
       #!/usr/bin/perl -w
       use strict;
@@ -84,19 +58,13 @@ hand your designer a simple template to pretty up:
 
       [% INCLUDE footer.tt %]
 
-and your task is done. You don't have to explicitly select the reviews;
-you don't have to then cross-reference to another table to find out the
-reviewer's name; you don't have to mess with HERE-documents or fill your
-program with print statements. You hardly have to do anything.
+and your task is done. You don't have to explicitly select the reviews; you don't have to then cross-reference to another table to find out the reviewer's name; you don't have to mess with HERE-documents or fill your program with print statements. You hardly have to do anything.
 
-Except of course, write the `Bookworm::*` classes in the first place,
-but that's easy.
+Except of course, write the `Bookworm::*` classes in the first place, but that's easy.
 
 ### Simple, Small Classes
 
-For convenience, we write a class containing all the SQL needed to set
-up our database schema. This is very useful for running tests as well as
-for deploying a new install of the application.
+For convenience, we write a class containing all the SQL needed to set up our database schema. This is very useful for running tests as well as for deploying a new install of the application.
 
       package Bookworm::Setup;
       use strict;
@@ -138,9 +106,7 @@ for deploying a new install of the application.
           }
       );
 
-This class has a single method that sets up a database conforming to the
-schema above. Here's the rendered POD for it; the implementation is
-pretty simple. The "force\_clear" option is very useful for testing.
+This class has a single method that sets up a database conforming to the schema above. Here's the rendered POD for it; the implementation is pretty simple. The "force\_clear" option is very useful for testing.
         setup_db( dbname      => 'bookworms',
                   dbuser      => 'username',
                   dbpass      => 'password',
@@ -159,14 +125,7 @@ pretty simple. The "force\_clear" option is very useful for testing.
 
       Croaks on error, returns true if all OK.
 
-Now, another class to wrap around the `Template` Toolkit; we want to
-grab global variables like the name of the site, and so on, from a
-config class. (There are plenty of config modules on CPAN; you're bound
-to find one you like. I quite like `Config::Tiny`; other people swear by
-`AppConfig`--and since the latter is a prerequisite of the `Template`
-Toolkit, you'll have it installed already.) `Bookworms::Config` is just
-a little wrapper class around `Config::Tiny`, so if I change to a
-different config method later I don't have to rewrite lots of code.
+Now, another class to wrap around the `Template` Toolkit; we want to grab global variables like the name of the site, and so on, from a config class. (There are plenty of config modules on CPAN; you're bound to find one you like. I quite like `Config::Tiny`; other people swear by `AppConfig`--and since the latter is a prerequisite of the `Template` Toolkit, you'll have it installed already.) `Bookworms::Config` is just a little wrapper class around `Config::Tiny`, so if I change to a different config method later I don't have to rewrite lots of code.
 
       package Bookworms::Template;
       use strict;
@@ -195,8 +154,7 @@ different config method later I don't have to rewrite lots of code.
           return $header . $output;
       }
 
-Now we can start writing the classes to manage our database tables.
-Here's the class to handle book objects:
+Now we can start writing the classes to manage our database tables. Here's the class to handle book objects:
 
       package Bookworms::Book;
       use base 'Bookworms::DBI';
@@ -209,23 +167,14 @@ Here's the class to handle book objects:
 
       1;
 
-Yes, that's all you need. This simple class, by its ultimate inheritance
-from `Class::DBI`, has auto-created constructors and accessors for every
-aspect of a book as defined in our database schema. And moreover,
-because we've told it (using `has_a`) that the `author` column in the
-`book` table is actually a foreign key for the primary key of the table
-modeled by `Bookworms::Author`, when we use the `->author` accessor we
-actually get a `Bookworms::Author` object, which we can then call
-methods on:
+Yes, that's all you need. This simple class, by its ultimate inheritance from `Class::DBI`, has auto-created constructors and accessors for every aspect of a book as defined in our database schema. And moreover, because we've told it (using `has_a`) that the `author` column in the `book` table is actually a foreign key for the primary key of the table modeled by `Bookworms::Author`, when we use the `->author` accessor we actually get a `Bookworms::Author` object, which we can then call methods on:
 
       my $hobbit = Bookworms::Book->search( title => "The Hobbit" );
       print "The Hobbit was written by " . $hobbit->author->name;
 
-There are a couple of supporting classes that we need to write, but
-they're not complicated either.
+There are a couple of supporting classes that we need to write, but they're not complicated either.
 
-First a base class, as with all `Class::DBI` applications, to set the
-database details:
+First a base class, as with all `Class::DBI` applications, to set the database details:
 
       package Bookworms::DBI;
       use base "Class::DBI::mysql";
@@ -235,19 +184,11 @@ database details:
 
       1;
 
-Our base class inherits from `Class::DBI::mysql` instead of plain
-`Class::DBI`, so we can save ourselves the trouble of directly
-specifying the table columns for each of our database tables--the
-database-specific base classes will auto-create a `set_up_table` method
-to handle all this for you.
+Our base class inherits from `Class::DBI::mysql` instead of plain `Class::DBI`, so we can save ourselves the trouble of directly specifying the table columns for each of our database tables--the database-specific base classes will auto-create a `set_up_table` method to handle all this for you.
 
-At the time of writing, base classes for MySQL, PostgreSQL, Oracle, and
-SQLite are available on CPAN. There's also `Class::DBI::BaseDSN`, which
-allows you to specify the database type at runtime.
+At the time of writing, base classes for MySQL, PostgreSQL, Oracle, and SQLite are available on CPAN. There's also `Class::DBI::BaseDSN`, which allows you to specify the database type at runtime.
 
-We'll also want a class for each of the author, review, and reviewer
-tables, but these are even simpler than the `Book` class. For example,
-the author class could be as trivial as:
+We'll also want a class for each of the author, review, and reviewer tables, but these are even simpler than the `Book` class. For example, the author class could be as trivial as:
 
       package Bookworms::Author;
       use base 'Bookworms::DBI';
@@ -257,14 +198,12 @@ the author class could be as trivial as:
 
       1;
 
-If we wanted to be able to access all the books by a given author, we
-could add the single line
+If we wanted to be able to access all the books by a given author, we could add the single line
 
       __PACKAGE__->has_many( "books",
                              "Bookworms::Book" => "author" );
 
-and an accessor to return an array of `Bookworms::Book` objects would be
-automatically created, to be used like so:
+and an accessor to return an array of `Bookworms::Book` objects would be automatically created, to be used like so:
 
       my $author = Bookworms::Author->search( name => "J K Rowling" );
       my @books = $author->books;
@@ -279,27 +218,18 @@ Or indeed:
         [% END %]
       </ul>
 
-Simple, small, almost trivial classes, taking a minute or two each to
-write.
+Simple, small, almost trivial classes, taking a minute or two each to write.
 
 ### What Does This Get Me?
 
 The immediate benefits of all this are obvious:
 
--   You don't have to mess about with HTML, since the very simplistic
-    use of the `Template` Toolkit means that templates are
-    comprehensible to competent web designers.
--   You don't have to maintain classes full of copy-and-paste code,
-    since the repetitive programming tasks like creating constructors
-    and simple accessors are done for you.
+-   You don't have to mess about with HTML, since the very simplistic use of the `Template` Toolkit means that templates are comprehensible to competent web designers.
+-   You don't have to maintain classes full of copy-and-paste code, since the repetitive programming tasks like creating constructors and simple accessors are done for you.
 
-A large hidden benefit is testing. Since the actual CGI scripts--which
-can be a pain to test--are so simple, you can concentrate most of your
-energy on testing the underlying modules.
+A large hidden benefit is testing. Since the actual CGI scripts--which can be a pain to test--are so simple, you can concentrate most of your energy on testing the underlying modules.
 
-It's probably worth writing a couple of simple tests to make sure that
-you've set up your classes the way you intended to, particularly in your
-first couple of forays into `Class::DBI`.
+It's probably worth writing a couple of simple tests to make sure that you've set up your classes the way you intended to, particularly in your first couple of forays into `Class::DBI`.
 
       use Test::More tests => 5;
       use strict;
@@ -313,31 +243,13 @@ first couple of forays into `Class::DBI`.
       isa_ok( $book, "Bookworms::Book" );
       is( $book->author->name, "Isaac Asimov", "right author" );
 
-However, the big testing win with this technique of separating out the
-heavy lifting from the CGI scripts into modules is when you'd like to
-add something more complicated. Say, for example, fuzzy matching. It's
-well known that people can't spell, and you'd like someone typing in
-"Isaac Assimov" to find the author they're looking for. So, let's
-process the author names as we create the author objects, and store some
-kind of canonicalized form in the database.
+However, the big testing win with this technique of separating out the heavy lifting from the CGI scripts into modules is when you'd like to add something more complicated. Say, for example, fuzzy matching. It's well known that people can't spell, and you'd like someone typing in "Isaac Assimov" to find the author they're looking for. So, let's process the author names as we create the author objects, and store some kind of canonicalized form in the database.
 
-`Class::DBI` allows you to define "triggers"--methods that are called at
-given points during the lifetime of an object. We'll want to use an
-`after_create` trigger, which is called after an object has been created
-and stored in the database. We use this in preference to a
-`before_create` trigger, since we want to know the uid of the object,
-and this is only created (via the auto\_increment primary key) once the
-object has been written to the database.
+`Class::DBI` allows you to define "triggers"--methods that are called at given points during the lifetime of an object. We'll want to use an `after_create` trigger, which is called after an object has been created and stored in the database. We use this in preference to a `before_create` trigger, since we want to know the uid of the object, and this is only created (via the auto\_increment primary key) once the object has been written to the database.
 
-We use `Search::InvertedIndex` to store the canonicalized names, for
-quick access. We start with a very simple canonicalization--stripping
-out vowels and collapsing repeated letters. (I've found that this can
-pick up about half of name misspellings found in the wild, which is
-pretty impressive.)
+We use `Search::InvertedIndex` to store the canonicalized names, for quick access. We start with a very simple canonicalization--stripping out vowels and collapsing repeated letters. (I've found that this can pick up about half of name misspellings found in the wild, which is pretty impressive.)
 
-We'll write a couple of tests before we move on to code. Here are some
-that check that our class is doing what we told it to--removing vowels
-and collapsing repeated consonants.
+We'll write a couple of tests before we move on to code. Here are some that check that our class is doing what we told it to--removing vowels and collapsing repeated consonants.
 
       use Test::More tests => 2;
       use strict;
@@ -353,12 +265,9 @@ and collapsing repeated consonants.
       is_deeply( \@matches, [ $author ], 
         "fuzzy matching catches repeated letters" );
 
-We should also write some other tests to run our algorithms over various
-misspellings that we've captured from actual users, to give an idea of
-whether "what we told our class to do" is the right thing.
+We should also write some other tests to run our algorithms over various misspellings that we've captured from actual users, to give an idea of whether "what we told our class to do" is the right thing.
 
-Here's the first addition to the `Bookworms::Author` class, to store the
-indexed data:
+Here's the first addition to the `Bookworms::Author` class, to store the indexed data:
 
       use Search::InvertedIndex;
 
@@ -399,8 +308,7 @@ indexed data:
           return $word;
       }
 
-(We'll also want similar triggers for `after_update` and `after_delete`,
-in order that our indexing is kept up to date with our data.)
+(We'll also want similar triggers for `after_update` and `after_delete`, in order that our indexing is kept up to date with our data.)
 
 Then we can write the fuzzy\_matching method:
 
@@ -432,24 +340,14 @@ Then we can write the fuzzy\_matching method:
           return @matches;
       }
 
-(The matching method can be improved. I've found that neither
-`Text::Soundex` nor `Text::Metaphone` are much of an improvement over
-the simple approach already detailed, but `Text::DoubleMetaphone` is
-definitely worth plugging in, to catch misspellings such as
-Nicolas/Nicholas and Asimov/Azimof.)
+(The matching method can be improved. I've found that neither `Text::Soundex` nor `Text::Metaphone` are much of an improvement over the simple approach already detailed, but `Text::DoubleMetaphone` is definitely worth plugging in, to catch misspellings such as Nicolas/Nicholas and Asimov/Azimof.)
 
-There are plenty of other features that our little web application would
-benefit from, but I shall leave those as an exercise for the reader. I
-hope I've given you some insight into my current preferred web
-development techniques--and I'd love to see a finished `Bookworms`
-application if it does scratch anyone's itch.
+There are plenty of other features that our little web application would benefit from, but I shall leave those as an exercise for the reader. I hope I've given you some insight into my current preferred web development techniques--and I'd love to see a finished `Bookworms` application if it does scratch anyone's itch.
 
 ### See Also
 
 -   [`Class::DBI`](http://search.cpan.org/author/TMTM/Class-DBI/)
--   [The `Template`
-    Toolkit](http://search.cpan.org/author/ABW/Template-Toolkit/)
+-   [The `Template` Toolkit](http://search.cpan.org/author/ABW/Template-Toolkit/)
 -   [`Search::InvertedIndex`](http://search.cpan.org/author/SNOWHARE/Search-InvertedIndex/)
 -   [`Text::DoubleMetaphone`](http://search.cpan.org/author/MAURICE/Text-DoubleMetaphone/)
-
 

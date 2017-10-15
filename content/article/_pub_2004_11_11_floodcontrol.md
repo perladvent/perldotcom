@@ -1,71 +1,51 @@
 {
+   "image" : null,
+   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
+   "date" : "2004-11-11T00:00:00-08:00",
+   "categories" : "science",
+   "authors" : [
+      "vladi-belperchinov-shabanski"
+   ],
+   "title" : "Implementing Flood Control",
    "tags" : [
       "algorithm-floodcontrol",
       "event-processing",
       "flood-control",
       "vladi-belperchinov-shabanski"
    ],
-   "image" : null,
-   "categories" : "science",
-   "draft" : null,
-   "date" : "2004-11-11T00:00:00-08:00",
    "slug" : "/pub/2004/11/11/floodcontrol.html",
-   "title" : "Implementing Flood Control",
-   "authors" : [
-      "vladi-belperchinov-shabanski"
-   ],
-   "thumbnail" : "/images/_pub_2004_11_11_floodcontrol/111-flood.gif",
+   "draft" : null,
    "description" : "Accordingly to Merriam-Webster Online, \"flood\" means: 1: a rising and overflowing of a body of water especially onto normally dry land; 2: an overwhelming quantity or volume. In computer software there are very similar situations when an unpredictable and irregular..."
 }
 
 
 
-
-
 Accordingly to Merriam-Webster Online, "flood" means:
 
-> 1: a rising and overflowing of a body of water especially onto
-> normally dry land;
+> 1: a rising and overflowing of a body of water especially onto normally dry land;
 >
 > 2: an overwhelming quantity or volume.
 
-In computer software there are very similar situations when an
-unpredictable and irregular flow of events can reach higher levels. Such
-situations usually are not comfortable for users, either slowing down
-systems or having other undesired effects.
+In computer software there are very similar situations when an unpredictable and irregular flow of events can reach higher levels. Such situations usually are not comfortable for users, either slowing down systems or having other undesired effects.
 
-Floods can occur from accessing web pages, requesting information from
-various sources (ftp lists, irc services, etc.), receiving SMS
-notification messages, and email processing. It is obvious that it is
-not possible to list all flood cases.
+Floods can occur from accessing web pages, requesting information from various sources (ftp lists, irc services, etc.), receiving SMS notification messages, and email processing. It is obvious that it is not possible to list all flood cases.
 
-"Flood control" is a method of controlling the processing-rate of a
-stream of events. It can reject or postpone events until there are
-available resources (CPU, time, space, etc.) for them. Essentially the
-flood control restricts the number of events processed in a specific
-period of time.
+"Flood control" is a method of controlling the processing-rate of a stream of events. It can reject or postpone events until there are available resources (CPU, time, space, etc.) for them. Essentially the flood control restricts the number of events processed in a specific period of time.
 
-### [Closing the Gates]{#closing_the_gates}
+### <span id="closing_the_gates">Closing the Gates</span>
 
 To maintain flood control, you must calculate the flood ratio, which is:
 
-![flood ratio
-equation](/images/_pub_2004_11_11_floodcontrol/flood2-eq1.gif){width="73"
-height="50"}\
+<img src="/images/_pub_2004_11_11_floodcontrol/flood2-eq1.gif" alt="flood ratio equation" width="73" height="50" />
 *Figure 1. Flood ratio equation.*
 
     fr flood ratio
     ec event count
     tp time period for ec
 
-To determine if a flood is occurring, compare the flood ratio to the
-fixed maximum (threshold) ratio. If the result is less than the
-threshold, there's no flood. Accept the event. If the result is higher,
-refuse or postpone the event.
+To determine if a flood is occurring, compare the flood ratio to the fixed maximum (threshold) ratio. If the result is less than the threshold, there's no flood. Accept the event. If the result is higher, refuse or postpone the event.
 
-![comparing the
-ratios](/images/_pub_2004_11_11_floodcontrol/flood2-eq2.gif){width="68"
-height="50"}\
+<img src="/images/_pub_2004_11_11_floodcontrol/flood2-eq2.gif" alt="comparing the ratios" width="68" height="50" />
 *Figure 2. Comparing the ratios.*
 
     ec event count
@@ -73,30 +53,17 @@ height="50"}\
     fc fixed event count (max)
     fp fixed time period for fc
 
-It is possible to keep an array of timestamps of all events. Upon
-receipt of a new event, calculate the time period since the oldest event
-to use as the current count/time ratio. This approach has two drawbacks.
-The first is that it uses more and more memory to hold all of the
-timestamps. Suppose that you want only two events to happen inside a
-one-minute period, giving two events per minute. Someone can trigger a
-single event, wait half an hour, and finally flood you with another 58
-requests. At this point the ratio will be 1.9/min., well below the
-2/min. limit. This is the second drawback.
+It is possible to keep an array of timestamps of all events. Upon receipt of a new event, calculate the time period since the oldest event to use as the current count/time ratio. This approach has two drawbacks. The first is that it uses more and more memory to hold all of the timestamps. Suppose that you want only two events to happen inside a one-minute period, giving two events per minute. Someone can trigger a single event, wait half an hour, and finally flood you with another 58 requests. At this point the ratio will be 1.9/min., well below the 2/min. limit. This is the second drawback.
 
-A better approach is to keep a sliding window either of events (`fc`) or
-time period (`fp`).
+A better approach is to keep a sliding window either of events (`fc`) or time period (`fp`).
 
-This period window requires an array of the last events. This array size
-is unknown. (The specific time units are not important, but the
-following examples use minutes.)
+This period window requires an array of the last events. This array size is unknown. (The specific time units are not important, but the following examples use minutes.)
 
                    past                                   now
         Timeline:  1----2----3----4----5----6----7----8----9---> (min)
         Events:    e1      e2 e3         e4     e5 e6     e7
 
-This timeline measures event timestamps. To calculate the flood ratio,
-you count events newer than the current time window of size `fp`. And
-check against a ratio of four events in three minutes:
+This timeline measures event timestamps. To calculate the flood ratio, you count events newer than the current time window of size `fp`. And check against a ratio of four events in three minutes:
 
     Time now:      9
     Time window:   from 9-3 = 6 to now(9), so window is 6-9
@@ -104,21 +71,15 @@ check against a ratio of four events in three minutes:
     Event count:   3 (in 6-9 period)
     Flood ratio:   3/3
 
-This ratio of 3/3 is below the flood threshold of 4/3, so at this moment
-there is no flood. Perform this check at the last event to check. In
-this example, this event is `e7`. After each check, you can safely
-remove all events older than the time window to reduce memory
-consumption.
+This ratio of 3/3 is below the flood threshold of 4/3, so at this moment there is no flood. Perform this check at the last event to check. In this example, this event is `e7`. After each check, you can safely remove all events older than the time window to reduce memory consumption.
 
-The other solution requires a fixed array of events with size `fc`. With
-our 4ev/3min example, then:
+The other solution requires a fixed array of events with size `fc`. With our 4ev/3min example, then:
 
                    past                  now
         Timeline:  <--5----6----7----8----9---> (min)
         Events:      e4        e5 e6     e7
 
-The event array (window) is size 4. To check for a flood at `e7`, we use
-this:
+The event array (window) is size 4. To check for a flood at `e7`, we use this:
 
     Window size "fc": 4
     First event time: e4 -> 5
@@ -126,19 +87,11 @@ this:
     Time period "tp": 9-5 = 4
     Flood ratio is:   4/4
 
-The ratio of 4/4 is also below the threshold of 4/3, so it's OK to
-accept event `e7`. When you must check a new event, add it to the end of
-the event array (window) and remove the oldest one. If the new event
-would cause a flood, remember to reverse these operations.
+The ratio of 4/4 is also below the threshold of 4/3, so it's OK to accept event `e7`. When you must check a new event, add it to the end of the event array (window) and remove the oldest one. If the new event would cause a flood, remember to reverse these operations.
 
-If the flood check fails, you can find a point in the future when this
-check will be OK. This makes it possible to return some feedback
-information to the user indicating how much time to wait before the
-system will accept the next event:
+If the flood check fails, you can find a point in the future when this check will be OK. This makes it possible to return some feedback information to the user indicating how much time to wait before the system will accept the next event:
 
-![time until next event
-equation](/images/_pub_2004_11_11_floodcontrol/flood2-eq3.gif){width="126"
-height="50"}\
+<img src="/images/_pub_2004_11_11_floodcontrol/flood2-eq3.gif" alt="time until next event equation" width="126" height="50" />
 *Figure 3. Time until next event equation.*
 
     ec  event count (requests received, here equal to fc)
@@ -147,30 +100,20 @@ height="50"}\
     now the future time point we search for
     ot  oldest event time point in the array (event timestamp)
 
-![simplified time until next event
-equation](/images/_pub_2004_11_11_floodcontrol/flood2-eq4.gif){width="186"
-height="50"}\
+<img src="/images/_pub_2004_11_11_floodcontrol/flood2-eq4.gif" alt="simplified time until next event equation" width="186" height="50" />
 *Figure 4. Simplified time until next event equation.*
 
-![time to wait
-equation](/images/_pub_2004_11_11_floodcontrol/flood2-eq5.gif){width="192"
-height="30"}\
+<img src="/images/_pub_2004_11_11_floodcontrol/flood2-eq5.gif" alt="time to wait equation" width="192" height="30" />
 *Figure 5. The time-to-wait equation.*
 
     time the actual current time (time of the new event)
     wait time period to wait before next allowed event
 
-If `wait` is positive, then this event should be either rejected or
-postponed. When `wait` is 0 or negative, it's OK to process the event
-immediately.
+If `wait` is positive, then this event should be either rejected or postponed. When `wait` is 0 or negative, it's OK to process the event immediately.
 
-### [The Code]{#the_code}
+### <span id="the_code">The Code</span>
 
-In the following implementation I'll use a slightly modified version of
-the sliding window of events. To avoid removing the last event and
-eventually replacing it after a failed check, I decided to check the
-current flood ratio with the existing events array and with the time of
-the new one:
+In the following implementation I'll use a slightly modified version of the sliding window of events. To avoid removing the last event and eventually replacing it after a failed check, I decided to check the current flood ratio with the existing events array and with the time of the new one:
 
                    past                  now
         Timeline:  <--5----6----7----8----9---> (min)
@@ -182,21 +125,11 @@ the new one:
         Time period tp: 9-5 = 4
         Flood ratio is:   4/4
 
-This seems a bit strange at first, but it works exactly as needed. The
-check is performed as if `e6` is timed as `e7`, which is the worst case
-(the biggest time period for the fixed event window size). If the check
-passes, than after removing `e3`, the flood ratio will be always below
-the threshold!
+This seems a bit strange at first, but it works exactly as needed. The check is performed as if `e6` is timed as `e7`, which is the worst case (the biggest time period for the fixed event window size). If the check passes, than after removing `e3`, the flood ratio will be always below the threshold!
 
-Following this description I wrote a function to call for each request
-or event that needs flood control. It receives a fixed, maximum count of
-requests (the events window size) and a fixed time period. It returns
-how much time must elapse until the next allowed event, or 0 if it's OK
-to process the event immediately.
+Following this description I wrote a function to call for each request or event that needs flood control. It receives a fixed, maximum count of requests (the events window size) and a fixed time period. It returns how much time must elapse until the next allowed event, or 0 if it's OK to process the event immediately.
 
-This function should be generic, so it needs some kind of event names.
-To achieve this there is a third argument -- the specific event name for
-each flood check.
+This function should be generic, so it needs some kind of event names. To achieve this there is a third argument -- the specific event name for each flood check.
 
 Here is the actual code:
 
@@ -239,12 +172,9 @@ Here is the actual code:
       return 0;
     }
 
-I've put this on the CPAN as
-[Algorithm::FloodControl](http://search.cpan.org/dist/Algorithm-FloodControl).
+I've put this on the CPAN as [Algorithm::FloodControl](http://search.cpan.org/dist/Algorithm-FloodControl).
 
-To test it, I wrote a simple program that accepts text, line by line,
-from standard input and prints each accepted line or the amount of time
-before the program will accept the next line.
+To test it, I wrote a simple program that accepts text, line by line, from standard input and prints each accepted line or the amount of time before the program will accept the next line.
 
     #!/usr/bin/perl
     use strict;
@@ -281,8 +211,7 @@ before the program will accept the next line.
       print "$tm: GLOBAL OK: $_";
       }
 
-I named this `floodtest.pl`. The of the test were: ("&gt;" marks my
-input lines)
+I named this `floodtest.pl`. The of the test were: ("&gt;" marks my input lines)
 
     cade@aenea:~$ ./floodtest.pl 
     > hello
@@ -315,28 +244,15 @@ input lines)
     Wed Feb 17 08:26:42 2004: LOCAL  OK: free again
     Wed Feb 17 08:26:42 2004: GLOBAL OK: free again
 
-You can see that I could not enter "hello" 3 times during the first 10
-seconds but still I managed to enter one more "hello" a bit later (the
-10-second flood had ended for the "hello" line) and 2 other lines before
-the global flood check triggered (5 lines for 1 minute). After 60
-seconds, *floodtest.pl* finally accepted my sixth line, "free again."
+You can see that I could not enter "hello" 3 times during the first 10 seconds but still I managed to enter one more "hello" a bit later (the 10-second flood had ended for the "hello" line) and 2 other lines before the global flood check triggered (5 lines for 1 minute). After 60 seconds, *floodtest.pl* finally accepted my sixth line, "free again."
 
-The next sections show how to use flood control in several applications.
-These examples are not exhaustive but are very common, so they will work
-as templates for other cases.
+The next sections show how to use flood control in several applications. These examples are not exhaustive but are very common, so they will work as templates for other cases.
 
-### [My Scores Please?]{#my_scores_please}
+### <span id="my_scores_please">My Scores Please?</span>
 
-Imagine an IRC bot (robot) which can report scores from the local game
-servers. Generally this bot receives requests from someone inside IRC
-channel (a chat room, for those of you who haven�t used IRC) and reports
-current scores back to the channel. If this eventually becomes very
-popular, people will start requesting scores more frequently than it is
-useful just for fun, so there's a clear need for flood control.
+Imagine an IRC bot (robot) which can report scores from the local game servers. Generally this bot receives requests from someone inside IRC channel (a chat room, for those of you who haven�t used IRC) and reports current scores back to the channel. If this eventually becomes very popular, people will start requesting scores more frequently than it is useful just for fun, so there's a clear need for flood control.
 
-I'd prefer to allow any user to request scores no more than twice per
-minute, but at the same time I want to allow 10 requests total every two
-minutes:
+I'd prefer to allow any user to request scores no more than twice per minute, but at the same time I want to allow 10 requests total every two minutes:
 
     sub scores_request
     {
@@ -360,34 +276,17 @@ minutes:
           }
     }
 
-This code uses the [Net::IRC](http://search.cpan.org/dist/Net-IRC)
-module, so if you want to know the details of the `notice()` and
-`privmsg()` functions, check the module documentation.
+This code uses the [Net::IRC](http://search.cpan.org/dist/Net-IRC) module, so if you want to know the details of the `notice()` and `privmsg()` functions, check the module documentation.
 
-This is good example of combining events, but it works correctly only if
-the second flood ratio (in this case 10/120) is greater than first one
-(2/60). Otherwise you should extend the `flood_check()` function with an
-array of events to check in one loop, so if any of them fails the
-internal storage will update. Perhaps `Algorithm::FloodControl` will
-have such a feature in the future.
+This is good example of combining events, but it works correctly only if the second flood ratio (in this case 10/120) is greater than first one (2/60). Otherwise you should extend the `flood_check()` function with an array of events to check in one loop, so if any of them fails the internal storage will update. Perhaps `Algorithm::FloodControl` will have such a feature in the future.
 
-Another common case is to limit the execution of resource-consuming web
-scripts (CGI).
+Another common case is to limit the execution of resource-consuming web scripts (CGI).
 
-### [(Don't) Flood the Page!]{#_don_t__flood_the_page_}
+### <span id="_don_t__flood_the_page_">(Don't) Flood the Page!</span>
 
-If you want to limit CGI-script execution you will hit a problem: you
-must save and restore the flood-control internal data between script
-invocations. For this reason the `Algorithm::FloodControl` module
-exports another function called `flood_storage`, which can get or set
-the internal data.
+If you want to limit CGI-script execution you will hit a problem: you must save and restore the flood-control internal data between script invocations. For this reason the `Algorithm::FloodControl` module exports another function called `flood_storage`, which can get or set the internal data.
 
-In this example I'll use two other modules,
-[Storable](http://search.cpan.org/dist/Storable) and
-[LockFile::Simple](http://search.cpan.org/dist/LockFile-Simple). I use
-the first to save and restore the flood-control data to and from disk
-files and the second to lock this file to avoid corruptions if two or
-more instances of the script run at the same time:
+In this example I'll use two other modules, [Storable](http://search.cpan.org/dist/Storable) and [LockFile::Simple](http://search.cpan.org/dist/LockFile-Simple). I use the first to save and restore the flood-control data to and from disk files and the second to lock this file to avoid corruptions if two or more instances of the script run at the same time:
 
     #!/usr/bin/perl
     use strict;
@@ -437,17 +336,11 @@ more instances of the script run at the same time:
     print scalar localtime;
     print "\n...\n";
 
-There are various issues to consider, such as the save/restore method,
-time required, and locking, but in any case the scheme will be similar.
+There are various issues to consider, such as the save/restore method, time required, and locking, but in any case the scheme will be similar.
 
-### [Beep, Beep, Beep ...]{#beep__beep__beep___}
+### <span id="beep__beep__beep___">Beep, Beep, Beep ...</span>
 
-In this last example I'll describe a small program, a variation of which
-I use for (email) SMS notifications. I wanted to avoid scanning large
-mail directories so I made my email filter copy incoming messages into a
-separate folder. The program scans this copy folder every 10 minutes for
-new messages. If there are any, it sends a notification for each one to
-my mobile phone and removes the copy of the message.
+In this last example I'll describe a small program, a variation of which I use for (email) SMS notifications. I wanted to avoid scanning large mail directories so I made my email filter copy incoming messages into a separate folder. The program scans this copy folder every 10 minutes for new messages. If there are any, it sends a notification for each one to my mobile phone and removes the copy of the message.
 
     #!/usr/bin/perl
     use strict;
@@ -507,14 +400,8 @@ my mobile phone and removes the copy of the message.
       print "SMS: $folder, $file\n";
     }
 
-As you can see, this code -- while implementing a totally different task
--- has exactly the same flood check as in the previous two examples.
+As you can see, this code -- while implementing a totally different task -- has exactly the same flood check as in the previous two examples.
 
-### [Conclusion]{#conclusion}
+### <span id="conclusion">Conclusion</span>
 
-I said in the beginning that flood control has a vast field of
-applications. There are many cases where it is appropriate or even
-necessary. There is no excuse to avoid such checks; implementing it is
-not hard at all.
-
-
+I said in the beginning that flood control has a vast field of applications. There are many cases where it is appropriate or even necessary. There is no excuse to avoid such checks; implementing it is not hard at all.

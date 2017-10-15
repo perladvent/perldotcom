@@ -1,14 +1,4 @@
 {
-   "thumbnail" : "/images/_pub_2006_06_01_fear-api/111-FEAR-less.gif",
-   "description" : " Imagine that you have an assignment that you need to fetch all of the web pages of a given website, scrape data from them, and transfer the data to another place, such as a database or plain files. This...",
-   "title" : "FEAR-less Site Scraping",
-   "slug" : "/pub/2006/06/01/fear-api.html",
-   "authors" : [
-      "yung-chung-lin"
-   ],
-   "date" : "2006-06-01T00:00:00-08:00",
-   "categories" : "web",
-   "image" : null,
    "tags" : [
       "domain-specific-languages",
       "dsl",
@@ -18,22 +8,24 @@
       "web-scraping",
       "web-spiders"
    ],
-   "draft" : null
+   "slug" : "/pub/2006/06/01/fear-api.html",
+   "draft" : null,
+   "description" : " Imagine that you have an assignment that you need to fetch all of the web pages of a given website, scrape data from them, and transfer the data to another place, such as a database or plain files. This...",
+   "thumbnail" : "/images/_pub_2006_06_01_fear-api/111-FEAR-less.gif",
+   "image" : null,
+   "date" : "2006-06-01T00:00:00-08:00",
+   "categories" : "web",
+   "authors" : [
+      "yung-chung-lin"
+   ],
+   "title" : "FEAR-less Site Scraping"
 }
 
 
 
+Imagine that you have an assignment that you need to fetch all of the web pages of a given website, scrape data from them, and transfer the data to another place, such as a database or plain files. This is a common scenario for data scraping tasks, and CPAN has plenty of modules for this job.
 
-
-Imagine that you have an assignment that you need to fetch all of the
-web pages of a given website, scrape data from them, and transfer the
-data to another place, such as a database or plain files. This is a
-common scenario for data scraping tasks, and CPAN has plenty of modules
-for this job.
-
-While I was developing site-scraping scripts, retrieving data from some
-sites of the same type, I realized that I had repeated many identical or
-very similar code structures, such as:
+While I was developing site-scraping scripts, retrieving data from some sites of the same type, I realized that I had repeated many identical or very similar code structures, such as:
 
       fetch_the_homepage();
 
@@ -46,26 +38,11 @@ very similar code structures, such as:
 
 ### The Usual Tools
 
-At the very beginning, I created scripts using `LWP::Simple`,
-`LWP::UserAgent`, and vanilla regular expressions to extract links and
-produce details. As the number of scripts grew, I needed more powerful
-resources, so I started to use `WWW::Mechanize` for web page fetching
-and `Regexp::Bind`, `Template::Extract`, `HTML::LinkExtractor`,
-`Regexp::Common`, etc. for data scraping. However, then I still found
-many redundancies.
+At the very beginning, I created scripts using `LWP::Simple`, `LWP::UserAgent`, and vanilla regular expressions to extract links and produce details. As the number of scripts grew, I needed more powerful resources, so I started to use `WWW::Mechanize` for web page fetching and `Regexp::Bind`, `Template::Extract`, `HTML::LinkExtractor`, `Regexp::Common`, etc. for data scraping. However, then I still found many redundancies.
 
-A scraping script first needs to use essential modules for the site
-scraping task. Second, it may need to instantiate objects. Third, site
-scraping involves many interactions among different modules, mostly by
-passing data between them. After you fetch a page, you may need to pass
-the page to `HTML::LinkExtractor` to extract links, to
-`Template::Extract` to get detailed information, or save it to a file.
-You may then store extracted data in a relational database. Considering
-these properties, creating a site scraping script is very
-time-consuming, and sometimes it makes a lot of duplication.
+A scraping script first needs to use essential modules for the site scraping task. Second, it may need to instantiate objects. Third, site scraping involves many interactions among different modules, mostly by passing data between them. After you fetch a page, you may need to pass the page to `HTML::LinkExtractor` to extract links, to `Template::Extract` to get detailed information, or save it to a file. You may then store extracted data in a relational database. Considering these properties, creating a site scraping script is very time-consuming, and sometimes it makes a lot of duplication.
 
-Thus, I tried to fuse some modules together, hoping to save some of my
-keystrokes and simplify the coding process.
+Thus, I tried to fuse some modules together, hoping to save some of my keystrokes and simplify the coding process.
 
 ### An Example using `WWW::Mechanize` and `Template::Extract`
 
@@ -111,19 +88,11 @@ This program does several things:
 -   Dump links in the page.
 -   Use YAML to print extract results.
 
-If you need to create just one or two temporary scripts, it is
-acceptable to use copy and paste to generate scripts. Things will become
-messy if the job is to create a hundred scripts and you still use copy
-and paste.
+If you need to create just one or two temporary scripts, it is acceptable to use copy and paste to generate scripts. Things will become messy if the job is to create a hundred scripts and you still use copy and paste.
 
 ### What Do I Need?
 
-There are some techniques to gather identical code blocks and put them
-into some place and create scripts by loading different components for
-different purposes. Instead, I worked on the interface. I wished to
-simplify the problem through language. I re-examined the routine and the
-code structure to identified distinct features in every site scraping
-script:
+There are some techniques to gather identical code blocks and put them into some place and create scripts by loading different components for different purposes. Instead, I worked on the interface. I wished to simplify the problem through language. I re-examined the routine and the code structure to identified distinct features in every site scraping script:
 
 -   Manually load lots of modules.
 -   Create a WWW agent.
@@ -132,9 +101,7 @@ script:
 -   Perform extraction.
 -   Process extracted results.
 
-I searched CPAN for something related to my ideas. I found plenty of
-modules for site scraping and data extraction, but no module that could
-meet my needs.
+I searched CPAN for something related to my ideas. I found plenty of modules for site scraping and data extraction, but no module that could meet my needs.
 
 Then I created `FEAR::API`.
 
@@ -142,15 +109,9 @@ Then I created `FEAR::API`.
 
 `FEAR::API`'s documentation says:
 
-> `FEAR::API` is a tool that helps reduce your time creating site
-> scraping scripts and helps you do it in an much more elegant way.
-> `FEAR::API` combines many strong and powerful features from various
-> CPAN modules, such as `LWP::UserAgent`, `WWW::Mechanize`,
-> `Template::Extract`, `Encode`, `HTML::Parser`, etc., and digests them
-> into a deeper Zen.
+> `FEAR::API` is a tool that helps reduce your time creating site scraping scripts and helps you do it in an much more elegant way. `FEAR::API` combines many strong and powerful features from various CPAN modules, such as `LWP::UserAgent`, `WWW::Mechanize`, `Template::Extract`, `Encode`, `HTML::Parser`, etc., and digests them into a deeper Zen.
 
-It might be best to introduce `FEAR::API` by rewriting the previous
-example:
+It might be best to introduce `FEAR::API` by rewriting the previous example:
 
        1    use FEAR::API -base;
        2    url("search.cpan.org");
@@ -167,75 +128,40 @@ example:
       13    print Dumper \@link;
       14    invoke_handler('YAML');
 
-Line 1 loads `FEAR::API`. The `-base` argument means the package is a
-subclass of `FEAR::API`. The module automatically instantiates `$_` as a
-`FEAR::API` object.
+Line 1 loads `FEAR::API`. The `-base` argument means the package is a subclass of `FEAR::API`. The module automatically instantiates `$_` as a `FEAR::API` object.
 
-Line 2 specifies the URL. The code will later fetch this URL by calling
-`fetch()`, but you can use `fetch( $the_url )`, too.
+Line 2 specifies the URL. The code will later fetch this URL by calling `fetch()`, but you can use `fetch( $the_url )`, too.
 
-Line 3 fetches the home page of *some.site.com*. `>>` is an overloaded
-operator for dispatching links. The following array reference contains
-pairs of (`regular expression => action`). An action can be a code ref,
-an array ref, or a `_feedback` or `_self` constant.
+Line 3 fetches the home page of *some.site.com*. `>>` is an overloaded operator for dispatching links. The following array reference contains pairs of (`regular expression => action`). An action can be a code ref, an array ref, or a `_feedback` or `_self` constant.
 
-`FEAR::API` maintains a queue of links. Using `_feedback` or `_self`
-means that `FEAR::API` should put the link in a queue for fetching later
-if the link matches a certain regular expression.
+`FEAR::API` maintains a queue of links. Using `_feedback` or `_self` means that `FEAR::API` should put the link in a queue for fetching later if the link matches a certain regular expression.
 
-Line 8 calls `has_more_links`, so `FEAR::API` checks if the internal
-link queue has, well, more links. The program will continue fetching if
-there are queued links.
+Line 8 calls `has_more_links`, so `FEAR::API` checks if the internal link queue has, well, more links. The program will continue fetching if there are queued links.
 
-Line 9 specifies the extraction method. The default method is
-`Template::Extract`.
+Line 9 specifies the extraction method. The default method is `Template::Extract`.
 
 Line 10 extracts data according to `$template`.
 
-Line 11 dumps the extracted results to `STDOUT`. `FEAR::API` even
-exports `Dumper()` for you. For
-[YAML](http://search.cpan.org/perldoc?YAML) fans, there is also
-`Dump()`.
+Line 11 dumps the extracted results to `STDOUT`. `FEAR::API` even exports `Dumper()` for you. For [YAML](http://search.cpan.org/perldoc?YAML) fans, there is also `Dump()`.
 
-Line 12 accesses the fetched content through the object returned from
-`document`. You need to invoke `as_string()` to stringify the data. By
-the way, each fetched document is converted to UTF-8 automatically for
-you. It is very useful while processing multilingual texts.
+Line 12 accesses the fetched content through the object returned from `document`. You need to invoke `as_string()` to stringify the data. By the way, each fetched document is converted to UTF-8 automatically for you. It is very useful while processing multilingual texts.
 
-Line 14 invokes the result handler to do data processing. The argument
-can be a subref, a module's name, `YAML`, or `Data::Dumper`.
+Line 14 invokes the result handler to do data processing. The argument can be a subref, a module's name, `YAML`, or `Data::Dumper`.
 
 ### Comparison
 
-I hope that now you can see what `FEAR::API` has improved, at least in
-code size. `FEAR::API` encapsulates many modules, and you don't need to
-worry about messing around with them on your own. All you need to do is
-tell `FEAR::API` to fetch a page, to do extraction, and how you want to
-deal with links contained in the page and the extracted results from the
-page. You don't need to initialize a WWW agent, convert the encoding of
-a fetched page, create an extractor object on your own, pass content to
-the extractor, write control structures for link processing, or anything
-else. Everything happens inside of `FEAR::API` or via this simple
-syntax.
+I hope that now you can see what `FEAR::API` has improved, at least in code size. `FEAR::API` encapsulates many modules, and you don't need to worry about messing around with them on your own. All you need to do is tell `FEAR::API` to fetch a page, to do extraction, and how you want to deal with links contained in the page and the extracted results from the page. You don't need to initialize a WWW agent, convert the encoding of a fetched page, create an extractor object on your own, pass content to the extractor, write control structures for link processing, or anything else. Everything happens inside of `FEAR::API` or via this simple syntax.
 
-At first sight, perhaps you don't even realize that the example script
-uses OO. If you don't like things to happen so automatically, you may
-choose to drop the `-base` option. Then you have to create FEAR::API
-objects manually using `fear()`:
+At first sight, perhaps you don't even realize that the example script uses OO. If you don't like things to happen so automatically, you may choose to drop the `-base` option. Then you have to create FEAR::API objects manually using `fear()`:
 
        use FEAR::API;
        my $f = fear();
 
-One of the goals of `FEAR::API` is to weed out redundancies and minimize
-code size. It is very cumbersome to use syntax such as
-`$_->blah_blah('blah')` throughout a scraping script, given mass script
-creation requirements. I decided to remove `$_->`, while it still uses
-OO.
+One of the goals of `FEAR::API` is to weed out redundancies and minimize code size. It is very cumbersome to use syntax such as `$_->blah_blah('blah')` throughout a scraping script, given mass script creation requirements. I decided to remove `$_->`, while it still uses OO.
 
 ### More Features
 
-`FEAR::API` incorporates many features from successful modules, and you
-can use `FEAR::API` as an alternative.
+`FEAR::API` incorporates many features from successful modules, and you can use `FEAR::API` as an alternative.
 
 If you use `LWP::Simple`:
 
@@ -271,9 +197,7 @@ In `FEAR::API`, use `Template-Toolkit`:
             [% END %]");
        fetch while has_more_links;
 
-`FEAR::API` also supports `WWW::Mechanize` methods. Use `submit_form()`,
-`links()`, and `follow_links()` in `FEAR::API` like those in
-`WWW::Mechanize`.
+`FEAR::API` also supports `WWW::Mechanize` methods. Use `submit_form()`, `links()`, and `follow_links()` in `FEAR::API` like those in `WWW::Mechanize`.
 
 Submitting a query is easy:
 
@@ -296,10 +220,7 @@ So is following links:
 
 #### Cleaning Up Content
 
-You may use `HTML::Strip` or basic regular expressions to strip HTML
-code in fetched content or in extracted results, but `FEAR::API`
-provides two simple methods: `preproc()` and `postproc()`. (There are
-also aliases: `doc_filter()` and `result_filter()`.)
+You may use `HTML::Strip` or basic regular expressions to strip HTML code in fetched content or in extracted results, but `FEAR::API` provides two simple methods: `preproc()` and `postproc()`. (There are also aliases: `doc_filter()` and `result_filter()`.)
 
 You may process documents now with code resembling:
 
@@ -338,14 +259,11 @@ If you don't use `FEAR::API` for postprocessing, your code might be:
        postproc('s/(?:<[^>]*>)+/ /g;');
        print extresult;
 
-You can apply `preproc()` and `postproc()` on data multiple times until
-you find satisfactory results.
+You can apply `preproc()` and `postproc()` on data multiple times until you find satisfactory results.
 
 #### More Overloaded Operators.
 
-The previous examples have used the `dispatch_links` operator (`>>`).
-There are more overloaded operators that you can use to reduce your code
-size further.
+The previous examples have used the `dispatch_links` operator (`>>`). There are more overloaded operators that you can use to reduce your code size further.
 
        print document->as_string;
 
@@ -380,8 +298,7 @@ is equivalent to:
 
 #### Filtering Syntax
 
-`FEAR::API` creates something like shell piping. You can continually
-pass data through a series of filters to get what you need.
+`FEAR::API` creates something like shell piping. You can continually pass data through a series of filters to get what you need.
 
        url("search.cpan.org")->()
          | _preproc(use => 'html_to_null')
@@ -402,9 +319,7 @@ This is equivalent to:
 
 ### A Full Example
 
-Finally, here is an example that submits a query to CPAN, extracts
-records of results, and then puts the extracted data into a `SQLite`
-database.
+Finally, here is an example that submits a query to CPAN, extracts records of results, and then puts the extracted data into a `SQLite` database.
 
 First, create the database schema:
 
@@ -491,19 +406,8 @@ Isn't that easy?
 
 ### Conclusion
 
-`FEAR::API` is an innovation for site scraping. It combines strong
-features and powerful methods from various modules, and it also employs
-operator overloading to build something a domain-specific language
-without forbidding the use of Perl's full power. `FEAR::API` is very
-suitable for the fast creation of scraping scripts. A central dogma of
-`FEAR::API` is "Code the least and perform the most."
+`FEAR::API` is an innovation for site scraping. It combines strong features and powerful methods from various modules, and it also employs operator overloading to build something a domain-specific language without forbidding the use of Perl's full power. `FEAR::API` is very suitable for the fast creation of scraping scripts. A central dogma of `FEAR::API` is "Code the least and perform the most."
 
-However, `FEAR::API` still needs lots of improvement. Currently, it does
-not handle errors very well, lacks automatic template generation,
-performs no logging, and has no direct connection to a database mapper
-such as `DBIx::Class` or `Class::DBI`. Even the documentation needs
-work.
+However, `FEAR::API` still needs lots of improvement. Currently, it does not handle errors very well, lacks automatic template generation, performs no logging, and has no direct connection to a database mapper such as `DBIx::Class` or `Class::DBI`. Even the documentation needs work.
 
 Patches or suggestions are welcome!
-
-

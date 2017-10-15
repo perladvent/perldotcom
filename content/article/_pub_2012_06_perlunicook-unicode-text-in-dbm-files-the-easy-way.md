@@ -1,37 +1,26 @@
 {
-   "description" : "℞ 43: Unicode text in DBM hashes, the easy way Some Perl libraries require you to jump through hoops to handle Unicode data. Would that everything worked as easily as Perl's open pragma! For DBM files, here's how to implicitly...",
+   "image" : null,
    "thumbnail" : null,
+   "date" : "2012-06-20T06:00:01-08:00",
+   "categories" : "unicode",
+   "title" : "Perl Unicode Cookbook: Unicode Text in DBM Files (the easy way)",
    "authors" : [
       "tom-christiansen"
    ],
+   "tags" : [],
    "slug" : "/pub/2012/06/perlunicook-unicode-text-in-dbm-files-the-easy-way.html",
-   "title" : "Perl Unicode Cookbook: Unicode Text in DBM Files (the easy way)",
-   "date" : "2012-06-20T06:00:01-08:00",
-   "draft" : null,
-   "categories" : "unicode",
-   "image" : null,
-   "tags" : []
+   "description" : "℞ 43: Unicode text in DBM hashes, the easy way Some Perl libraries require you to jump through hoops to handle Unicode data. Would that everything worked as easily as Perl's open pragma! For DBM files, here's how to implicitly...",
+   "draft" : null
 }
 
 
 
-
-
-℞ 43: Unicode text in DBM hashes, the easy way {#Unicode-text-in-DBM-hashes-the-easy-way}
+℞ 43: Unicode text in DBM hashes, the easy way
 ----------------------------------------------
 
-[Some Perl libraries require you to jump through hoops to handle Unicode
-data](/media/_pub_2012_06_perlunicook-unicode-text-in-dbm-files-the-easy-way/perlunicook-unicode-text-in-stubborn-libraries.html).
-Would that everything worked as easily as Perl's
-[open](http://perldoc.perl.org/open.html) pragma!
+[Some Perl libraries require you to jump through hoops to handle Unicode data](/pub/2012/06/perlunicook-unicode-text-in-stubborn-libraries.html). Would that everything worked as easily as Perl's [open](http://perldoc.perl.org/open.html) pragma!
 
-For DBM files, here's how to implicitly manage the translation; all
-encoding and decoding is done automatically, just as with streams that
-have a particular encoding attached to them. The
-[DBM\_Filter](http://search.cpan.org/perldoc?DBM_Filter) module allows
-you to apply filters to keys and values to manipulate their contents
-before storing or fetching. The module includes a "utf8" filter. Use it
-like:
+For DBM files, here's how to implicitly manage the translation; all encoding and decoding is done automatically, just as with streams that have a particular encoding attached to them. The [DBM\_Filter](http://search.cpan.org/perldoc?DBM_Filter) module allows you to apply filters to keys and values to manipulate their contents before storing or fetching. The module includes a "utf8" filter. Use it like:
 
         use DB_File;
         use DBM_Filter;
@@ -49,13 +38,8 @@ like:
         # $uni_key holds a normal Perl string (abstract Unicode)
         my $uni_value = $dbhash{$uni_key};
 
-Previous: [℞ 42: Unicode Text in Stubborn
-Libraries](/media/_pub_2012_06_perlunicook-unicode-text-in-dbm-files-the-easy-way/perlunicook-unicode-text-in-stubborn-libraries.html)
+Previous: [℞ 42: Unicode Text in Stubborn Libraries](/pub/2012/06/perlunicook-unicode-text-in-stubborn-libraries.html)
 
-Series Index: [The Standard
-Preamble](/media/_pub_2012_06_perlunicook-unicode-text-in-dbm-files-the-easy-way/perlunicook-standard-preamble.html)
+Series Index: [The Standard Preamble](/pub/2012/04/perlunicook-standard-preamble.html)
 
-Next: [℞ 44: Demo of Unicode Collation and
-Printing](/media/_pub_2012_06_perlunicook-unicode-text-in-dbm-files-the-easy-way/perlunicook-demo-of-unicode-collation-and-printing.html)
-
-
+Next: [℞ 44: Demo of Unicode Collation and Printing](/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing.html)

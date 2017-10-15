@@ -1,37 +1,28 @@
 {
-   "thumbnail" : null,
-   "description" : "℞ 44: PROGRAM: Demo of Unicode collation and printing The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more...",
+   "categories" : "unicode",
    "title" : "Perl Unicode Cookbook: Demo of Unicode Collation and Printing",
-   "slug" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing.html",
    "authors" : [
       "tom-christiansen"
    ],
-   "date" : "2012-06-22T06:00:01-08:00",
    "image" : null,
-   "categories" : "unicode",
+   "thumbnail" : null,
+   "date" : "2012-06-22T06:00:01-08:00",
+   "description" : "℞ 44: PROGRAM: Demo of Unicode collation and printing The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more...",
+   "draft" : null,
    "tags" : [],
-   "draft" : null
+   "slug" : "/pub/2012/06/perlunicook-demo-of-unicode-collation-and-printing.html"
 }
 
 
 
-
-
-℞ 44: PROGRAM: Demo of Unicode collation and printing {#PROGRAM:-Demo-of-Unicode-collation-and-printing}
+℞ 44: PROGRAM: Demo of Unicode collation and printing
 -----------------------------------------------------
 
-The past several weeks of Unicode recipes have explained how Unicode
-works and shown how to use it in your programs. If you've gone through
-those recipes, you now understand more than most programmers.
+The past several weeks of Unicode recipes have explained how Unicode works and shown how to use it in your programs. If you've gone through those recipes, you now understand more than most programmers.
 
 How about putting everything together?
 
-Here's a full program showing how to make use of locale-sensitive
-sorting, Unicode casing, and managing print widths when some of the
-characters take up zero or two columns, not just one column each time.
-When run, the following program produces this nicely aligned output
-(though the quality of the alignment depends on the quality of your
-Unicode font, of course):
+Here's a full program showing how to make use of locale-sensitive sorting, Unicode casing, and managing print widths when some of the characters take up zero or two columns, not just one column each time. When run, the following program produces this nicely aligned output (though the quality of the alignment depends on the quality of your Unicode font, of course):
 
         Crème Brûlée....... €2.00
         Éclair............. €1.60
@@ -135,13 +126,8 @@ Here's that program; tested on v5.14.
 
 Simple enough, isn't it? Put together, everything just works nicely.
 
-Previous: [℞ 43: Unicode Text in DBM Files (the easy
-way)](/media/_pub_2012_06_perlunicook-demo-of-unicode-collation-and-printing/perlunicook-unicode-text-in-dbm-files-the-easy-way.html)
+Previous: [℞ 43: Unicode Text in DBM Files (the easy way)](/pub/2012/06/perlunicook-unicode-text-in-dbm-files-the-easy-way.html)
 
-Series Index: [The Standard
-Preamble](/media/_pub_2012_06_perlunicook-demo-of-unicode-collation-and-printing/perlunicook-standard-preamble.html)
+Series Index: [The Standard Preamble](/pub/2012/04/perlunicook-standard-preamble.html)
 
-Next: [℞ 45: Further
-Resources](/media/_pub_2012_06_perlunicook-demo-of-unicode-collation-and-printing/perlunicook-further-resources.html)
-
-
+Next: [℞ 45: Further Resources](/pub/2012/06/perlunicook-further-resources.html)

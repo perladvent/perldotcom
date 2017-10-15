@@ -1,103 +1,72 @@
 {
-   "date" : "2000-10-02T00:00:00-08:00",
-   "draft" : null,
    "image" : null,
-   "categories" : "Community",
-   "tags" : [],
-   "description" : " Everyone who has read the Camel Book knows that the three great virtues of programming are laziness, impatience and hubris. Most of the columns that appear here at www.perl.com have to do, in one way or another, with either...",
    "thumbnail" : null,
+   "date" : "2000-10-02T00:00:00-08:00",
+   "categories" : "Community",
    "authors" : [
       "walt-mankowski"
    ],
    "title" : "How Perl Helped Me Win the Office Football Pool",
-   "slug" : "/pub/2000/10/footpool.html"
+   "tags" : [],
+   "slug" : "/pub/2000/10/footpool.html",
+   "draft" : null,
+   "description" : " Everyone who has read the Camel Book knows that the three great virtues of programming are laziness, impatience and hubris. Most of the columns that appear here at www.perl.com have to do, in one way or another, with either..."
 }
 
 
 
+Everyone who has read the Camel Book knows that the three great virtues of programming are laziness, impatience and hubris. Most of the columns that appear here at www.perl.com have to do, in one way or another, with either laziness or impatience; i.e. getting things done faster or more simply than before. While I'll touch on those virtues, this is primarily a column about hubris. And aside from programming, there are few greater sources of hubris in the workplace than the office football pool.
 
+A football pool looks something like this. (Please note that any relationship between this and a real football pool is completely accidental.)
 
-Everyone who has read the Camel Book knows that the three great virtues
-of programming are laziness, impatience and hubris. Most of the columns
-that appear here at www.perl.com have to do, in one way or another, with
-either laziness or impatience; i.e. getting things done faster or more
-simply than before. While I'll touch on those virtues, this is primarily
-a column about hubris. And aside from programming, there are few greater
-sources of hubris in the workplace than the office football pool.
+|              |     |        |     |               |
+|--------------|-----|--------|-----|---------------|
+| FAVORITE     |     | SPREAD |     | UNDERDOG      |
+|              |     |        |     |               |
+|              |     |        |     |               |
+|              |     |        |     |               |
+| Thursday     |     |        |     |               |
+| TENNESSEE    |     | 3      |     | Indianapolis  |
+|              |     |        |     |               |
+|              |     |        |     |               |
+|              |     |        |     |               |
+| Sunday       |     |        |     |               |
+| BUFFALO      |     | 7      |     | Washington    |
+| TAMPA BAY    |     | 8      |     | St. Louis     |
+| PITTSBURGH   |     | 5 ½    |     | Dallas        |
+| GREEN BAY    |     | 4      |     | Cincinnati    |
+| Miami        |     | 10 ½   |     | SEATTLE       |
+| Atlanta      |     | 1 ½    |     | KANSAS CITY   |
+| NEW ENGLAND  |     | 9      |     | N. Y. Giants  |
+| ARIZONA      |     | 8      |     | Detroit       |
+| NEW ORLEANS  |     | 3      |     | Baltimore     |
+| Philadelphia |     | 9 ½    |     | CAROLINA      |
+| Cleveland    |     | 3      |     | N. Y. JETS    |
+| SAN DIEGO    |     | 1      |     | San Francisco |
+| Minnesota    |     | 5      |     | OAKLAND       |
+|              |     |        |     |               |
+|              |     |        |     |               |
+|              |     |        |     |               |
+| Monday       |     |        |     |               |
+| DENVER       |     | 9      |     | Chicago       |
 
-A football pool looks something like this. (Please note that any
-relationship between this and a real football pool is completely
-accidental.)
+The home team is printed in capital letters. The pool is traditionally marked **For Amusement Only** so management will not suspect that there is gambling taking place in the office.
 
-  -------------- --- -------- --- ---------------
-  FAVORITE           SPREAD       UNDERDOG
-                                  
-                                  
-                                  
-  Thursday                        
-  TENNESSEE          3            Indianapolis
-                                  
-                                  
-                                  
-  Sunday                          
-  BUFFALO            7            Washington
-  TAMPA BAY          8            St. Louis
-  PITTSBURGH         5 ½          Dallas
-  GREEN BAY          4            Cincinnati
-  Miami              10 ½         SEATTLE
-  Atlanta            1 ½          KANSAS CITY
-  NEW ENGLAND        9            N. Y. Giants
-  ARIZONA            8            Detroit
-  NEW ORLEANS        3            Baltimore
-  Philadelphia       9 ½          CAROLINA
-  Cleveland          3            N. Y. JETS
-  SAN DIEGO          1            San Francisco
-  Minnesota          5            OAKLAND
-                                  
-                                  
-                                  
-  Monday                          
-  DENVER             9            Chicago
-  -------------- --- -------- --- ---------------
+The object is to pick the most winning teams. The team marked as the favorite must win by at least the number of points in the point spread.
 
-The home team is printed in capital letters. The pool is traditionally
-marked **For Amusement Only** so management will not suspect that there
-is gambling taking place in the office.
+There are two basic approaches to picking winners in a football pool. One is to spend hours researching the teams, studying scouting reports, teams' records against their opponents and against the spread, looking up injury reports on the Internet, and so on. This method is often used by the ex-jocks and DBA's in the department. The other approach is to pick the teams randomly, based on, perhaps, the color of the teams' uniforms. This approach is typically used by the less analytical members of the department; for example, the boss' secretary or Visual Basic programmers.
 
-The object is to pick the most winning teams. The team marked as the
-favorite must win by at least the number of points in the point spread.
+Surprisingly, my informal studies have shown that both methods are about equally successful. I suspect this is because the folks making the betting lines in Las Vegas know much more about football than the average office worker, and are good at picking point spreads that give each team an equal chance of winning.
 
-There are two basic approaches to picking winners in a football pool.
-One is to spend hours researching the teams, studying scouting reports,
-teams' records against their opponents and against the spread, looking
-up injury reports on the Internet, and so on. This method is often used
-by the ex-jocks and DBA's in the department. The other approach is to
-pick the teams randomly, based on, perhaps, the color of the teams'
-uniforms. This approach is typically used by the less analytical members
-of the department; for example, the boss' secretary or Visual Basic
-programmers.
-
-Surprisingly, my informal studies have shown that both methods are about
-equally successful. I suspect this is because the folks making the
-betting lines in Las Vegas know much more about football than the
-average office worker, and are good at picking point spreads that give
-each team an equal chance of winning.
-
-Several of us in the office realized this a few years ago. Since then,
-we have amused ourselves with devising more and more creative ways to
-randomly pick our pools each week. For example:
+Several of us in the office realized this a few years ago. Since then, we have amused ourselves with devising more and more creative ways to randomly pick our pools each week. For example:
 
 -   Pick the team with the longest or shortest name.
 -   Around Christmas, pick the team closest to the North Pole.
--   Pick the team with the most ex-Philadelphia Eagles (since they
-    always seem to do better after leaving town).
+-   Pick the team with the most ex-Philadelphia Eagles (since they always seem to do better after leaving town).
 
-Well, that was fun for a while, but it's tough devising new ways to pick
-the teams each week. Even flipping a coin all those times becomes
-tiresome. There had to be a better way.
+Well, that was fun for a while, but it's tough devising new ways to pick the teams each week. Even flipping a coin all those times becomes tiresome. There had to be a better way.
 
-Perl, of course, makes it easy to be lazy. Why flip a coin by hand when
-you can have perl flip a coin for you? So I wrote pick\_pool.pl:
+Perl, of course, makes it easy to be lazy. Why flip a coin by hand when you can have perl flip a coin for you? So I wrote pick\_pool.pl:
 
     #!/usr/local/bin/perl -w
     use strict;
@@ -134,12 +103,9 @@ Here's a sample run:
     Game 15: FAVORITE
     $
 
-This remarkably simple program actually won the pool for me the second
-week I used it, much to the annoyance of the other people in the pool.
+This remarkably simple program actually won the pool for me the second week I used it, much to the annoyance of the other people in the pool.
 
-But it turns out we can do even better. Using Damian Conway's
-Quantum::Superpositions module, it's possible to pick all the games
-simultaneously, *in constant time*:
+But it turns out we can do even better. Using Damian Conway's Quantum::Superpositions module, it's possible to pick all the games simultaneously, *in constant time*:
 
     #!/usr/local/bin/perl -w
     use strict;
@@ -161,15 +127,9 @@ simultaneously, *in constant time*:
 
     print @picks;
 
-What's more, thanks to the magic of quantum mechanics, this program will
-get each game right each week! That's because, just as Schoedinger's cat
-is both dead and alive until the box is opened, each pick remains in
-both a "FAVORITE" and an "underdog" state until it is observed. All you
-need to do is prevent the person running the pool from looking at your
-picks until after all the games have been played.
+What's more, thanks to the magic of quantum mechanics, this program will get each game right each week! That's because, just as Schoedinger's cat is both dead and alive until the box is opened, each pick remains in both a "FAVORITE" and an "underdog" state until it is observed. All you need to do is prevent the person running the pool from looking at your picks until after all the games have been played.
 
-As proof, let's compare the @picks generated by the quantum
-superpositions code to a sample set of winners:
+As proof, let's compare the @picks generated by the quantum superpositions code to a sample set of winners:
 
     my @winners = qw(underdog
        FAVORITE
@@ -213,5 +173,3 @@ As expected, the output is
     Game 13: winner
     Game 14: winner
     Game 15: winner
-
-
