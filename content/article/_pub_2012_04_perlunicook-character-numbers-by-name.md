@@ -3,7 +3,7 @@
    "title" : "Perl Unicode Cookbook: Get Character Number by Name",
    "categories" : "unicode",
    "date" : "2012-04-13T06:00:01-08:00",
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "draft" : null,
    "authors" : [

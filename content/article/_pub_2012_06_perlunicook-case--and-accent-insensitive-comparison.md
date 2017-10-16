@@ -1,5 +1,5 @@
 {
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "date" : "2012-06-08T06:00:01-08:00",
    "image" : null,

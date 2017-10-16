@@ -6,7 +6,7 @@
       "tom-christiansen"
    ],
    "tags" : [],
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "date" : "2012-06-04T06:00:01-08:00",
    "categories" : "unicode",
    "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Sorting",

@@ -4,7 +4,7 @@
    "image" : null,
    "title" : "Perl Unicode Cookbook: Extract by Grapheme Instead of Codepoint (regex)",
    "tags" : [],
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "slug" : "/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html",
    "description" : "℞ 30: Extract by grapheme instead of by codepoint (regex) Remember that Unicode defines a grapheme as \"what a user thinks of as a character\". A codepoint is an integer value in the Unicode codespace. While ASCII conflates the two,...",
    "draft" : null,

@@ -3,7 +3,7 @@
    "title" : "Perl Unicode Cookbook: Always Decompose and Recompose",
    "categories" : "unicode",
    "date" : "2012-04-03T06:00:01-08:00",
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "draft" : null,
    "authors" : [

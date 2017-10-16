@@ -10,7 +10,7 @@
    "title" : "Perl Unicode Cookbook: Specify a File's Encoding",
    "image" : null,
    "tags" : [],
-   "thumbnail" : null
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg"
 }
 
 

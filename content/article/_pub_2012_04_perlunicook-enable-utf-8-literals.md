@@ -3,7 +3,7 @@
    "image" : null,
    "title" : "Perl Unicode Cookbook: Enable UTF-8 Literals",
    "categories" : "unicode",
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "slug" : "/pub/2012/04/perlunicook-enable-utf-8-literals.html",
    "description" : "℞ 3: Declare source in UTF-8 for identiﬁers and literals Without the all-critical use utf8 declaration, putting UTF‑8 in your literals and identiﬁers won't work right. If you used the standard Perl Unicode preamble, this already happened. If you did,...",

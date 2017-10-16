@@ -10,7 +10,7 @@
    "title" : "Perl Unicode Cookbook: Decode @ARGV as Local Encoding",
    "date" : "2012-04-26T06:00:01-08:00",
    "tags" : [],
-   "thumbnail" : null
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg"
 }
 
 

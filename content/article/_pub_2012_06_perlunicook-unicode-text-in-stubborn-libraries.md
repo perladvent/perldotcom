@@ -3,7 +3,7 @@
    "title" : "Perl Unicode Cookbook: Unicode Text in Stubborn Libraries",
    "image" : null,
    "categories" : "unicode",
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "description" : "℞ 42: Unicode text in DBM hashes, the tedious way While Perl 5 has long been very careful about handling Unicode correctly inside the world of Perl itself, every time you leave the Perl internals, you cross a boundary at...",
    "slug" : "/pub/2012/06/perlunicook-unicode-text-in-stubborn-libraries.html",

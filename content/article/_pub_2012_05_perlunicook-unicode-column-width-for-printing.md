@@ -9,7 +9,7 @@
    "image" : null,
    "title" : "Perl Unicode Cookbook: Unicode Column Width for Printing",
    "categories" : "unicode",
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : []
 }
 

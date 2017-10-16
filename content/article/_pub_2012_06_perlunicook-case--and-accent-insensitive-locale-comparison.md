@@ -10,7 +10,7 @@
    "image" : null,
    "title" : "Perl Unicode Cookbook: Case- and Accent-insensitive Locale Comparisons",
    "tags" : [],
-   "thumbnail" : null
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg"
 }
 
 

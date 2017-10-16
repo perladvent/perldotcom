@@ -1,6 +1,6 @@
 {
    "tags" : [],
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "categories" : "unicode",
    "image" : null,
    "title" : "Perl Unicode Cookbook: Match Unicode Grapheme Cluster in Regex",

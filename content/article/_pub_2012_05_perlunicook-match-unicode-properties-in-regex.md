@@ -4,7 +4,7 @@
    "title" : "Perl Unicode Cookbook: Match Unicode Properties in Regex",
    "image" : null,
    "tags" : [],
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "slug" : "/pub/2012/05/perlunicook-match-unicode-properties-in-regex.html",
    "description" : "℞ 25: Match Unicode properties in regex with \\p, \\P Every Unicode codepoint has one or more properties, indicating the rules which apply to that codepoint. Perl's regex engine is aware of these properties; use the \\p{} metacharacter sequence to...",
    "draft" : null,

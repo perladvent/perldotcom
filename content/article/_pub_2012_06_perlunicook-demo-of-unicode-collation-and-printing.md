@@ -4,7 +4,7 @@
    "image" : null,
    "date" : "2012-06-22T06:00:01-08:00",
    "tags" : [],
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "authors" : [
       "tom-christiansen"
    ],

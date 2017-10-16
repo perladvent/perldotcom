@@ -1,5 +1,5 @@
 {
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "image" : null,
    "title" : "Perl Unicode Cookbook: Decode Standard Filehandles as UTF-8",

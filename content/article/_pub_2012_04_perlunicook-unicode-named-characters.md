@@ -3,7 +3,7 @@
    "image" : null,
    "title" : "Perl Unicode Cookbook: Unicode Named Characters",
    "categories" : "unicode",
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "tags" : [],
    "slug" : "/pub/2012/04/perlunicook-unicode-named-characters.html",
    "description" : "℞ 8: Unicode named characters Use the \\N{charname} notation to get the character by that name for use in interpolated literals (double-quoted strings and regexes). In v5.16, there is an implicit use charnames qw(:full :short); But prior to v5.16, you...",

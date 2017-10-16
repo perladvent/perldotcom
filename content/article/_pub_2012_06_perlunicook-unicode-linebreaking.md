@@ -1,6 +1,6 @@
 {
    "tags" : [],
-   "thumbnail" : null,
+   "thumbnail" : "/images/_pub_2012_04_perlunicook-standard-preamble/unicode.jpg",
    "categories" : "unicode",
    "title" : "Perl Unicode Cookbook: Unicode Linebreaking",
    "image" : null,
