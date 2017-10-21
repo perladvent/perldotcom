@@ -1,11 +1,11 @@
-# Perl.com
+Perl.com
+========
 
-This is a WIP static site conversion of Perl.com.
+Hello!
 
-All articles discovered are in `perl.com/pub/articles-index-20171008.csv`.
+[Perl.com](http://perl.com) is a website dedicated to Perl programming code, culture and community news, managed by the [Perl Foundation](http://www.perlfoundation.org/).
 
-Launch a local version of the site with [hugo](https://gohugo.io).
+If you're interested in writing for Perl.com, check out our contributing [guide](CONTRIBUTING.md). You can send us a pull request with your article or just [email](mailto:editor@perl.com) me if you have any questions or feedback. We're always looking for new writers and material!
 
-    $ hugo server
-
-Once it's running you can browse the [local site](http://localhost:1313/article)
+David Farrell
+*Managing Editor*
