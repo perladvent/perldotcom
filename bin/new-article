@@ -1,0 +1,69 @@
+#!/usr/bin/env perl
+use autodie;
+use Cwd;
+use Getopt::Long 'GetOptions';
+use Time::Piece;
+
+my @categories = qw/apps community cpan data development hardware managing_perl perl6 security testing web/;
+
+GetOptions(
+  'title=s'       => \my $title,
+  'category=s'    => \my $category,
+  'description=s' => \(my $description = ''),
+  'author=s'      => \(my $author = ''),
+  'help'          => \&usage,
+  'open'          => \my $open_in_editor,
+  'editor'        => \(my $editor = $ENV{EDITOR}),
+) or usage();
+usage() unless $title && $category && (grep $_ eq $category, @categories);
+
+# check we're in perltricks-static
+my $cwd = cwd();
+chomp $cwd; # for Mac OS?
+my $parent_dir = [split /\/|\\/, $cwd]->[-1];
+die "$0 must be run from the root project directory!\n"
+  unless $parent_dir eq 'perltricks-static';
+
+# prepare the file
+my $filename = lc $title;
+$filename =~ s/\W+/-/g;
+$filename = "content/article/$filename.md";
+die "$filename.md already exists!\n" if -e $filename;
+open my $fh, '>:utf8', $filename;
+
+my $dt = localtime;
+my $date = $dt->datetime;
+
+print $fh qq(
+  {
+    "title"  : "$title",
+    "authors": ["$author"],
+    "date"   : "$date",
+    "tags"   : [],
+    "draft"  : true,
+    "image"  : "",
+    "description" : "$description",
+    "categories": "$category"
+  }
+
+The article body goes here. Use [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/) to write the article body. Don't forget to delete this line!
+
+);
+
+print "$filename created\n.";
+system $editor, $filename if $open_in_editor;
+
+sub usage {
+  print "\n$0 [OPTIONS]\n\n";
+  print "Options
+  --title, -t        Article title (required)
+  --category, -c     One of: apps,community,cpan,data,development,hardware
+                             managing_perl,perl6,security,testing,web
+  --description, -d  Description (subtitle)
+  --author, -a       Author
+  --help, -h         Print help
+  --open, -o         Open in editor (defaults to \$EDITOR environment variable)
+  --editor, -e       Editor to use (defaults to \$EDITOR environment variable)
+  \n";
+  exit 0;
+}

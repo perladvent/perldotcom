@@ -1,0 +1,167 @@
+#!/usr/bin/env perl
+
+use 5.16.3;
+use autodie;
+use warnings;
+
+use HTTP::Tiny;
+use Time::HiRes 'sleep';
+use Time::Piece;
+use Time::Seconds;
+
+# dont leave tmp file behind
+BEGIN { $SIG{TERM} = $SIG{INT} = sub { exit 0 } }
+END { unlink '.tmp.pod' }
+
+my @lines = <> if @ARGV or die $!;
+
+my %categories = (
+  'APIs & Apps'       => [],
+  'Config & Devops'   => [],
+  'Data'              => [],
+  'Development & Version Control' => [],
+  'Hardware'          => [],
+  'Language & International' => [],
+  'Science & Mathematics' => [],
+  'Web' => [],
+  'Other' => [],
+);
+
+my @attributes = qw/name version description release_date type author/;
+
+my $total = @lines;
+my $i     = 0;
+
+for my $release (sort @lines)
+{
+    $i++;
+    my @release = split /\|/, $release;
+    $release[0] =~ s/-/::/g;
+    chomp $release[-1];
+
+    my %module = map { $attributes[$_] => $release[$_] } 0..$#release;
+
+    $module{name} =~ s/-/::/g;
+    # remove the module name from the desc
+    #$module{description} =~ s/$module{name}//g;
+
+    # skip prolific authors
+    next if grep ($module{author} =~ /$_/i, qw/perlancar unknown spacek imrie/);
+
+    # skip garbage uploads
+    next unless $module{name} && $module{name} =~ /\w/
+      && $module{description} && $module{description} =~ /\w/;
+
+    # fetch pod, skip unless accepted
+    my $ua = HTTP::Tiny->new;
+    my $response = $ua->get("http://fastapi.metacpan.org/v1/pod/$module{name}?content-type=text/x-pod");
+    next unless $response->{success};
+    open my $tmp, '>:utf8', '.tmp.pod';
+    print $tmp $response->{content};
+    close $tmp; # flush it
+    eval { system "perldoc .tmp.pod" };
+    next if $@;
+
+    # format the module description
+    $module{mcpan_link} = "[$module{name}](https://metacpan.org/pod/$module{name})";
+
+    my @descriptions = (
+      sprintf('%s with %s', $module{description}, $module{mcpan_link}),
+      sprintf('%s using %s', $module{description}, $module{mcpan_link}),
+      sprintf('%s %s', $module{mcpan_link}, $module{description}),
+      sprintf('%s can %s', $module{mcpan_link}, $module{description}),
+    );
+    $module{description} = $descriptions[ int rand @descriptions ];
+
+    # categorize the module
+    if ($module{name}    =~ /^(?:API|App|WebService|Net::)/)
+    {
+      $module{category} = 'APIs & Apps';
+    }
+    elsif ($module{name} =~ /^(?:Alien|Badge|Bot|CPAN|Config|Shell|MetaCPAN|Log|Win32)/)
+    {
+      $module{category} = 'Config & Devops';
+    }
+    elsif ($module{name} =~ /^(?:Data|DBI|DBIx|CSV|HTML|DBD|Hash|File|Sereal|XML)/)
+    {
+      $module{category} = 'Data';
+    }
+    elsif ($module{name} =~ /^(?:AnyEvent|Devel|Dist|List|POE|MooseX|Scalar|Test|Tie|Git)/)
+    {
+      $module{category} = 'Development & Version Control';
+    }
+    elsif ($module{name} =~ /^(?:Device)/)
+    {
+      $module{category} = 'Hardware';
+    }
+    elsif ($module{name} =~ /^(?:Text|Lingua|MarpaX|Pod)/)
+    {
+      $module{category} = 'Language & International';
+    }
+    elsif ($module{name} =~ /^(?:Algorithm|Bio|Compress|Crypt|Digest|Math)/)
+    {
+      $module{category} = 'Science & Mathematics';
+    }
+    elsif ($module{name} =~ /^(?:Catalyst|Mojo|Dancer|CGI|WWW|FCGI|Plack|Email|LWP)/)
+    {
+      $module{category} = 'Web';
+    }
+    else
+    {
+      $module{category} = 'Other';
+    }
+
+    # confirm category or exclude
+    print "$i/$total $module{name} - accept category or select another:\n";
+
+    my @categories;
+    for (sort keys %categories)
+    {
+      my $current = $module{category} eq $_ ? '*' : ' ';
+      push @categories, $_;
+      printf " %s[%u] %s\n", $current, @categories - 1, $_;
+    }
+    my $answer = <<>>; chomp $answer;
+    if ($answer)
+    {
+      next unless $answer =~ /^\d$/ && $answer < @categories;
+      $module{category} = $categories[$answer];
+    }
+    push @{$categories{$module{category}}}, \%module;
+}
+
+# output results
+use JSON;
+my $datetime = gmtime;
+$datetime -= ONE_MONTH;
+my $now = gmtime;
+
+open my $md_fh, '>:utf8', sprintf 'what-s-new-on-cpan---%s-%s.md',
+  lc($datetime->fullmonth), $datetime->year;
+
+my $metadata = {
+  title       => sprintf('What\'s new on CPAN - %s %s', $datetime->fullmonth, $datetime->year),
+  description => sprintf('A curated look at %s\'s new CPAN uploads', $datetime->fullmonth),
+  authors     => ['David Farrell'],
+  tags        => [],
+  categories  => 'cpan',
+  image       => "",
+  draft       => JSON::true,
+  date        => $now->datetime,
+};
+
+my $json = JSON->new();
+say $md_fh $json->pretty->encode($metadata);
+
+say $md_fh "\nWelcome to \"What's new on CPAN\", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!\n";
+
+for (sort keys %categories)
+{
+  next unless scalar @{$categories{$_}};
+  say $md_fh "### $_";
+  for (@{$categories{$_}})
+  {
+    say $md_fh "* $_->{description}";
+  }
+  say $md_fh "\n";
+}

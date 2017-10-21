@@ -1,0 +1,101 @@
+#!/usr/bin/env perl
+use 5.16.3;
+use warnings;
+use CPAN::Recent::Uploads;
+use Getopt::Long 'GetOptions';
+use HTTP::Tiny;
+use JSON::XS 'decode_json';
+use Time::Piece;
+
+GetOptions(
+  'start=s' => \my $start,
+  'end=s'   => \my $end,
+  'debug'   => \my $debug,
+  'trace'   => \my $trace,
+) or die "error parsing options $@\n";
+
+print_usage() unless 2 == grep { $_ && /^\d\d\d\d-\d\d-\d\d$/ }
+  $start, $end;
+
+my $start_date = Time::Piece->new->strptime($start, '%Y-%m-%d');
+my $end_date   = Time::Piece->strptime("${end}T23:59:59",'%Y-%m-%dT%H:%M:%S');
+
+my (@upload, @distnamefail, @fetchfail, @outofdate, @notnew, @dupe, @include);
+@upload = CPAN::Recent::Uploads->recent($start_date->epoch);
+
+my $url = 'https://fastapi.metacpan.org/v1/release';
+my $ua  = HTTP::Tiny->new();
+
+foreach (@upload) {
+  my @parts = split /\//;
+  my $author = $parts[2];
+  my $release_name = $parts[3] =~ s/(?:\.tar\.gz|\.tgz)$//r;
+
+  say STDERR "Checking $author/$release_name" if $debug;
+
+  my $res = $ua->get("$url/$author/$release_name");
+
+  unless ($res->{success}) {
+    push @fetchfail, "$author/$release_name";
+    say STDERR "Failed to get $author/$release_name: " . ($res->{reason}||'unknown error') if $debug;
+    next;
+  }
+
+  my $release = decode_json($res->{content});
+
+  unless (!grep /$release->{distribution}/, @include) {
+    push @dupe, $release->{distribution};
+    say STDERR "Skipping dup: $release->{distribution}" if $debug;
+    next;
+  }
+
+  unless ($release->{first}) {
+    push @notnew, $release->{distribution};
+    say STDERR "$release->{distribution} is not new" if $debug;
+    next;
+  }
+
+  my $upload_date = Time::Piece->strptime($release->{date}, '%Y-%m-%dT%H:%M:%S');
+
+  unless ($upload_date <= $end_date) {
+    push @outofdate, $release->{distribution};
+    say STDERR "Upload date is out of range: $release->{date}" if $debug;
+    next;
+  }
+
+  push @include, $release->{distribution};
+
+  my $line = (($release->{distribution} || '')
+      . '|' . ($release->{version} || '')
+      . '|' . ($release->{abstract} || '')
+      . '|' . ($release->{date} || '')
+      . '|' . ($release->{status} || '')
+      . '|' . ($release->{metadata}{author}[0] || '')
+  );
+  say $line =~ s/\n|\r//gr;
+}
+
+printf STDERR "uploads: %d, regex fail: %d, fetch fail: %d, out of date: %d, not new: %d, dupes: %d, included: %d\n",
+  scalar @upload, scalar @distnamefail, scalar @fetchfail, scalar @outofdate, scalar @notnew, scalar @dupe, scalar @include;
+
+if ($trace) {
+  say STDERR "\nupload";
+  say STDERR for @upload;
+  say STDERR "\ndistnamefail";
+  say STDERR for @distnamefail;
+  say STDERR "\nfetchfail";
+  say STDERR for @fetchfail;
+  say STDERR "\noutofdate";
+  say STDERR for @outofdate;
+  say STDERR "\nnotnew";
+  say STDERR for @notnew;
+  say STDERR "\ndupe";
+  say STDERR for @dupe;
+  say STDERR "\ninclude";
+  say STDERR for @include;
+}
+
+sub print_usage {
+  say "\nget-cpan-uploads --start YYYY-MM-DD --end YYYY-MM-DD\n";
+  exit 0;
+}
