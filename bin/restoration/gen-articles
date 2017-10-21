@@ -1,30 +1,24 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use lib 'bin/lib';
+use lib 'lib';
 use Article;
 use Text::CSV;
+use JSON::XS;
 
-# The number of generated articles is less than the number of indexed articles
-# do we have dups?
-
-#$SIG{__WARN__} = sub {};
+# generate markdown articles using articles-index
+$SIG{__WARN__} = sub {};
 
 my $csv = Text::CSV->new();
+my $json = JSON::XS->new->utf8->pretty;
+my $base_article_path = 'content/article';
 
 open my $article_index, '<:utf8', "perl.com/pub/articles-index-20171008.csv" or die $!;
 my @column_names = qw(date title authors file categories tags);
 
-my %files;
-my $counter = 1;
 while (my $cols = $csv->getline($article_index)) {
   my %args = map { $column_names[$_] => $cols->[$_] } 0..$#$cols;
   my $a = Article->new(\%args);
-  if ($files{ $a->filepath }) {
-    print "$counter\n";
-  }
-  else {
-    $files{ $a->filepath }++;
-  }
-  $counter++;
+  open my $fh, '>:raw', join('/', $base_article_path, $a->filepath) or die $!;
+  print $fh $a->serialize;
 }
