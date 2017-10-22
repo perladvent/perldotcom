@@ -29,7 +29,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Reduce Complexity](/doc/FMTEYEWTK/style/slide28.html)
+\
 Back to [Avoid Testing eof](/doc/FMTEYEWTK/style/slide26.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

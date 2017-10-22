@@ -34,7 +34,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Break Complex Tasks Up](/doc/FMTEYEWTK/style/slide31.html)
+\
 Back to [Reduce Complexity (solution)](/doc/FMTEYEWTK/style/slide29.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

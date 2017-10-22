@@ -28,7 +28,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Using A Hash Instead of $$name](/doc/FMTEYEWTK/style/slide25.html)
+\
 Back to [Avoid Byte Processing](/doc/FMTEYEWTK/style/slide23.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

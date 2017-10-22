@@ -29,7 +29,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Learn Precedence](/doc/FMTEYEWTK/style/slide11.html)
+\
 Back to [Parallelism](/doc/FMTEYEWTK/style/slide9.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

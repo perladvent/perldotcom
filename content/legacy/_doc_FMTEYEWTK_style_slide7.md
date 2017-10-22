@@ -31,7 +31,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Length of Variable Names](/doc/FMTEYEWTK/style/slide8.html)
+\
 Back to [On the Naming of Names (Form)](/doc/FMTEYEWTK/style/slide6.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

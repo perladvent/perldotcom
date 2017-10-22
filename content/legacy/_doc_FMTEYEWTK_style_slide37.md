@@ -29,7 +29,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Switch by Using do{} Creatively](/doc/FMTEYEWTK/style/slide38.html)
+\
 Back to [Closures](/doc/FMTEYEWTK/style/slide36.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

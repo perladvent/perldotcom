@@ -22,7 +22,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Defensive Programming](/doc/FMTEYEWTK/style/slide4.html)
+\
 Back to [Program Perl, Not C/BASIC/Java/Pascal/etc](/doc/FMTEYEWTK/style/slide2.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

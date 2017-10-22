@@ -91,7 +91,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Avoid Symbolic References](/doc/FMTEYEWTK/style/slide24.html)
+\
 Back to [Use foreach() Loops](/doc/FMTEYEWTK/style/slide22.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

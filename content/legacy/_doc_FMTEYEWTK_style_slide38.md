@@ -28,7 +28,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Switch with for via && and ||](/doc/FMTEYEWTK/style/slide39.html)
+\
 Back to [Learn to Switch with for](/doc/FMTEYEWTK/style/slide37.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

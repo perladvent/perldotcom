@@ -35,7 +35,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Embrace && and || for Control and Values](/doc/FMTEYEWTK/style/slide10.html)
+\
 Back to [Length of Variable Names](/doc/FMTEYEWTK/style/slide8.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

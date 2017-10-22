@@ -23,7 +23,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Configuration Files](/doc/FMTEYEWTK/style/slide34.html)
+\
 Back to [Break Programs into Separate Processes](/doc/FMTEYEWTK/style/slide32.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

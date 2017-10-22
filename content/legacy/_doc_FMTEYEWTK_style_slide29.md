@@ -38,7 +38,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Loop Hoisting](/doc/FMTEYEWTK/style/slide30.html)
+\
 Back to [Reduce Complexity](/doc/FMTEYEWTK/style/slide28.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

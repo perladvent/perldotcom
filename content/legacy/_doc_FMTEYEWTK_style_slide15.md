@@ -37,7 +37,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Negative Array Subscripts](/doc/FMTEYEWTK/style/slide16.html)
+\
 Back to [Embrace Pattern Matching](/doc/FMTEYEWTK/style/slide14.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

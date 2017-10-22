@@ -25,7 +25,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Use Hashes of Records, not Parallel Arrays](/doc/FMTEYEWTK/style/slide20.html)
+\
 Back to [Use Hashes for Sets](/doc/FMTEYEWTK/style/slide18.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

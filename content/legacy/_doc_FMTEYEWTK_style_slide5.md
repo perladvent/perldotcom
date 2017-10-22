@@ -24,7 +24,9 @@
 ------------------------------------------------------------------------
 
 Forward to [On the Naming of Names (Form)](/doc/FMTEYEWTK/style/slide6.html)
+\
 Back to [Defensive Programming](/doc/FMTEYEWTK/style/slide4.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

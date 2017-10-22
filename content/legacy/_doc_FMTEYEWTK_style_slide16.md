@@ -26,7 +26,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Embrace Hashes](/doc/FMTEYEWTK/style/slide17.html)
+\
 Back to [Changing *en passant*](/doc/FMTEYEWTK/style/slide15.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

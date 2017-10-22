@@ -24,7 +24,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Patches](/doc/FMTEYEWTK/style/slide42.html)
+\
 Back to [Switch Using for and do{} Even More Creatively](/doc/FMTEYEWTK/style/slide40.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

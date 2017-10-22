@@ -21,7 +21,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Use Hashes for Sets](/doc/FMTEYEWTK/style/slide18.html)
+\
 Back to [Negative Array Subscripts](/doc/FMTEYEWTK/style/slide16.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

@@ -38,7 +38,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Closures](/doc/FMTEYEWTK/style/slide36.html)
+\
 Back to [Configuration Files](/doc/FMTEYEWTK/style/slide34.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

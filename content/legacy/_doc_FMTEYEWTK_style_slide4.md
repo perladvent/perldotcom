@@ -27,7 +27,9 @@
 ------------------------------------------------------------------------
 
 Forward to [The Art of Commenting Code](/doc/FMTEYEWTK/style/slide5.html)
+\
 Back to [Elegance](/doc/FMTEYEWTK/style/slide3.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

@@ -32,7 +32,9 @@
 ------------------------------------------------------------------------
 
 Forward to [The Care and Feeding of Modules](/doc/FMTEYEWTK/style/slide41.html)
+\
 Back to [Switch with for via && and ||](/doc/FMTEYEWTK/style/slide39.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

@@ -21,7 +21,9 @@
 ------------------------------------------------------------------------
 
 Forward to [From Perlstyle (part 1)](/doc/FMTEYEWTK/style/slide43.html)
+\
 Back to [The Care and Feeding of Modules](/doc/FMTEYEWTK/style/slide41.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

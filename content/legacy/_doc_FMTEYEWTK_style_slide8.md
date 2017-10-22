@@ -36,7 +36,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Parallelism](/doc/FMTEYEWTK/style/slide9.html)
+\
 Back to [On the Naming of Names (Content)](/doc/FMTEYEWTK/style/slide7.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

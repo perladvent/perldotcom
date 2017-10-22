@@ -22,7 +22,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Changing *en passant*](/doc/FMTEYEWTK/style/slide15.html)
+\
 Back to [Never define "TRUE" and "FALSE"](/doc/FMTEYEWTK/style/slide13.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

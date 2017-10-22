@@ -30,7 +30,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Avoid Testing eof](/doc/FMTEYEWTK/style/slide26.html)
+\
 Back to [Avoid Symbolic References](/doc/FMTEYEWTK/style/slide24.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

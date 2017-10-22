@@ -38,7 +38,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Use $\_ in Short Code](/doc/FMTEYEWTK/style/slide21.html)
+\
 Back to [Use Hashes for the First Time](/doc/FMTEYEWTK/style/slide19.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

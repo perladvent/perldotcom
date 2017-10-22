@@ -31,7 +31,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Break Programs into Separate Processes](/doc/FMTEYEWTK/style/slide32.html)
+\
 Back to [Loop Hoisting](/doc/FMTEYEWTK/style/slide30.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

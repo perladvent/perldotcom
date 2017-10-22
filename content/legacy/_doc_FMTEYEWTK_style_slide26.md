@@ -37,7 +37,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Avoid Gratuitous Backslashes](/doc/FMTEYEWTK/style/slide27.html)
+\
 Back to [Using A Hash Instead of $$name](/doc/FMTEYEWTK/style/slide25.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

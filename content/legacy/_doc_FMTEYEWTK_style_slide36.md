@@ -39,7 +39,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Learn to Switch with for](/doc/FMTEYEWTK/style/slide37.html)
+\
 Back to [Functions as Data](/doc/FMTEYEWTK/style/slide35.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

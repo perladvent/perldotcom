@@ -33,7 +33,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Functions as Data](/doc/FMTEYEWTK/style/slide35.html)
+\
 Back to [Data-Oriented Programming](/doc/FMTEYEWTK/style/slide33.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

@@ -32,7 +32,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Data-Oriented Programming](/doc/FMTEYEWTK/style/slide33.html)
+\
 Back to [Break Complex Tasks Up](/doc/FMTEYEWTK/style/slide31.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

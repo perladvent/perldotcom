@@ -40,7 +40,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Avoid Byte Processing](/doc/FMTEYEWTK/style/slide23.html)
+\
 Back to [Use $\_ in Short Code](/doc/FMTEYEWTK/style/slide21.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

@@ -28,7 +28,9 @@
 ------------------------------------------------------------------------
 
 Forward to [On the Naming of Names (Content)](/doc/FMTEYEWTK/style/slide7.html)
+\
 Back to [The Art of Commenting Code](/doc/FMTEYEWTK/style/slide5.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

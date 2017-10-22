@@ -30,7 +30,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Switch Using for and do{} Even More Creatively](/doc/FMTEYEWTK/style/slide40.html)
+\
 Back to [Switch by Using do{} Creatively](/doc/FMTEYEWTK/style/slide38.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

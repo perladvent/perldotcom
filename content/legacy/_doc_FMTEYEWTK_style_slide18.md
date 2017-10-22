@@ -33,7 +33,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Use Hashes for the First Time](/doc/FMTEYEWTK/style/slide19.html)
+\
 Back to [Embrace Hashes](/doc/FMTEYEWTK/style/slide17.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

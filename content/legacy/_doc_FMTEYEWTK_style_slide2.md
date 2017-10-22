@@ -21,7 +21,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Elegance](/doc/FMTEYEWTK/style/slide3.html)
+\
 Back to [Everyone Has an Opinion](/doc/FMTEYEWTK/style/slide1.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

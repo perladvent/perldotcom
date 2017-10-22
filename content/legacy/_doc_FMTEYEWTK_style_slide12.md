@@ -39,7 +39,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Never define "TRUE" and "FALSE"](/doc/FMTEYEWTK/style/slide13.html)
+\
 Back to [Learn Precedence](/doc/FMTEYEWTK/style/slide11.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

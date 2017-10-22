@@ -33,7 +33,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Reduce Complexity (solution)](/doc/FMTEYEWTK/style/slide29.html)
+\
 Back to [Avoid Gratuitous Backslashes](/doc/FMTEYEWTK/style/slide27.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen

@@ -41,7 +41,9 @@
 ------------------------------------------------------------------------
 
 Forward to [Don't Overdo \`?:'](/doc/FMTEYEWTK/style/slide12.html)
+\
 Back to [Embrace && and || for Control and Values](/doc/FMTEYEWTK/style/slide10.html)
+\
 Up to [index](/doc/FMTEYEWTK/style/slide-index.html)
 
 Copyright © 1998, Tom Christiansen
