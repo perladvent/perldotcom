@@ -1,0 +1,48 @@
+#!/usr/bin/env perl
+
+use v5.16.0;
+use warnings;
+use autodie;
+use DBI;
+use File::Find::Rule;
+use Getopt::Long;
+use JSON::XS 'decode_json';
+
+GetOptions (
+   'sql=s'    => \my $sql,
+   'format=s' => \(my $format = 'join "\t", map $r{$_}, sort keys %r'),
+) or die("Error in command line arguments\n");
+
+die 'requires --sql argument' unless $sql;
+
+my @metadata = qw(
+  id categories date description draft filename image slug thumbnail title
+);
+my $metadata = join ',', @metadata;
+
+my $dbh = DBI->connect('dbi:SQLite::memory:', { RaiseError => 1 });
+$dbh->do("CREATE TABLE article ($metadata)");
+
+my $id = 0;
+for my $file (File::Find::Rule->file->name('*.md')->in('content')) {
+  my $json;
+  open my $fh, '<', $file;
+  while (<$fh>) {
+    $json .= $_ if /^\s*{/ .. 0;
+    last if /}\s*$/;
+  }
+  my $data = decode_json($json);
+  $data->{id} = ++$id;
+
+  my @values = map { $data->{$_} } @metadata;
+  $dbh->do("INSERT INTO article ($metadata) VALUES (?,?,?,?,?,?,?,?,?,?)",
+    undef, @values);
+}
+
+my $sth = $dbh->prepare($sql);
+$sth->execute();
+
+my $formatter = sub { my %r = %{$_[0]}; eval $format };
+for my $row (@{$sth->fetchall_arrayref({})}) {
+  say $formatter->($row);
+}
