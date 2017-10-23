@@ -4,7 +4,6 @@ use v5.16.0;
 use warnings;
 use autodie;
 use DBI;
-use File::Find::Rule;
 use Getopt::Long;
 use JSON::XS 'decode_json';
 
@@ -23,20 +22,18 @@ my $metadata = join ',', @metadata;
 my $dbh = DBI->connect('dbi:SQLite::memory:', { RaiseError => 1 });
 $dbh->do("CREATE TABLE article ($metadata)");
 
-my $id = 0;
-for my $file (File::Find::Rule->file->name('*.md')->in('content')) {
-  my $json;
-  open my $fh, '<', $file;
-  while (<$fh>) {
-    $json .= $_ if /^\s*{/ .. 0;
-    last if /}\s*$/;
-  }
-  my $data = decode_json($json);
-  $data->{id} = ++$id;
+my ($json,$id);
+while (<STDIN>) {
+  $json .= $_;
+  if (/}$/) {
+    my $data = decode_json($json);
+    $data->{id} = ++$id;
+    my @values = map { $data->{$_} } @metadata;
+    $dbh->do("INSERT INTO article ($metadata) VALUES (?,?,?,?,?,?,?,?,?,?)",
+      undef, @values);
 
-  my @values = map { $data->{$_} } @metadata;
-  $dbh->do("INSERT INTO article ($metadata) VALUES (?,?,?,?,?,?,?,?,?,?)",
-    undef, @values);
+    undef $json;
+  }
 }
 
 my $sth = $dbh->prepare($sql);
