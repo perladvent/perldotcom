@@ -13,8 +13,7 @@
       "symbolic",
       "ref",
       "master",
-      "branch",
-      "old_site"
+      "branch"
    ],
    "categories" : "apps"
 }

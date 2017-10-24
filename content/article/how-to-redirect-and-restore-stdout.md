@@ -7,8 +7,7 @@
       "powershell",
       "bash",
       "stdout",
-      "log",
-      "old_site"
+      "log"
    ],
    "categories" : "development",
    "authors" : [

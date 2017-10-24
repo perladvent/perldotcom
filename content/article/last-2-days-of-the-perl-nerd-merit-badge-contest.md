@@ -4,9 +4,7 @@
    "date" : "2014-02-19T14:18:31",
    "title" : "Last 2 days of the Perl Nerd Merit Badge Contest",
    "image" : "/images/70/EC59DF9E-FF2E-11E3-AD4D-5C05A68B9E16.png",
-   "tags" : [
-      "old_site"
-   ],
+   "tags" : [],
    "description" : "Code snippets large and small, get them in!",
    "authors" : [
       "david-farrell"

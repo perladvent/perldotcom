@@ -18,8 +18,7 @@
       "fake",
       "role_basic",
       "bless",
-      "sub",
-      "old_site"
+      "sub"
    ]
 }
 

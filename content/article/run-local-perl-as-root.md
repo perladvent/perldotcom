@@ -7,8 +7,7 @@
       "unix",
       "bash",
       "mac",
-      "perlbrew",
-      "old_site"
+      "perlbrew"
    ],
    "date" : "2013-08-10T14:33:18",
    "categories" : "tooling",

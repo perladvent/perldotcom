@@ -12,8 +12,7 @@
       "raspberry_pi",
       "hackerspace",
       "hardware",
-      "camera",
-      "old_site"
+      "camera"
    ],
    "slug" : "140/2014/12/15/A-Hackerspace-Webcam"
 }

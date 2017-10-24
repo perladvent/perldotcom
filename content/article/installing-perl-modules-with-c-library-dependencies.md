@@ -6,8 +6,7 @@
       "documentation",
       "linux",
       "network",
-      "sysadmin",
-      "old_site"
+      "sysadmin"
    ],
    "draft" : false,
    "authors" : [

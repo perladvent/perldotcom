@@ -2,8 +2,7 @@
    "tags" : [
       "community",
       "cpan",
-      "interview",
-      "old_site"
+      "interview"
    ],
    "description" : "We catch up with the prolific CPAN module author",
    "date" : "2014-01-24T03:17:09",

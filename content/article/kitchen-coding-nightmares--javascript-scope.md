@@ -13,8 +13,7 @@
       "es6",
       "strict",
       "requirejs",
-      "jshint",
-      "old_site"
+      "jshint"
    ],
    "draft" : false,
    "title" : "Kitchen coding nightmares: JavaScript scope",

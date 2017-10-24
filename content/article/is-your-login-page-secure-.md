@@ -12,8 +12,7 @@
       "catalyst",
       "mvc",
       "security",
-      "authentication",
-      "old_site"
+      "authentication"
    ],
    "draft" : false
 }

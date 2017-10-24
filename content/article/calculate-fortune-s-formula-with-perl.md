@@ -2,8 +2,7 @@
    "tags" : [
       "kelly_criterion",
       "algorithm",
-      "betting",
-      "old_site"
+      "betting"
    ],
    "draft" : false,
    "date" : "2015-03-23T12:42:08",

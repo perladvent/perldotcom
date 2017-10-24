@@ -6,8 +6,7 @@
       "cpan",
       "module",
       "subroutine",
-      "sysadmin",
-      "old_site"
+      "sysadmin"
    ],
    "draft" : false,
    "title" : "How to track new CPAN releases",

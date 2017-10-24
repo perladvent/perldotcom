@@ -8,8 +8,7 @@
    "tags" : [
       "geekuni",
       "moodle",
-      "online_learning",
-      "old_site"
+      "online_learning"
    ],
    "image" : "/images/150/B86DC024-B658-11E4-8BDD-633BD495B04B.png",
    "title" : "Why I Started Geekuni",

@@ -6,7 +6,6 @@
    ],
    "title" : "The Perl Nerd Merit Badge Contest results",
    "tags" : [
-      "old_site"
    ],
    "description" : "Three winners, three awesome Perl tricks. Read on to find out more...",
    "image" : "/images/73/EC75761E-FF2E-11E3-BD48-5C05A68B9E16.png",

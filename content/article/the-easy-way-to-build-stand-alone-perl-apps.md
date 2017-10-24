@@ -1,8 +1,7 @@
 {
    "tags" : [
       "configuration",
-      "app",
-      "old_site"
+      "app"
    ],
    "title" : "The easy way to build stand-alone Perl apps",
    "categories" : "apps",

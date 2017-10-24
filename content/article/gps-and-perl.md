@@ -13,8 +13,7 @@
       "hardware",
       "gps",
       "nmea",
-      "rs232",
-      "old_site"
+      "rs232"
    ],
    "date" : "2015-03-10T12:43:30"
 }

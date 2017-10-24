@@ -15,8 +15,7 @@
       "glyph",
       "bootstrap",
       "icon",
-      "font",
-      "old_site"
+      "font"
    ],
    "slug" : "146/2015/1/23/Introducing-3-new-Perl-Glyphs"
 }

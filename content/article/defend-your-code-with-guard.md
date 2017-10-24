@@ -8,8 +8,7 @@
    ],
    "tags" : [
       "guard",
-      "safety",
-      "old_site"
+      "safety"
    ],
    "title" : "Defend your code with Guard",
    "description" : "Guard helps you protect against unexpected changes to values",

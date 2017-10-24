@@ -8,8 +8,7 @@
    "tags" : [
       "math",
       "social_media",
-      "net_twitter",
-      "old_site"
+      "net_twitter"
    ],
    "date" : "2016-01-21T13:52:14",
    "title" : "Twitter as a datastore",

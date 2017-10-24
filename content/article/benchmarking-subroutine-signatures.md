@@ -3,8 +3,7 @@
    "tags" : [
       "subroutine",
       "method",
-      "optimization",
-      "old_site"
+      "optimization"
    ],
    "date" : "2014-05-12T13:19:16",
    "image" : null,

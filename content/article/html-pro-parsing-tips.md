@@ -8,8 +8,7 @@
       "web",
       "libxml2",
       "scrape",
-      "xml_libxml",
-      "old_site"
+      "xml_libxml"
    ],
    "image" : null,
    "date" : "2014-07-10T12:33:45",

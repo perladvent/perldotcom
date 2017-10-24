@@ -12,8 +12,7 @@
       "modernperl",
       "reference",
       "news",
-      "postfix",
-      "old_site"
+      "postfix"
    ],
    "categories" : "development"
 }

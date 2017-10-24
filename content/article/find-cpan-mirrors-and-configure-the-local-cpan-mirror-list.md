@@ -5,8 +5,7 @@
       "cpan",
       "module",
       "sysadmin",
-      "config",
-      "old_site"
+      "config"
    ],
    "title" : "Find CPAN mirrors and configure the local CPAN mirror list",
    "slug" : "44/2013/10/20/Find-CPAN-mirrors-and-configure-the-local-CPAN-mirror-list",

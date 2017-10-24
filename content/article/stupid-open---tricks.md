@@ -11,8 +11,7 @@
    "tags" : [
       "filehandle",
       "ipc",
-      "perlio",
-      "old_site"
+      "perlio"
    ],
    "description" : "Everyone tells you to use a three-argument open(), but there's a lot more you can do ..."
 }

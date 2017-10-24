@@ -12,8 +12,7 @@
       "cloudfront",
       "swagger",
       "hilbert",
-      "php",
-      "old_site"
+      "php"
    ],
    "authors" : [
       "david-farrell"

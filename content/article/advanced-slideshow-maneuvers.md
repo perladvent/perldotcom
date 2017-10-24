@@ -11,8 +11,7 @@
       "revealjs",
       "app_revealup",
       "speaker_notes",
-      "markdown",
-      "old_site"
+      "markdown"
    ],
    "description" : "Get the most out of your markdown-driven presentations",
    "draft" : false

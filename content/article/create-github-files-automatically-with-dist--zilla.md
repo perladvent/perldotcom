@@ -11,8 +11,7 @@
       "module",
       "config",
       "pause",
-      "dzil",
-      "old_site"
+      "dzil"
    ],
    "authors" : [
       "david-farrell"

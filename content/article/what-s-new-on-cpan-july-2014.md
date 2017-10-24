@@ -9,8 +9,7 @@
       "git",
       "aws",
       "docker",
-      "duckduckgo",
-      "old_site"
+      "duckduckgo"
    ],
    "slug" : "106/2014/8/1/What-s-new-on-CPAN-July-2014",
    "authors" : [

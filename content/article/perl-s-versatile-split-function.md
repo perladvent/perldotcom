@@ -15,8 +15,7 @@
       "whitespace",
       "trim",
       "char",
-      "join",
-      "old_site"
+      "join"
    ],
    "date" : "2014-10-24T12:42:52",
    "title" : "Perl's versatile split function"

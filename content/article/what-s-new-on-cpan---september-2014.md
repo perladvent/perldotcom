@@ -9,8 +9,7 @@
       "analytics",
       "dns",
       "beer",
-      "rex",
-      "old_site"
+      "rex"
    ],
    "draft" : false,
    "date" : "2014-10-03T12:06:35",

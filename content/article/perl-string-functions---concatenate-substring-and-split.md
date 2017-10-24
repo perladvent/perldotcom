@@ -9,8 +9,7 @@
    "tags" : [
       "operator",
       "string",
-      "syntax",
-      "old_site"
+      "syntax"
    ],
    "slug" : "8/2013/3/31/Perl-string-functions---concatenate-substring-and-split",
    "description" : "Perl has many string functions, let's take a look at a some of the most common ones: concatenate, substring and split.",

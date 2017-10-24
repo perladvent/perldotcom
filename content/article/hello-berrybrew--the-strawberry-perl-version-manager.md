@@ -11,8 +11,7 @@
       "perlbrew",
       "config",
       "berrybrew",
-      "strawberry_perl",
-      "old_site"
+      "strawberry_perl"
    ],
    "date" : "2014-10-10T12:39:52",
    "description" : "A fruitier perlbrew for Windows",

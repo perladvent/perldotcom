@@ -7,8 +7,7 @@
       "configuration",
       "cpan",
       "module",
-      "operator",
-      "old_site"
+      "operator"
    ],
    "image" : null,
    "description" : "",

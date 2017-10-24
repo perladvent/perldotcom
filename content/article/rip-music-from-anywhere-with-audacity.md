@@ -16,8 +16,7 @@
       "soundcloud",
       "pandora",
       "portaudio",
-      "mp3",
-      "old_site"
+      "mp3"
    ]
 }
 

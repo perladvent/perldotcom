@@ -15,8 +15,7 @@
       "rss",
       "feed",
       "atom",
-      "bot",
-      "old_site"
+      "bot"
    ],
    "date" : "2015-02-09T13:41:04"
 }

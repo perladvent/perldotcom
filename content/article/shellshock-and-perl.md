@@ -8,8 +8,7 @@
       "vulnerability",
       "env",
       "system",
-      "exec",
-      "old_site"
+      "exec"
    ],
    "image" : "/images/115/BCF626CC-4583-11E4-951D-2D78FA3BB728.jpeg",
    "categories" : "security",

@@ -4,8 +4,7 @@
    "categories" : "development",
    "tags" : [
       "community",
-      "news",
-      "old_site"
+      "news"
    ],
    "description" : "We review the new features, changes and enhancements of the new Perl release",
    "authors" : [

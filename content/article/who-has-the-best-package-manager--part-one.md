@@ -5,8 +5,7 @@
       "npm",
       "pypi",
       "rubygems",
-      "package_manager",
-      "old_site"
+      "package_manager"
    ],
    "image" : "/images/110/27B53D22-28C9-11E4-BF47-7C15C254CEE0.png",
    "date" : "2014-08-21T13:03:03",

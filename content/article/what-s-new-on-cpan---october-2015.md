@@ -12,8 +12,7 @@
       "slack",
       "jira",
       "fnv",
-      "linkedin",
-      "old_site"
+      "linkedin"
    ],
    "date" : "2015-11-03T15:24:04",
    "description" : "A curated look at October's new CPAN uploads"

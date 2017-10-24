@@ -16,8 +16,7 @@
       "terminal",
       "command_line",
       "perl-6",
-      "rakudo",
-      "old_site"
+      "rakudo"
    ]
 }
 

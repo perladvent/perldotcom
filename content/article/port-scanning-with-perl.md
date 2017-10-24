@@ -11,8 +11,7 @@
       "tcp",
       "infosec",
       "udp",
-      "libpcap",
-      "old_site"
+      "libpcap"
    ],
    "image" : "/images/183/2714AD7A-2EE1-11E5-B064-7C659059EE40.jpeg",
    "date" : "2015-07-20T13:14:57"

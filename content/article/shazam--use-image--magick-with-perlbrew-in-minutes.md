@@ -4,8 +4,7 @@
       "configuration",
       "sysadmin",
       "perlbrew",
-      "imagemagick",
-      "old_site"
+      "imagemagick"
    ],
    "categories" : "tooling",
    "authors" : [

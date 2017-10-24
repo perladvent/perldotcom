@@ -12,8 +12,7 @@
       "wget",
       "recursive",
       "recursion",
-      "webapp",
-      "old_site"
+      "webapp"
    ],
    "authors" : [
       "david-farrell"

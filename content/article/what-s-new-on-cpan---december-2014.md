@@ -15,8 +15,7 @@
       "vultr",
       "instapaper",
       "geo_code",
-      "bitcoin",
-      "old_site"
+      "bitcoin"
    ],
    "title" : "What's new on CPAN - December 2014"
 }

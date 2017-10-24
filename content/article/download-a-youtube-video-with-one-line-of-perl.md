@@ -3,8 +3,7 @@
    "draft" : false,
    "tags" : [
       "one_liner",
-      "youtube",
-      "old_site"
+      "youtube"
    ],
    "description" : "... and a lot of of help from WWW::YouTube::Download",
    "authors" : [

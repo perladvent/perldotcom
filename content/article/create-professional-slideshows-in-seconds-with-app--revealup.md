@@ -12,8 +12,7 @@
       "app",
       "javascript",
       "github",
-      "reveal_js",
-      "old_site"
+      "reveal_js"
    ],
    "draft" : false
 }

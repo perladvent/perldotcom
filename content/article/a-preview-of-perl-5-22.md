@@ -9,8 +9,7 @@
    "tags" : [
       "5",
       "22",
-      "features",
-      "old_site"
+      "features"
    ],
    "draft" : false,
    "date" : "2015-04-10T14:29:14",

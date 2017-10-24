@@ -4,8 +4,7 @@
    "tags" : [
       "catalyst",
       "dancer",
-      "mvc",
-      "old_site"
+      "mvc"
    ],
    "categories" : "web",
    "image" : "/images/85/ECCE3D08-FF2E-11E3-8D5F-5C05A68B9E16.png",

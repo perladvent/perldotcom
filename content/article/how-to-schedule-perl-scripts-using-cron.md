@@ -15,8 +15,7 @@
       "unix",
       "sysadmin",
       "mac",
-      "config",
-      "old_site"
+      "config"
    ]
 }
 

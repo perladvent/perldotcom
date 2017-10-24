@@ -6,8 +6,7 @@
       "catalyst",
       "dancer",
       "mojolicious",
-      "cache",
-      "old_site"
+      "cache"
    ],
    "image" : "/images/76/EC83FACC-FF2E-11E3-BBAC-5C05A68B9E16.jpeg",
    "date" : "2014-03-11T03:18:00",

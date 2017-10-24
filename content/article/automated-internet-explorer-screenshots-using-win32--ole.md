@@ -15,8 +15,7 @@
       "ole",
       "screenshot",
       "internet_explorer",
-      "win32",
-      "old_site"
+      "win32"
    ]
 }
 

@@ -8,8 +8,7 @@
    "tags" : [
       "database",
       "module",
-      "password_manager",
-      "old_site"
+      "password_manager"
    ],
    "date" : "2014-03-24T13:00:38",
    "categories" : "apps",

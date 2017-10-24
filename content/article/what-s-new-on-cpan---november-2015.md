@@ -11,8 +11,7 @@
       "lz4",
       "handlebars",
       "consul",
-      "tvmaze",
-      "old_site"
+      "tvmaze"
    ],
    "date" : "2015-12-08T04:34:15",
    "authors" : [

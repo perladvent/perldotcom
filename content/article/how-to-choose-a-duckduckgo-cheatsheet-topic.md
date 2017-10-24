@@ -6,8 +6,7 @@
    "tags" : [
       "seo",
       "goodie",
-      "duckduckhack",
-      "old_site"
+      "duckduckhack"
    ],
    "image" : "/images/191/5E030C7A-E6E1-11E4-9A7F-886D1846911D.jpeg",
    "authors" : [

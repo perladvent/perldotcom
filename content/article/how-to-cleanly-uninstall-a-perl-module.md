@@ -11,8 +11,7 @@
       "module",
       "sysadmin",
       "cpanm",
-      "cpanminus",
-      "old_site"
+      "cpanminus"
    ],
    "authors" : [
       "david-farrell"

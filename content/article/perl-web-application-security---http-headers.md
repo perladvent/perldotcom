@@ -11,8 +11,7 @@
       "catalyst",
       "dancer",
       "mojolicious",
-      "mvc",
-      "old_site"
+      "mvc"
    ],
    "draft" : false,
    "title" : "Perl web application security - HTTP headers"

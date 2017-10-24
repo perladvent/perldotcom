@@ -12,8 +12,7 @@
       "bot",
       "twitter",
       "automation",
-      "tweet",
-      "old_site"
+      "tweet"
    ],
    "authors" : [
       "david-farrell"

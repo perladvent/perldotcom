@@ -7,8 +7,7 @@
       "docker",
       "search",
       "api",
-      "net_github",
-      "old_site"
+      "net_github"
    ],
    "authors" : [
       "david-farrell"

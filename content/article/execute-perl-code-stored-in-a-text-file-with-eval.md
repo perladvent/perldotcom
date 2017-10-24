@@ -4,8 +4,7 @@
       "string",
       "syntax",
       "wizardry",
-      "eval",
-      "old_site"
+      "eval"
    ],
    "categories" : "development",
    "title" : "Execute Perl code stored in a text file with eval",

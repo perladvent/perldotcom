@@ -8,8 +8,7 @@
       "module",
       "multicore",
       "optimization",
-      "multithreading",
-      "old_site"
+      "multithreading"
    ],
    "date" : "2014-01-21T03:22:40",
    "image" : "/images/61/EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png",

@@ -12,8 +12,7 @@
       "module",
       "syntax",
       "html",
-      "javascript",
-      "old_site"
+      "javascript"
    ],
    "slug" : "60/2014/1/13/Display-beautiful-Perl-code-in-HTML-without-JavaScript"
 }

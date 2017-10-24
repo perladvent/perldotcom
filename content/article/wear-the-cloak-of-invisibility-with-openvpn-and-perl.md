@@ -13,8 +13,7 @@
       "linux",
       "useragent",
       "openvpn",
-      "screen_scraping",
-      "old_site"
+      "screen_scraping"
    ]
 }
 

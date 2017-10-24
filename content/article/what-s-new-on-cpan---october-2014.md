@@ -19,8 +19,7 @@
       "cloud_convert",
       "fuzzy_match",
       "mojo",
-      "sitemap",
-      "old_site"
+      "sitemap"
    ],
    "draft" : false
 }

@@ -8,8 +8,7 @@
       "distribution",
       "cpanday",
       "pause",
-      "celebration",
-      "old_site"
+      "celebration"
    ],
    "slug" : "109/2014/8/13/Celebrate-CPAN-day-on-August-16th",
    "categories" : "community",

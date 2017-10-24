@@ -5,8 +5,7 @@
    "draft" : false,
    "tags" : [
       "configuration",
-      "module",
-      "old_site"
+      "module"
    ],
    "date" : "2013-04-25T18:39:48",
    "title" : "Use Module::Version to get the version of an installed Perl module",

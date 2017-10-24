@@ -14,8 +14,7 @@
       "time",
       "datetime",
       "strptime",
-      "strftime",
-      "old_site"
+      "strftime"
    ],
    "date" : "2014-01-10T04:24:25"
 }

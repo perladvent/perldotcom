@@ -10,8 +10,7 @@
       "mojo",
       "email",
       "verification",
-      "automated",
-      "old_site"
+      "automated"
    ],
    "categories" : "web",
    "date" : "2015-09-18T11:46:46",

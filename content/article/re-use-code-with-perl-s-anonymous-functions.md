@@ -8,8 +8,7 @@
    "tags" : [
       "functional",
       "subroutine",
-      "sysadmin",
-      "old_site"
+      "sysadmin"
    ],
    "slug" : "34/2013/7/17/Re-use-code-with-Perl-s-anonymous-functions",
    "description" : "An anonymous function in Perl is an unnamed subroutine. But what are they good for? This article shows how through using anonymous functions it's possible to write more generic, re-usable Perl code.",

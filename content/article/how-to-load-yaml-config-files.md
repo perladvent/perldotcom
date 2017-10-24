@@ -9,8 +9,7 @@
       "configuration",
       "config",
       "yaml",
-      "libyaml",
-      "old_site"
+      "libyaml"
    ],
    "authors" : [
       "david-farrell"

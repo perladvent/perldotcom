@@ -10,8 +10,7 @@
       "object",
       "attribute",
       "method",
-      "typeglob",
-      "old_site"
+      "typeglob"
    ],
    "draft" : false,
    "title" : "Add Moose-style attribute accessors to your Perl classes",

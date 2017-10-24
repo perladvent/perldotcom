@@ -4,8 +4,7 @@
    "tags" : [
       "javascript",
       "firefox",
-      "mechanize",
-      "old_site"
+      "mechanize"
    ],
    "image" : "/images/138/589C58AA-7EE4-11E4-9429-0240B3613736.png",
    "authors" : [

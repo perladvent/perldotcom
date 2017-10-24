@@ -4,8 +4,7 @@
    "tags" : [
       "open_source",
       "nyc",
-      "miniconf",
-      "old_site"
+      "miniconf"
    ],
    "categories" : "community",
    "image" : "/images/175/3103D79E-F9D4-11E4-8FFE-C354103B7DD2.png",

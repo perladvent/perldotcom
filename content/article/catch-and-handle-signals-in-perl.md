@@ -8,8 +8,7 @@
       "core",
       "signal",
       "posix",
-      "sigint",
-      "old_site"
+      "sigint"
    ],
    "categories" : "development",
    "slug" : "37/2013/8/18/Catch-and-Handle-Signals-in-Perl",

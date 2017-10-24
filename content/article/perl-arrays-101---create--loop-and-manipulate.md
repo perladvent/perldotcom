@@ -10,8 +10,7 @@
       "pop",
       "shift",
       "unshift",
-      "foreach",
-      "old_site"
+      "foreach"
    ],
    "description" : "Arrays in Perl contain an ordered list of values that can be accessed using built-in functions. They are one of the most useful data structures and frequently used in Perl programming.",
    "authors" : [

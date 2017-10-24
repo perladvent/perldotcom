@@ -8,8 +8,7 @@
       "mastering_perl",
       "symbol_table",
       "ruby",
-      "did_you_mean",
-      "old_site"
+      "did_you_mean"
    ],
    "description" : "Catching and handling undefined subroutine exceptions",
    "authors" : [

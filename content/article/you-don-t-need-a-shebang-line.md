@@ -1,8 +1,7 @@
 {
    "tags" : [
       "configuration",
-      "syntax",
-      "old_site"
+      "syntax"
    ],
    "date" : "2013-03-25T23:39:55",
    "image" : null,

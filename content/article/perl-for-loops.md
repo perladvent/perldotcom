@@ -12,8 +12,7 @@
       "loop",
       "array",
       "foreach",
-      "for",
-      "old_site"
+      "for"
    ],
    "image" : null
 }

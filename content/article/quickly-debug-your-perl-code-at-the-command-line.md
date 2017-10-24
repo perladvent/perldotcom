@@ -8,8 +8,7 @@
       "one_liner",
       "terminal",
       "debug",
-      "testing",
-      "old_site"
+      "testing"
    ],
    "categories" : "testing",
    "title" : "Quickly Debug your Perl code at the command line",

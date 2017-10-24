@@ -8,8 +8,7 @@
    "draft" : false,
    "tags" : [
       "community",
-      "news",
-      "old_site"
+      "news"
    ],
    "slug" : "99/2014/6/23/YAPC--NA-2014-Talks-Preview",
    "description" : "We pick out some of the most promising talks in the schedule",

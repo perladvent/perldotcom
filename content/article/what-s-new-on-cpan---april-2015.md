@@ -8,8 +8,7 @@
       "electron",
       "couchdb",
       "dynamodb",
-      "minecraft",
-      "old_site"
+      "minecraft"
    ],
    "authors" : [
       "david-farrell"

@@ -1,8 +1,7 @@
 {
    "tags" : [
       "module",
-      "news",
-      "old_site"
+      "news"
    ],
    "description" : "A curated look at March's new CPAN uploads",
    "image" : null,

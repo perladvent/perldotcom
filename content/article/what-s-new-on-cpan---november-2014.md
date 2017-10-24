@@ -11,8 +11,7 @@
       "jump_hash",
       "todoist",
       "gnucash",
-      "bitbucket",
-      "old_site"
+      "bitbucket"
    ],
    "description" : "A curated look at the latest CPAN uploads",
    "date" : "2014-12-02T14:15:16",

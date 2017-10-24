@@ -21,8 +21,7 @@
       "reveal",
       "js",
       "phantomjs",
-      "pic",
-      "old_site"
+      "pic"
    ]
 }
 

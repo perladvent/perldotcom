@@ -12,8 +12,7 @@
       "iod",
       "arduino",
       "raspberry_pi",
-      "unicode",
-      "old_site"
+      "unicode"
    ],
    "slug" : "113/2014/9/2/What-s-new-on-CPAN-August-2014",
    "description" : "A curated look at August's new CPAN uploads",

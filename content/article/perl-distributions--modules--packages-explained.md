@@ -8,8 +8,7 @@
       "module",
       "config",
       "distribution",
-      "package",
-      "old_site"
+      "package"
    ],
    "date" : "2014-06-13T12:26:00",
    "title" : "Perl distributions, modules, packages explained",

@@ -3,8 +3,7 @@
    "tags" : [
       "cpan",
       "creative_commons",
-      "toolchain",
-      "old_site"
+      "toolchain"
    ],
    "image" : "/images/200/3BB0C5B2-9565-11E5-9B7B-6AE8E6E91CBA.png",
    "title" : "How to install any* Perl module",

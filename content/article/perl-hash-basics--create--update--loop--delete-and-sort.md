@@ -14,8 +14,7 @@
       "value",
       "pair",
       "length",
-      "size",
-      "old_site"
+      "size"
    ],
    "categories" : "development",
    "authors" : [

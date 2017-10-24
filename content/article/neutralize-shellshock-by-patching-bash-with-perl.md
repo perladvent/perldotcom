@@ -10,8 +10,7 @@
       "perl",
       "shellshock",
       "fix",
-      "bashfix",
-      "old_site"
+      "bashfix"
    ],
    "description" : "Unsupported Linux version? Upgrade Bash now",
    "categories" : "security",

@@ -7,8 +7,7 @@
    "categories" : "development",
    "tags" : [
       "operator",
-      "string",
-      "old_site"
+      "string"
    ],
    "authors" : [
       "david-farrell"

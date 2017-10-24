@@ -13,8 +13,7 @@
       "influxdb",
       "crate",
       "ssh",
-      "dios",
-      "old_site"
+      "dios"
    ],
    "date" : "2015-08-04T12:55:33",
    "slug" : "184/2015/8/4/What-s-new-on-CPAN---July-2015",

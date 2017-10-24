@@ -12,8 +12,7 @@
    "tags" : [
       "terminal",
       "du",
-      "filesystem",
-      "old_site"
+      "filesystem"
    ]
 }
 

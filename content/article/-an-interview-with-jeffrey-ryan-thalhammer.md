@@ -15,8 +15,7 @@
       "stratopan",
       "cloud",
       "saas",
-      "interview",
-      "old_site"
+      "interview"
    ]
 }
 

@@ -10,8 +10,7 @@
       "cpan",
       "chromatic",
       "pragmatic_bookshelf",
-      "book-review",
-      "old_site"
+      "book-review"
    ],
    "title" : "Modern Perl 4th edition, a review",
    "date" : "2015-12-21T00:02:25",

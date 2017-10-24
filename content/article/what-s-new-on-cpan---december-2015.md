@@ -7,8 +7,7 @@
       "parsito",
       "dbgp",
       "dna",
-      "dijkstra",
-      "old_site"
+      "dijkstra"
    ],
    "image" : "/images/209/EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
    "title" : "What's new on CPAN - December 2015",

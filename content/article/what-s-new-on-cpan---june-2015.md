@@ -14,8 +14,7 @@
       "hipchat",
       "ditaa",
       "bonusly",
-      "zendesk",
-      "old_site"
+      "zendesk"
    ],
    "title" : "What's new on CPAN - June 2015",
    "description" : "Our monthly curated guide to CPAN's newest modules",

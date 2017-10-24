@@ -9,8 +9,7 @@
       "dbix_class",
       "orm",
       "testing",
-      "sqlite",
-      "old_site"
+      "sqlite"
    ],
    "authors" : [
       "david-farrell"

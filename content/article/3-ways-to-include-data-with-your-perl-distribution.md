@@ -7,8 +7,7 @@
    "tags" : [
       "configuration",
       "module",
-      "__data__",
-      "old_site"
+      "__data__"
    ],
    "title" : "3 ways to include data with your Perl distribution",
    "authors" : [

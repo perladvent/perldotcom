@@ -11,8 +11,7 @@
    "tags" : [
       "operator",
       "division",
-      "modulo",
-      "old_site"
+      "modulo"
    ],
    "image" : null
 }

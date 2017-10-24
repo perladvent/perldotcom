@@ -14,8 +14,7 @@
       "perl_6",
       "nyc",
       "hackathon",
-      "rt",
-      "old_site"
+      "rt"
    ]
 }
 

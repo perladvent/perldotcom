@@ -9,8 +9,7 @@
    "tags" : [
       "community",
       "news",
-      "perltricks",
-      "old_site"
+      "perltricks"
    ],
    "slug" : "78/2014/3/21/PerlTricks-com-is-a-year-old",
    "draft" : false,

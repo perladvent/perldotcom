@@ -3,8 +3,7 @@
       "tcp",
       "icmp",
       "udp",
-      "nmap",
-      "old_site"
+      "nmap"
    ],
    "slug" : "188/2015/8/15/Port-scanning-with-Perl--Part-II",
    "image" : "/images/188/2714AD7A-2EE1-11E5-B064-7C659059EE40.jpeg",

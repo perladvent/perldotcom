@@ -9,8 +9,7 @@
    "tags" : [
       "perl_6",
       "grammar",
-      "pegex",
-      "old_site"
+      "pegex"
    ],
    "image" : null,
    "description" : "They're powerful and easy to whip up",

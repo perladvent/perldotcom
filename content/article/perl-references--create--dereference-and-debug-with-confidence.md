@@ -10,8 +10,7 @@
       "scalar",
       "array",
       "hash",
-      "reference",
-      "old_site"
+      "reference"
    ],
    "authors" : [
       "david-farrell"

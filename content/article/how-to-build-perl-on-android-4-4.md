@@ -12,8 +12,7 @@
       "configuration",
       "sysadmin",
       "android",
-      "kitkat",
-      "old_site"
+      "kitkat"
    ],
    "draft" : false
 }

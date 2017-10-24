@@ -7,8 +7,7 @@
    "tags" : [
       "community",
       "culture",
-      "modernperl",
-      "old_site"
+      "modernperl"
    ],
    "slug" : "13/2013/4/6/Modern-Perl-mecca--modernperlbooks-com",
    "title" : "Modern Perl mecca: modernperlbooks.com",

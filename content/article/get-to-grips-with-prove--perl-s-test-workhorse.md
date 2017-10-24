@@ -4,11 +4,11 @@
    "description" : "The ubiquitous test runner is a powerful tool for your arsenal",
    "slug" : "177/2015/6/9/Get-to-grips-with-Prove--Perl-s-test-workhorse",
    "tags" : [
-      "perl6",
+      "perl-6",
       "test",
       "prove",
       "cheet_sheet",
-      "old_site"
+      "test-anything-protocol"
    ],
    "categories" : "testing",
    "title" : "Get to grips with Prove, Perl's test workhorse",

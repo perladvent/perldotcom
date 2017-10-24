@@ -13,8 +13,7 @@
       "regex",
       "variable",
       "dereference",
-      "syntax",
-      "old_site"
+      "syntax"
    ]
 }
 

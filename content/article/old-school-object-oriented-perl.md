@@ -13,8 +13,7 @@
       "class",
       "object",
       "attribute",
-      "inheritance",
-      "old_site"
+      "inheritance"
    ],
    "description" : "If you need to write object oriented Perl code with no dependencies, then you need to use the old school Perl syntax. This article describes the main features of old school object oriented Perl including class declaration, constructors, destructors, methods, attributes, accessors and inheritance.",
    "categories" : "development"

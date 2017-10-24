@@ -12,8 +12,7 @@
       "github",
       "movable_type",
       "evozon",
-      "open_source",
-      "old_site"
+      "open_source"
    ],
    "date" : "2014-02-17T04:09:21",
    "description" : "We review the new open source blogging platform",

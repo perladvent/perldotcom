@@ -9,8 +9,7 @@
       "security",
       "disqus",
       "comments",
-      "privacy",
-      "old_site"
+      "privacy"
    ],
    "date" : "2014-07-29T11:46:55",
    "title" : "Your users deserve better than Disqus",

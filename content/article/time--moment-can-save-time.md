@@ -5,8 +5,7 @@
       "time",
       "datetime",
       "8601",
-      "moment",
-      "old_site"
+      "moment"
    ],
    "draft" : false,
    "slug" : "148/2015/2/2/Time--Moment-can-save-time",

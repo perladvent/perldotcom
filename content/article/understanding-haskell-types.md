@@ -14,8 +14,7 @@
       "oreilly",
       "cis194",
       "lyas",
-      "ghci",
-      "old_site"
+      "ghci"
    ]
 }
 

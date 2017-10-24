@@ -8,8 +8,7 @@
    "tags" : [
       "syntax",
       "json",
-      "cheatsheet",
-      "old_site"
+      "cheatsheet"
    ],
    "title" : "Check your DuckDuckGo cheatsheets with Perl",
    "description" : "Zero-in on any defects with this Perl script",

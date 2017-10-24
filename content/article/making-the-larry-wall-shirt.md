@@ -7,8 +7,7 @@
    "tags" : [
       "gimp",
       "inkscape",
-      "stencil",
-      "old_site"
+      "stencil"
    ],
    "categories" : "community",
    "image" : "/images/201/A73A0F48-995A-11E5-A40D-AF14E7E91CBA.png",

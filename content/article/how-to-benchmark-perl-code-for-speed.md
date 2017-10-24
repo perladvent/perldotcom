@@ -9,8 +9,7 @@
    "tags" : [
       "benchmarking",
       "module",
-      "core",
-      "old_site"
+      "core"
    ],
    "draft" : false,
    "categories" : "development",

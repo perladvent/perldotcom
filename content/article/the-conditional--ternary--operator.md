@@ -8,8 +8,7 @@
    "draft" : false,
    "tags" : [
       "operator",
-      "syntax",
-      "old_site"
+      "syntax"
    ],
    "image" : null,
    "categories" : "development",

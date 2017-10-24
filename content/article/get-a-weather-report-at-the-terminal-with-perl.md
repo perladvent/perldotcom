@@ -11,8 +11,7 @@
       "wundergound",
       "script",
       "terminal",
-      "command_line",
-      "old_site"
+      "command_line"
    ],
    "description" : "WWW::Wunderground::API makes it easy to pull weather data for your area",
    "slug" : "114/2014/9/11/Get-a-weather-report-at-the-terminal-with-Perl",

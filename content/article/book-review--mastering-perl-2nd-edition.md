@@ -8,7 +8,6 @@
       "david-farrell"
    ],
    "tags" : [
-      "old_site",
       "book-review"
    ],
    "date" : "2014-02-10T05:24:44",

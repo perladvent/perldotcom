@@ -11,8 +11,7 @@
       "curlmyip",
       "geo_ip",
       "geolocate",
-      "maxmind",
-      "old_site"
+      "maxmind"
    ],
    "image" : null,
    "description" : "The WWW::curlmyip module is an API for curlmyip.com",

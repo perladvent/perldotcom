@@ -14,8 +14,7 @@
       "directconnect",
       "google_analytics",
       "pocket",
-      "airbrake",
-      "old_site"
+      "airbrake"
    ],
    "draft" : false,
    "slug" : "176/2015/6/4/What-s-new-on-CPAN---May-2015",

@@ -14,8 +14,7 @@
       "perl-6",
       "productivity",
       "vim",
-      "vimscript",
-      "old_site"
+      "vimscript"
    ]
 }
 

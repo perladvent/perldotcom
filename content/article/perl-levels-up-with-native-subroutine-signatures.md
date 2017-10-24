@@ -2,8 +2,7 @@
    "tags" : [
       "modernperl",
       "subroutine",
-      "method",
-      "old_site"
+      "method"
    ],
    "image" : null,
    "date" : "2014-02-24T03:55:52",

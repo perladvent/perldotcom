@@ -5,8 +5,7 @@
    "tags" : [
       "operator",
       "string",
-      "variable",
-      "old_site"
+      "variable"
    ],
    "categories" : "development",
    "date" : "2013-03-30T18:49:41",

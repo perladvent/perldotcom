@@ -1,8 +1,7 @@
 {
    "tags" : [
       "configuration",
-      "version",
-      "old_site"
+      "version"
    ],
    "image" : null,
    "draft" : false,

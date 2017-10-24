@@ -5,8 +5,7 @@
       "duckduckgo",
       "perldoc",
       "cheatsheet",
-      "app_duckpan",
-      "old_site"
+      "app_duckpan"
    ],
    "image" : "/images/169/5E030C7A-E6E1-11E4-9A7F-886D1846911D.jpeg",
    "categories" : "community",

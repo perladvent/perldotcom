@@ -11,8 +11,7 @@
    "tags" : [
       "irssi",
       "irc",
-      "gnome3",
-      "old_site"
+      "gnome3"
    ],
    "image" : "/images/95/ED13777E-FF2E-11E3-8E65-5C05A68B9E16.png"
 }

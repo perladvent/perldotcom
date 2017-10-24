@@ -17,8 +17,7 @@
       "aes",
       "encryption",
       "security",
-      "privacy",
-      "old_site"
+      "privacy"
    ]
 }
 

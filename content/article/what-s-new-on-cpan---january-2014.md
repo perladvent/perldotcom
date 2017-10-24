@@ -2,8 +2,7 @@
    "draft" : false,
    "tags" : [
       "module",
-      "news",
-      "old_site"
+      "news"
    ],
    "date" : "2014-02-03T13:29:44",
    "slug" : "65/2014/2/3/What-s-new-on-CPAN---January-2014",

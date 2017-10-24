@@ -6,8 +6,7 @@
    "tags" : [
       "mojolicious",
       "websockets",
-      "novnc",
-      "old_site"
+      "novnc"
    ],
    "slug" : "212/2016/2/2/Get-an-in-browser-remote-desktop-with-Mojolicious-and-noVNC",
    "authors" : [

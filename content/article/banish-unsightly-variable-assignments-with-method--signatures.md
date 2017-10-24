@@ -12,8 +12,7 @@
    "tags" : [
       "subroutine",
       "syntax",
-      "method",
-      "old_site"
+      "method"
    ]
 }
 

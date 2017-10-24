@@ -8,8 +8,7 @@
       "config",
       "stratopan",
       "cloud",
-      "saas",
-      "old_site"
+      "saas"
    ],
    "authors" : [
       "david-farrell"

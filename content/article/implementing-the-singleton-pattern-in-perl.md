@@ -3,8 +3,7 @@
       "object_oriented",
       "object",
       "pattern",
-      "gof",
-      "old_site"
+      "gof"
    ],
    "description" : "Learn when and how to use this classic \"gang of four\" code pattern",
    "date" : "2013-12-11T04:33:35",

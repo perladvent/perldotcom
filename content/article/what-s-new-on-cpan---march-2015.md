@@ -11,8 +11,7 @@
       "ltsv",
       "presto",
       "email",
-      "extjs",
-      "old_site"
+      "extjs"
    ],
    "authors" : [
       "david-farrell"

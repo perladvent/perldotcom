@@ -13,8 +13,7 @@
       "variable",
       "scalar",
       "array",
-      "syntax",
-      "old_site"
+      "syntax"
    ],
    "date" : "2013-04-03T22:24:28"
 }

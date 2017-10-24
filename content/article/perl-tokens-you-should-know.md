@@ -15,8 +15,7 @@
       "global_variables",
       "__package__",
       "__end__",
-      "__data__",
-      "old_site"
+      "__data__"
    ]
 }
 

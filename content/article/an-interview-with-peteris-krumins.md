@@ -9,8 +9,7 @@
       "powershell",
       "bash",
       "interview",
-      "one_liner",
-      "old_site"
+      "one_liner"
    ],
    "draft" : false,
    "image" : "/images/54/EBF9E79C-FF2E-11E3-A3E3-5C05A68B9E16.jpeg",

@@ -4,8 +4,7 @@
    "date" : "2013-04-13T12:31:25",
    "tags" : [
       "community",
-      "culture",
-      "old_site"
+      "culture"
    ],
    "title" : "Crowd funded Perl development: Pinto",
    "slug" : "18/2013/4/13/Crowd-funded-Perl-development--Pinto",

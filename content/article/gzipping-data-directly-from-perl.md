@@ -7,8 +7,7 @@
    "tags" : [
       "perl",
       "gzip",
-      "compression",
-      "old_site"
+      "compression"
    ],
    "title" : "Gzipping data directly from Perl",
    "authors" : [

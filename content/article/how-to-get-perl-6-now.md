@@ -8,8 +8,7 @@
       "windows",
       "rakudo",
       "osx",
-      "panda",
-      "old_site"
+      "panda"
    ],
    "slug" : "207/2015/12/31/How-to-get-Perl-6-now",
    "title" : "How to get Perl 6 now",

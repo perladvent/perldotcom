@@ -10,8 +10,7 @@
    "slug" : "75/2014/3/6/Perl-master---an-interview-with-brian-d-foy",
    "tags" : [
       "community",
-      "interview",
-      "old_site"
+      "interview"
    ],
    "date" : "2014-03-06T03:52:17"
 }

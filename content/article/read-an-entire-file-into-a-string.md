@@ -12,8 +12,7 @@
       "file",
       "filehandle",
       "open",
-      "slurp",
-      "old_site"
+      "slurp"
    ],
    "date" : "2013-04-21T20:54:15"
 }

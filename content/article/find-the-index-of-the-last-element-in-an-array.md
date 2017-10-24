@@ -2,8 +2,7 @@
    "tags" : [
       "array",
       "dereference",
-      "syntax",
-      "old_site"
+      "syntax"
    ],
    "image" : null,
    "authors" : [

@@ -7,8 +7,7 @@
    "tags" : [
       "community",
       "contest",
-      "velociraptor",
-      "old_site"
+      "velociraptor"
    ],
    "description" : "Enter for a chance to win an exclusive Perl Nerd Merit Badge",
    "title" : "Announcing: the Perl Nerd Merit Badge contest",

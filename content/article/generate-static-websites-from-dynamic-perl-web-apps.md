@@ -9,8 +9,7 @@
       "web",
       "wallflower",
       "psgi",
-      "framework",
-      "old_site"
+      "framework"
    ],
    "description" : "App::Wallflower generates static apps from PSGI applications",
    "image" : "/images/102/72C9C7DC-0AF2-11E4-B70D-23925E2B53EB.jpeg",

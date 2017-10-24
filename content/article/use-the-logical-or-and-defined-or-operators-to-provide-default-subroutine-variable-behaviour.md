@@ -12,8 +12,7 @@
    "tags" : [
       "modernperl",
       "operator",
-      "subroutine",
-      "old_site"
+      "subroutine"
    ]
 }
 

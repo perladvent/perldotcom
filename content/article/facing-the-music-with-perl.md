@@ -14,8 +14,7 @@
       "itunes",
       "metadata",
       "file_copy",
-      "digest_md5",
-      "old_site"
+      "digest_md5"
    ],
    "authors" : [
       "brian-d-foy"

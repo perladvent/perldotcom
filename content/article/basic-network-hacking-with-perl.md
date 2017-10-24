@@ -7,8 +7,7 @@
       "livehost",
       "port",
       "scan",
-      "hack",
-      "old_site"
+      "hack"
    ],
    "categories" : "security",
    "date" : "2015-07-01T12:51:31",

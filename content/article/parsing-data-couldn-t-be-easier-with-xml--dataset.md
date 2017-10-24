@@ -10,8 +10,7 @@
       "cpan",
       "xml",
       "data",
-      "parse",
-      "old_site"
+      "parse"
    ],
    "title" : "Parsing data couldn't be easier with XML::Dataset",
    "slug" : "87/2014/5/9/Parsing-data-couldn-t-be-easier-with-XML--Dataset",

@@ -16,8 +16,7 @@
       "office",
       "open",
       "read",
-      "spreadsheet_read",
-      "old_site"
+      "spreadsheet_read"
    ],
    "categories" : "data",
    "draft" : false

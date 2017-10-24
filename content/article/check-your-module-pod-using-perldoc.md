@@ -12,8 +12,7 @@
    "tags" : [
       "debugging",
       "documentation",
-      "pod",
-      "old_site"
+      "pod"
    ]
 }
 

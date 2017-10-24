@@ -15,8 +15,7 @@
       "rgb",
       "oauth",
       "diachronic",
-      "neovim",
-      "old_site"
+      "neovim"
    ],
    "date" : "2015-10-01T13:49:32"
 }

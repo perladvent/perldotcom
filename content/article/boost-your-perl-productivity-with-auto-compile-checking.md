@@ -13,8 +13,7 @@
       "sublime_text",
       "text_editor",
       "watch",
-      "syntastic",
-      "old_site"
+      "syntastic"
    ],
    "title" : "Boost your Perl productivity with auto-compile checking",
    "slug" : "133/2014/11/10/Boost-your-Perl-productivity-with-auto-compile-checking",

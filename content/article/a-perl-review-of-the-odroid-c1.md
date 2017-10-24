@@ -9,8 +9,7 @@
       "hardware",
       "odroid",
       "raspberrypi",
-      "device_webio",
-      "old_site"
+      "device_webio"
    ],
    "slug" : "152/2015/2/11/A-Perl-Review-of-the-ODROID-C1",
    "authors" : [

@@ -13,8 +13,7 @@
       "community",
       "windows",
       "app",
-      "open_source",
-      "old_site"
+      "open_source"
    ]
 }
 

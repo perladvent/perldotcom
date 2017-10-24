@@ -5,8 +5,7 @@
       "sysadmin",
       "config",
       "stratopan",
-      "cloud",
-      "old_site"
+      "cloud"
    ],
    "categories" : "tooling",
    "image" : "/images/71/EC623B08-FF2E-11E3-92DE-5C05A68B9E16.png",

@@ -13,8 +13,7 @@
       "signal",
       "sigint",
       "destructor",
-      "sigtrap",
-      "old_site"
+      "sigtrap"
    ],
    "draft" : false,
    "date" : "2013-08-27T02:57:30"

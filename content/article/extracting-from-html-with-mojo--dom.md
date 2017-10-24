@@ -13,8 +13,7 @@
       "html",
       "mojolicious",
       "parse",
-      "dom",
-      "old_site"
+      "dom"
    ]
 }
 

@@ -13,8 +13,7 @@
       "nginx",
       "dancer",
       "mojolicious",
-      "cache",
-      "old_site"
+      "cache"
    ],
    "title" : "Simple web framework FastCGI caching with nginx - part 2"
 }

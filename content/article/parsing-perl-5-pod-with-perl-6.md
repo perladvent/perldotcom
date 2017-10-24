@@ -14,8 +14,7 @@
       "perl-6",
       "grammar",
       "pegex",
-      "parser",
-      "old_site"
+      "parser"
    ]
 }
 

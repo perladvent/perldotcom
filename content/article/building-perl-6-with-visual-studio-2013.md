@@ -6,8 +6,7 @@
       "rakudo",
       "star",
       "visual_studio_2013",
-      "visual_studio_2015",
-      "old_site"
+      "visual_studio_2015"
    ],
    "draft" : false,
    "date" : "2014-11-18T13:34:36",

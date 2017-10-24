@@ -6,8 +6,7 @@
    "tags" : [
       "string",
       "array",
-      "split",
-      "old_site"
+      "split"
    ],
    "draft" : false,
    "categories" : "development",

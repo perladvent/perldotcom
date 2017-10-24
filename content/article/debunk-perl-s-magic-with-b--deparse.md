@@ -5,8 +5,7 @@
    ],
    "tags" : [
       "debugging",
-      "module",
-      "old_site"
+      "module"
    ],
    "categories" : "development",
    "slug" : "89/2014/5/15/Debunk-Perl-s-magic-with-B--Deparse",

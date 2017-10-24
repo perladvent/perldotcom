@@ -4,8 +4,7 @@
       "module",
       "object_oriented",
       "object",
-      "role",
-      "old_site"
+      "role"
    ],
    "title" : "Use roles in object oriented Perl with Role::Tiny",
    "date" : "2013-11-11T04:48:50",

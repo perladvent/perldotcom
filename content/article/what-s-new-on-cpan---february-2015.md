@@ -19,8 +19,7 @@
       "json",
       "surveymonkey",
       "haskell",
-      "toml",
-      "old_site"
+      "toml"
    ]
 }
 

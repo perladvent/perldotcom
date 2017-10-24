@@ -12,8 +12,7 @@
       "object_oriented",
       "object",
       "method",
-      "wizardry",
-      "old_site"
+      "wizardry"
    ],
    "image" : null
 }

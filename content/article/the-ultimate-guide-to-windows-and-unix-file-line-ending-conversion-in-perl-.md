@@ -16,8 +16,7 @@
       "powershell",
       "bash",
       "crlf",
-      "osx",
-      "old_site"
+      "osx"
    ]
 }
 

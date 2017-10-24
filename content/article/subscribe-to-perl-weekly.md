@@ -3,8 +3,7 @@
    "categories" : "community",
    "tags" : [
       "community",
-      "culture",
-      "old_site"
+      "culture"
    ],
    "authors" : [
       "david-farrell"

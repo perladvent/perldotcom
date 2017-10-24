@@ -3,8 +3,7 @@
       "operator",
       "string",
       "array",
-      "syntax",
-      "old_site"
+      "syntax"
    ],
    "slug" : "15/2013/4/9/List-shortcuts--qw-the-quote-whitespace-operator",
    "title" : "List shortcuts: qw the quote whitespace operator",

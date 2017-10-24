@@ -11,8 +11,7 @@
       "module",
       "sysadmin",
       "powershell",
-      "bash",
-      "old_site"
+      "bash"
    ],
    "date" : "2013-03-24T17:30:19",
    "description" : "Perl module features and behaviour can change from version to version and so knowing the version number of an installed Perl module can be useful in several scenarios. Below are three different command line methods for finding out the version number of an installed module that work on Bash and Windows Powershell. So fire up the terminal and get typing!",

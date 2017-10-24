@@ -10,8 +10,7 @@
    "slug" : "141/2014/12/15/The-Whitespace-in-the-Perl-community",
    "tags" : [
       "community",
-      "opportunity",
-      "old_site"
+      "opportunity"
    ],
    "image" : "/images/141/7EEFA988-8EAE-11E4-A6C2-215DA59D04B1.jpeg"
 }

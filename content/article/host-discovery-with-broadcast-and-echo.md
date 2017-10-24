@@ -15,8 +15,7 @@
       "icmp",
       "socket",
       "ping",
-      "udp",
-      "old_site"
+      "udp"
    ]
 }
 

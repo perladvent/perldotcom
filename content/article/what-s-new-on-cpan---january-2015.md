@@ -8,8 +8,7 @@
       "google_tasks",
       "data_fake",
       "devops",
-      "diff",
-      "old_site"
+      "diff"
    ],
    "image" : "/images/149/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
    "title" : "What's new on CPAN - January 2015",

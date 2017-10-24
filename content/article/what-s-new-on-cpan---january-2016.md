@@ -5,8 +5,7 @@
       "github",
       "lua",
       "rpm",
-      "sdcard",
-      "old_site"
+      "sdcard"
    ],
    "description" : "A curated look at January's new CPAN uploads",
    "title" : "What's new on CPAN - January 2016",

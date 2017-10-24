@@ -5,7 +5,6 @@
    "tags" : [
       "command_line",
       "multiplexer",
-      "old_site",
       "screen",
       "sysadmin",
       "terminal",
@@ -14,7 +13,7 @@
    ],
    "draft" : false,
    "date" : "2015-02-16T14:15:50",
-   "categories" : "apps",
+   "categories" : "tooling",
    "slug" : "153/2015/2/16/Get-to-grips-with-GNU-Screen",
    "title" : "Get to grips with GNU Screen",
    "description" : "Once you start using a multiplexer, you'll never go back",

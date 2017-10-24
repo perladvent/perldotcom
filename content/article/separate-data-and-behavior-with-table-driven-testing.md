@@ -4,8 +4,7 @@
    "tags" : [
       "data",
       "unit_testing",
-      "sprintf",
-      "old_site"
+      "sprintf"
    ],
    "date" : "2015-06-17T13:09:04",
    "slug" : "178/2015/6/17/Separate-data-and-behavior-with-table-driven-testing",

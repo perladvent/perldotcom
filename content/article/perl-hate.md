@@ -10,8 +10,7 @@
    "categories" : "community",
    "tags" : [
       "community",
-      "other",
-      "old_site"
+      "other"
    ],
    "image" : "/images/83/ECB8F812-FF2E-11E3-A6C7-5C05A68B9E16.jpeg"
 }

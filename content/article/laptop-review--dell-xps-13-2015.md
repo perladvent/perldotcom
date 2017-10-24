@@ -9,8 +9,7 @@
    "tags" : [
       "dell",
       "laptop",
-      "xps",
-      "old_site"
+      "xps"
    ],
    "authors" : [
       "david-farrell"

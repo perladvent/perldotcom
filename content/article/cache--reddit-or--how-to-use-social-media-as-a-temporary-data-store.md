@@ -3,8 +3,7 @@
       "cache",
       "reddit",
       "storable",
-      "humor",
-      "old_site"
+      "humor"
    ],
    "authors" : [
       "david-farrell"

@@ -3,8 +3,7 @@
       "community",
       "qa_hackathon",
       "berlin",
-      "2015",
-      "old_site"
+      "2015"
    ],
    "image" : "/images/147/AB4B476C-A5BA-11E4-B4C4-D3B19EE10EC8.jpeg",
    "title" : "Support the 2015 QA Hackathon",

@@ -16,8 +16,7 @@
       "quacknhack",
       "alleynyc",
       "ny_pm",
-      "bloomberg",
-      "old_site"
+      "bloomberg"
    ],
    "draft" : false
 }

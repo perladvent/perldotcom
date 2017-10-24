@@ -9,8 +9,7 @@
       "upload",
       "orm",
       "application",
-      "web",
-      "old_site"
+      "web"
    ],
    "date" : "2014-06-30T12:17:25",
    "title" : "Managing files is a breeze with this DBIx::Class plugin",

@@ -8,8 +8,7 @@
       "test",
       "unit_test",
       "test_exception",
-      "tap",
-      "old_site"
+      "tap"
    ],
    "slug" : "157/2015/3/5/How-to-test-for-exceptions-in-Perl",
    "title" : "How to test for exceptions in Perl",

@@ -2,8 +2,7 @@
    "tags" : [
       "module",
       "require",
-      "class_load",
-      "old_site"
+      "class_load"
    ],
    "title" : "Save time with compile tests",
    "draft" : false,

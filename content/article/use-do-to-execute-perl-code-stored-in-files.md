@@ -9,8 +9,7 @@
       "syntax",
       "wizardry",
       "eval",
-      "do",
-      "old_site"
+      "do"
    ],
    "image" : null,
    "authors" : [

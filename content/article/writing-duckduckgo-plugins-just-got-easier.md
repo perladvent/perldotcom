@@ -12,8 +12,7 @@
    "tags" : [
       "community",
       "search",
-      "json",
-      "old_site"
+      "json"
    ]
 }
 

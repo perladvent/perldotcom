@@ -12,8 +12,7 @@
    "tags" : [
       "one_liner",
       "news",
-      "offer",
-      "old_site"
+      "offer"
    ]
 }
 

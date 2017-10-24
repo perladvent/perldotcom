@@ -9,8 +9,7 @@
    "tags" : [
       "configuration",
       "cpan",
-      "sysadmin",
-      "old_site"
+      "sysadmin"
    ],
    "description" : "It's super easy with CPAN::Uploader",
    "date" : "2013-06-30T03:44:12",

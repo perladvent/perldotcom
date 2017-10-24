@@ -6,8 +6,7 @@
    "date" : "2014-03-03T04:10:36",
    "tags" : [
       "module",
-      "news",
-      "old_site"
+      "news"
    ],
    "authors" : [
       "david-farrell"

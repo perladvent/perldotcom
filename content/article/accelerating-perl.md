@@ -6,8 +6,7 @@
       "raspberry",
       "pi",
       "hardware",
-      "accelerometer",
-      "old_site"
+      "accelerometer"
    ],
    "description" : "Things move quickly with Perl. Use accelerometers to find out just how quickly.",
    "draft" : false,

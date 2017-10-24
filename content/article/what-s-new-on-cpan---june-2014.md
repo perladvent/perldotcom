@@ -15,8 +15,7 @@
       "cgi",
       "dist_zilla",
       "paypal",
-      "jenkins",
-      "old_site"
+      "jenkins"
    ],
    "description" : "Our curated guide to June's new CPAN uploads",
    "image" : "/images/100/0EFC8AF6-0259-11E4-9DBD-A8FCA58B9E16.png",

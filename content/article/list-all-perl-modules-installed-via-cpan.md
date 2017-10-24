@@ -8,8 +8,7 @@
    "tags" : [
       "cpan",
       "module",
-      "sysadmin",
-      "old_site"
+      "sysadmin"
    ],
    "slug" : "14/2013/4/7/List-all-Perl-modules-installed-via-CPAN",
    "draft" : false,

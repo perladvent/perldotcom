@@ -11,10 +11,9 @@
       "community",
       "github",
       "open_source",
-      "perl5",
-      "perl6",
-      "exercism_io",
-      "old_site"
+      "perl-5",
+      "perl-6",
+      "exercism_io"
    ],
    "date" : "2014-05-22T15:09:13",
    "slug" : "91/2014/5/22/How-to-contribute-to-the-exercism-io-Perl-5-repo"

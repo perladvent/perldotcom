@@ -11,8 +11,7 @@
       "unix",
       "variable",
       "windows",
-      "mac",
-      "old_site"
+      "mac"
    ],
    "title" : "Test if the user is root",
    "description" : "When Perl is executing a program, it maintains the user id of the process owner in a global variable ($<). When a Perl program is executed by root or a user with root privileges (e.g. using the sudo command), the user id variable is always set to zero. This can be checked at the command line:",

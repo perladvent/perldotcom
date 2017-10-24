@@ -8,8 +8,7 @@
       "modulino",
       "caller",
       "main",
-      "test_more",
-      "old_site"
+      "test_more"
    ],
    "authors" : [
       "brian-d-foy"

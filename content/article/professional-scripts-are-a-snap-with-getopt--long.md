@@ -2,8 +2,7 @@
    "tags" : [
       "app",
       "terminal",
-      "type_check",
-      "old_site"
+      "type_check"
    ],
    "date" : "2015-10-21T12:40:21",
    "draft" : false,

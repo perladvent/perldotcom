@@ -13,8 +13,7 @@
       "terminal",
       "command_line",
       "perldoc",
-      "productivity",
-      "old_site"
+      "productivity"
    ],
    "title" : "Hello perldoc, productivity booster",
    "date" : "2015-02-26T13:42:57",
