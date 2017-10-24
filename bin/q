@@ -21,6 +21,8 @@ my $metadata = join ',', @metadata;
 
 my $dbh = DBI->connect('dbi:SQLite::memory:', { RaiseError => 1 });
 $dbh->do("CREATE TABLE article ($metadata)");
+$dbh->do("CREATE TABLE author (article_id, author)");
+$dbh->do("CREATE TABLE tag (article_id, tag)");
 
 my $id = 0;
 for my $filename (File::Find::Rule->file->name('*.md')->in('content')) {
@@ -37,6 +39,15 @@ for my $filename (File::Find::Rule->file->name('*.md')->in('content')) {
   my @values = map { $data->{$_} } @metadata;
   $dbh->do("INSERT INTO article ($metadata) VALUES (?,?,?,?,?,?,?,?,?,?)",
     undef, @values);
+
+  for my $author (@{$data->{authors}}) {
+    $dbh->do("INSERT INTO author (article_id, author) VALUES (?,?)",
+      undef, $data->{id}, $author);
+  }
+  for my $tag (@{$data->{tags}}) {
+    $dbh->do("INSERT INTO tag (article_id, tag) VALUES (?,?)",
+      undef, $data->{id}, $tag);
+  }
 }
 
 my $sth = $dbh->prepare($sql);
