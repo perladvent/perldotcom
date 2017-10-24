@@ -1,7 +1,7 @@
 {
    "description" : "How to write your own uninstall modules script",
    "slug" : "3/2013/3/27/How-to-cleanly-uninstall-a-Perl-module",
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "date" : "2013-03-27T00:00:17",
    "title" : "How to cleanly uninstall a Perl module",
    "image" : null,

@@ -16,7 +16,7 @@
    "authors" : [
       "david-farrell"
    ],
-   "categories" : "perl6"
+   "categories": "perl-6"
 }
 
 

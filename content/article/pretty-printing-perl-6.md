@@ -7,7 +7,7 @@
     "draft"  : false,
     "image"  : "",
     "description" : "When .Str is not good enough",
-    "categories": "perl6"
+    "categories": "perl-6"
   }
 
 

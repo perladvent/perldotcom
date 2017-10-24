@@ -1,6 +1,6 @@
 {
    "title" : "Get started with Perl 6 one liners",
-   "categories" : "perl6",
+   "categories" : "perl-6",
    "image" : "/images/136/76F864F4-70BD-11E4-97E0-E519A241EDA8.png",
    "description" : "One liners in Perl are better than ever",
    "slug" : "136/2014/11/20/Get-started-with-Perl-6-one-liners",
@@ -15,7 +15,7 @@
       "perl",
       "terminal",
       "command_line",
-      "perl6",
+      "perl-6",
       "rakudo",
       "old_site"
    ]

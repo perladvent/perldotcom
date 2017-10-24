@@ -9,7 +9,7 @@
    "image" : "/images/200/3BB0C5B2-9565-11E5-9B7B-6AE8E6E91CBA.png",
    "title" : "How to install any* Perl module",
    "date" : "2015-11-28T00:11:17",
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "authors" : [
       "david-farrell"
    ],

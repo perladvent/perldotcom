@@ -14,7 +14,7 @@
       "david-farrell"
    ],
    "description" : "How to tackle this tricky config issue",
-   "categories" : "managing_perl",
+   "categories" : "managing-perl",
    "title" : "Installing Perl modules with C library dependencies",
    "image" : null,
    "date" : "2013-04-15T18:37:26",

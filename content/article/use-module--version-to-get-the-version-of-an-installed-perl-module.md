@@ -11,7 +11,7 @@
    "date" : "2013-04-25T18:39:48",
    "title" : "Use Module::Version to get the version of an installed Perl module",
    "image" : null,
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "slug" : "22/2013/4/25/Use-Module--Version-to-get-the-version-of-an-installed-Perl-module",
    "description" : "Another cool way to get the version of a module"
 }

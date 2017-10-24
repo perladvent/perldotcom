@@ -7,7 +7,7 @@
       "imagemagick",
       "old_site"
    ],
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "authors" : [
       "david-farrell"
    ],

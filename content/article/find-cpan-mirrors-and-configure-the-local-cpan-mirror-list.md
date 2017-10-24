@@ -10,7 +10,7 @@
    ],
    "title" : "Find CPAN mirrors and configure the local CPAN mirror list",
    "slug" : "44/2013/10/20/Find-CPAN-mirrors-and-configure-the-local-CPAN-mirror-list",
-   "categories" : "managing_perl",
+   "categories" : "cpan",
    "draft" : false,
    "authors" : [
       "david-farrell"

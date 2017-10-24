@@ -1,5 +1,5 @@
 {
-   "categories" : "perl6",
+   "categories" : "perl-6",
    "title" : "How to create a grammar in Perl 6",
    "draft" : false,
    "authors" : [

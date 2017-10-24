@@ -1,6 +1,6 @@
 {
    "image" : null,
-   "categories" : "managing_perl",
+   "categories" : "cpan",
    "date" : "2013-04-07T18:52:11",
    "authors" : [
       "david-farrell"

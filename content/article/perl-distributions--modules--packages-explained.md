@@ -16,7 +16,7 @@
    "authors" : [
       "david-farrell"
    ],
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "image" : "/images/96/ED19E49C-FF2E-11E3-BA0A-5C05A68B9E16.png",
    "draft" : false
 }

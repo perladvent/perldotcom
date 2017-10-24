@@ -4,13 +4,10 @@
    "image" : null,
    "date" : "2005-02-24T00:00:00-08:00",
    "tags" : [
-      "mandrake",
       "mandrakelinux",
-      "perl-and-linux",
-      "perl-applications",
-      "perl-gui",
-      "perl-pumpking",
-      "rafael-garcia-suarez"
+      "apps",
+      "graphics",
+      "pumpking"
    ],
    "thumbnail" : "/images/_pub_2005_02_24_mandrakelinux/111-mandrakes_gui.gif",
    "authors" : [

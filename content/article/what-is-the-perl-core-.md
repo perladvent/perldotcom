@@ -1,7 +1,7 @@
 {
    "date" : "2016-03-09T10:04:57",
    "title" : "What is the Perl Core?",
-   "categories" : "managing_perl",
+   "categories" : "managing-perl",
    "authors" : [
       "david-farrell"
    ],

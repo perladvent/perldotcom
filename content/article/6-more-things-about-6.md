@@ -4,7 +4,7 @@
    "authors" : [
       "brian-d-foy"
    ],
-   "categories" : "perl6",
+   "categories" : "perl-6",
    "tags" : [
      "rat", "return-value","perl-shop","failure","fmt"
    ],

@@ -6,13 +6,14 @@
    "date" : "2015-09-22T22:16:48",
    "draft" : false,
    "image" : "/images/194/C75D3D7C-6197-11E5-993C-AA2FD27BB60F.png",
-   "categories" : "perl6",
+   "categories" : "tooling",
    "slug" : "194/2015/9/22/Activating-Perl-6-syntax-highlighting-in-Vim",
    "title" : "Activating Perl 6 syntax highlighting in Vim",
    "tags" : [
       "config",
-      "perl6",
+      "perl-6",
       "productivity",
+      "vim",
       "vimscript",
       "old_site"
    ]

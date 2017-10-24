@@ -7,7 +7,7 @@
     "draft"  : false,
     "image"  : "/images/plotting-with-perl-6/book-cover.jpg",
     "description" : "Using Inline::Python and Matplotlib to visualize commit history",
-    "categories": "perl6"
+    "categories": "perl-6"
   }
 
 (This chapter originally appeared in [Perl 6 Fundamentals: A Primer with

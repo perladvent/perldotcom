@@ -11,7 +11,7 @@
       "old_site"
    ],
    "date" : "2013-08-10T14:33:18",
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "authors" : [
       "david-farrell"
    ],

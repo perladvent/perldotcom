@@ -1,6 +1,6 @@
 {
    "date" : "1999-10-15T00:00:00-08:00",
-   "categories" : "tutorials",
+   "categories" : "graphics",
    "title" : "Perl/Tk Tutorial",
    "image" : null,
    "tags" : [

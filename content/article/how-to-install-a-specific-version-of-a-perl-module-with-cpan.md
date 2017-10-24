@@ -12,7 +12,7 @@
    ],
    "image" : null,
    "description" : "",
-   "categories" : "managing_perl",
+   "categories" : "cpan",
    "authors" : [
       "david-farrell"
    ]

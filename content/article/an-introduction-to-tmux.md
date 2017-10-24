@@ -7,7 +7,7 @@
    ],
    "description" : "How to get started with the open source terminal multiplexer ",
    "tags" : [
-      "command_line",
+      "command-line",
       "multiplexer",
       "screen",
       "sysadmin",
@@ -15,7 +15,7 @@
       "terminator",
       "tmux"
    ],
-   "categories" : "apps",
+   "categories" : "tooling",
    "date" : "2016-02-24T09:29:18"
 }
 

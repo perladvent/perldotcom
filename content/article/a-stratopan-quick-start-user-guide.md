@@ -1,7 +1,7 @@
 {
    "slug" : "48/2013/11/15/A-Stratopan-quick-start-user-guide",
    "title" : "A Stratopan quick start user guide",
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "draft" : false,
    "tags" : [
       "sysadmin",

@@ -7,7 +7,7 @@
     "draft"  : false,
     "image"  : "",
     "description" : "A gentle introduction to Perl's C interface",
-    "categories": "development"
+    "categories": "tutorials"
   }
 
 

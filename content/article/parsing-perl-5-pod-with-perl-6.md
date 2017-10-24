@@ -8,10 +8,10 @@
    "title" : "Parsing Perl 5 pod with Perl 6",
    "image" : "/images/170/AA60EE46-EF3A-11E4-98F4-3C044E9B8265.png",
    "date" : "2015-04-30T13:14:23",
-   "categories" : "perl6",
+   "categories" : "perl-6",
    "tags" : [
       "pod",
-      "perl6",
+      "perl-6",
       "grammar",
       "pegex",
       "parser",

@@ -2,7 +2,7 @@
    "title" : "3 quick ways to find out the version number of an installed Perl module from the terminal",
    "draft" : false,
    "image" : null,
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "authors" : [
       "david-farrell"
    ],

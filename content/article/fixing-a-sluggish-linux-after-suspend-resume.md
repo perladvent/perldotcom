@@ -7,7 +7,7 @@
     "draft"  : false,
     "image"  : "",
     "description" : "The cpupower program can resolve throttled machines",
-    "categories": "apps"
+    "categories": "linux"
   }
 
 Occasionally when I suspend my Linux laptop (sleep mode) and later resume working the machine is sluggish. Perceptible pauses occur every time I change applications, scrolling is fractured and text edits are delayed. Monitoring tools like [htop](http://hisham.hm/htop/) and [iotop](http://guichaz.free.fr/iotop/) give no indication of system resources being under heavy load. I can close all applications and the sluggishness persists.

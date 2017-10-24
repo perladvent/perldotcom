@@ -12,7 +12,7 @@
    "authors" : [
       "david-farrell"
    ],
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "date" : "2013-09-27T01:25:18"
 }
 

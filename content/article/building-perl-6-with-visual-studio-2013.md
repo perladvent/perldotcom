@@ -2,7 +2,7 @@
    "title" : "Building Perl 6 with Visual Studio 2013",
    "tags" : [
       "windows",
-      "perl6",
+      "perl-6",
       "rakudo",
       "star",
       "visual_studio_2013",
@@ -14,7 +14,7 @@
    "authors" : [
       "sinan-unur"
    ],
-   "categories" : "perl6",
+   "categories" : "perl-6",
    "slug" : "135/2014/11/18/Building-Perl-6-with-Visual-Studio-2013",
    "description" : "Compiling Rakudo on Windows is easier than you think",
    "image" : "/images/135/A8E8819E-6EC2-11E4-9A80-FF7CA241EDA8.png"

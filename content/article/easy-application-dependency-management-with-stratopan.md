@@ -8,7 +8,7 @@
       "cloud",
       "old_site"
    ],
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "image" : "/images/71/EC623B08-FF2E-11E3-92DE-5C05A68B9E16.png",
    "draft" : false,
    "date" : "2014-02-20T03:55:29",

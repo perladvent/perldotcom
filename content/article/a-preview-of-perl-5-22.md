@@ -5,7 +5,7 @@
    "title" : "A preview of Perl 5.22",
    "slug" : "165/2015/4/10/A-preview-of-Perl-5-22",
    "image" : null,
-   "categories" : "managing_perl",
+   "categories" : "tooling",
    "tags" : [
       "5",
       "22",

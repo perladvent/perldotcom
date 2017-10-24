@@ -9,7 +9,7 @@
       "ubuntu",
       "debian"
    ],
-   "categories" : "apps",
+   "categories" : "linux",
    "authors" : [
       "david-farrell"
    ],
