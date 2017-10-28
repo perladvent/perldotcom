@@ -92,3 +92,6 @@ In the meantime, Google has stopped warning me about unusual activity, and I hav
 * [DD-WRT](http://www.dd-wrt.com/site/index) is a Linux distribution for routers
 * [Data::Netflow](https://metacpan.org/pod/Data::Netflow) is a Perl module that can encode/decode Netflow data versions 5 and 9 (DD-WRT produces version 5).
 * [Net::Whois::IP](https://metacpan.org/pod/Net::Whois::IP) is a Perl module for running [WHOIS](https://en.wikipedia.org/wiki/WHOIS) queries, it parses the response into a Perl data structure although it doesn't normalize the keys.
+
+\
+*This article was originally posted on [PerlTricks.com](http://perltricks.com).*
