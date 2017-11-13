@@ -3,7 +3,7 @@
    "image" : "/images/199/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
    "description" : "A curated look at October's new CPAN uploads",
    "authors" : [
-      "David Farrell"
+      "david-farrell"
    ],
    "tags" : ["bitbucket", "apache", "yandex", "seabass", "dist-zilla", "websocket", "catalyst", "mojolicious", "dancer2", "type-tiny"],
    "categories" : "cpan",
