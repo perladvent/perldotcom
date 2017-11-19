@@ -4,7 +4,14 @@ use Cwd;
 use Getopt::Long 'GetOptions';
 use Time::Piece;
 
-my @categories = qw/apps community cpan data development hardware managing_perl perl6 security testing web/;
+# check we're in perltricks-static
+my $cwd = cwd();
+chomp $cwd; # for Mac OS?
+my $parent_dir = [split /\/|\\/, $cwd]->[-1];
+die "$0 must be run from the root project directory!\n"
+  unless $parent_dir eq 'perldotcom';
+
+my @categories = get_categories();
 
 GetOptions(
   'title=s'       => \my $title,
@@ -17,12 +24,6 @@ GetOptions(
 ) or usage();
 usage() unless $title && $category && (grep $_ eq $category, @categories);
 
-# check we're in perltricks-static
-my $cwd = cwd();
-chomp $cwd; # for Mac OS?
-my $parent_dir = [split /\/|\\/, $cwd]->[-1];
-die "$0 must be run from the root project directory!\n"
-  unless $parent_dir eq 'perltricks-static';
 
 # prepare the file
 my $filename = lc $title;
@@ -36,14 +37,15 @@ my $date = $dt->datetime;
 
 print $fh qq(
   {
-    "title"  : "$title",
-    "authors": ["$author"],
-    "date"   : "$date",
-    "tags"   : [],
-    "draft"  : true,
-    "image"  : "",
+    "title"       : "$title",
+    "authors"     : ["$author"],
+    "date"        : "$date",
+    "tags"        : [],
+    "draft"       : true,
+    "image"       : "",
+    "thumbanail"  : "",
     "description" : "$description",
-    "categories": "$category"
+    "categories"  : "$category"
   }
 
 The article body goes here. Use [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/) to write the article body. Don't forget to delete this line!
@@ -66,4 +68,8 @@ sub usage {
   --editor, -e       Editor to use (defaults to \$EDITOR environment variable)
   \n";
   exit 0;
+}
+
+sub get_categories {
+  return map { chomp;$_ } `bin/q --sql 'select distinct categories from article order by 1'`;
 }
