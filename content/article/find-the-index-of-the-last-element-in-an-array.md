@@ -39,7 +39,7 @@ Perl has a 'last-index' variable for arrays ($\#array\_name).
 
 ``` prettyprint
 print $#numbers_array; 
-# 5
+# 4
 print $numbers_array[$#numbers_array]; 
 # 62
 ```
@@ -51,7 +51,7 @@ my $arrayref = [41, 67, 13, 9, 62];
 print $#$arrayref;
 # 4
 print $$arrayref[$#$arrayref]; 
-# 62 
+# 62
 ```
 
 ### Negative indexing
