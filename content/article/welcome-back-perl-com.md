@@ -2,9 +2,9 @@
   {
     "title"  : "Welcome back, Perl.com",
     "authors": ["jim-brandt", "david-farrell"],
-    "date"   : "2017-11-19T11:34:04",
+    "date"   : "2017-12-06T14:34:04",
     "tags"   : ["news","perldotcom"],
-    "draft"  : true,
+    "draft"  : false,
     "thumbnail"  : "/images/site/perl-onion.png",
     "description" : "The updated site is better than ever",
     "categories": "community"
