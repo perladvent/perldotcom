@@ -11,9 +11,7 @@
       "bioinformatics",
       "bioperl",
       "data-munging",
-      "perl-bioinformatics",
-      "perl-biology",
-      "perl-data-munging",
+      "biology",
       "scriptome"
    ],
    "date" : "2005-10-20T00:00:00-08:00",

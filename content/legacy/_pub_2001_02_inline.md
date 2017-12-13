@@ -11,11 +11,11 @@
    "image" : null,
    "tags" : [
       "c",
-      "c",
       "cpr",
       "inline",
       "python",
-      "xs"
+      "xs",
+      "c-and-perl"
    ],
    "thumbnail" : null
 }

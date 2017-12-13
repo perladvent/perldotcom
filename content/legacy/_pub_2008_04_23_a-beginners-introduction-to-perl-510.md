@@ -8,7 +8,7 @@
       "novice-programmers",
       "perl-5-10",
       "perl-for-beginners",
-      "perl-tutorial"
+      "tutorials"
    ],
    "slug" : "/pub/2008/04/23/a-beginners-introduction-to-perl-510.html",
    "description" : "First, a Little Sales Pitch Editor's note: this series is based on Doug Sheppard's Beginner's Introduction to Perl. A Beginner's Introduction to Files and Strings with Perl 5.10 explains how to use files and strings, and A Beginner's Introduction to...",

@@ -9,7 +9,7 @@
       "algorithm-floodcontrol",
       "event-processing",
       "flood-control",
-      "vladi-belperchinov-shabanski"
+      "communications"
    ],
    "thumbnail" : "/images/_pub_2005_02_03_rpc_design/111-shapes.gif",
    "categories" : "community",

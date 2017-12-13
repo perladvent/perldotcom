@@ -18,7 +18,8 @@
       "remote-apis",
       "sam-tregar",
       "soap",
-      "web-services"
+      "web-services",
+      "http"
    ]
 }
 

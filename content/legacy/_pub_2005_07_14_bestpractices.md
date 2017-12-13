@@ -12,7 +12,9 @@
       "perl-development",
       "perl-discipline",
       "perl-style",
-      "serious-perl"
+      "serious-perl",
+      "style-guides",
+      "troubleshooting"
    ],
    "date" : "2005-07-14T00:00:00-08:00",
    "title" : "Ten Essential Development Practices",

@@ -15,7 +15,8 @@
       "cms-workflow",
       "content-management",
       "document-modeling",
-      "open-source-cms"
+      "open-source-cms",
+      "dynamic-content"
    ]
 }
 

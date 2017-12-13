@@ -12,8 +12,8 @@
    "tags" : [
       "anniversary",
       "memories",
-      "perl",
-      "programming-stories"
+      "programming-stories",
+      "advocacy"
    ],
    "thumbnail" : null
 }

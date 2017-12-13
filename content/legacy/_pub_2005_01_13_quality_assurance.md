@@ -5,12 +5,13 @@
    "title" : "An Introduction to Quality Assurance",
    "tags" : [
       "automated-testing",
-      "perl-qa",
-      "perl-testing",
+      "qa",
+      "testing",
       "quality-assurance",
       "software-quality",
       "test-plans",
-      "test-specifications"
+      "test-specifications",
+      "bug-trackingreporting"
    ],
    "thumbnail" : "/images/_pub_2005_01_13_quality_assurance/111-sure_quality.gif",
    "description" : " On Being Wrong When I decided to study computer science, I installed Linux on my computer and bought a copy of \"The C Programming Language\" by Kernighan and Ritchie. I have been trying to solve software problems ever since....",

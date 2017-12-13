@@ -4,7 +4,8 @@
       "files",
       "perl-5-10",
       "perl-filehandles",
-      "string"
+      "string",
+      "tutorials"
    ],
    "title" : "Beginner's Introduction to Perl 5.10, Part 2",
    "image" : null,

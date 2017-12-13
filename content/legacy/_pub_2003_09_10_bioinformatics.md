@@ -12,9 +12,7 @@
    "tags" : [
       "bioinformatics",
       "biological-sequence-data",
-      "james-tisdall",
-      "perl-for-bioinformatics",
-      "tisdall"
+      "biology"
    ],
    "thumbnail" : "/images/_pub_2003_09_10_bioinformatics/111-chromosome.gif"
 }

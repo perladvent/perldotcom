@@ -10,7 +10,7 @@
    "categories" : "community",
    "date" : "2000-12-12T00:00:00-08:00",
    "thumbnail" : null,
-   "tags" : []
+   "tags" : ["advocacy"]
 }
 
 

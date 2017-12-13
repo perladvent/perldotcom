@@ -10,7 +10,8 @@
       "html-assignments-perl-html",
       "parsing-html",
       "perl-assignments",
-      "perl-parsing"
+      "perl-parsing",
+      "school"
    ],
    "title" : "Analyzing HTML with Perl",
    "image" : null,

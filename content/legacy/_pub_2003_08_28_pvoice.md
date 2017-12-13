@@ -7,9 +7,8 @@
    ],
    "tags" : [
       "disabled-speech",
-      "jouke-visser",
-      "perl",
-      "pvoice"
+      "pvoice",
+      "communications"
    ],
    "thumbnail" : "/images/_pub_2003_08_28_pvoice/111-pvoice.gif",
    "date" : "2003-08-23T00:00:00-08:00",

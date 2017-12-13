@@ -16,7 +16,8 @@
       "email-wap",
       "mail-to-wap-gateway",
       "mobile-mail",
-      "wap"
+      "wap",
+      "mail-and-usenet-news"
    ]
 }
 

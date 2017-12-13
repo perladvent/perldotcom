@@ -9,7 +9,7 @@
    "title" : "Guide to the Perl 6 Working Groups",
    "image" : null,
    "date" : "2000-09-05T00:00:00-08:00",
-   "tags" : [],
+   "tags" : ["lists"],
    "thumbnail" : null
 }
 

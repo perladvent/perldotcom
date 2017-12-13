@@ -10,7 +10,8 @@
       "cms",
       "content-management",
       "cpan-installation",
-      "mod-perl-installation"
+      "mod-perl-installation",
+      "web-management"
    ],
    "thumbnail" : null,
    "description" : " In my previous article, I provided a guided tour of the Bricolage installation process. If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as Mr. Popeil used to...",

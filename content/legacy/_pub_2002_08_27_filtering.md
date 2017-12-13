@@ -11,7 +11,8 @@
    "categories" : "email",
    "thumbnail" : "/images/_pub_2002_08_27_filtering/111-mail_filtering.gif",
    "tags" : [
-      "mail-filtering"
+      "mail-filtering",
+      "mail-and-usenet-news"
    ]
 }
 

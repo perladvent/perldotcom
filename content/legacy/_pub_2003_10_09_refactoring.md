@@ -5,8 +5,8 @@
       "optimization",
       "perl",
       "refactoring",
-      "refactoring-techniques",
-      "speed"
+      "speed",
+      "style-guides"
    ],
    "title" : "A Refactoring Example",
    "image" : null,

@@ -10,7 +10,7 @@
    "image" : null,
    "categories" : "science",
    "thumbnail" : null,
-   "tags" : []
+   "tags" : ["books-and-magazines"]
 }
 
 

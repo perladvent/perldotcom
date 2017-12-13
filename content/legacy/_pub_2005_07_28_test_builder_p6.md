@@ -13,7 +13,8 @@
       "pugs",
       "refactoring",
       "test-driven-design-of-perl-6",
-      "test-builder"
+      "test-builder",
+      "porting"
    ],
    "thumbnail" : "/images/_pub_2005_07_28_test_builder_p6/111-testbuilder.gif",
    "categories" : "perl-6",

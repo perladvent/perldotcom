@@ -9,7 +9,8 @@
       "mvc",
       "presentation",
       "template-recall",
-      "templating"
+      "templating",
+      "text-tools"
    ],
    "thumbnail" : null,
    "date" : "2008-03-14T00:00:00-08:00",

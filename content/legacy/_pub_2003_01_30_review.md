@@ -1,6 +1,6 @@
 {
    "thumbnail" : null,
-   "tags" : [],
+   "tags" : ["books-and-magazines"],
    "date" : "2003-01-30T00:00:00-08:00",
    "image" : null,
    "title" : "Embedding Perl in HTML with Mason",

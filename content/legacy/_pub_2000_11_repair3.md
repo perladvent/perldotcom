@@ -1,5 +1,5 @@
 {
-   "tags" : [],
+   "tags" : ["style-guides"],
    "thumbnail" : null,
    "categories" : "development",
    "title" : "Program Repair Shop and Red Flags",

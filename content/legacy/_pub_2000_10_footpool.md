@@ -3,7 +3,7 @@
    "image" : null,
    "title" : "How Perl Helped Me Win the Office Football Pool",
    "date" : "2000-10-02T00:00:00-08:00",
-   "tags" : [],
+   "tags" : ["oddities"],
    "thumbnail" : null,
    "draft" : null,
    "authors" : [

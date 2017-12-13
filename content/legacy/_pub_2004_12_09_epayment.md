@@ -15,7 +15,9 @@
       "perl-electronic-payment",
       "perl-evangelism",
       "perl-success-stories",
-      "university-of-new-york-at-buffalo"
+      "finance",
+      "university-of-new-york-at-buffalo",
+      "school"
    ],
    "thumbnail" : "/images/_pub_2004_12_09_epayment/111-success.gif"
 }

@@ -10,7 +10,7 @@
       "algorithm-floodcontrol",
       "event-processing",
       "flood-control",
-      "vladi-belperchinov-shabanski"
+      "networking-applications"
    ],
    "date" : "2004-11-11T00:00:00-08:00",
    "image" : null,

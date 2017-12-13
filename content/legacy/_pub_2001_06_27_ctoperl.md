@@ -2,7 +2,7 @@
    "tags" : [
       "c",
       "compile",
-      "perl"
+      "c-and-perl"
    ],
    "thumbnail" : "/images/_pub_2001_06_27_ctoperl/111-perlc.jpg",
    "date" : "2001-06-27T00:00:00-08:00",

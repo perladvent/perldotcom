@@ -10,7 +10,9 @@
       "awlp",
       "perl-for-system-administration",
       "slackware",
-      "wireless-gateway"
+      "wireless-gateway",
+      "networking-applications",
+      "system-administration-applications"
    ],
    "title" : "Build a Wireless Gateway with Perl",
    "image" : null,

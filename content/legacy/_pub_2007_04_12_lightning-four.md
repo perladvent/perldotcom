@@ -16,7 +16,7 @@
       "pogl",
       "subroutine-attributes",
       "test-counts",
-      "test-count"
+      "c-and-perl"
    ],
    "thumbnail" : null,
    "categories" : "development",

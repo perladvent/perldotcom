@@ -14,7 +14,8 @@
       "cms",
       "content-management",
       "cpan-installation",
-      "mod-perl-installation"
+      "mod-perl-installation",
+      "web-management"
    ],
    "thumbnail" : null
 }

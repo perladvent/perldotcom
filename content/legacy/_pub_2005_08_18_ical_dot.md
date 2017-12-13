@@ -6,7 +6,8 @@
       "graphviz",
       "ical",
       "icalendar",
-      "perl-glue-language"
+      "perl-glue-language",
+      "statistics"
    ],
    "date" : "2005-08-18T00:00:00-08:00",
    "image" : null,

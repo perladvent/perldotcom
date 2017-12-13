@@ -4,7 +4,7 @@
    "title" : "Where Wizards Fear To Tread",
    "date" : "2002-05-07T00:00:00-08:00",
    "tags" : [
-      "op-tree-b-generate-wizards"
+      "op","tree","b","generate","wizards","perl-internals"
    ],
    "thumbnail" : "/images/_pub_2002_05_07_optree/111-wizards.gif",
    "draft" : null,

@@ -1,5 +1,6 @@
 {
    "tags" : [
+      "binaries",
       "client-side-perl",
       "hitachi-gst",
       "perl",

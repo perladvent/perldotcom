@@ -8,8 +8,8 @@
    "tags" : [
       "command-line-file-editing",
       "fmtyewtk",
-      "geoff-broadwell",
-      "perl-file-editing"
+      "perl-file-editing",
+      "text-tools"
    ],
    "thumbnail" : "/images/_pub_2004_10_14_file_editing/111-cli_textedit.gif",
    "categories" : "tooling",

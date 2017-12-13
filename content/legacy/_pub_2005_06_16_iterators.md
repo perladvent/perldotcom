@@ -7,11 +7,11 @@
    "description" : " The purpose of this tutorial is to give a general overview of what iterators are, why they are useful, how to build them, and things to consider to avoid common pitfalls. I intend to give the reader enough information...",
    "tags" : [
       "functional-perl",
-      "iteration",
       "iterators",
       "lisp-and-perl",
-      "perl-closures",
-      "perl-generators"
+      "closures",
+      "generators",
+      "data-structures"
    ],
    "thumbnail" : "/images/_pub_2005_06_16_iterators/111-iterators.gif",
    "categories" : "development",

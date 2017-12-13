@@ -10,7 +10,7 @@
    "categories" : "perl-internals",
    "date" : "2000-09-19T00:00:00-08:00",
    "thumbnail" : null,
-   "tags" : []
+   "tags" : ["perl-internals"]
 }
 
 

@@ -16,7 +16,8 @@
       "mac-glue",
       "perl-for-macs",
       "perl-mac-apps",
-      "scripting"
+      "scripting",
+      "macintosh"
    ]
 }
 

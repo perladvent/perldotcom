@@ -12,9 +12,9 @@
    "tags" : [
       "michael-w-collins",
       "mod-perl",
-      "mod-perlservice",
       "perl-remoting",
-      "perl-server"
+      "perl-server",
+      "networking-applications"
    ],
    "thumbnail" : null
 }

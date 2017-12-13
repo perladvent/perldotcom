@@ -16,7 +16,8 @@
       "perl-automation",
       "perl-testing",
       "x11-testing",
-      "x11-guitest"
+      "x11-guitest",
+      "user-interfaces"
    ],
    "thumbnail" : "/images/_pub_2006_02_02_x11_gui_testing/111-x11_test.gif"
 }

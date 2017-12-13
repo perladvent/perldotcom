@@ -7,11 +7,11 @@
    "slug" : "/pub/2007/02/02/htmltemplate-widgets.html",
    "thumbnail" : "/images/_pub_2007_02_02_htmltemplate-widgets/111-HTML_Frag.gif",
    "tags" : [
-      "html-templating",
       "html-template",
-      "perl-templating",
+      "template",
       "web-templates",
-      "widgets"
+      "widgets",
+      "webcgi"
    ],
    "title" : "Advanced HTML::Template: Widgets",
    "image" : null,

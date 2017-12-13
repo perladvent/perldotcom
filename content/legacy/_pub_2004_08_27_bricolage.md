@@ -6,7 +6,8 @@
    "tags" : [
       "bricolage",
       "cms",
-      "content-management"
+      "content-management",
+      "web-management"
    ],
    "thumbnail" : "/images/_pub_2004_08_27_bricolage/111-bricolage.gif",
    "authors" : [

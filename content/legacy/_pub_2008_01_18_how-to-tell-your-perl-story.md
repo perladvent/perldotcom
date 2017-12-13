@@ -6,12 +6,10 @@
       "brian-d-foy"
    ],
    "tags" : [
-      "brian-d-foy",
       "conference",
-      "conference-sessions",
       "lightning-talks",
       "oscon",
-      "perl-conference"
+      "courses-and-training"
    ],
    "thumbnail" : null,
    "date" : "2008-01-18T00:00:00-08:00",

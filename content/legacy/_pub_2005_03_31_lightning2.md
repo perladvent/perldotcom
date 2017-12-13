@@ -5,10 +5,10 @@
       "emacs-customization",
       "lightning-articles",
       "mock-database",
-      "perl-buffering",
-      "perl-debugging",
-      "perl-unbuffer",
-      "test-mockdbi"
+      "buffering",
+      "debugging",
+      "test-mockdbi",
+      "screen-io"
    ],
    "thumbnail" : null,
    "date" : "2005-03-31T00:00:00-08:00",

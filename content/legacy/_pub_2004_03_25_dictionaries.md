@@ -14,7 +14,8 @@
       "dictionaries",
       "languages",
       "linguistics",
-      "rtf"
+      "rtf",
+      "lingua"
    ]
 }
 

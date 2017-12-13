@@ -1,7 +1,8 @@
 {
    "thumbnail" : "/images/_pub_2002_01_02_bioinf/111-bioperl.gif",
    "tags" : [
-      "bioinformatics-biochemistry-biology-chemistry"
+      "bioinformatics",
+      biology"
    ],
    "date" : "2002-01-02T00:00:00-08:00",
    "image" : null,
