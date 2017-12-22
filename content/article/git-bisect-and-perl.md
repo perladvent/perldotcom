@@ -49,7 +49,7 @@ To fix this, wrap the call to `t/foo.t` in a shell script which caps the return 
 
 ``` prettyprint
 #!/bin/sh
-$*
+"$@"
 rv=$?
 if [ $rv -gt 127 ]; then
   exit 127
@@ -58,7 +58,7 @@ else
 fi
 ```
 
-The variable `$*` is a string of the commands passed to the shell script, so it literally executes whatever arguments are passed to it. Just like in Perl, `$?` is the exit value of the last run command, which here I assign to `rv`. Then the script exits either with 127 or the value of `rv`. I save the script as `cap-exit-value`, and use it like this:
+The variable `"$@"` is a string of the commands passed to the shell script, with spaces within each argument preserved, so it literally executes whatever arguments are passed to it (unlike `$*` which would split each argument up with spaces before executing). Just like in Perl, `$?` is the exit value of the last run command, which here I assign to `rv`. Then the script exits either with 127 or the value of `rv`. I save the script as `cap-exit-value`, and use it like this:
 
     $ git bisect start HEAD b507d1a
     Bisecting: 41 revisions left to test after this (roughly 5 steps)
