@@ -64,6 +64,7 @@ The front matter contains the article metadata. Here's an example for a recent a
       "mastering_perl"
    ]
 }
+```
 
 Older articles also have the `slug` attribute, which determines the URL of the article. This isn't necessary anymore (it's used to preserve historic URLs). Instead just name the file the same as the title of the article, but in lowercase and with spaces replaced with hyphens (`-`). In this example case, the filename is `content/article/magical-tied-scalars.md`.
 
