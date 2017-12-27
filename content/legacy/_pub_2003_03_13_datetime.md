@@ -143,7 +143,7 @@ These are the modules that have the longest history, and are the most widely use
 
 -   **<span id="item_date%3a%3acalc">Date::Calc</span>**
 
-    Steffen Beyer's [`Date::Calc`](#item_date%3a%3acalc) distribution is where you go when you need functionality combined with speed. This modules offers much of the functionality provided by [`Date::Manip`](#item_date%3a%3amanip), but the core [`Date::Calc`](#item_date%3a%3acalc) module has a much smaller memory footprint than [`Date::Manip`](#item_date%3a%3amanip) (about 1MB on my box), and much greater speed. This is based its core implementation is in C.
+    Steffen Beyer's [`Date::Calc`](#item_date%3a%3acalc) distribution is where you go when you need functionality combined with speed. This modules offers much of the functionality provided by [`Date::Manip`](#item_date%3a%3amanip), but the core [`Date::Calc`](#item_date%3a%3acalc) module has a much smaller memory footprint than [`Date::Manip`](#item_date%3a%3amanip) (about 1MB on my box), and much greater speed. This is because its core implementation is in C.
 
     This module provides functions for calculating all sorts of date-related information, as well some minimal parsing and formatting operations. The interface requires some hand-holding to use, as every function returns one or more elements, never a data structure such as a hash, so you have to constantly deal with passing and receiving arrays of values.
 
@@ -165,7 +165,7 @@ It wouldn't be Perl if there weren't at least a dozen other modules with overlap
 
     Contains a number of functions useful when dealing with datetimes as they are used in astronomy.
 
--   **<span id="item_class%3a%3adate_%2d_balzs_szab">Class::Date - Bal&0xE1;zs Szab&0xF3;</span>**
+-   **<span id="item_class%3a%3adate_%2d_balzs_szab">Class::Date - Balázs Szabó</span>**
 
     This is basically the [`Time::Piece`](#item_time%3a%3apiece) API plus more stuff. It appears to provide complete time zone support based on the Olson database, by way of [`POSIX.pm`](#item_posix%2epm). It is epoch-limited.
 
@@ -222,7 +222,7 @@ It wouldn't be Perl if there weren't at least a dozen other modules with overlap
 
     Tells you whether or not a given date is a Japanese holiday.
 
--   **<span id="item_date%3a%3aleapsecond_%2d_flvio_soibelmann_glock">Date::Leapsecond - Fl&0xE1;vio Soibelmann Glock</span>**
+-   **<span id="item_date%3a%3aleapsecond_%2d_flvio_soibelmann_glock">Date::Leapsecond - Flávio Soibelmann Glock</span>**
 
     Converts between UT1 and UTC times.
 
@@ -252,7 +252,7 @@ It wouldn't be Perl if there weren't at least a dozen other modules with overlap
 
     An object for representing dates according to the Roman calendar.
 
--   **<span id="item_date%3a%3aset_%2d_flvio_soibelmann_glock">Date::Set - Fl&0xE1;vio Soibelmann Glock</span>**
+-   **<span id="item_date%3a%3aset_%2d_flvio_soibelmann_glock">Date::Set - Flávio Soibelmann Glock</span>**
 
     An object that represents sets of datetimes. A set can be either a datetime span, a recurring set of dates, or a fixed set of specific datetimes. It provides set math operations for all of these, as well as allowing you to iterate across the members of the set. Also see `Date::Set::Timezone`.
 
@@ -261,7 +261,7 @@ It wouldn't be Perl if there weren't at least a dozen other modules with overlap
 
     date object that represents dates only, without a time component. It provides date math. It is not epoch-limited.
 
--   **<span id="item_date%3a%3atie_%2d_flvio_soibelmann_glock">Date::Tie - Fl&0xE1;vio Soibelmann Glock</span>**
+-   **<span id="item_date%3a%3atie_%2d_flvio_soibelmann_glock">Date::Tie - Flávio Soibelmann Glock</span>**
 
     A basic date object with date math. Its functionality is implemented via a tied hash interface. It supports fixed offset time zones, and it is epoch-limited.
 
