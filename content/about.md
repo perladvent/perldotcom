@@ -1,6 +1,7 @@
 {
   "title": "About Perl.com",
-  "type": "about"
+  "type": "about",
+  "categories": "meta"
 }
 
 Since 1997 Perl.com has been the home for quality articles about Perl programming, news and culture. The website is managed by the [The Perl Foundation](https://tpf.org), and the current site editor is [David Farrell](/authors/david-farrell/), who can be reached via [email](mailto:perl.com-editor@perl.org).
