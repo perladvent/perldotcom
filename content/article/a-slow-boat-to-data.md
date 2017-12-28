@@ -1,7 +1,7 @@
 
   {
     "title"  : "A slow boat to ... Data",
-    "authors": ["Nadim Khemir"],
+    "authors": ["nadim-khemir"],
     "date"   : "2017-09-06T12:28:27",
     "tags"   : [],
     "draft"  : true,
