@@ -76,15 +76,13 @@ Titles-as-filenames has another benefit: no two articles can have the same title
 
 The front matter is provided inline in the markdown file, immediately followed by the article body, in GitHub flavored markdown ([cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)). The two main rules to know here are as follows:
 
-If you want highlighted code syntax, use a fenced code block with the `prettyprint`  keyword:
+If you want highlighted code syntax, use a fenced code block with the programm language name, e.g:
 
-    ``` prettyprint
+    ```perl
       code
       code
       code
     ```
-
-Code is highlighted using `prettify.js` and it will automatically detect the code type and provide the appropriate syntax highlighting (it's not perfect, but good enough).
 
 Otherwise just use a code block (fenced or indented style) and it will be displayed in monospace on a dark background. This is used for showing data and terminal commands.
 
