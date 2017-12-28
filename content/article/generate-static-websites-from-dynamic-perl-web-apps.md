@@ -27,7 +27,7 @@
 
 The CPAN Testers [results](http://matrix.cpantesters.org/?dist=App-Wallflower+1.004) for the latest version (v1.004) of App::Wallflower show it runs on just about any Perl and operating system, including Windows. You can install it from CPAN by going to the command line and typing:
 
-``` prettyprint
+```perl
 $ cpan App::Wallflower
 ```
 
@@ -35,20 +35,20 @@ $ cpan App::Wallflower
 
 Let's create a simple application using [Dancer2](https://metacpan.org/pod/Dancer2):
 
-``` prettyprint
+```perl
 $ dancer2 -a MyApp
 ```
 
 This will create a skeleton application for us. Now change into the root application directory and create a new directory to hold the static files, we'll call it "static":
 
-``` prettyprint
+```perl
 $ cd MyApp
 $ mkdir static
 ```
 
 That's all we need to generate the static site with wallflower:
 
-``` prettyprint
+```perl
 $ wallflower --a bin/app.pl --d static
 ```
 
@@ -58,7 +58,7 @@ Wallflower will request the application root page ('/') and spider all links it 
 
 Let's deploy the site with nginx locally (you'll need nginx installed for this). First create the virtual host file:
 
-``` prettyprint
+```perl
 server {
     listen 80;
     server_name localhost;
@@ -72,7 +72,7 @@ server {
 
 Assuming a unix-like platform, save the virtual host file to "/etc/nginx/sites-available/localhost". Next enter these commands:
 
-``` prettyprint
+```perl
 $ sudo mkdir /var/www/MyApp
 $ sudo cp static /var/www/MyApp
 $ cd /etc/nginx/sites-enabled
@@ -81,13 +81,13 @@ $ sudo ln -s ../sites-available/localhost
 
 Now we need to start nginx. On RHEL/Fedora/CentOS you can start nginx with:
 
-``` prettyprint
+```perl
 $ sudo nginx
 ```
 
 On Ubuntu:
 
-``` prettyprint
+```perl
 sudo service nginx start
 ```
 

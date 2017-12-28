@@ -32,7 +32,7 @@ Mojolicious has a built-in event-based [TCP Client](http://mojoliciou.us/perldoc
 
 Here is a [Mojolicious::Lite](http://mojolicio.us/perldoc/Mojolicious/Guides/Tutorial) application which serves the noVNC client when you request a url like `/192.168.0.1`. When the page loads, the client requests the WebSocket route at `/proxy?target=192.168.0.1` which establishes the bridge. This example is bundled with my forthcoming wrapper module with a working name of [Mojo::Websockify](https://github.com/jberger/Mojo-Websockify/blob/master/ex/client.pl). The code is remarkably simple:
 
-``` prettyprint
+```perl
 use Mojolicious::Lite;
 
 use Mojo::IOLoop;

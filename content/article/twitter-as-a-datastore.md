@@ -39,7 +39,7 @@ Access Token Secret
 
 The Net::Twitter module needs these strings to create its object. The module handles all of the OAuth details without me having to think about them:
 
-``` prettyprint
+```perl
 use Net::Twitter;
 
 my $nt = Net::Twitter->new(
@@ -58,7 +58,7 @@ In my excellent number program, I wanted to be as simple as possible. I didn't w
 
 It's easy to fetch a bunch of statuses with the `user_timeline` method. I need to tell it where to start (`min_id` or `since_id`). Twitter returns huge JSON structures with lots of information, but Net::Twitter turns that into a Perl data structure for me. I dump what they send and pull out the parts I want:
 
-``` prettyprint
+```perl
 my %tweets;
 STATUSES: while( 1 ) {
   state $min_id = 1;
@@ -93,13 +93,13 @@ This part is complicated for another reason. At the start of the project I was g
 
 Notice that I also `warn` if I run into a tweet with a number that I think is a duplicate:
 
-``` prettyprint
+```perl
 warn "[$number] has more than one tweet!\n" if exists $tweets{$number};
 ```
 
 If this was a bigger problem (and it's not anymore), I could use the `destroy_status` method to automatically get rid of it:
 
-``` prettyprint
+```perl
 $nt->destroy_status( $status->{id} ) if exists $tweets{$number};
 ```
 
@@ -107,7 +107,7 @@ I decided not to delete automatically from the program. It's not a problem to ha
 
 Now I know everything I've tweeted previously and I've put them in `%tweets`. The next part is to tweet what I've found and haven't stored yet. I also store that in a local file (but remember I want the alerts and the backup!) that I used to populate `%numbers`. I skip the numbers I already tweeted and use `update` to make the new tweets. Storing new numbers is easy, and when I do it I want to tweet the new numbers in ascending order:
 
-``` prettyprint
+```perl
 NUMBER: foreach my $number ( sort { $a <=> $b } keys %numbers ) {
   next NUMBER if exists $tweets{$number};
 

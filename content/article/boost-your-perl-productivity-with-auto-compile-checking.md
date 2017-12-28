@@ -24,7 +24,7 @@
 
 The Perl command line option `-c` causes Perl to check the syntax of the program, but not execute it (apart from code in BEGIN, CHECK and UNITCHECK blocks - watch out for those). For example:
 
-``` prettyprint
+```perl
 $ perl -c lib/Devel/DidYouMean.pm
 lib/Devel/DidYouMean.pm syntax OK
 ```
@@ -35,13 +35,13 @@ This is useful but it's kind of clunky to type it every time you want to check t
 
 One of my favourite [features](https://metacpan.org/pod/Catalyst::Manual::Tutorial::02_CatalystBasics#The-Simplest-Way) when developing Catalyst web apps is using the test server to automatically check the syntax of the web app as I develop it. This saves me time as I know immediately if the web app compiles or not and don't waste time opening up a browser only to get an error. if you're working on a Unix-based operating system you can achieve a similar effect for any Perl program (not just web apps). The `watch` program can automatically run the check command. Just start a new terminal, and enter:
 
-``` prettyprint
+```perl
 $ watch 'perl -c lib/Devel/DidYouMean.pm'
 ```
 
 Giving this output:
 
-``` prettyprint
+```perl
 Every 2s perl -c lib/Devel/DidYouMean.pm           Sat Nov  8 2014
 
 lib/Devel/DidYouMean.pm syntax OK
@@ -49,7 +49,7 @@ lib/Devel/DidYouMean.pm syntax OK
 
 In this case I'm watching the file `lib/Devel/DidYouMean.pm` but you can provide any path to a Perl file that you want to check for syntax errors. By default `watch` will run the command every 2 seconds. So if I save a bad update to the file, the watching terminal window will show the error:
 
-``` prettyprint
+```perl
 Every 2.0s: perl -c lib/Devel/DidYouMean.pm           Sat Nov  8 2014
 
 syntax error at lib/Devel/DidYouMean.pm line 122, near "} keys"
@@ -65,7 +65,7 @@ Using `watch` is useful, but I find it can be annoying to have to check a separa
 
 Add the following line to your .vimrc file:
 
-``` prettyprint
+```perl
 autocmd BufWritePost *.pm,*.t,*.pl echom system("perl -Ilib -c " . '"' . expand("%:p"). '"' )
 ```
 
@@ -79,7 +79,7 @@ Several readers got in touch to recommend the Syntastic [plugin](https://github.
 
 A simpler alternative to Syntastic is to use Vim's built-in compiler support. With a Perl file in the current buffer, type:
 
-``` prettyprint
+```perl
 :compiler perl
 :make
 :cope

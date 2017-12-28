@@ -28,7 +28,7 @@ DuckDuckGo support several different types of instant answers, but today I'm goi
 
 To get going you'll need Perl 5.18 or higher and have installed [App::DuckPAN](https://metacpan.org/pod/App::duckpan), which you can do with `cpan` or `cpanminus`:
 
-``` prettyprint
+```perl
 $ cpan App::DuckPAN
 # or
 $ cpanm App::DuckPAN
@@ -36,13 +36,13 @@ $ cpanm App::DuckPAN
 
 You'll also need a local copy of DuckDuckGo's goodies instant answers repo [repo](https://github.com/duckduckgo/zeroclickinfo-goodies), which you can clone with Git:
 
-``` prettyprint
+```perl
 $ git clone https://github.com/duckduckgo/zeroclickinfo-goodies.git
 ```
 
 With both App::DuckPAN and the goodies repo installed, change into the zeroclickinfo-goodies repo, and launch the duckpan server:
 
-``` prettyprint
+```perl
 $ cd zeroclickinfo-goodies
 $ duckpan server
 ```
@@ -60,7 +60,7 @@ If you open your browser and navigate to `http://localhost:5000`, you'll be gree
 
 So now you've got the development environment setup, you're ready to create an instant answer. I'm going to create an instant answer for `perldoc` (taken from my perldoc [article](#)). I can get a headstart on this by creating the skeleton instant answer code with `duckpan new`:
 
-``` prettyprint
+```perl
 $ duckpan new PerldocCheatSheet
 ```
 
@@ -72,7 +72,7 @@ This creates the basic files required for the instant answer:
 
 All of the logic for the instant answer is in `PerldocCheatSheet.pm`, and `duckpan` has already created a good skeleton:
 
-``` prettyprint
+```perl
 package DDG::Goodie::PerldocCheatSheet;
 # ABSTRACT: Write an abstract here
 # Start at https://duck.co/duckduckhack/goodie_overview if you are new
@@ -115,7 +115,7 @@ handle remainder => sub {
 
 I'll fill in the answers for the abstract, [metadata](https://duck.co/duckduckhack/metadata) and [triggers](https://duck.co/duckduckhack/goodie_triggers), and the `handle` subroutine:
 
-``` prettyprint
+```perl
 package DDG::Goodie::PerldocCheatSheet;
 # ABSTRACT: A cheat sheet for perldoc, the Perl documentation program
 
@@ -167,7 +167,7 @@ The handle subroutine will return a plain text and an HTML version of the cheat 
 
 The quickest way to test that the instant answer is working, is with the `duckpan query` command. I can run it in the terminal:
 
-``` prettyprint
+```perl
 $ duckpan query
 ```
 
@@ -189,13 +189,13 @@ This launches an interactive command line program. I can enter one of the trigge
 
 Looking good! (I've cut the output as it's verbose). The next thing I can try is a browser test using `duckpan server`:
 
-``` prettyprint
+```perl
 $ duckpan server
 ```
 
 Then I point my browser at `http://localhost:5000`, and enter a trigger query for the instant answer. That works as well. Finally, I need to complete a unit test script for the instant answer. I've already got a skeleton test script which was created by `duckpan new` at the start:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 
 use strict;
@@ -222,7 +222,7 @@ done_testing;
 
 I'll update the test file, and add some comments:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 
 use strict;
@@ -272,7 +272,7 @@ done_testing;
 
 Most of this is easy to follow; but there are a few gotchas; `@test_zci` is a variable that stores the expected output from a successful trigger of the instant answer. It's a bit of a hack: its passed to the `test_zci()` function which expects a scalar which matches the plain text response, followed by 2 key/pairs, one for the heading and one for the HTML response (see the [docs](https://duck.co/duckduckhack/test_files) for more detail). I can run this script at the command line:
 
-``` prettyprint
+```perl
 $ prove -I t/PerldocCheatSheet.t
 ```
 

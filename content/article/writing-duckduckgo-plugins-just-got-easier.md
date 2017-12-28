@@ -33,7 +33,7 @@ Instant answer JSON files should be created in the `share/goodie/cheat_sheets` d
 
 This is a truncated example from my `perldoc` instant answer:
 
-``` prettyprint
+```perl
 {
     "id": "perldoc_cheat_sheet",
     "name": "perldoc",
@@ -65,7 +65,7 @@ The `sections` field is the content of the instant answer. Each entry is a key v
 
 Let's take a closer look at a section entry, here is `Module Options`:
 
-``` prettyprint
+```perl
         "Module Options": [
         {
             "key": "Module::Name",

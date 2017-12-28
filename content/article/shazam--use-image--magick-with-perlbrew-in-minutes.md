@@ -32,7 +32,7 @@ You'll need to have Perlbrew and a local Perl installation via Perlbrew on Unix-
 
 Create a local directory: we will install ImageMagick here. Open up the terminal and enter the following:
 
-``` prettyprint
+```perl
 mkdir ~/local
 ```
 
@@ -40,19 +40,19 @@ mkdir ~/local
 
 Although the [Image::Magick](https://metacpan.org/pod/Image::Magick) module is available on CPAN, installing it via CPAN is usually a fruitless task as the process croaks on make. Instead download the whole [ImageMagick tarball](http://www.imagemagick.org/download/ImageMagick.tar.gz). Once downloaded, navigate to the tarball's parent directory using the terminal and un-tar the archive with the following command
 
-``` prettyprint
+```perl
 tar xvfz ImageMagick.tar.gz
 ```
 
 Now change into the new directory:
 
-``` prettyprint
+```perl
 cd ImageMagick-6.8.8-0
 ```
 
 Enter the following command, replacing [username], [path to CORE] and [path to Perl bin] with your system's details. Remove the "--without-threads" text if your Perl was compiled with threads (here is how to check).
 
-``` prettyprint
+```perl
 LDFLAGS=-L/home/[username]/perl5/perlbrew/perls/[path to CORE] \
     ./configure --prefix /home/[username]/local \
     --with-perl=/home/[username]/perl5/perlbrew/perls/[path to Perl bin] \
@@ -61,7 +61,7 @@ LDFLAGS=-L/home/[username]/perl5/perlbrew/perls/[path to CORE] \
 
 Here is a completed example for my system:
 
-``` prettyprint
+```perl
 LDFLAGS=-L/home/sillymoose/perl5/perlbrew/perls/perl-5.16.3/lib/5.16.3/x86_64-linux/CORE \
     ./configure --prefix /home/sillymoose/local \
     --with-perl=/home/sillymoose/perl5/perlbrew/perls/perl-5.16.3/bin/perl \
@@ -70,7 +70,7 @@ LDFLAGS=-L/home/sillymoose/perl5/perlbrew/perls/perl-5.16.3/lib/5.16.3/x86_64-li
 
 Running this command should cause ImageMagick to run a series of configuration checks, at the end of which it will print a configuration summary, which should look something like this:
 
-``` prettyprint
+```perl
 ImageMagick is configured as follows. Please verify that this configuration
 matches your expectations.
 
@@ -131,7 +131,7 @@ Check that the image file formats you expect to be working with are showing as "
 
 To install ImageMagick and the Image::Magick Perl module, run this command:
 
-``` prettyprint
+```perl
 make install
 ```
 
@@ -139,13 +139,13 @@ make install
 
 Confirming that the Image::Magick module has installed is not quite straightforward either. With version Image Magick 6.8.8, the $VERSION variable is stored in the super class Image::Magick::Q16. Hence you'll need to type:
 
-``` prettyprint
+```perl
 perl -MImage::Magick::Q16\ 999
 ```
 
 Which should yield:
 
-``` prettyprint
+```perl
 Image::Magick::Q16 version 999 required--this is only version 6.88.
 ```
 

@@ -23,7 +23,7 @@ The `open` function can do much more than you probably realize. If you read enou
 
 There's a one-argument form of `open` that takes only a bareword filehandle. In this example, when I open the filehandle `F` with no other arguments, Perl uses the package scalar variable of the same name as the filename:
 
-``` prettyprint
+```perl
 our $F;
 while( $F = shift @ARGV ) {
   open F;
@@ -34,7 +34,7 @@ while( $F = shift @ARGV ) {
 
 This might seem a bit silly, but as many shortcuts like this, consider the one-liner and scripting side of Perl. Imagine I want to go through a bunch of files on the command line, but some of those I want to skip. I can't simply use `-n` because that opens all the files for me. I have to handle that myself:
 
-``` prettyprint
+```perl
 perl -e 'while($F=shift){next if$F=~/\.jpg/;open F;while(<F>){print;exit if /Perl/}}' *
 ```
 
@@ -44,7 +44,7 @@ Maybe you'll need that once in life. Maybe you'll never want to use it. Still, t
 
 If I give `open` a filename of an explicit `undef` and the read-write mode (`+>` or `+<`), Perl opens an anonymous temporary file:
 
-``` prettyprint
+```perl
 open my $fh, '+>', undef;
 ```
 
@@ -54,19 +54,19 @@ Perl actually creates a named file and opens it, but immediately unlinks the nam
 
 If my **perl** is compiled with PerlIO (it probably is), I can open a filehandle on a scalar variable if the filename argument is a reference to that variable.
 
-``` prettyprint
+```perl
 open my $fh, '>', \ my $string;
 ```
 
 This is handy when I want to capture output for an interface that expects a filehandle:
 
-``` prettyprint
+```perl
 something_that_prints( $fh );
 ```
 
 Now `$string` contains whatever was printed by the function. I can inspect it by printing it:
 
-``` prettyprint
+```perl
 say "I captured:\n$string";
 ```
 
@@ -74,13 +74,13 @@ say "I captured:\n$string";
 
 I can also read from a scalar variable by opening a filehandle on it.
 
-``` prettyprint
+```perl
 open my $fh, '<', \ $string;
 ```
 
 Now I can play with the string line-by-line without messing around with regex anchors or line endings:
 
-``` prettyprint
+```perl
 while( <$fh> ) { ... }
 ```
 
@@ -90,7 +90,7 @@ I write about these sorts of filehandle-on-string tricks in [Effective Perl Prog
 
 Most Unix programmers probably already know that they can read the output from a command as the input for another command. I can do that with Perl's `open` too:
 
-``` prettyprint
+```perl
 use v5.10;
 
 open my $pipe, '-|', 'date';
@@ -101,7 +101,7 @@ while( <$pipe> ) {
 
 This reads the output of the `date` system command and prints it. But, I can have more than one command in that pipeline. I have to abandon the three-argument form which purposely prevents this nonsense:
 
-``` prettyprint
+```perl
 open my $pipe, qq(cat '$0' | sort |);
 while( <$pipe> ) {
   print "$.: $_";
@@ -114,7 +114,7 @@ This captures the text of the current program, sorts each line alphabetically an
 
 In [Gzipping data directly from Perl](http://perltricks.com/article/162/2015/3/27/Gzipping-data-directly-from-Perl), I showed how I could compress data on the fly by using Perl's gzip IO layer. This is handy when I have limited disk space:
 
-``` prettyprint
+```perl
 open my $fh, '>:gzip' $filename 
   or die "Could not write to $filename: $!";
 
@@ -125,7 +125,7 @@ while( $_ = something_interesting() ) {
 
 I can go the other direction as well, reading directly from compressed files when I don't have enough space to uncompress them first:
 
-``` prettyprint
+```perl
 open my $fh, '<:gzip' $filename 
   or die "Could not read from $filename: $!";
 
@@ -140,7 +140,7 @@ I can change the default output filehandle with `select` if I don't like standar
 
 First I can say the "dupe" the standard output filehandle with the special `&`mode:
 
-``` prettyprint
+```perl
 use v5.10;
 
 open my $STDOLD, '>&', STDOUT;
@@ -150,35 +150,35 @@ Any of the file modes will work there as long as I append the `&` to it.
 
 I can then re-open `STDOUT`:
 
-``` prettyprint
+```perl
 open STDOUT, '>>', 'log.txt';
 say 'This should be logged to log.txt.';
 ```
 
 When I'm ready to change it back, I do the same thing:
 
-``` prettyprint
+```perl
 open STDOUT, '>&', $STDOLD;
 say 'This should show in the terminal';
 ```
 
 If I only have the file descriptor, perhaps because I'm working with an old Unix programmer who thinks **vi** is a crutch, I can use that:
 
-``` prettyprint
+```perl
 open my $fh, "<&=$fd" 
   or die "Could not open filehandle on $fd\n";
 ```
 
 This file descriptor has a three-argument form too:
 
-``` prettyprint
+```perl
 open my $fh, '<&=', $fd
   or die "Could not open filehandle on $fd\n";
 ```
 
 I can have multiple filehandles that go to the same place since they are different names for the same file descriptor:
 
-``` prettyprint
+```perl
 use v5.10;
 
 open my $fh, '>>&=', fileno(STDOUT);

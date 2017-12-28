@@ -25,7 +25,7 @@ I recently took a break from Perl work to study at the [Recurse Center](http://r
 
 For imperative-language programmers, Haskell keywords are likely to mislead. Take the `type` keyword for instance. It's not for creating new types per se, but *type synonyms*, which are like aliases for existing types. I might use it like this:
 
-``` prettyprint
+```perl
 type FirstName = String
 type LastName = String
 type Age = Int
@@ -33,13 +33,13 @@ type Age = Int
 
 One way to declare new types is with the `data` keyword (naturally!). If I wanted to create a person type, I could use `data` :
 
-``` prettyprint
+```perl
 data Person = Person String String Int
 ```
 
 This declares a new type called `Person` with 2 strings and 1 integer as attributes. But I could also use our type synonyms from the earlier example, and clarify my intentions:
 
-``` prettyprint
+```perl
 data Person = Person FirstName LastName Age
 ```
 
@@ -47,7 +47,7 @@ data Person = Person FirstName LastName Age
 
 In Haskell function signatures can be restricted by types. I can create a function to tell which of two people is older:
 
-``` prettyprint
+```perl
 eldest :: Person -> Person -> String
 eldest (Person x1 y1 z1) (Person x2 y2 z2)
   | z1 > z2   = x1 ++ " " ++ y1 ++ " is older"
@@ -57,7 +57,7 @@ eldest (Person x1 y1 z1) (Person x2 y2 z2)
 
 This is a lot of new syntax, so bear with me. The first line declares a function called `eldest` which takes two persons and returns a string. The second line assigns the attributes of each person to variables. The rest of the function tests which person is older and returns an appropriate message. I'll save all of this code into a file called "person.hs", so I can test the function in the Haskell REPL, `ghci`
 
-``` prettyprint
+```perl
 ghci> :l person.hs
 [1 of 1] Compiling Main             ( person.hs, interpreted )
 Ok, modules loaded: Main.
@@ -69,14 +69,14 @@ ghci> eldest a b
 
 Sometimes we don't need to access all of the attributes of a type in a function. In these cases Haskell let's you use `_` as a placeholder, that won't be assigned to a variable. For example to print the initials of a person, I only need to know their first and last names:
 
-``` prettyprint
+```perl
 initials :: Person -> String
 initials (Person x y _) = [head x,'.',head y, '.']
 ```
 
 The second line of code assigns a person's firstname to `x` and lastname to `y`. It then takes the first char of each using `head` and returns a new list of chars with a dot after each char. I can test the function by reloading "person.hs":
 
-``` prettyprint
+```perl
 ghci> :l person.hs
 [1 of 1] Compiling Main             ( person.hs, interpreted )
 Ok, modules loaded: Main.
@@ -91,7 +91,7 @@ Typeclasses are similar to traits (roles in Perl-speak) for types. For example, 
 
 By generalizing the properties of types with typeclasses, Haskell can support generic functions which operate on typeclasses, instead of being restricted to one type. The signature of the `quicksort` function from [Learn You a Haskell](http://learnyouahaskell.com/recursion) is a great example of this:
 
-``` prettyprint
+```perl
 quicksort :: (Ord a) => [a] -> [a]
 quicksort [] = []
 quicksort (x:xs) =·
@@ -106,7 +106,7 @@ This declares a new function called quicksort which is restricted to lists of or
 
 If you saw the `instance` keyword in some Haskell code, you might think "aha, a singleton constructor!" but actually `instance` is used to make types instances of typeclasses. This makes sense when you consider that every type is an **instance** of a typeclass. Revisiting my `Person` type from earlier, what if I wanted to make it orderable? Typically in the English-speaking parts of the world, people are sorted by their last name, so I'm going to implement it that way:
 
-``` prettyprint
+```perl
 data Person = Person FirstName LastName Age deriving (Eq, Show)
 
 instance Ord Person where
@@ -115,7 +115,7 @@ instance Ord Person where
 
 I start by updating the type declaration of Person with `deriving (Eq, Show)`. These operate on the whole type (all of its attributes together). `Eq` will let Haskell compare Persons for equality and `Show` just let's Haskell serialize the type as a string. The second line of code uses `instance` to make persons orderable. The final line implements a comparison function using the lastname attribute of the Person. I can test the code using the `quicksort` function declared above.
 
-``` prettyprint
+```perl
 ghci> :l person.hs
 [1 of 1] Compiling Main             ( person.hs, interpreted )
 Ok, modules loaded: Main.
@@ -133,7 +133,7 @@ The final keyword to be aware of is `class`. By now it shouldn't surprise you to
 
 This is the finished code:
 
-``` prettyprint
+```perl
 --person.hs
 type FirstName = String
 type LastName  = String

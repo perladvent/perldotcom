@@ -26,7 +26,7 @@ I rarely write scripts like that anymore. If I'm developing a module, I'll write
 
 Perl has a ton of command line switches (see `perldoc perlrun`), but I'm just going to cover the ones you'll commonly need to debug code. The most important switch is `-e`, for execute (or maybe "engage" :) ). The `-e` switch takes a quoted string of Perl code and executes it. For example:
 
-``` prettyprint
+```perl
 $ perl -e 'print "Hello, World!\n"'
 Hello, World!
 ```
@@ -35,14 +35,14 @@ It's important that you use single-quotes to quote the code for `-e`. This usual
 
 I'm always forgetting what Perl's predefined special variables do, and often test them at the command line with a one liner to see what they contain. For instance do you remember what `$^O` is?
 
-``` prettyprint
+```perl
 $ perl -e 'print "$^O\n"'
 linux
 ```
 
 It's the operating system name. With that cleared up, let's see what else we can do. If you're using a relatively new Perl (5.10.0 or higher) you can use the `-E` switch instead of `-e`. This turns on some of Perl's newer features, like `say`, which prints a string and appends a newline to it. This saves typing and makes the code cleaner:
 
-``` prettyprint
+```perl
 $ perl -E 'say "$^O"'
 linux
 ```
@@ -53,7 +53,7 @@ Pretty handy! `say` is a nifty feature that you'll use again and again.
 
 If you ever need to check which version of Perl is installed on your system, use the `-v` switch:
 
-``` prettyprint
+```perl
 $ perl -v
 
 This is perl 5, version 20, subversion 2 (v5.20.2) built for x86_64-linux
@@ -69,7 +69,7 @@ Quick tip: if you need detailed information about the installed Perl version, us
 
 Modules can be loaded at the command line too. For instance to download and print the PerlTricks.com homepage, I can use [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny):
 
-``` prettyprint
+```perl
 $ perl -MHTTP::Tiny -E 'say HTTP::Tiny->new->get("http://perltricks.com")->{content}';
 <!DOCTYPE html>
 <html lang="en">
@@ -81,7 +81,7 @@ $ perl -MHTTP::Tiny -E 'say HTTP::Tiny->new->get("http://perltricks.com")->{cont
 
 If you need to import functions from a module, use an equals sign followed by a comma separated list of function names. I can check if an XML file is valid XML with [XML::Simple](https://metacpan.org/pod/XML::Simple) and it's `XMLin` function just by loading the XML file:
 
-``` prettyprint
+```perl
 $ perl -MXML::Simple=XMLin -e 'XMLin("data.xml")'
 ```
 
@@ -91,14 +91,14 @@ If `XMLin` doesn't emit any warnings or exceptions, the data is probably correct
 
 This one is pretty simple: use `-w` to turn on warnings. This can be incredibly helpful when code is not behaving the way you think it should. Warnings can help you identify issues that would otherwise be hard to spot:
 
-``` prettyprint
+```perl
 $ perl -E '$counter = 2; $countor = 3; say $counter'
 2
 ```
 
 Hmm `$counter` should be 3 shouldn't it? Turning on warnings quickly identifies the issue:
 
-``` prettyprint
+```perl
 $ perl -wE '$counter = 2; $countor = 3; say $counter'
 Name "main::countor" used only once: possible typo at -e line 1.
 2
@@ -106,7 +106,7 @@ Name "main::countor" used only once: possible typo at -e line 1.
 
 There are plenty of more subtle bugs that warnings won't identify directly, but the fact that Perl issues a warning puts you onto the fact that something is wrong. Take this example:
 
-``` prettyprint
+```perl
 $ perl -MTry::Tiny -wE '$pass; try { $pass = "true" } catch { say $_ } return $pass if $pass or die'
 Useless use of a variable in void context at -e line 1.
 Died at -e line 1.
@@ -118,7 +118,7 @@ Can you see what's wrong here? The `catch` block is missing a trailing semicolon
 
 Sometimes you'll be working with modules that are not installed in Perl's standard locations. This often happens when you're debugging an application but it's not installed via CPAN. To demonstrate this, I'll download my [WWW::curlmyip](https://metacpan.org/pod/WWW::curlmyip) module:
 
-``` prettyprint
+```perl
 $ cpan -g WWW::curlmyip
 $~ tar xzf WWW-curlmyip-0.02.tar.gz 
 $ cd WWW-curlmyip-0.02/
@@ -126,7 +126,7 @@ $ cd WWW-curlmyip-0.02/
 
 WWW::curlmyip exports a function called `get_ip` which returns your external IP address. I can use it in a one liner:
 
-``` prettyprint
+```perl
 $ perl -MWWW::curlmyip -E 'say get_ip'
 Can't locate WWW/curlmyip.pm in @INC (you may need to install the WWW::curlmyip module) (@INC contains: /home/dfarrell/.plenv/versions/5.20.2/lib/perl5/site_perl/5.20.2/x86_64-linux /home/dfarrell/.plenv/versions/5.20.2/lib/perl5/site_perl/5.20.2 /home/dfarrell/.plenv/versions/5.20.2/lib/perl5/5.20.2/x86_64-linux /home/dfarrell/.plenv/versions/5.20.2/lib/perl5/5.20.2 .).
 BEGIN failed--compilation aborted.
@@ -134,7 +134,7 @@ BEGIN failed--compilation aborted.
 
 That didn't work. Perl is complaining that it can't find WWW::curlmyip. To fix this, I can include the distribution `lib` directory that contains the module using `-I`:
 
-``` prettyprint
+```perl
 $ perl -Ilib -MWWW::curlmyip -E 'say get_ip'
 100.241.20.7
 ```

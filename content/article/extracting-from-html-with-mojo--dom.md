@@ -24,7 +24,7 @@ The DOM is the ["Document Object Model"](http://www.w3.org/DOM/). Something behi
 
 If I'm using [Mojo::UserAgent](http://mojolicio.us/perldoc/Mojo/UserAgent), I can get a DOM object from the response object from an HTTP request:
 
-``` prettyprint
+```perl
 use Mojo::UserAgent;
 my $ua = Mojo::UserAgent->new;
 
@@ -39,7 +39,7 @@ I don't *have* to make a request to get a DOM object. I'm often presented with H
 
 In the first example, I fetched `http://search.cpan.org/~bdfoy/'`, my author page at [CPAN Search](http://search.cpan.org/). I'll start with that HTML, assuming I already have it in a string.
 
-``` prettyprint
+```perl
 use Mojo::DOM;
 
 my $string = ...;
@@ -55,7 +55,7 @@ print $module_list;
 
 Once I have the `$dom` object, I can use `find` to select elements. I give `find` a [CSS3 selector](http://mojolicio.us/perldoc/Mojo/DOM/CSS#SELECTORS), in this case just `a` to find all the anchor links. `find` returns a [Mojo::Collection](="http://mojolicio.us/perldoc/Mojo/Collection") object, a fancy way to store a list and do things do it. The Mojolicious style makes heavy use of method chaining so it needs a way to call methods on the result. In this example, I merely `join` the elements with a newline. These are the results:
 
-``` prettyprint
+```perl
 <a href="/"><img alt="CPAN" src="http://st.pimg.net/tucs/img/cpan_banner.png"></a>
 <a href="/">Home</a>
 <a href="/author/">Authors</a>
@@ -71,7 +71,7 @@ Once I have the `$dom` object, I can use `find` to select elements. I give `find
 
 That's a good start, but I extracted all of the links. I want to limit it to the links to my distributions. Looking at the HTML, I see that the link I want is in the first `td` tag in a `tr`:
 
-``` prettyprint
+```perl
 <tr class=s>
     <td><a href="Data-Constraint-1.17/">Data-Constraint-1.17</a></td>
     <td>prototypical value checking</td>
@@ -83,7 +83,7 @@ That's a good start, but I extracted all of the links. I want to limit it to the
 
 I change my selector to look for the first anchor in the first table cell in a table row:
 
-``` prettyprint
+```perl
 my $module_list = $dom
     ->find('tr td:first-child a:first-child')
     ->join("\n");
@@ -91,7 +91,7 @@ my $module_list = $dom
 
 Now I have a list of the links I want, but with the anchor HTML and text:
 
-``` prettyprint
+```perl
 <a href="Acme-BDFOY-0.01/">Acme-BDFOY-0.01</a>
 <a href="Apache-Htaccess-1.4/">Apache-Htaccess-1.4</a>
 <a href="Apache-iTunes-0.11/">Apache-iTunes-0.11</a>
@@ -101,7 +101,7 @@ Now I have a list of the links I want, but with the anchor HTML and text:
 
 I still have a bit of work to do. I want to extract the value of the `href` attribute. I can do that with the `map` method from [Mojo::Collection](http://mojolicio.us/perldoc/Mojo/Collection):
 
-``` prettyprint
+```perl
 my $module_list = $dom
     ->find('tr td:first-child a:first-child')
     ->map( attr => 'href' )
@@ -110,7 +110,7 @@ my $module_list = $dom
 
 Each element in the collection is actually a [Mojo::DOM](http://mojolicio.us/perldoc/Mojo/DOM) object. The first argument to `map` is the method to call on each element and the remaining arguments pass through to that method. In this case, I'm calling `attr('href')` on each object. Now I mostly have the values I want:
 
-``` prettyprint
+```perl
 Acme-BDFOY-0.01/
 Apache-Htaccess-1.4/
 Apache-iTunes-0.11/
@@ -120,7 +120,7 @@ App-PPI-Dumper-1.02/
 
 I don't want that trailing slash. I can use another `map`, but with an anonymous subroutine. The result of the subroutine replaces the element in the collection. I use the [`/r` of the substitution operator to return the modified string](http://www.effectiveperlprogramming.com/2010/09/use-the-r-substitution-flag-to-work-on-a-copy/) instead of the number of substitutions (best Perl enhancement ever):
 
-``` prettyprint
+```perl
 use v5.14;
 
 my $module_list = $dom
@@ -132,7 +132,7 @@ my $module_list = $dom
 
 Now I have my list of distributions:
 
-``` prettyprint
+```perl
 Acme-BDFOY-0.01
 Apache-Htaccess-1.4
 Apache-iTunes-0.11
@@ -142,7 +142,7 @@ App-PPI-Dumper-1.02
 
 That's still as one string since I ended the method chain with `join("\n")`. To get a list, I use `each` to get the list, which I join myself later:
 
-``` prettyprint
+```perl
 my @module_list = $dom
     ->find('tr td:first-child a:first-child')
     ->map( attr => 'href' )
@@ -154,7 +154,7 @@ print join "\n", @module_list;
 
 I can get even fancier. Instead of the distribution name with the version, I can break it up with [CPAN::DistnameInfo](http://www.metacpan.org/module/CPAN::DistnameInfo). I'll turn every found link into a tuple of name and version. Since that module wants to deal with a distribution filename, I tack on *.tar.gz* to make it work out:
 
-``` prettyprint
+```perl
 use Data::Printer;
 use CPAN::DistnameInfo;
 
@@ -175,7 +175,7 @@ p @module_list;
 
 The `each` extracts each element from the collection and returns it. I use [Data::Printer](https://metacpan.org/pod/Data::Printer) to display the array:
 
-``` prettyprint
+```perl
 [
     [0]   [
         [0] "Acme-BDFOY",
@@ -197,7 +197,7 @@ The `each` extracts each element from the collection and returns it. I use [Data
 
 If I want only the distributions that are development versions, I can use [Mojo::Collection](http://mojolicio.us/perldoc/Mojo/Collection)'s `grep`:
 
-``` prettyprint
+```perl
 my @module_list = $dom
     ->find('tr td:first-child a:first-child')
     ->map( attr => 'href' )
@@ -212,7 +212,7 @@ my @module_list = $dom
 
 The `grep` selects each element of the collection for which the subroutine returns a true value:
 
-``` prettyprint
+```perl
 [
     [0]  [
         [0] "Brick",

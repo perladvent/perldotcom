@@ -18,7 +18,7 @@ Let's say you support an application with a customer sign up process where the c
 
 One answer is to use libpostal's normalization capability to expand single address string into valid variants. If you already have a customer whose address matches one of the variants, you know you've got a duplicate sign-up. Let's say you have a customer with the address "216 Park Avenue Apt 17D, New York, NY 10022". Then another customer comes along with the ever-so-similar address "216 Park **Ave** Apt 17D, New York, NY 10022". Here's how you can test for that with Perl:
 
-``` prettyprint
+```perl
 use Geo::libpostal 'expand_address';
 
 my @original_variants = expand_address("216 Park Avenue Apt 17D, New York, NY 10022");
@@ -43,7 +43,7 @@ for my $address (@new_variants) {
 
 libpostal can also parse an address string into its constituent parts using such as house name, number, city and postcode. This can be useful for all sorts of things from information extraction to simplifying web forms. This is how to parse an address string with Perl:
 
-``` prettyprint
+```perl
 use Geo::libpostal 'parse_address';
 
 my %address = parse_address("216 Park Avenue Apt 17D, New York, NY 10022");
@@ -61,7 +61,7 @@ my %address = parse_address("216 Park Avenue Apt 17D, New York, NY 10022");
 To be as fast as possible, libpostal uses setup functions to create lookup tables in memory. These can take several seconds to construct, so under the hood Geo::libpostal lazily calls the setup functions for you. This means that the first call to `expand_address` or `parse_address` is a lot slower than usual as the setup functions are running as well:
 
 
-``` prettyprint
+```perl
 use Geo::libpostal 'expand_address';
 
 # this is slow

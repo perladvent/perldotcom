@@ -26,19 +26,19 @@ Let's look at an example. I'm going to use [Mojolicious](http://mojolicio.us) si
 
 The example application is going to need a persistent mechanism to store user information. A tool I reach for in examples and prototyping is [DBM::Deep](https://metacpan.org/pod/DBM::Deep). It is a file-backed system for storing Perl data structures. To use it, simply create an instance (or `tie` one) and use it as a hash reference (array references are possible too); any changes will be saved automagically!
 
-``` prettyprint
+```perl
 my $db = DBM::Deep->new('filename.db');
 ```
 
 I'll store this object in a helper, named `users`. In Mojolicious, a helper is a subroutine that can be called as a method on a controller instance or the app itself, or called as a function in a template. They are often used for linkages between application and business or model logic, though here it is providing database access. When the time comes to need access to user data, say from a controller instance `$c`, it is as simple as:
 
-``` prettyprint
+```perl
 my $user = $c->users->{$username};
 ```
 
 And likewise to create a user, simply assign to it:
 
-``` prettyprint
+```perl
 $c->users->{$username} = {
   email     => $email,
   password  => $c->bcrypt($password),
@@ -62,7 +62,7 @@ The app declares a helper to send an email, cleverly called `send_email` which t
 
 A nice feature of Email::Sender is that you can specify [transport via the environment](https://metacpan.org/pod/Email::Sender::Manual::QuickStart#specifying-transport-in-the-environment). For prototyping purposes, by setting an environment variable, the email is "sent" to the terminal. Meanwhile, the Mojolicious [eval](http://mojolicio.us/perldoc/Mojolicious/Command/eval) command is a handy way to perform one-line scripts with your app. If I combine these features together, I can see what the resulting email would look like with a one liner:
 
-``` prettyprint
+```perl
 $ EMAIL_SENDER_TRANSPORT=Print ./app.pl eval 'app->send_email(q[me@spam.org], "Care for some SPAM?", "Well how about it?")'
 ```
 
@@ -78,19 +78,19 @@ I create a helper which initializes an instance of [Mojo::JWT](https://metacpan.
 
 To create the confirmation URL, the app first sets the claims and encodes to a JWT encoded string containing the data structure.
 
-``` prettyprint
+```perl
 my $jwt = $c->jwt->claims({username => $username})->encode;
 ```
 
 Then it generates a URL to the "confirm" route, makes it absolute, and appends the query/value pair to the end:
 
-``` prettyprint
+```perl
 my $url = $c->url_for('confirm')->to_abs->query(jwt => $jwt);
 ```
 
 Later when the URL is clicked, the app can retrieve the username from the JWT encoded query parameter like this:
 
-``` prettyprint
+```perl
 my $username = $c->jwt->decode($c->param('jwt'))->{username};
 ```
 
@@ -110,13 +110,13 @@ The app declares a task, called `email_task` which is a wrapper for the `send_em
 
 This helper then is all that is needed to send an email via a job worker, well that and a worker. While prototyping, it is handy to start a worker in another terminal by running:
 
-``` prettyprint
+```perl
 $ EMAIL_SENDER_TRANSPORT=Print ./app.pl minion worker
 ```
 
 Again by setting the transport to `Print`, the result will be output in the terminal. The progress of the job can then be tracked via the `minion` command as well.
 
-``` prettyprint
+```perl
 $ ./myapp.pl minion job
 $ ./myapp.pl minion job <<id>>
 ```
@@ -125,25 +125,25 @@ $ ./myapp.pl minion job <<id>>
 
 The rest of the web application is a fairly standard Mojolicious app. One thing that I employ is a helper that redirects to the landing (index) page and optionally accepts a message to be displayed after redirect. This message is called a "flash" message and is stored in the session cookie, valid only on the next request. Using this helper I can easily start the sign-in/sign-up cycle again and tell the user what happened, good or bad. Because setters in Mojolicious are chainable, the helper is simply:
 
-``` prettyprint
+```perl
 helper to_index => sub { shift->flash(message => shift)->redirect_to('index') };
 ```
 
 In the template, if the flash message is defined from the previous request, it is used otherwise a default is presented
 
-``` prettyprint
+```perl
 <p><%= flash('message') || 'Sign in or sign up!' %></p>
 ```
 
 Then if the username is already taken, for example, I can stop processing immediately by:
 
-``` prettyprint
+```perl
 return $c->to_index("Username $username is taken") if $c->users->{$username};
 ```
 
 Now that you know how the pieces work, check out the final [script](https://gist.github.com/jberger/91a853ee223737c1a1d1), or have a look below. Happy Perling!
 
-``` prettyprint
+```perl
 use Mojolicious::Lite;
 
 use DBM::Deep;

@@ -23,14 +23,14 @@
 
 First of all [modulo](http://perldoc.perl.org/perlop.html#Multiplicative-Operators) is an integer operator, and if it receives fractional arguments, Perl will only use the integer portion of the fraction. This means that the following two operations are equivalent:
 
-``` prettyprint
+```perl
 my $result1 = 5.5 % 3.2;
 my $result2 = 5 % 3;
 ```
 
 Second the modulo operator is performing [Euclidean division](http://en.wikipedia.org/wiki/Euclidean_division) not [arithmetic division](https://en.wikipedia.org/wiki/Division_%28mathematics%29). Mathematically this is expected, however that is why the characterization of modulo as returning the "remainder of a division operation" can catch programmers by surprise - it does not return a fractional decimal. For example:
 
-``` prettyprint
+```perl
 my $result3 = 5 / 2; # 2.5
 my $result4 = 5 % 2; # 1 (not 0.5)
 ```
@@ -41,7 +41,7 @@ Some languages (e.g. Haskell) implement a remainder function to provide the rema
 
 The following subroutine returns the remainder from an arithmetic division operation. It takes two arguments: a dividend ($a) and a divisor ($b) and returns early for zero and undef arguments.
 
-``` prettyprint
+```perl
 sub remainder {
     my ($a, $b) = @_;
     return 0 unless $b && $a;

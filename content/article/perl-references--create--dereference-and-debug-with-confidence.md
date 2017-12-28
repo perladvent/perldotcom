@@ -25,7 +25,7 @@
 
 A reference is a scalar variable whose value is a pointer to another Perl variable. If you were to print out a reference, you would see something like this:
 
-``` prettyprint
+```perl
 SCALAR(0x509ea0)
 ```
 
@@ -41,7 +41,7 @@ Accessing the value that a reference points to is called "dereferencing". When y
 
 We're going to focus on array and hash references as those are the most commonly encountered reference types. Working them is easy. For arrays, use square brackets instead of parentheses to declare, and the arrow operator ("-\>") to dereference:
 
-``` prettyprint
+```perl
 my @array       = ('apple', 'banana', 'pear');
 my $array_ref   = ['apple', 'banana', 'pear'];
 
@@ -51,7 +51,7 @@ print $array_ref->[1]; #banana
 
 For hashes, use curly braces instead of parentheses to declare, and the same arrow operator to dereference:
 
-``` prettyprint
+```perl
 my %hash        = (one => 1, two => 2, three => 3);
 my $hash_ref    = {one => 1, two => 2, three => 3};
 
@@ -61,7 +61,7 @@ print $hash_ref->{three}; #3
 
 One of the coolest things about references is the ability to create complex data structures to hold any kind of data you need. Let's look at a more realistic data structure for a fictional customer:
 
-``` prettyprint
+```perl
 my $customer = { name   => 'Mr Smith',
                  dob    => '01/18/1987',
                  phones => { home   => '212-608-5787',
@@ -83,7 +83,7 @@ my $customer = { name   => 'Mr Smith',
 
 $customer is a hash ref with 5 keys. Two of the keys ("name" and "dob") have the usual scalar values. The other key values though are nested references: "phones" is a nested hashref, and "last\_3\_purchase\_values" and "addresses" are arrayrefs. So how would you access any of the values in $customer data structure? Check this out:
 
-``` prettyprint
+```perl
 print $customer->{name}; # Mr Smith
 print $customer->{phones}{home}; # 212-608-5787
 print $customer->{last_3_purchase_values}[0]; # 78.92
@@ -96,7 +96,7 @@ To dereference a value in $customer, we start by using the arrow operator. From 
 
 Sometimes you'll need to loop through an arrayref. The syntax for this is the same as an ordinary array, except that you need to dereference the entire array, rather than a single element of it. This is done by enclosing the arrayref in with a dereferencing array block: "@{ $array\_ref }". Let look at some examples using $customer
 
-``` prettyprint
+```perl
 use feature 'say';
 
 #iterate through a nested array
@@ -112,7 +112,7 @@ foreach my $address (@{ $customer->{addresses} }) {
 
 Arrays support other operations like push and shift. In these cases you will need a dereferencing array block too:
 
-``` prettyprint
+```perl
 push @{$customer->{addresses}}, { street => '157 Van Cordant Street',
                                   zip    => '10008',
                                   city   => 'New York',
@@ -126,7 +126,7 @@ Here we have pushed a new address on to the "addresses" arrayref. We used a dere
 
 Dereferencing blocks can be used for hash operations too. Probably the most common operation is looping through the keys of the hash, using the "keys" function. In this case, you'll need to use a dereferencing hash block "%{ $hash\_ref }". Let's look at an example using $customer:
 
-``` prettyprint
+```perl
 use feature 'say';
 
 # iterate through a nested hash
@@ -139,13 +139,13 @@ foreach my $key (keys %{ $customer->{phones} }) {
 
 References can be harder to debug than normal variables as you need to dereference the reference in order to see what variable it is pointing to. Imagine you wanted to print out the contents of $customer. This doesn't work:
 
-``` prettyprint
+```perl
 print $customer; # HASH(0x2683b30)
 ```
 
 Fortunately you can use Data::Dumper's "Dumper" function to dereference and pretty-print a reference for you:
 
-``` prettyprint
+```perl
 use Data::Dumper;
 
 print Dumper($customer);
@@ -153,7 +153,7 @@ print Dumper($customer);
 
 Would print:
 
-``` prettyprint
+```perl
 $VAR1 = {
           'last_3_purchase_values' => [
                                         '78.92',
@@ -195,14 +195,14 @@ Another useful tool is the Perl's [ref](http://perldoc.perl.org/functions/ref.ht
 
 To create a reference to an existing variable, use the backslash operator:
 
-``` prettyprint
+```perl
 my $array_ref   = \@array;
 my $hash_ref    = \%hash;
 ```
 
 The backslash operator often comes into play when working within a subroutine. For instance consider these three subs:
 
-``` prettyprint
+```perl
 # example 1 - processor & memory inefficient
 sub return_array {
     my @array = (1, 2, 3);

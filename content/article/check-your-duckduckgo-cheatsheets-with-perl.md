@@ -23,13 +23,13 @@ With DuckDuckGo's global [Quack & Hack](https://duck.co/blog) just around the co
 
 To run the script, download it from [Github](https://github.com/dnmfarrell/DDG-cheatsheet-check/blob/master/cheatsheet_check). It requires the [JSON](https://metacpan.org/pod/JSON) and [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny) Perl modules which you can install with `cpan` at the terminal:
 
-``` prettyprint
+```perl
 $ cpan JSON HTTP::Tiny
 ```
 
 Be sure to give execute permissions to the script too:
 
-``` prettyprint
+```perl
 $ chmod 744 cheatsheet_check
 ```
 
@@ -37,7 +37,7 @@ $ chmod 744 cheatsheet_check
 
 Once you have a cheatsheet in JSON that you want to check, just pass the filepath to `cheatsheet_check`:
 
-``` prettyprint
+```perl
 $ ./cheatsheet_check /path/to/cheatsheet.json
 ```
 

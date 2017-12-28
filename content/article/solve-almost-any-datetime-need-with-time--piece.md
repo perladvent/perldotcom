@@ -26,7 +26,7 @@
 
 Time::Piece has been in Perl core since version 5.8, so you should already have it installed. If you don't have it, you can install it via cpan at the terminal.
 
-``` prettyprint
+```perl
 $ cpan Time::Piece
 ```
 
@@ -34,7 +34,7 @@ $ cpan Time::Piece
 
 To create a new Time::Piece object with the current system time, use new:
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $time = Time::Piece->new;
@@ -44,7 +44,7 @@ my $time = Time::Piece->new;
 
 Time::Piece provides many methods for printing the datetime in common formats. For example:
 
-``` prettyprint
+```perl
 $time;           # Thu Jan  9 21:21:36 2014
 $time->datetime; # 2014-01-09T21:21:36
 $time->date;     # 2014-01-09
@@ -56,7 +56,7 @@ $time->epoch;    # 1389320496 (Unix time)
 
 If you need to get the datetime in a custom format, Time::Piece provides a "strftime" method which takes a custom string format. A complete list of formatting codes is on the [man page](http://man7.org/linux/man-pages/man3/strftime.3.html). Here are some examples:
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $time = Time::Piece->new;
@@ -70,7 +70,7 @@ $time->strftime('%Y %y %G %g');    # 2014 14 2014 14 (4 different years,really)
 
 Time::Piece also provides a strptime method which takes a string, and a string format and initializes a new Time::Piece object with that datetime. If either the date or time component is missing, Time::Piece assumes the current date or time. Here are some examples:
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $yesterday    = Time::Piece->strptime('01-08-2014', '%m-%d-%Y');
@@ -89,7 +89,7 @@ my $pacific_datetime = Time::Piece->strptime('2015-10-05T09:34:19 -0700','%Y-%m-
 
 **Warning** Time::Piece fails to parse timezones with semicolons in them. To handle that, just remove the semicolon from the timezone before passing it to `strptime`:
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $datetime = '2015-10-05T09:34:19 -04:00';
@@ -104,7 +104,7 @@ my $dt       = Time::Piece->strptime($datetime, "%Y-%m-%dT%H:%M:%S %z");
 
 This is easy. Just initialize two Time::Piece objects and compare them with an operator (\<, \<=, ==, \>=, \> and \<=\>). For example:
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $today = Time::Piece->new;
@@ -121,7 +121,7 @@ The first thing to know is that Time::Piece objects are **immutable** so any ope
 
 Time::Piece provides a couple of methods for adding months and years ("add\_months", "add\_years") from Time::Piece objects. Simply use a negative integer to subtract. For example:
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $datetime = Time::Piece->new;
@@ -135,7 +135,7 @@ You'll often need more granular control over the datetime, and that's where the 
 
 Let's see how to use the constants:
 
-``` prettyprint
+```perl
 use Time::Piece;
 use Time::Seconds;
 
@@ -147,7 +147,7 @@ my $lastMonth = $time - ONE_MONTH;
 
 If you need to change the datetime by seconds, with you can simply use integer arithmetic.
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $now = Time::Piece->new;
@@ -158,7 +158,7 @@ my $30SecondsAgo = $now - 30;
 
 [Time::Piece](https://metacpan.org/pod/Time::Piece) has excellent documentation, you can read it on the command line with perldoc:
 
-``` prettyprint
+```perl
 $ perldoc Time::Piece
 ```
 

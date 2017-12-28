@@ -23,7 +23,7 @@ Over the past year I've been working on several large Perl projects, sometimes a
 
 Let's look at a simple compile test, I've adapted this example from [Perly-Bot](https://github.com/dnmfarrell/Perly-Bot):
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Test::More;
 use lib 'lib';
@@ -46,7 +46,7 @@ done_testing();
 
 The code is simple enough; it adds the local `lib` directory to the list of directories for Perl to search for modules. Then it declares an array of module names called `@modules`. Finally it loops through each module name and tries to import it, bailing out if any module fails to load. Because tests are usually run in alphabetical order, this file is called `00-compile.t` so that it is run first. I can run this test at the terminal:
 
-``` prettyprint
+```perl
 $ ./t/00-compile.t
 perl t/00-compile.t 
 ok 1 - use Perly::Bot;
@@ -63,7 +63,7 @@ ok 7 - use Perly::Bot::Media::Reddit;
 
 The basic compile test example has an obvious flaw: it requires the programmer to list all the module names to be tested. This means that every time a new module is added to the codebase or a module is renamed, this test needs to be updated. This also introduces the risk of error - a failing module could exist in the codebase and never be tested. Instead of a static list of modules, I can tell Perl to search the `lib` directory and try to import any module it finds:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Test::More;
 use lib 'lib';
@@ -89,21 +89,21 @@ Here I use [Path::Tiny](https://metacpan.org/pod/Path::Tiny) to iterate through 
 
 One problem with using [require](http://perldoc.perl.org/functions/require.html) to load filepaths instead of module names is that it can generate "subroutine redefined" warnings if the same module is loaded twice by different files. Imagine this code:
 
-``` prettyprint
+```perl
 require 'lib/Game.pm';
 require 'lib/Game/Asset/Player.pm';
 ```
 
 If `Game.pm` loads `Game::Asset::Player`, Perl will emit the subroutine redefined warning when the second `require` statement is executed. I can deal with this in a couple of ways: I could suppress the warning by adding `no warnings 'redefine';` to my compile test file. But this would mask genuine warnings that could be helpful, like if I have circular dependencies in my codebase. Or I can convert the filepath into a module name, and then `require` won't complain, for example:
 
-``` prettyprint
+```perl
 require 'Game';
 require 'Game::Asset::Player';
 ```
 
 For the compile tests, I can use substitute regexes to convert the filepath into a module name. When the compile tests run they won't generate spurious "subroutine redefined" warnings.
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Test::More;
 use lib 'lib';
@@ -134,7 +134,7 @@ Compile tests are an interesting class of test. They're an implementation of the
 
 If you ever need to suppress a particular warning, in newer versions of Perl the warnings pragma [documentation](http://perldoc.perl.org/warnings.html) lists all of the types of warnings it recognizes. This is especially useful when using experimental features like [subroutine signatures](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures). You can read it for your version of Perl at the command line with:
 
-``` prettyprint
+```perl
 $ perldoc warnings
 ```
 

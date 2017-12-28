@@ -23,13 +23,13 @@ Perl module features and behaviour can change from version to version and so kno
 
 ### 1. Use CPAN with the -D flag
 
-``` prettyprint
+```perl
 cpan -D Moose
 ```
 
 Type the code above into the terminal replacing 'Moose' with the Perl module name of your choice (in the typical Perl format of Namespace::ModuleName, e.g. Catalyst::Runtime). CPAN will report the module's version, installed location, the latest version number available on CPAN, and whether the locally installed version of the module is up to date or not. The resulting output looks like this:
 
-``` prettyprint
+```perl
 D/DO/DOY/Moose-2.0604.tar.gz
 /home/sillymoose/perl5/perlbrew/perls/perl-5.14.2/lib/site_perl/5.14.2/x86_64-linux/Moose.pm
 Installed: 2.0603
@@ -40,19 +40,19 @@ doy@cpan.org
 
 ### 2. Use a Perl one-liner to load and print the module version number
 
-``` prettyprint
+```perl
 perl -MMoose -e 'print $Moose::VERSION ."\n";'
 ```
 
 This command loads the module with Perl's -M flag, and then prints the version variable. This should always be available under $MODULENAME::VERSION. Using a one-liner avoids the need to use CPAN, plus it neatly returns only the version number, which can easily be used for further processing:
 
-``` prettyprint
+```perl
 2.0603
 ```
 
 ### 3. Use Perldoc with the -m flag to load the module's source code and extract the version number.
 
-``` prettyprint
+```perl
 # If you are using Bash:
 perldoc -m Moose | grep VERSION
 
@@ -62,7 +62,7 @@ perldoc -m Moose | select-string VERSION
 
 Admittedly somewhat of a hack, but this will usually work. Don't forget to replace Moose with the module name you are searching for.The output can be a messy, but you can usually locate the version number. This is a good option if methods 1 and 2 above do not work.
 
-``` prettyprint
+```perl
 $Moose::VERSION = '2.0603';
 die "Class::MOP version $Moose::VERSION required--this is version $Class::MOP::VERSION"
     if $Moose::VERSION && $Class::MOP::VERSION ne $Moose::VERSION;

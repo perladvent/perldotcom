@@ -34,7 +34,7 @@ If you do not have one of the above needs, you may not need to use the Singleton
 
 Instead of implementing a "new" constructor, the Singleton class implements an "get\_instance" method which will return a new object if it doesn't already exist, else it returns the existing instance. The Singleton class is shown below:
 
-``` prettyprint
+```perl
 package Singleton;
 
 my $instance = undef;
@@ -49,7 +49,7 @@ sub get_instance {
 
 To test the Singleton get\_instance method we can run the following script:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Singleton; 

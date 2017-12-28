@@ -23,7 +23,7 @@ Perl has many string functions, let's take a look at a some of the most common o
 
 Concatenate strings by inserting a fullstop (.) operator between them. Perl will automatically 'stringify' scalar variables that were initialised as a number.
 
-``` prettyprint
+```perl
 # declare and concatenate two strings
 my $joke = 'A horse walks ' . 'into a bar.'; # A horse walks into a bar.
 # Concatenate two scalars
@@ -41,7 +41,7 @@ my $time_string = $hour . ':' . $minutes; # 6:30
 
 Substring extracts and returns a sub-set of an existing string. It takes up to four arguments: the expression to substring, the offset from where to start the substring, the length of the substring and a replacement string. If the length is omitted the substring will run to the end of input expression.
 
-``` prettyprint
+```perl
 # substr(expression, offset, [length], [replacement])
 my $joke            = 'A horse walks into a bar.';
 my $animal          = substr($joke, 2, 5); # horse
@@ -58,7 +58,7 @@ The [perldoc](http://perldoc.perl.org/functions/substr.html) page for substr has
 
 The split function divides an input string into a list of substrings using a split pattern, and an (optional) limit on the number of split fields. If the input expression is omitted, Perl will use $\_.
 
-``` prettyprint
+```perl
 # split(pattern, [expression], [number_of_fields])
 my $sentence       = 'A horse walks into a bar.';
 my @words          = split(' ', $sentence); # A,horse,walks,into,a,bar

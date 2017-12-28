@@ -27,7 +27,7 @@ Every now and then I'll run into a problem where I need to programmatically chec
 
 Before we look at the module, let's consider a Perl solution using only core Perl code. I can grab my IP address from the terminal with a single line of Perl:
 
-``` prettyprint
+```perl
 $ perl -MHTTP::Tiny -e 'print HTTP::Tiny->new->get(q{http://curlmyip.com})->{content}'
 121.45.140.5
 ```
@@ -36,7 +36,7 @@ $ perl -MHTTP::Tiny -e 'print HTTP::Tiny->new->get(q{http://curlmyip.com})->{con
 
 Well that was easy. But notice how I didn't have to append a newline to the output? That's because curlmyip.com returns the IP address with a newline appended. If we want to use the IP address as an input to any other program, we'll need to `chomp` that newline away. The code would then be:
 
-``` prettyprint
+```perl
 $ perl -MHTTP::Tiny -E '$ip=HTTP::Tiny->new->get(q{http://curlmyip.com})->{content}; chomp $ip; say $ip'
 121.45.140.5
 ```
@@ -47,7 +47,7 @@ Not so clean anymore is it? In fact it would be a stretch to call this a "one li
 
 The module exports a `get_ip` function which returns the IP address. It's super simple to use:
 
-``` prettyprint
+```perl
 use WWW::curlmyip;
 
 my $ip = get_ip();
@@ -55,7 +55,7 @@ my $ip = get_ip();
 
 So far, so good. But what can you do with this information? In the past I've had programs check my IP address when connected to a VPN, or to TOR to confirm my real IP is masked. The other obvious use case is geolocation:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 
 use WWW::curlmyip;
@@ -71,7 +71,7 @@ print "You are in $record->{region_name}, $record->{country_code}\n";
 
 In this code I retrieve my IP address and then lookup my location using the [Geo::IP](https://metacpan.org/pod/Geo::IP) module from MaxMind. Saving the code as `whereami.pl` and running it outputs:
 
-``` prettyprint
+```perl
 $ whereami.pl
 You are in New York, US
 ```

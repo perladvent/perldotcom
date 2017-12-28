@@ -22,18 +22,18 @@ Paul submitted a solution for [memoizing](http://en.wikipedia.org/wiki/Memoizati
 
 To see this in action, just copy and save the script below as "memoizer.pl". Open up the terminal and type:
 
-``` prettyprint
+```perl
 $ chmod 755 memoizer.pl
 $ ./memoizer.pl
 ```
 
 Or if you're on Windows, in cmd.exe or PowerShell:
 
-``` prettyprint
+```perl
 >perl memoizer.pl
 ```
 
-``` prettyprint
+```perl
 #!/bin/env perl
 
 use strict;
@@ -99,13 +99,13 @@ say fib(40);
 
 Josh submitted a looping Perl one liner with a twist - once it has finished looping, the one liner executes a final block of code using Perl's [END](http://perldoc.perl.org/perlmod.html#BEGIN,-UNITCHECK,-CHECK,-INIT-and-END) block. For example this can be used to process a web server log, and then summarize the log statistics:
 
-``` prettyprint
+```perl
 $ cat /var/log/httpd/access_log |perl -lne '/20\d\d:\d\d:\d\d/;$counts{$&}++;$t++}END { for (sort keys %counts) { print "$_: $counts{$_} (".sprintf("%.02f",$counts{$_}/$t*100)."%)" }'
 ```
 
 Running the above code on an Apache or Nginx access log gives these results:
 
-``` prettyprint
+```perl
 2013:08:27: 1 (3.85%)
 2013:08:28: 4 (15.38%)
 2013:08:29: 1 (3.85%)
@@ -127,20 +127,20 @@ Yes you read that right - Justin and Mario's submission was a parallel processin
 
 To try out the app, you'll need to install the [Mojolicious::Lite](https://metacpan.org/pod/Mojolicious::Lite) module, which you can get from CPAN. Just open a terminal and enter:
 
-``` prettyprint
+```perl
 $ cpan Mojolicious::Lite
 ```
 
 Get the [application code](https://gist.github.com/tardisx/9088819) and save it as "mce\_mojolicious.pl". At the terminal type:
 
-``` prettyprint
+```perl
 $ chmod 755 mce_mojolicious.pl
 $ ./mce_mojolicious.pl daemon
 ```
 
 Or if you're on Windows, in cmd.exe or PowerShell type:
 
-``` prettyprint
+```perl
 >perl mce_mojolicious.pl daemon
 ```
 

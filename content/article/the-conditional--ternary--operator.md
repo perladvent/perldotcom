@@ -20,7 +20,7 @@ One way to reduce the verbosity of Perl code is to replace if-else statements wi
 
 Let's convert a standard Perl if-else into its conditional operator equivalent, using a fictitious subroutine. First here is the if-else:
 
-``` prettyprint
+```perl
 sub calculate_salary {
     my $hours = shift;
     my $salary;
@@ -36,7 +36,7 @@ sub calculate_salary {
 
 And here is the same statement using the conditional operator:
 
-``` prettyprint
+```perl
 sub calculate_salary {
     my $hours = shift;
     return $hours > 40 ? get_overtime_wage($hours) : get_normal_wage($hours);

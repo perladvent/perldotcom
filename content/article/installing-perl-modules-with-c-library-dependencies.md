@@ -36,7 +36,7 @@ Here are some places to check for dependencies:
 
 Once you have identified the missing C libraries, you need to install them. If you are on Linux, this can be done using a package manager and searching for and installing the package containing the C library:
 
-``` prettyprint
+```perl
 # yum package manager
 $ sudo yum search ssl
 ...

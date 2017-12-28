@@ -21,7 +21,7 @@ Perl's `tie` mechanism allows me to create something that looks like a scalar bu
 
 I think I fell in love with this technique when it allowed me to solve a seemly intractable problem creating some HTML by hand (so you know this must have been a long time ago). Someone had created a library to create an HTML table that allowed me to set the color of the table rows by passing in a scalar value for `tr`'s `bgcolor` attribute. Fortunately I've forgotten who that was or what the code looked like, but it was something like this:
 
-``` prettyprint
+```perl
 sub print_table_and_stuff {
     my( $color, @lots_of_other_arguments ) = @_;
 
@@ -44,7 +44,7 @@ I could have replaced the subroutine using one of the techniques I showed in [Ma
 
 Thus, I invented [Tie::Cycle](https://metacpan.org/pod/Tie::Cycle). The `tie` interface allows me to decide what a scalar should do when I access it or store it. I supply code behind both of those operations by defining special subroutines. Here's an extract of the code that shows those special methods:
 
-``` prettyprint
+```perl
 package Tie::Cycle;
 use strict;
 
@@ -84,7 +84,7 @@ The `tie` interface includes the `TIESCALAR` method that creates the `tied` obje
 
 In this short bit of code, I create the tied scalar by calling `tie` with the target scalar, the module name that defines the interface, and the arguments to pass to `TIESCALAR`. After that, I use `$scalar` as a normal scalar:
 
-``` prettyprint
+```perl
 use v5.10;
 use Tie::Cycle;
 
@@ -100,7 +100,7 @@ Each time through the `while`, I output the value of `$scalar`. It doesn't look 
 
 This is a bit more fun when I cycle through colored boxes:
 
-``` prettyprint
+```perl
 use v5.10;
 use open qw(:std :utf8);
 
@@ -125,7 +125,7 @@ Recently, David Farrell had a similar problem. He could pass a value to a method
 
 However, using the same trick I used for HTML row colors, he was able to create what looks like a simple scalar variable but was really a method call that increased the value each time:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 package Tie::Scalar::Ratio;
@@ -161,7 +161,7 @@ sub FETCH {
 
 My program to demonstrate this is almost the same as my prior one. The part where I use `$scalar` is the same.
 
-``` prettyprint
+```perl
 use v5.10;
 use Tie::Scalar::Ratio;
 
@@ -179,7 +179,7 @@ This is a tidy solution because it fits into the code that's already there. The 
 
 Instead of giving Tie::Scalar::Ratio, I'd like to give it a callback. David also created [Tie::Scalar::Callback](https://metacpan.org/pod/Tie::Scalar::Callback). Each time I access the scalar, this module calls the subroutine I passed to it and give me back the result. The code looks similar to the others:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 package Tie::Scalar::Callback;
@@ -210,7 +210,7 @@ sub FETCH {
 
 Here's a subroutine that does the same thing as the previous example by stores the state in the subroutine rather than in the tied object:
 
-``` prettyprint
+```perl
 my $coderef = sub {
         state $value  = 1/2;
         state $factor = 2;
@@ -227,7 +227,7 @@ while( $count++ < 10 ) {
 
 That's a simple callback, but I can make something a little more exotic. How about a sine-based function?
 
-``` prettyprint
+```perl
 use v5.10;
 use Tie::Scalar::Callback;
 
@@ -249,7 +249,7 @@ while( $count++ < 10 ) {
 
 Now the output backs off and speeds up. There's something that might be more useful. Perhaps I want to use the load average to decide the number:
 
-``` prettyprint
+```perl
 use Sys::LoadAvg qw(loadavg);
 use Tie::Scalar::Callback;
 
@@ -266,7 +266,7 @@ tie my $scalar, 'Tie::Scalar::Callback', $coderef;
 
 Finally, just for fun, here's a tied scalar that creates the Fibonacci series using the inline `package NAMESPACE BLOCK` syntax introduced in v5.14:
 
-``` prettyprint
+```perl
 use v5.14;
 
 package Tie::Scalar::Fibonacci {
@@ -305,7 +305,7 @@ Every time I access it I get the next number in the Fibonacci series. Curiously,
 
 But, it can generate other series too. Instead of looking at the previous two values, I can give `TIESCALAR` a different number to specify how many previous numbers to sum:
 
-``` prettyprint
+```perl
 tie my $scalar, 'Tie::Scalar::Fibonacci', 5;
 
 my $count;

@@ -40,7 +40,7 @@ This quote neatly articulates the main arguments in favor of sigils, to which I'
 
 It's undeniable that string interpolation is easier with sigils, compared to using `sprintf`, concatenation or `join`:
 
-``` prettyprint
+```perl
 "$greeting, $name";
 sprintf '%s, %s', greeting, name;
 greeting . ', ' . name;
@@ -62,7 +62,7 @@ This claim is subjective; I know of other Perl programmers believe it is more re
 
 Perl 5 uses variant sigils: the symbol changes depending on the type being accessed. For example:
 
-``` prettyprint
+```perl
 my @num = (1, 2, 3);
 my $num = 25;
 say $num[1];
@@ -82,7 +82,7 @@ Another way to reduce the risk of clashes is to use far fewer builtin keywords, 
 
 For arrays and hashes, instead of providing a class name and calling a constructor method, in Perl we can simply use `@` or `%`. This reduces the amount of text needed, consider:
 
-``` prettyprint
+```perl
 my @numbers = (1, 2, 3);
 my numbers  = Array->new(1, 2, 3);
 ```
@@ -93,14 +93,14 @@ The first way is obviously shorter. What about other types though? Suppose we wa
 
 Perl 6 takes a different approach: the [sigil](https://docs.perl6.org/language/variables) denotes a interface supported by the underlying type. For example `@` means positional, `%` means associative and `&` means callable. You can also define [custom types](https://docs.perl6.org/language/subscripts#Custom_type_example). This approach preserves the look and feel of Perl 5 whilst placing the syntax on a more logical footing. But it's not without its peculiarities. For instance the scalar sigil `$` denotes "no type constraint". So you can do this:
 
-``` prettyprint
+```perl
 my %h = Hash.new( 'a', 1 );
 my $h = Hash.new( 'b', 2 );
 ```
 
 This code declares two hashes one with the associate sigil `%` and one with the "no type constraints" sigil `$`. What's the difference between the two? You might think that only the one declared with the associative sigil can use the postcircumfix accessor, but they both work:
 
-``` prettyprint
+```perl
 say %h<a>;
 say $h<b>;
 ```
@@ -113,7 +113,7 @@ Is this better than Perl 5's variant sigils? Consider my example of the ordered 
 
 Now imagine if the sigil truly were an interface only in Perl 6, we could apply any of the sigils to the same variable depending on the context we required:
 
-``` prettyprint
+```perl
 my $ordered = OrderedHash.new();
 ...
 if (%ordered<foo>) { ... }

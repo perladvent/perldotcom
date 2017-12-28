@@ -38,7 +38,7 @@ The code operates on the default variable `$_` which is the line of output from 
 
 I can add this as a function to my `.bashrc` file:
 
-``` prettyprint
+```perl
 function current_git_branch {
   git branch 2> /dev/null | perl -ne 'print " [$_]" if s/^\*\s+// && chomp'
 }
@@ -79,7 +79,7 @@ Perhaps a more efficient approach is to have Git emit only the active branch nam
 
 This emits the active branch only. So now the code in my `.bashrc` becomes:
 
-``` prettyprint
+```perl
 function current_git_branch {
   local branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null);
   if [[ -n $branch ]];then

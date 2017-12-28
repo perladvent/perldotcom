@@ -36,19 +36,19 @@ FastCGI server caching brings the following benefits:
 
 All of the major Perl frameworks support server caching and the good news is it's easy to implement. For example, if $seconds is number of seconds to cache the response for, in Catalyst add this line to a controller method.
 
-``` prettyprint
+```perl
 $c->response->header('Cache-Control' => "max-age=$seconds");
 ```
 
 In Mojolicious, add this code to your controller action:
 
-``` prettyprint
+```perl
 $self->res->headers->cache_control('max-age=$seconds');
 ```
 
 And for Dancer, update a route with:
 
-``` prettyprint
+```perl
 header 'max-age' => '$seconds';
 ```
 
@@ -56,7 +56,7 @@ header 'max-age' => '$seconds';
 
 To enable nginx caching, add the fastcgi cache directives to to your virtual host config file. For example:
 
-``` prettyprint
+```perl
 fastcgi_cache_path  /var/nginx/cache levels=1:2
                     keys_zone=fcgi_cache:50m
                     inactive=60m;
@@ -66,14 +66,14 @@ fastcgi_buffers 256 4k;
 
 This code specifies the cache directory, zone name, cache key and buffers (see the [manual](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html) for details). The code should be outside your server declaration. Within your server declaration, add:
 
-``` prettyprint
+```perl
 fastcgi_cache fcgi_cache;
 fastcgi_cache_valid 200 1s;
 ```
 
 This code defines the cache zone to use ("fcgi\_cache"), sets the cache size to 200mb and by default caches a response for 1 second. The max-age header will override the default cache time, but you may want to choose a value other than 1 second, depending on your application's needs. Here is a complete example virtual host file with fastcgi caching:
 
-``` prettyprint
+```perl
 fastcgi_cache_path  /var/nginx/cache levels=1:2
                     keys_zone=PerlTricks:50m
                     inactive=60m;
@@ -100,7 +100,7 @@ For an in-depth look at the configuring the nginx fastcgi cache, check out this 
 
 Whilst caching responses can deliver huge benefits, it would be nice to be able to clear the cache on-demand, in case the application state changes. Fortunately with nginx this is super-easy with Perl - all you have to do is delete all files in the fastcgi\_cache\_path declared in the virtual host config file. For example, on Unix-based systems this works:
 
-``` prettyprint
+```perl
 sub clear_cache {
     if (-e '/var/nginx/cache') {
         system('find /var/nginx/cache -type f -exec rm -f {} \;');

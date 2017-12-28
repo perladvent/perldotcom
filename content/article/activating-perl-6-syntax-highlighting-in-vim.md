@@ -43,7 +43,7 @@ Vim will automatically use Perl 6 syntax highlighting if the file extension is `
 
 A modeline is a line of code in the text of the file which Vim reads and executes. So to activate Perl 6 syntax highlighting I just need to add this modeline to every Perl 6 file I work with:
 
-``` prettyprint
+```perl
 # vim: filetype=perl6
 ```
 

@@ -43,7 +43,7 @@ The idea is to use the [DWebBrowserEvents2](http://msdn.microsoft.com/en-us/libr
 
 The cause of the problem lay in accessing the `StatusText` property of the [Internet Explorer object](http://msdn.microsoft.com/en-us/library/aa752084%28v=vs.85%29). Apparently, IE10 no longer exposes this property. Well, I had only used it so as to give some idea of what was happening. I decided instead to write a quick logging function which could be used with all events:
 
-``` prettyprint
+```perl
 sub log_browser_event {
     my $event = shift;
     no warnings 'uninitialized';
@@ -61,7 +61,7 @@ We are only interested in two events: [DocumentComplete](http://msdn.microsoft.c
 
 You initialize OLE events using the call:
 
-``` prettyprint
+```perl
 Win32::OLE->WithEvents(
     $object,
     $handler,
@@ -71,7 +71,7 @@ Win32::OLE->WithEvents(
 
 Then, presumably, your `$handler` has some giant switch statement, dispatching on the basis of the actual events received. Instead, I opted for a dispatch table:
 
-``` prettyprint
+```perl
 const my %BrowserEvents => (
     DocumentComplete => sub {
         $do_take_screenshot = 1;
@@ -89,7 +89,7 @@ Notice the use of [Win32::MessageLoop-\>QuitMessageLoop](https://metacpan.org/po
 
 Then, I initialize the OLE events interface using:
 
-``` prettyprint
+```perl
 Win32::OLE->WithEvents(
     $browser,
     sub { $handler->(\%BrowserEvents, @_) },
@@ -99,7 +99,7 @@ Win32::OLE->WithEvents(
 
 The `$handler` in this case just logs the event, and consults the dispatch table to see if we are interested in the event:
 
-``` prettyprint
+```perl
 sub WebBrowserEventHandler {
     my $handlers = shift;
     my $browser = shift;
@@ -122,7 +122,7 @@ Upon receiving either `DocumentComplete` or `onQuit`, we terminate the message l
 
 When I ran this revised script, and tried to take screenshots using [Imager::Screenshot](https://metacpan.org/pod/Imager::Screenshot), I got screenshots with only the frame of the browser, and none of the content. I am not sure what's going on, and I will try to diagnose that issue later. For now, since I was using the venerable [Win32::GuiTest](https://metacpan.org/pod/Win32::GuiTest) module anyway, I decided to use the `Win32::GuiTest::DibSect` class it provides:
 
-``` prettyprint
+```perl
 sub take_screenshot {
     my $browser = shift;
 
@@ -150,7 +150,7 @@ sub take_screenshot {
 
 With that in place, I was still getting the occasional screenshot with a blank document area. If I understand this correctly, the fact that the `DocumentReady` event fired does not mean the document has been fully rendered. It just means that you can manipulate the DOM. So, I added a simple spin loop for the browser to stop being [busy](http://msdn.microsoft.com/en-us/library/aa752050%28v=vs.85%29). This is by no means foolproof, but it has worked for most sites have tried. Sites with a lot of AJAXy stuff tend to have issues with this. There are site-specific ways of dealing with that, but that's beyond the scope of this article.
 
-``` prettyprint
+```perl
 sub wait_until_ready {
     my $browser = shift;
     {

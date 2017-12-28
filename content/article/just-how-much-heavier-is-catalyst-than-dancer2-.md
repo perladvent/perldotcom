@@ -78,7 +78,7 @@ When installing a CPAN module, the module tests usually take the longest time of
 
 To check for this, I tested both frameworks installation tests:
 
-``` prettyprint
+```perl
 $ perl Makefile.PL
 $ make
 $ make test
@@ -86,13 +86,13 @@ $ make test
 
 Catalyst's test results:
 
-``` prettyprint
+```perl
 Files=166, Tests=3374, 179 wallclock secs ( 0.85 usr  0.16 sys + 172.95 cusr  4.56 csys = 178.52 CPU)
 ```
 
 Dancer2's results:
 
-``` prettyprint
+```perl
 Files=78, Tests=1112, 21 wallclock secs ( 0.38 usr  0.07 sys + 19.68 cusr  1.46 csys = 21.59 CPU)
 ```
 

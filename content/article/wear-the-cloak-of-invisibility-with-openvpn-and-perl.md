@@ -26,7 +26,7 @@ The following solution has been tested on Linux and may work on other UNIX-based
 
 You will also need to install Net::OpenVPN::Agent via CPAN:
 
-``` prettyprint
+```perl
 cpan Net::OpenVPN::Agent
 ```
 
@@ -44,7 +44,7 @@ The Net::OpenVPN::Agent provides a configurable useragent that will automaticall
 
 Let's pull together a simple scraper to demonstrate the concept. The code below initializes uses [Net::OpenVPN::Agent](https://metacpan.org/pod/Net::OpenVPN::Agent) to get the main page of the New York times website. It then extracts and requests every URL it finds, with the aim of doing something with that content.
 
-``` prettyprint
+```perl
 use Net::OpenVPN::Agent;
 use strict;
 use warnings;
@@ -62,7 +62,7 @@ foreach ($html =~ /href="($base_url.*?)"/g) {
 
 Running this code at the terminal with full logging gives the following output:
 
-``` prettyprint
+```perl
 sudo $(which perl) times.pl
 DEBUG - setting ip address
 DEBUG - GET: http://geoip.hidemyass.com/ip/

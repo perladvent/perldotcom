@@ -23,7 +23,7 @@ Scripts are practically Perl's raison d'être, and so naturally it has some grea
 
 Let's imagine I wanted to create a program for creating software licenses, like [App::Software::License](https://metacpan.org/pod/App::Software::License). The user will run the program and it will print the software license text, with the license text customized for the user. To do this, the program will need to process a few arguments from the user - a perfect use case for Getopt::Long! Let's start with the license holder's name:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Getopt::Long;
 
@@ -36,7 +36,7 @@ print "$holder_name\n";
 
 I start by importing [Getopt::Long](https://metacpan.org/pod/Getopt::Long), it's part of the core Perl distribution, so if you have Perl installed, you should already have it. The `GetOptions` function from Getopt::Long is where the magic happens. It takes a hash of parameter names and variable references which define the program's API. The string `holder=s` tells Getopt::Long to accept an argument like `--holder` and assign it to `$holder_name`. If we receive any arguments that are not defined in `GetOptions`, the code dies and prints out an exception message (terminating the exception message with a newline stops Perl from printing the line reference of the exception). The final line just prints out the value. I'll save the script as `license` and test it out:
 
-``` prettyprint
+```perl
 $ chmod a+x license
 $ ./license --holder "David Farrell"
 David Farrell
@@ -44,13 +44,13 @@ David Farrell
 
 On Windows, you'll need to type:
 
-``` prettyprint
+```perl
 > perl license --holder "David Farrell"
 ```
 
 By default Getopt::Long also recognizes the short form of arguments, so this works too:
 
-``` prettyprint
+```perl
 $ ./license -h "David Farrell"
 David Farrell
 ```
@@ -59,7 +59,7 @@ David Farrell
 
 Getopt::Long provides basic type checking for strings, integers and floating point numbers. I've already added a string argument for the license holder's name, so I'll add an integer option for the license year:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Getopt::Long;
 
@@ -73,14 +73,14 @@ print "$holder_name $year\n";
 
 Running the program again, it will now accept a `--year` argument:
 
-``` prettyprint
+```perl
 ./license -h "David Farrell" --y 2014
 David Farrell 2014
 ```
 
 Note how I was able to pass `-y 2014` and Getopt::Long knew to assign it to `$year`. Getopt::Long will also do basic type checking, so if a non-integer value is passed, it will print and warning and the script will die.
 
-``` prettyprint
+```perl
 ./license -h "David Farrell" --year abcd
 Value "abcd" invalid for option year (number expected)
 Invalid options passed to ./getopt
@@ -88,7 +88,7 @@ Invalid options passed to ./getopt
 
 I'm going to add an option for the license type, so the user can specify which license text they want such as the GPL, MIT or BSD licenses (there are many more).
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Getopt::Long;
 
@@ -105,7 +105,7 @@ print "$holder_name $year $type\n";
 
 Finally I want to add a boolean option for whether to print out the full license text or not. To use boolean options with Getopt::Long, it's the same as with other options except that you don't specify the type after the option name:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Getopt::Long;
 
@@ -121,7 +121,7 @@ print "$holder_name $year $type $fulltext\n";
 
 The fulltext option does not take a value and will be initialized as 1 if present, or `undef` if not:
 
-``` prettyprint
+```perl
 $ ./license -h "David Farrell" -y 2012 -t FreeBSD -fulltext
 David Farrell 2012 FreeBSD 1
 ```
@@ -130,7 +130,7 @@ David Farrell 2012 FreeBSD 1
 
 Some options I can give default values to. For example if the user doesn't pass the year they want the license for, I'll assume they want the current year.
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Getopt::Long;
 use Time::Piece;
@@ -157,7 +157,7 @@ I've added the [Time::Piece](https://metacpan.org/pod/Time::Piece) module, which
 
 So far so good, but what about mandatory parameters? This script will not work unless the user passes the license holder information. For mandatory parameters I have to check for their presence myself, Getopt::Long can't help me here. Luckily it's a simple check:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Getopt::Long;
 use Time::Piece;
@@ -187,7 +187,7 @@ In case you're wondering, the variable `$0` is a special variable that is the pr
 
 We're almost done, but Getopt::Long has more tricks up its sleeve. I'll add some basic documentation to this script, in [Pod](http://perldoc.perl.org/perlpod.html):
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use warnings;
 use strict;
@@ -237,7 +237,7 @@ license - get license texts at the command line!
 
 The documentation is pretty minimal, just the program name, synopsis of its arguments and a version number. I've replaced the print statement with a stub function `print_license`, which is where the main program would be implemented. I've replaced the `die` calls with the Getopt::Long function `HelpMessage`. This will print a usage help text and exit the program when called. Let's try it out:
 
-``` prettyprint
+```perl
 $ ./license -k
 Unknown option: k
 Usage:

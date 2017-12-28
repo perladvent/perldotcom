@@ -26,7 +26,7 @@ Cron is a job scheduling program available on UNIX-like platforms. Most system c
 
 When preparing a script to be run by cron, there a few things to keep in mind. You may want to add a shebang line to the of the script for the Perl binary you want to execute. For example:
 
-``` prettyprint
+```perl
 #!/usr/local/bin/perl
 ```
 
@@ -38,13 +38,13 @@ Also ensure that any paths used in the script are absolute paths (such as for op
 
 To schedule a job with cron, the job needs to be added to the user's crontab. To do this open a terminal and type the following:
 
-``` prettyprint
+```perl
 crontab -e
 ```
 
 This will open the crontab in a text editor. To add a job, a line must be added in the following format:
 
-``` prettyprint
+```perl
 * * * * * command to be executed
 | | | | |
 | | | | |
@@ -59,7 +59,7 @@ An asterisk (*) means all.
 
 Here are some example crontab entries:
 
-``` prettyprint
+```perl
 # execute every minute
 * * * * * perl /path/to/Beacon.pl
 
@@ -75,13 +75,13 @@ Here are some example crontab entries:
 
 If your script does not contain a shebang line, provide the absolute path to the Perl binary in the crontab. For example:
 
-``` prettyprint
+```perl
 30 */12 * * * /usr/local/bin/perl /path/to/Beacon.pl
 ```
 
 Save the crontab and exit the text editor. To check the job has been scheduled, you can check your crontab with this command from the terminal:
 
-``` prettyprint
+```perl
 crontab -l
 ```
 

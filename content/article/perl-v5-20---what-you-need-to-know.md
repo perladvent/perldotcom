@@ -22,7 +22,7 @@
 
 This is the big one. It's hard to understate how great this is. No more ugly assignment code - with 5.20 you can write:
 
-``` prettyprint
+```perl
 use feature 'signatures';
 
 sub echo_chamber ($sound) {
@@ -36,7 +36,7 @@ We first [covered](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-wit
 
 The next cool new feature is postfix dereferencing. Hard to describe but easy to show:
 
-``` prettyprint
+```perl
 use experimental 'postderef';
 
 my $nested_array_ref = [[[[[1,2,3]]]]];
@@ -54,7 +54,7 @@ We previously [detailed](http://perltricks.com/article/68/2014/2/13/Cool-new-Per
 
 Perl 5.20 delivers a new slice type: hash slices. These work in a similar way to the array slice, except the "sliced" data provides full key value pairs instead of just the values as with an array slice.
 
-``` prettyprint
+```perl
 my %raindrops = ( splish => 4, splash => 9, splosh => 7 );
 my %hash_slice = %raindrops{ 'splish', 'splosh'};
 # hash_slice is (splish => 4, splosh => 7)
@@ -62,7 +62,7 @@ my %hash_slice = %raindrops{ 'splish', 'splosh'};
 
 What's even more cool, if you use a hash slice on an array, the resulting hash has the array index elements as the keys:
 
-``` prettyprint
+```perl
 my @raindrop_types = qw/splish splash splosh/;
 my %hash_slice = %raindrop_types[0, 2];
 # hash_slice is (0 => 'splish', 2 => 'splosh')
@@ -80,7 +80,7 @@ Perl 5.20 is faster in all kinds of areas - the perldelta for 5.20 lists 17 perf
 
 Subroutine prototypes can now be declared as subroutine attribute with the "prototype" keyword. For example:
 
-``` prettyprint
+```perl
 # usual prototype
 sub example ($$) {}
 

@@ -19,7 +19,7 @@ This article is about [Devel::Timer](https://metacpan.org/pod/Devel::Timer), ano
 
 Let's say I have a subroutine which is far too slow, but I'm not sure what's slowing it down. The (fictional) subroutine looks like this:
 
-``` prettyprint
+```perl
 sub foo {
   my $args = shift;
 
@@ -40,7 +40,7 @@ sub foo {
 
 I can use Devel::Timer to time each statement in the subroutine, and tell me how long each one took:
 
-``` prettyprint
+```perl
 use Devel::Timer;
 
 sub foo {

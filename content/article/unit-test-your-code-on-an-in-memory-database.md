@@ -27,7 +27,7 @@ One way to deal with this is to create an in-memory database, visible only to th
 
 The Perl [DBI](https://metacpan.org/pod/DBI) module is the de-facto way of accessing relational databases in Perl. To create an in-memory database, I can use call `connect` specifying the SQLite driver, and the database name as ":memory:". This returns a database handle to a new, in memory SQLite3 database.
 
-``` prettyprint
+```perl
 use Test::More;
 use DBI;
 
@@ -56,7 +56,7 @@ From here I slurp a SQL script for creating the tables into a string and use the
 
 [DBIx::Class](https://metacpan.org/pod/DBIx::Class), the Perl ORM uses the same underlying technology as DBI, but because it creates Perl classes representing each table, I can leverage that code to make the database setup even easier than with vanilla DBI:
 
-``` prettyprint
+```perl
 use Test::More;
 use SomeApp::Schema;
 

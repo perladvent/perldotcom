@@ -65,7 +65,7 @@ tell LIRC where to find the pin, and also configure some Raspberry Pi boot optio
 
 In `/etc/modules-load.d/modules.conf`, put:
 
-``` prettyprint
+```perl
 lirc_dev
 lirc_rpi gpio_in_pin=23 gpio_out_pin=22
 ```
@@ -73,7 +73,7 @@ lirc_rpi gpio_in_pin=23 gpio_out_pin=22
 That will make GPIO 23 as your input pin. LIRC can also be setup to send IR data, so
 we set GPIO 22 for that as long as we're here. Next, modify `/etc/lirc/hardware.conf`:
 
-``` prettyprint
+```perl
 # /etc/lirc/hardware.conf
 #
 # Arguments which will be used when launching lircd
@@ -104,7 +104,7 @@ device path, and `MODULES` for the Raspberry Pi GPIO driver.
 
 Finally, edit `/boot/config.txt` and add this somewhere in the file:
 
-``` prettyprint
+```perl
 dtoverlay=lirc-rpi,gpio_in_pin=23,gpio_out_pin=22
 ```
 
@@ -147,7 +147,7 @@ At present, the module works by parsing the output of LIRC's `mode2`
 program. This may change to reading directly from `/dev/lirc0` in the future.
 For now, we'll start by opening a pipe to `mode2`:
 
-``` prettyprint
+```perl
 open( my $in, '-|', 'mode2 -d /dev/lirc0' ) or die "Can't exec mode2: $!\n";
 ```
 
@@ -159,7 +159,7 @@ expect to come in for pulses or spaces.
 For instance, we know that NEC sends a 9000μs pulse and 4500μs space for its header.
 We tell the constructor this with:
 
-``` prettyprint
+```perl
 my $ir = Linux::IRPulses->new({
     header => [ pulse 9000, space 4500 ],
     ...
@@ -171,7 +171,7 @@ space data is what we expect. Once it reaches the end of the header array, it ma
 header as good and then looks for valid data for ones and zeros. We specify those in
 much the same way. We'll add in the other constructor parameters here, as well:
 
-``` prettyprint
+```perl
 my $ir = Linux::IRPulses->new({
     header => [ pulse 9000, space 4500 ],
     zero => [ pulse 563, space 563 ],

@@ -23,7 +23,7 @@ Perl v5.22 is bringing myriad new features and ways of doing things, making its 
 
 The line input operator, `<>` looks at the `@ARGV` array for filenames to open and read through the `ARGV` filehandle. It has the same meta-character problem as the two-argument `open`. Special characters in the filename might do shell things. To get around this unintended feature (which I think might be useful if that's what you want), there's a new line-input operator, `<<>>`, that doesn't treat any character as special:
 
-``` prettyprint
+```perl
 while( <<>> ) {  # new, safe line input operator
     ...;
     }
@@ -45,7 +45,7 @@ Have you always felt too constrained by ten digits, but were also stuck with non
 
 We already have the exponential notation with uses the `e` to note the exponent, as in `1.23e4`. But that `e` is a hexadecimal digit, so we can't use that to denote the exponent. Instead, we use `p` and an exponent that's a power of two:
 
-``` prettyprint
+```perl
 use v5.22;
 
 my $num = 0.deadbeefp2;
@@ -55,7 +55,7 @@ my $num = 0.deadbeefp2;
 
 We can now assign to the reference version of a non-reference variable. This creates an alias for the referenced value.
 
-``` prettyprint
+```perl
 use v5.22;
 use feature qw(refaliasing);
 
@@ -64,7 +64,7 @@ use feature qw(refaliasing);
 
 I think we'll discover many interesting uses for this, and probably some dangerous ones, but the use case in the docs looks interesting. We can now assign to something other than a scalar for the `foreach` control variable:
 
-``` prettyprint
+```perl
 use v5.22;
 use feature qw(refaliasing);
 
@@ -81,19 +81,19 @@ I don't think I'll use that particular pattern since I'm comfortable with refere
 
 Perl can assign one list of scalars to another. In [Learning Perl](http://www.learning-perl.com) we show assigning to `undef`. I could make dummy variables:
 
-``` prettyprint
+```perl
 my($name, $card_num, $addr, $home, $work, $count) = split /:/;
 ```
 
 But if I don't need all of those variable, I can put placeholder `undef`s in the assignment list:
 
-``` prettyprint
+```perl
 my(undef, $card_num, undef, undef, undef, $count) = split /:/;
 ```
 
 Those consecutive `undef`s can be a problem, as well as ugly. I don't have to count out separate `undef`s now:
 
-``` prettyprint
+```perl
 use v5.22;
 
 my(undef, $card_num, (undef)x3, $count) = split /:/;
@@ -103,7 +103,7 @@ my(undef, $card_num, (undef)x3, $count) = split /:/;
 
 The three-argument `open` can take a pipe mode, which didn't previously work on Windows. Now it does, to the extent that the list form of `system` works on Win32:
 
-``` prettyprint
+```perl
 open my $fh, '-|', 'some external command' or die;
 ```
 

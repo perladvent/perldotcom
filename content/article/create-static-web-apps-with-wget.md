@@ -29,7 +29,7 @@
 
 You'll need Wget installed - if you're using Linux it should already be installed. OSX users can install it with [Homebrew](http://brew.sh/) and there is a Windows [version](http://gnuwin32.sourceforge.net/packages/wget.htm) available. To follow this example you'll also need Dancer2 installed, which you can get via cpan:
 
-``` prettyprint
+```perl
 $ cpan Dancer2
 ```
 
@@ -37,7 +37,7 @@ $ cpan Dancer2
 
 We'll use Dancer2 to create a basic skeleton app:
 
-``` prettyprint
+```perl
 $ dancer2 -a MyApp
 + MyApp
 + MyApp/config.yml
@@ -75,7 +75,7 @@ $ dancer2 -a MyApp
 
 Lets start the app:
 
-``` prettyprint
+```perl
 $ ./MyApp/bin/app.pl
 >> Dancer2 v0.143000 server 435 listening on http://0.0.0.0:3000
 ```
@@ -84,7 +84,7 @@ $ ./MyApp/bin/app.pl
 
 We'll point Wget at the site in recursive mode, so that it pulls all the files we need (up to a depth of 5 by default).
 
-``` prettyprint
+```perl
 $ wget -r 0:3000 -d 0:3000 --page-requisites
 ```
 
@@ -100,7 +100,7 @@ By default Wget will create a directory named after the domain ("0:3000") and pl
 
 So if both apps can generate static sites, which one is better? If you're working with a non-Perl site, then Wget is obviously the way to go. In terms of speed, Wget is faster if you combine the command with xargs and request the urls in parallel:
 
-``` prettyprint
+```perl
 $ cat urls.txt | xargs -P16 wget -i
 ```
 

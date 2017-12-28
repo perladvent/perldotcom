@@ -29,7 +29,7 @@ For my first step, I needed to find all the music I had. I had backed up my file
 
 I started by collecting all the unique files from the directories in which I had found music. This program has some of my favorite things about Perl, especially since I still have the wounds from moving files around during my C phase.
 
-``` prettyprint
+```perl
 use v5.10;
 use strict;
 use warnings;
@@ -84,7 +84,7 @@ Working from the digested directory each time was a bad decision. I'd have to co
 
 If I could enter a directory, examine each file in that directory, then process them on the way out of that directory, removing the duplicate files becomes much easier. I remembered that [File::Find](http://www.metacpan.org/pod/File::Find) has a `post_process` option that allows me to do this, although I haven't used it in years:
 
-``` prettyprint
+```perl
 use File::Find qw(find);
 
 find( 
@@ -100,7 +100,7 @@ While I was in each directory, I could collect information on each file. Each fi
 
 After sorting, I mark for deletion everything except the first element in the list. I don't delete them right away; I print the list to a file which I can use later to delete files. I've been around too long to delete files right away.
 
-``` prettyprint
+```perl
 #!/Users/brian/bin/perls/perl5.18.1
 use v5.18;
 use Digest::MD5 qw( md5_hex );

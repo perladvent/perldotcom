@@ -12,7 +12,7 @@
 
 [JSON::Schema::ToJSON](https://metacpan.org/pod/JSON::Schema::ToJSON) is a module which takes a [JSON schema](http://json-schema.org/), and generates a data structure compliant with the schema. Here's a quick script to generate a data structure based on a schema:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 # gen-json - create json from a schema filepath
 use Data::Dumper;
@@ -132,7 +132,7 @@ Let's say we've got the following Swagger doc (a JSON schema) which defines a si
 
 Here's a [Mojolicious::Lite app](http://mojolicious.org/perldoc/Mojolicious/Lite) to serve the mocked route:
 
-``` prettyprint
+```perl
 use Mojolicious::Lite;
 use JSON::XS 'decode_json';
 use JSON::Schema::ToJSON;

@@ -25,7 +25,7 @@ Great news, Perl 6 was [released](https://perl6advent.wordpress.com/2015/12/25/c
 
 On Linux and Mac the easiest way to get Perl 6 is with [rakudobrew](https://github.com/tadzik/rakudobrew). You'll need the typical software development tools like `git`, `gcc` and `make`. On OSX Apple's [Command Line Tools app](https://developer.apple.com/opensource/) provides most of these and is easy to install. On Linux they're available via the package manager. Once you have the prerequisite tools installed, you can install rakudobrew via the terminal:
 
-``` prettyprint
+```perl
 $ git clone https://github.com/tadzik/rakudobrew ~/.rakudobrew
 $ export PATH=~/.rakudobrew/bin:$PATH
 $ rakudobrew build moar
@@ -40,7 +40,7 @@ On Windows it's a different story. I was unable to get rakudobrew to work on Win
 
 Alternatively you can use the latest [Rakudo Star distribution](http://rakudo.org/downloads/star/) which comes with a convenient `.msi` installer. Unfortunately the most recent Rakudo Star distribution is from September, so you won't benefit from the last 3 months of updates to Perl 6 (a new version should be available soon). If you've installed Rakudo Star, you'll need to add the Perl 6 binaries to your path. You can do that using `cmd.exe`:
 
-``` prettyprint
+```perl
 > SETX PATH "%PATH%;C:\rakudo\bin"
 ```
 

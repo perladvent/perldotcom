@@ -32,13 +32,13 @@ Perl's TIMTOWTDI nature means that there are several correct solutions for the e
 
 Grab the [latest binary](https://github.com/exercism/cli/releases/latest) for your platform and extract it. Fire up the command line and type:
 
-``` prettyprint
+```perl
 $ exercism demo
 ```
 
 This will fetch the first exercise ("Bob" at the time of writing). You can find the test file and readme at "perl5/bob/". Opening the readme you'll see:
 
-``` prettyprint
+```perl
 # Bob
 
 Bob is a lackadaisical teenager. In conversation, his responses are very limited.
@@ -68,14 +68,14 @@ Inspired by the 'Deaf Grandma' exercise in Chris Pine's Learn to Program tutoria
 
 To run the test file change into the exercise directory and use prove:
 
-``` prettyprint
+```perl
 $ cd perl5/bob
 $ prove bob.t
 ```
 
 That will get this output:
 
-``` prettyprint
+```perl
 bob.t .. 1/22 Bailout called.  Further testing stopped:  You need to create a module called Bob.pm with a function called hey() that gets one parameter: The text Bob hears.
 
 #   Failed test 'missing Bob.pm'
@@ -85,7 +85,7 @@ FAILED--Further testing stopped: You need to create a module called Bob.pm with 
 
 Let's create a basic Bob.pm module:
 
-``` prettyprint
+```perl
 package Bob;
 use warnings;
 use strict;
@@ -99,7 +99,7 @@ sub hey {
 
 This is a shell of the solution. Our "hey" subroutine returns the first input it receives. Re-running prove, we get this output:
 
-``` prettyprint
+```perl
 $ prove bob.t
 bob.t .. 1/22 
 #   Failed test 'stating something: Tom-ay-to, tom-aaaah-to.'

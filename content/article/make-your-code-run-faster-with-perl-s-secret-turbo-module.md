@@ -24,7 +24,7 @@
 
 You'll need to install the MCE module. The current [CPAN Testers' results](http://matrix.cpantesters.org/?dist=MCE+1.509) show it runs on a wide array of platforms and Perl versions. You can install MCE via CPAN at the command line:
 
-``` prettyprint
+```perl
 $ cpan MCE
 ```
 
@@ -42,7 +42,7 @@ The easiest way to get started with MCE is by using one of the 3 basic automatio
 
 Let's look at the grep model. The code below is standard Perl code; it opens an nginx access.log and prints the number of records in the log that were from a robot useragent:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature 'say';
@@ -59,7 +59,7 @@ say scalar $count;
 
 Let's modify the code above to use the MCE::Grep model. The new code is below:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature 'say';
@@ -91,7 +91,7 @@ The other basic automation models [MCE::Loop](https://metacpan.org/pod/MCE::Loop
 
 MCE also provides a special "mce\_grep\_f" function for working directly with files (the function is provided for all MCE models, e.g. mce\_loop\_f, and mce\_map\_f). The "mce\_grep\_f" function requires a filepath argument:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature 'say';
@@ -120,7 +120,7 @@ By default MCE initializes one worker per core. It detects the number of cores u
 
 MCE also has platform-specific methods defined for Solaris, HP-UX and other systems. Assuming that MCE will correctly guess the number of processors, the only reason to change the default behavior would be to use less than 100% of the available cores. You can do this using the "init()" method:
 
-``` prettyprint
+```perl
 use MCE::Grep;
 MCE::Grep::init({max_workers => 3});
 ```
@@ -135,7 +135,7 @@ When the source type is an array, MCE auto-calculates the chunk size based on th
 
 If the source type is a filehandle, the chunk size defaults to 2 (The module's author Mario Roy has told me this will change in the next version, 1.506). Therefore you may want to override the chunk size to try to get better performance. You can do this using the "init()" method:
 
-``` prettyprint
+```perl
 use MCE::Grep;
 MCE::Grep::init({chunk_size => 500});
 ```

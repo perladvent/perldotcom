@@ -34,7 +34,7 @@ A basic port scanner needs to be able to take an IP address of a livehost, enume
 
 We can use [Getopt::Long](https://metacpan.org/pod/Getopt::Long) and [Pod::Usage](https://metacpan.org/pod/Pod::Usage):
 
-``` prettyprint
+```perl
 use Getopt::Long;
 use Pod::Usage;
 
@@ -67,7 +67,7 @@ The `GetOptions` function parses command line arguments and assigns them to vari
 
 To send an IP packet, we need both the destination and the local IP address. We'll also need a local port.
 
-``` prettyprint
+```perl
 use Net::Address::IP::Local;
 use IO::Socket::INET;
 
@@ -88,7 +88,7 @@ To get the local ip address, I call the `public` method provided by the [Net::Ad
 
 For our simple scanner, I'll focus on scanning named ports, that is port numbers pre-assigned to services by the [IANA](http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml). Fortunately for us, the developers behind the popular NMAP tool have already assembled a text [file](https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/data/nmap-services.txt) of named ports, and I'll use this:
 
-``` prettyprint
+```perl
 use List::Util 'shuffle';
 
 my %port_directory;
@@ -124,7 +124,7 @@ This code starts by importing the `shuffle` function from [List::Util](https://m
 
 We need to send packets and listen for responses simultaneously, because if we send the packets first and *then* listen for packets, we might have missed some responses in the interim. To do this I use `fork` to create child processes for sending packets, and use the parent process to listen for responses.
 
-``` prettyprint
+```perl
 use Net::Pcap;
 use POSIX qw/WNOHANG ceil/;
 
@@ -198,7 +198,7 @@ You might be wondering what the constant `WNOHANG` is for. When `waitpid` is cal
 
 Now let's look at the `send_packet` subroutine:
 
-``` prettyprint
+```perl
 use Net::RawIP;
 
 sub send_packet
@@ -222,7 +222,7 @@ This code uses the much under-appreciated [Net::RawIP](https://metacpan.org/pod/
 
 The `read_packet` subroutine is a bit more involved:
 
-``` prettyprint
+```perl
 use NetPacket::Ethernet;
 use NetPacket::IP;
 use NetPacket::TCP;
@@ -262,7 +262,7 @@ I use the [NetPacket](https://metacpan.org/pod/NetPacket) distribution to parse 
 
 Once the port scan has finished, all closed and open ports should have been printed out. But there are also the filtered ports to think about - by definition we'll never receive a response for those. I've used the `%total_ports` hash to track the status of ports. Every port starts as "filtered", and is set to "open" or "closed" as responses are received. We can then use this data to summarize the results:
 
-``` prettyprint
+```perl
 printf "\n %d ports scanned, %d filtered, %d closed, %d open\n",
   scalar(keys %total_ports),
   scalar(grep { $total_ports{$_} eq 'filtered' } keys %total_ports),
@@ -274,7 +274,7 @@ END { pcap_close($pcap) if $pcap }
 
 The `END` block executes in the final stage of a Perl program, and closes the packet capture object. This won't execute if the program receives a INT or TERM signal during execution, so I can add signal handlers to ensure Perl shuts down in an orderly way, should a signal be received:
 
-``` prettyprint
+```perl
 BEGIN { $SIG{INT} = $SIG{TERM} = sub { exit 0 } }
 ```
 
@@ -284,7 +284,7 @@ I can add this code near the beginning of the program, but the `BEGIN` block ens
 
 I've saved the code into a [program](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d). Now I can run it on the command line:
 
-``` prettyprint
+```perl
 $ sudo $(which perl) port_scanner --ip 10.0.1.5
 ```
 

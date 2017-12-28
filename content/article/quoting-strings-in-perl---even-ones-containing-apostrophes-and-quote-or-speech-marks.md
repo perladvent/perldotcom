@@ -23,7 +23,7 @@ Broadly speaking Perl has two types of strings: quotes that are interpolated at 
 
 These strings are declared by encapsulating the quote in speech marks ("). If the encapsulated quote contains variables or escape-sequences, these will be processed at runtime.
 
-``` prettyprint
+```perl
 my $integer = 10;
 #Declare an interpolated string
 my $sentence = "I will count to $integer.\nThen I am coming for you!";
@@ -32,7 +32,7 @@ print $sentence;
 
 This will print:
 
-``` prettyprint
+```perl
 I will count to 10. 
 Then I am coming for you!
 ```
@@ -43,7 +43,7 @@ Notice how the $integer variable was interpolated to print it's value, and how t
 
 Literal strings need to be encapsulated by apostrophes ('). The content of these strings will be preserved as quoted, and not interpolated at runtime. Using literal strings is also more efficient as the Perl parser does not have to examine the the string for variables and escape sequences for interpolation.
 
-``` prettyprint
+```perl
 my $integer = 10;
 #Declare a literal string
 my $sentence = 'I will count to $integer.\nThen I am coming for you!';
@@ -52,7 +52,7 @@ print $sentence;
 
 This will print:
 
-``` prettyprint
+```perl
 I will count to $integer.\nThen I am coming for you!
 ```
 
@@ -60,7 +60,7 @@ I will count to $integer.\nThen I am coming for you!
 
 To quote a string that contains speech marks or apostrophes, Perl provides two quote operators: **q** for literal quotes and **qq** for interpolated quotes. The quote operators let the programmer define the encapsulating characters for the string - simply choose characters that are not contained in your string:
 
-``` prettyprint
+```perl
 my $user = "sillymoose";
 my $difficult_string_interpolated = qq{Welcome $user\n. Whilst you are are here, you can "do as they do in Rome" and enjoy yourself};
 print $difficult_string_interpolated;
@@ -68,7 +68,7 @@ print $difficult_string_interpolated;
 
 This will print:
 
-``` prettyprint
+```perl
 Welcome sillymoose
 Whilst you are are here, you can "do as they do in Rome" and enjoy yourself
 ```

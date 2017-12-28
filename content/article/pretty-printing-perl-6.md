@@ -15,7 +15,7 @@ As I was working on [Learning Perl 6](https://www.learningperl6.com/), I wanted 
 
 Before I get to my module, Perl 6 already has some nice ways to summarize objects. My first task was to dump a match object to see what it matched. Here's a bit of code that matches a string against a regex and saves the result in `$match`. That's a [Match](https://docs.perl6.org/type/Match) object:
 
-``` prettyprint
+```perl
 my $rx = rx/ <[ a .. z ]> <[ 1 .. 9 ]> /;
 my $string = ':::abc123::';
 my $match = $string ~~ $rx;
@@ -29,7 +29,7 @@ When I output that with [put](https://docs.perl6.org/routine/put), I get the par
 
 I could change the code slightly to use [say](https://docs.perl6.org/routine/say). That's like `put` but calls the [.gist](https://docs.perl6.org/routine/gist) method on the object first to provide a human-compatible version of the object. Each object can decide on it's own what that means.
 
-``` prettyprint
+```perl
 say $match;  # put $match.gist
 ```
 
@@ -39,7 +39,7 @@ In this case, the output is almost the same. There are some fancy quotes around 
 
 Instead of `.gist`, which `say` gives me for free, I could call the [perl](https://docs.perl6.org/routine/perl) method explicitly.
 
-``` prettyprint
+```perl
 put $match.perl;
 ```
 
@@ -49,7 +49,7 @@ This produces a string that represents what Perl 6 thinks the data structure is:
 
 I could also use [dd](https://docs.perl6.org/programs/01-debugging#Dumper_function_dd), a Rakudo-specific dumping feature:
 
-``` prettyprint
+```perl
 dd $match;
 ```
 
@@ -59,7 +59,7 @@ The output is similar to the string for `.perl`, but also slightly different:
 
 I didn't particularly like any of formats because they are squished together and rather ugly to my eyes (but being pleasing to me personally shows up in exactly zero designs). I looked for a module, and even though the Perl 6 module ecosystem is fairly young, I found [Pretty::Printer](https://github.com/drforr/perl6-pp) from Jeff Goff:
 
-``` prettyprint
+```perl
 use Pretty::Printer; # From Jeff Goff
 
 my $rx = rx/ <[ a .. z ]> <[ 1 .. 9 ]> /;
@@ -75,7 +75,7 @@ When I tried this, I didn't get anything (or, more exactly, I got literally "any
 
 `Pretty::Printer` was nice for the few data types that it handled, but not a `Match` object. It had some builtin handlers that it selected with a `given-when`:
 
-``` prettyprint
+```perl
 method _pp($ds,$depth)
   {
   my Str $str;
@@ -95,7 +95,7 @@ method _pp($ds,$depth)
 
 I started to work on `Pretty::Printer` to add a `Match` handler, and then a few others, but I quickly realized I was getting far away from Jeff's original code. Not only that, but I didn't want to add more and more branches to the `given-when`:
 
-``` prettyprint
+```perl
 method _pp($ds,$depth)
   {
   my Str $str;
@@ -119,7 +119,7 @@ method _pp($ds,$depth)
 
 I changed my module name to [PrettyDump](https://github.com/briandfoy/perl6-PrettyDump) and ended up with this:
 
-``` prettyprint
+```perl
 use PrettyDump;
 
 my $rx = rx/ <[ a .. z ]> <[ 1 .. 9 ]> /;
@@ -143,7 +143,7 @@ I was much more pleased with the output which allowed me easily pick out the par
 
 That solves that problem. But what about all the other types? One of my first improvements was a way to dump a class that my module did not know about. I knew about the `TO_JSON` method that the Perl 5 [JSON](https://www.metacpan.org/module/JSON) module. With that, a class could decide its own JSON representation. I could do that with `PrettyDump`. If a class or object has a `PrettyDump` method, my module will use that preferentially:
 
-``` prettyprint
+```perl
 class SomeClass {
     …
     method PrettyDump ( $pretty, $ds, $depth ) {
@@ -160,7 +160,7 @@ put $pretty.dump: $some-object;
 
 The class doesn't need to define that method. I could decorate an object with a `PrettyDump` method through a role. The [but](https://docs.perl6.org/language/operators#infix_but) operator can do that for me by creating a new object in a new class that includes that role mixed into the original class:
 
-``` prettyprint
+```perl
 use PrettyDump;
 
 my $pretty = PrettyDump.new;
@@ -178,7 +178,7 @@ put $pretty.dump: $b;
 
 My code looks different from Jeff's, but it's not that different. Instead of a `given-when`, I have an `if` structure. I collapsed Jeff's branches into `self.can: $ds.^name` to look for a matching method to the object type (and introduced a bug while doing it. See it?). The first branch looks for the `PrettyDump` method. The second does some special handling for numeric things. If none of those work, I `die`, which is another stupid thing I did at first.
 
-``` prettyprint
+```perl
 method dump ( $ds, $depth = 0 ) {
   put "In dump. Got ", $ds.^name;
   my Str $str;
@@ -203,7 +203,7 @@ method dump ( $ds, $depth = 0 ) {
 
 So, I kept going. I wanted a way to add (and remove) handlers to a `PrettyDump` object. I could add those as roles, but I thought about doing this repeatedly and often and didn't like the idea of the frankenclass that would create. I added a way to do it on my own (although I might change my mind later):
 
-``` prettyprint
+```perl
 my $pretty = PrettyDump.new;
 
 class SomeClass { … }
@@ -219,7 +219,7 @@ put $pretty.dump: $SomeClass-object;
 
 My code added a couple more branches (and some code comments to elucidate the process). First, I'd look for a handler. If I'd defined one of those, I'd use it. Otherwise, I went through the same process. I did add some more checks at the end. If nothing else worked, I try a `.Str` method. Instead of `die`-ing at the end, I add an "unhandled thingy" string for that object. That way I know that I didn't handle something and the rest of the program keeps going. That turned out to be more important than I thought. I use this to peek at a program as it executes. It's not part of the program flow and shouldn't interrupt it because my dumping code is incomplete:
 
-``` prettyprint
+```perl
 method dump ( $ds, Int $depth = 0 --> Str ) {
   my Str $str = do {
     # If the PrettyDump object has a user-defined handler

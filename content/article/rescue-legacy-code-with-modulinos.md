@@ -28,7 +28,7 @@ The trick involves using [caller](http://perldoc.perl.org/functions/caller.html)
 
 You can see the basic structure in [Modulino::Test](https://metacpan.org/pod/Modulino::Test), part of the [Modulino::Demo](https://metacpan.org/release/Modulino-Demo) distribution:
 
-``` prettyprint
+```perl
 package Modulino::Test;
 use utf8;
 use strict;
@@ -67,7 +67,7 @@ I have quite a bit of fun organizing a messy and (previously) unmanaged codebase
 
 Suppose I start with a script. Here's a short one:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 
 print "Hello World!\n";
@@ -77,7 +77,7 @@ Even this simple program has problems (we never have trouble finding faults with
 
 My first step is to make this a program that behaves the same but has a different structure. Larry designed Perl to do away with the `main` subroutine required by many other languages, but I bring it back:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 
 __PACKAGE__->run();
@@ -93,7 +93,7 @@ This program is now mostly a module and it has the distribution structure that a
 
 When I'm satisfied that the new code works, I can make more changes. This is where the modulino idea comes in. I want to test the code without automatically executing the code in `run`. I can use the `caller` trick; I don't execute the code if there's a higher level in the call stack (a program would be at the top):
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 
 __PACKAGE__->run() unless caller;
@@ -105,7 +105,7 @@ sub run {
 
 That's another small change in the actual code, but a significant change in behavior. I can get to the code in a test program:
 
-``` prettyprint
+```perl
 use Test::More;
 
 subtest 'load program' => sub {

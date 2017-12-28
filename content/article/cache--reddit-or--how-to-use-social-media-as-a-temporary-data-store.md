@@ -24,19 +24,19 @@ Sometimes crazy ideas are brilliant, but most of the time they are just crazy. I
 
 You probably don't want to do this, but if you were considering using the module, here's how. First you'll need a Reddit account with enough karma to use the API (usually handful of upvoted links and comments is enough). Second you should create your own [subreddit](http://www.reddit.com/subreddits/create/) to post to. Install [Cache::Reddit](https://metacpan.org/pod/Cache::Reddit) using the command line clients cpan or cpanm
 
-``` prettyprint
+```perl
 $ cpan Cache::Reddit
 ```
 
 Or:
 
-``` prettyprint
+```perl
 $ cpanm Cache::Reddit
 ```
 
 Finally set the environment variables: `reddit_username`, `reddit_password`, and `reddit_subreddit` (the name of the subreddit that data will be posted to). On Linux / OSX you can do this at the terminal:
 
-``` prettyprint
+```perl
 $ export reddit_username=somename
 $ export reddit_password=itsasecret
 $ export reddit_subreddit=mycache
@@ -48,7 +48,7 @@ To set environment variables on Windows 8, these [steps](http://winaero.com/blog
 
 The module exports the typical caching functions you'd expect: `set` for saving data, `get` for retrieval and `remove` for removal. For example:
 
-``` prettyprint
+```perl
 use Cache::Reddit; #exports get, set, remove
 
 my $monthly_revenues = { jan => 25000, feb => 23500, mar => 31000, apr => 15000 };

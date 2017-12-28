@@ -24,7 +24,7 @@ Back in June I wrote an [overview](http://perltricks.com/article/94/2014/6/6/Cre
 
 The speaker notes screen is one of the "killer features" of reveal.js. It's a separate browser window that displays your current slide, the next slide, the speaker notes and the time elapsed so far ([example](https://camo.githubusercontent.com/69f044f8126bdd09cf4caafa2d9239839612a8de/68747470733a2f2f662e636c6f75642e6769746875622e636f6d2f6173736574732f3632393432392f313738393338352f62316565323431652d363935362d313165332d383166652d6535363630643531323130612e706e67)). You can even control the slide transition from the speaker notes screen, enabling you to share the presentation on a large screen whilst driving the presentation from the speaker notes screen on your laptop. To add speaker notes to a slide in presentation, use the `Note:` syntax:
 
-``` prettyprint
+```perl
 # This is my title #
 
 Note:
@@ -37,7 +37,7 @@ Now, if I launch this presentation I can view the speaker notes by pressing the 
 
 The default slide transition is cute, but it can get a bit tiresome after a while. The good news is reveal.js gives you fine-grained control of slide transitions, the bad news is that the syntax is ugly as hell. You have to include the slide transition commands as HTML comments within your markdown:
 
-``` prettyprint
+```perl
 <!-- .slide: data-transition="none" -->
 # This is my title #
 
@@ -49,7 +49,7 @@ The first line of this markdown instructs reveal.js to use "none" as the slide t
 
 Another option is to use App::revealup's `transition` command line option:
 
-``` prettyprint
+```perl
 $ revealup server slides.md --port 5000 --transition zoom
 ```
 
@@ -59,7 +59,7 @@ This will apply the transition style to the entire presentation. What's nice abo
 
 Fragments are slide elements that you can introduce sequentially on to a slide. I use them all the time to keep the audience's focus on the item I'm currently talking about. This slide displays a rather uncontroversial opinion:
 
-``` prettyprint
+```perl
 I <!-- .element: class="fragment" data-fragment-index="1" --> 
 
  ❤ <!-- .element: class="fragment" data-fragment-index="2" --> 
@@ -77,7 +77,7 @@ Fade your presentation to black and get your audience's undivided attention by p
 
 Like slide transitions, I found the default reveal.js theme to be a novelty that quickly wears off. The good news is you can define your own CSS to get a style that works for you. Don't start with a blank slate! App::revealup ships with all the [standard themes](https://metacpan.org/source/YUSUKEBE/App-revealup-0.14/share/revealjs/css/theme) so grab one of those and edit it to meet your needs. Test out your new theme by loading it at the command line:
 
-``` prettyprint
+```perl
 $ revealup server presentation.md --port 5000 --theme /path/to/theme.css
 ```
 

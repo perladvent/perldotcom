@@ -22,7 +22,7 @@
 
 When Perl is executing a program, it maintains the user id of the process owner in a global variable ($\<). When a Perl program is executed by root or a user with root privileges (e.g. using the sudo command), the user id variable is always set to zero. This can be checked at the command line:
 
-``` prettyprint
+```perl
 $ perl -e 'print $< . \n;'
 1000
 $ sudo perl -e 'print $< . \n;'
@@ -31,7 +31,7 @@ $ sudo perl -e 'print $< . \n;'
 
 Because the root user id is always zero and in Perl zero is treated as false, it is a trivial task to test if the user is root during runtime. This can be used to for flow control, such as exiting the program early:
 
-``` prettyprint
+```perl
 use Carp qw/croak/;
 
 if ($<) {
@@ -41,7 +41,7 @@ if ($<) {
 
 In Windows the user id variable is always set to zero and is of limited use. However the Perl [Win32](https://metacpan.org/module/Win32) module has the Win32::IsAdminUser() method that can be used instead of $\<, like this:
 
-``` prettyprint
+```perl
 use Win32;
 use Carp qw/croak/;
 

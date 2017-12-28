@@ -23,7 +23,7 @@
 
 You'll need to install a copy of the latest Perl development release (v5.19.9). You can get this with Perlbrew:
 
-``` prettyprint
+```perl
 $ perlbrew install perl-5.19.9
 $ perlbrew switch perl-5.19.9
 ```
@@ -32,7 +32,7 @@ Or you can download and build Perl v5.19.9 from [cpan.org](http://www.cpan.org/s
 
 Once 5.19.9 is installed, you'll need the [experimental](https://metacpan.org/pod/experimental) distribution. Install it via cpan at the command line:
 
-``` prettyprint
+```perl
 $ cpan experimental
 ```
 
@@ -40,7 +40,7 @@ $ cpan experimental
 
 A subroutine signature is a formal list of parameters for a subroutine. You can declare a subroutine signature like this:
 
-``` prettyprint
+```perl
 use experimental 'signatures';
 
 sub echo ($message) {
@@ -54,7 +54,7 @@ In this example "($message)" is the subroutine signature. That indicates that al
 
 A signature can also declare default values for its parameters. Let's add a default message to the echo subroutine:
 
-``` prettyprint
+```perl
 use experimental 'signatures';
 
 sub echo ($message = 'Hello World!') {
@@ -70,7 +70,7 @@ Subroutine signatures can also declare optional and slurpy parameters. If you'd 
 
 Adding a signature to a subroutine enables argument checking for all calls to that subroutine. For example this code generates an error when run:
 
-``` prettyprint
+```perl
 use experimental 'signatures';
 
 sub echo ($message) {
@@ -80,14 +80,14 @@ sub echo ($message) {
 echo(); # missing argument
 ```
 
-``` prettyprint
+```perl
 $ perl echo.pl
 Too few arguments for subroutine at echo.pl line 3.
 ```
 
 Perl will also raise an error if too many arguments are passed:
 
-``` prettyprint
+```perl
 use experimental 'signatures';
 
 sub echo ($message) {
@@ -97,14 +97,14 @@ sub echo ($message) {
 echo('hello', 'world'); # too many arguments
 ```
 
-``` prettyprint
+```perl
 $ perl echo.pl
 Too many arguments for subroutine at echo.pl line 3.
 ```
 
 This is helpful- it avoids the need to write boilerplate argument checking code inside subroutines. Beware though; as there is no value check, the following will not raise an arguments error:
 
-``` prettyprint
+```perl
 use experimental 'signatures';
 
 sub echo ($message) {
@@ -118,7 +118,7 @@ echo(undef); #undef is an argument
 
 You can banish those unsightly variable assignments from your subroutines. Say goodbye (and good riddance) to this:
 
-``` prettyprint
+```perl
 sub ugly_code {
     my ($arg1, $arg2, arg3) = @_;
     ...
@@ -127,7 +127,7 @@ sub ugly_code {
 
 And say hello to this:
 
-``` prettyprint
+```perl
 sub fine_code ($arg1, $arg2, arg3){
     ...
 }
@@ -141,7 +141,7 @@ The native subroutine signatures implementation is a minimalist one compared to 
 
 On page 5 of [The Quick Python Book, Second Edition](http://www.amazon.com/gp/product/193518220X/ref=as_li_qf_sp_asin_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=193518220X&linkCode=as2&tag=perltrickscom-20) (affiliate link), the author compares equivalent Perl and Python functions for readability. In the author's view, the Python code is more readable than the Perl code. It's a straw man argument as the Perl example is written in "baby Perl", but let's revisit the example using Perl's native subroutine signatures feature. This is the Python example, unmodified:
 
-``` prettyprint
+```perl
 def pairwise_sum(list1, list2):
     result = []
     for i in range(len(list1)):
@@ -151,7 +151,7 @@ def pairwise_sum(list1, list2):
 
 And this is the original Perl code example:
 
-``` prettyprint
+```perl
 sub pairwise_sum {
     my($arg1, $arg2) = @_;
     my(@result) = ();
@@ -166,7 +166,7 @@ sub pairwise_sum {
 
 Here is a refactored Perl version:
 
-``` prettyprint
+```perl
 sub pairwise_sum {
     my ($arg1, $arg2) = @_;
     return map { $arg1->[$_] + $arg2->[$_] } 0 .. $#$arg1;
@@ -175,7 +175,7 @@ sub pairwise_sum {
 
 This code is cleaner and shorter than the original Perl code. It's also shorter than the Python example. But is it cleaner? Using subroutine signatures, we can do better:
 
-``` prettyprint
+```perl
 sub pairwise_sum ($arg1, $arg2) {
     return map { $arg1->[$_] + $arg2->[$_] } 0 .. $#$arg1;
 }

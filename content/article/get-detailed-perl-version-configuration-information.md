@@ -18,7 +18,7 @@
 
 Most Perl programmers know they can find out the current Perl version by typing "perl -v" as the command line:
 
-``` prettyprint
+```perl
 perl -v
 
 This is perl 5, version 16, subversion 3 (v5.16.3) built for x86_64-linux
@@ -35,7 +35,7 @@ Internet, point your browser at http://www.perl.org/, the Perl Home Page.
 
 To get detailed version information type "perl -**V**" (capital V) at the command line:
 
-``` prettyprint
+```perl
 perl -V
 
 Summary of my perl5 (revision 5 version 16 subversion 3) configuration:

@@ -24,7 +24,7 @@ In [part I](http://perltricks.com/article/183/2015/7/20/Port-scanning-with-Perl)
 
 The first feature I want to add is the ability to scan user-defined port ranges, instead of the default list of named ports. Because I'm using [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to parse command line arguments, I can add `range` to the parameter options:
 
-``` prettyprint
+```perl
 GetOptions (
   'ip=s'        => \ my $target_ip,
   'range=s'     => \ my $port_range,
@@ -34,7 +34,7 @@ GetOptions (
 
 The port processing [code](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L53-L57) becomes:
 
-``` prettyprint
+```perl
 # use named ports if no range was provided
 my @ports = shuffle do {
   unless ($port_range)
@@ -54,7 +54,7 @@ my @ports = shuffle do {
 
 I check for the presence of the `$port_range` variable, and if it's present I try to parse the minimum and maximum ports using a regex capture. I like this code pattern:
 
-``` prettyprint
+```perl
 my ($min, $max) = $port_range =~ /([0-9]+)-([0-9]+)/
       or die "port-range must be formatted like this: 100-1000\n";
 ```
@@ -67,7 +67,7 @@ The simple [port scanner](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729
 
 To capture those arguments, I can add `procs` and `delay` to `GetOptions`:
 
-``` prettyprint
+```perl
 GetOptions (
   'delay=f'     => \(my $delay = 1),
   'ip=s'        => \ my $target_ip,
@@ -81,13 +81,13 @@ This code does a few neat things: by using the `=i` definition, `GetOptions` wil
 
 To support `sleep` for floating point seconds, I need to import the [Time::HiRes](https://metacpan.org/pod/Time::HiRes) module (part of the Perl core):
 
-``` prettyprint
+```perl
 use Time::HiRes 'sleep';
 ```
 
 Now the forking [code](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L68-L91) can become:
 
-``` prettyprint
+```perl
 for (1..$procs)
 {
   my @ports_to_scan = splice @ports, 0, $batch_size;
@@ -122,7 +122,7 @@ The simple scanner prints out every scanned port and the port status. This can b
 
 To calculate the program runtime duration, and print the start datetime I can use the [Time::Piece](https://metacpan.org/pod/Time::Piece) module. The module is part of core Perl so there is no need to install it, plus you can do [almost anything](http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece) with it.
 
-``` prettyprint
+```perl
 use Time::Piece;
 
 my $start_time = localtime;
@@ -137,7 +137,7 @@ When you import Time::Piece it overrides the localtime and gmtime built in funct
 
 I'll add a `verbose` option to `GetOptions`. If this is present, we'll print out all port results, else just the open ones:
 
-``` prettyprint
+```perl
 GetOptions (
   'delay=f'     => \(my $delay = 1),
   'ip=s'        => \ my $target_ip,
@@ -152,7 +152,7 @@ Note how for boolean parameters no type declaration is given to `GetOptions` (e.
 
 Instead of printing out port results in the `read_packet()` [subroutine](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L145), I'm going to return the port number and status back to the calling code and defer the printing until later. This simple change has a two benefits: it's more flexible: I can add more packet parsing routines to `read_packet()` without having to add multiple print statements and I can sort the port scan results before printing them. The program can scan ports in a random order but the output should be orderly!
 
-``` prettyprint
+```perl
 for (sort { $a <=> $b } keys %port_scan_results)
 {
   printf " %5u %-15s %-40s\n", $_, $port_scan_results{$_}, ($port_directory{"$_/$protocol"}->{name} || '')
@@ -168,7 +168,7 @@ The simple scanner does a TCP "SYN" scan. This is a good default, but there are 
 
 As with the other updates, I'm going to add new parameters to the `GetOptions` function. I want to capture the protocol to use (e.g. TCP, UDP, ICMP) and any flags that should be added to the sent packet. These two variables should give us enough flexibility to support a variety of scans.
 
-``` prettyprint
+```perl
 GetOptions (
   'delay=f'     => \(my $delay = 1),
   'ip=s'        => \ my $target_ip,
@@ -183,19 +183,19 @@ GetOptions (
 
 You might be wondering how it's possible to read the `flag` string parameter into the `@flags` array. In this scenario, I want to be able to accept one or more flag arguments, so the user can pass them to the port scanner like this:
 
-``` prettyprint
+```perl
 $ ./port_scanner -flag fin -flag psh -flag urg
 ```
 
 Or more tersely:
 
-``` prettyprint
+```perl
 $ ./port_scanner -f fin -f psh -f urg
 ```
 
 These values will be captured into `@flags`. By the way, those three flags are part of a TCP port scanning technique called the "Xmas" scan. To process the flags I'll use this code:
 
-``` prettyprint
+```perl
 die "flags are for tcp only!\n" if $protocol ne 'tcp' && @flags;
 $flags[0] = 'syn' unless @flags || $protocol eq 'udp';
 my $flags = { map { $_ => 1 } @flags };
@@ -206,7 +206,7 @@ Flags can only be passed for TCP scans, so the first thing thing I'm checking he
 
 Now the [send\_packet](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L125-L139) subroutine can be updated to handle different protocols and scans:
 
-``` prettyprint
+```perl
 sub send_packet
 {
   my ($protocol, $target_port, $flags) = @_;
@@ -228,7 +228,7 @@ The updated subroutine transparently passes the arguments received to [Net::RawI
 
 The [read\_packet](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L145-L171) subroutine also needs to be updated to parse different packet types:
 
-``` prettyprint
+```perl
 sub read_packet
 {
   my $raw_data = shift;
@@ -277,7 +277,7 @@ That's not all we can do with ICMP responses. An ICMP response can also indicate
 
 So that's it! The full code can be found [here](https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/port_scanner). Now let's see some examples of how to run the code:
 
-``` prettyprint
+```perl
 # tcp syn scan of common ports, 100 processes sending packets every 0.25 sec:
 $ sudo $(which perl) -i 192.168.1.5 -p 100 -d 0.25
 

@@ -28,20 +28,20 @@ To build Perl on Android you'll need a unix-like environment (Cygwin may work to
 
 Download the Android "SDK Tools Only" [tarball](https://developer.android.com/sdk/index.html), and the NDK [tarball](https://developer.android.com/tools/sdk/ndk/index.html). At the command line, change to the directory where you downloaded the tarballs to and untar both tarballs:
 
-``` prettyprint
+```perl
 $ tar xvf android-ndk-r9d-linux-x86_64.tar.bz2
 $ tar xvf android-sdk_r22.6.2-linux.tgz
 ```
 
 To save typing later, add "android-sdk-\*/tools" and "android-sdk-\*/platform-tools" to $PATH (you'll need to provide the absolute paths to the directories). For example if I had extracted android-sdk-tools to my user directory, on Linux I could add it to PATH with the following command:
 
-``` prettyprint
+```perl
 $ export PATH=$PATH:$HOME/android-sdk-linux/tools:$HOME/android-sdk-linux/platform-tools
 ```
 
 With your PATH updated, launch the Android SDK Manager:
 
-``` prettyprint
+```perl
 $ android
 ```
 
@@ -51,7 +51,7 @@ This will open a GUI menu from where you can download and install the required A
 
 You'll also need a copy of the Perl 5.20.0 [tarball](http://www.cpan.org/src/5.0/perl-5.20.0.tar.gz). Untar this at the command line too:
 
-``` prettyprint
+```perl
 $ tar xvf perl-5.20.0.tar.gz
 ```
 
@@ -59,7 +59,7 @@ $ tar xvf perl-5.20.0.tar.gz
 
 Now we're going to create an Android Virtual Device that can be used by the emulator to run Android on your machine. At the command line type:
 
-``` prettyprint
+```perl
 $ android avd
 ```
 
@@ -81,7 +81,7 @@ Having created a new AVD, you can close the AVD Manager window.
 
 The following commands will create environment variables we'll need for the install. Be sure to adjust the path for ANDROID\_NDK to the location where you untarred the Android NDK archive earlier.
 
-``` prettyprint
+```perl
 $ export ANDROID_NDK=$HOME/android-ndk-r9d
 $ export TARGET_ARCH=arm-linux-androideabi
 $ export ANDROID_TOOLCHAIN=/tmp/my-toolchain-arm-linux-androideabi
@@ -92,13 +92,13 @@ $ export PATH=$PATH:$ANDROID_NDK/toolchains/$TARGET_ARCH-4.8/prebuilt/linux-x86_
 
 To create the toolchain, run this command:
 
-``` prettyprint
+```perl
  $ $ANDROID_NDK/build/tools/make-standalone-toolchain.sh --platform=android-9 --install-dir=$ANDROID_TOOLCHAIN --system=`uname | tr '[A-Z]' '[a-z]'`-x86_64 --toolchain=arm-linux-androideabi-4.8
 ```
 
 Launch your AVD with the emulator (replace kitkat with the name of the avd you created. If you can't remember the name, just run "android avd" again:
 
-``` prettyprint
+```perl
 $ emulator @kitkat&
 ```
 
@@ -112,39 +112,39 @@ Once it's booted, it will look like this:
 
 With the fully booted AVD still running, return to the command line and type:
 
-``` prettyprint
+```perl
 $ adb devices
 ```
 
 This will print out the names of all the connected Android devices.For example:
 
-``` prettyprint
+```perl
 List of devices attached 
 emulator-5554   device
 ```
 
 Now we've got the device name, we'll use adb to run shell commands on our emulated device. It's important that the AVD is booted and running:
 
-``` prettyprint
+```perl
 adb -s emulator-5554 shell "echo sh -c '\"mkdir $TARGETDIR\"' | su --"
 ```
 
 Now change into the untarred perl-5.20.0 directory, and run configure (replace "emulator-5554" with your device name):
 
-``` prettyprint
+```perl
 $ ./Configure -des -Dusedevel -Dusecrosscompile -Dtargetrun=adb -Dcc=arm-linux-androideabi-gcc -Dsysroot=$SYSROOT -Dtargetdir=$TARGETDIR -Dtargethost=emulator-5554
 ```
 
 You can now run make and make test to build and test Perl on the device:
 
-``` prettyprint
+```perl
 $ make
 $ make test
 ```
 
 Bear in mind that the make test can take a long time - on my machine it ran for 4 hours. It will appear like the process has hung, this is because adb only prints out the results once the command has completed. Make isntall does not work, but this does not matter, as you can still run the Perl binary and use core modules. For example:
 
-``` prettyprint
+```perl
 $ adb -s emulator-5554 shell "/mnt/asec/perl/perl -v"
 This is perl 5, version 20, subversion 0 (v5.20.0) built for linux-androideabi
 
@@ -160,13 +160,13 @@ Internet, point your browser at http://www.perl.org/, the Perl Home Page.
 
 Core modules are located in /mnt/asec/perl/lib. To load them, just use the -I switch. For example this one liner:
 
-``` prettyprint
+```perl
 adb -s emulator-5554 shell '/mnt/asec/perl/perl -I/mnt/asec/perl/lib -MHTTP::Tiny -E "say  HTTP::Tiny->new->get(q{http://perltricks.com})->{content}"'
 ```
 
 Or if running a script:
 
-``` prettyprint
+```perl
 adb -s emulator-5554 shell '/mnt/asec/perl/perl -I/mnt/asec/perl/lib my_script.pl'
 ```
 
@@ -178,7 +178,7 @@ This is not the only way to get Perl running on Android. For a different approac
 
 This article would not have been possible without the excellent Android perldoc page by Brian Fraser. You can read it on [Github](https://github.com/Perl/perl5/blob/blead/README.android) or with Perl 5.20.0 installed you can read it with perldoc:
 
-``` prettyprint
+```perl
 $ perldoc android
 ```
 

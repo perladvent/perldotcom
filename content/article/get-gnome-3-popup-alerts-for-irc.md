@@ -23,7 +23,7 @@
 
 Warning, this script has a lot of dependencies. To use it, you'll need to be running GNOME 3, have Irssi and install [Gtk3::Notify](https://metacpan.org/pod/Gtk3::Notify). There is an open [issue](https://rt.cpan.org/Public/Bug/Display.html?id=96108) on the Gtk3::Notify tests, so you'll have to force install it at the command line:
 
-``` prettyprint
+```perl
 $ cpan -fi Gtk3::Notify
 ```
 
@@ -33,7 +33,7 @@ Gtk3::Notify has several C library [dependencies](https://github.com/dnmfarrell/
 
 Unless you're running any scripts with Irssi already, you'll need to create a scripts directory, and download [gnotify.pl](https://raw.githubusercontent.com/dnmfarrell/irssi/master/gnotify.pl):
 
-``` prettyprint
+```perl
 $ mkdir ~/.irssi/scripts
 $ cd ~/.irssi/scripts
 $ curl -O https://raw.githubusercontent.com/dnmfarrell/irssi/master/gnotify.pl
@@ -41,7 +41,7 @@ $ curl -O https://raw.githubusercontent.com/dnmfarrell/irssi/master/gnotify.pl
 
 To have Irssi to autoload the script, create an "autorun" subdirectory with a symlink back to the script:
 
-``` prettyprint
+```perl
 $ mkdir ~/.irssi/scripts/autorun
 $ cd ~/.irssi/scripts/autorun
 $ ln -s ../gnotify.pl
@@ -51,7 +51,7 @@ $ ln -s ../gnotify.pl
 
 To make sure gnotify.pl is working, start Irssi and try sending a private message to yourself from within Irssi:
 
-``` prettyprint
+```perl
 /msg username hey this is a test message
 ```
 

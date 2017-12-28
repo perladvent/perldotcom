@@ -24,7 +24,7 @@ Roles are a label for a set of methods that a class provides. Similar to traits 
 
 In order to use the code examples in this article you'll need to install [Role::Tiny](https://metacpan.org/pod/Role::Tiny). You can install it via CPAN from the command line:
 
-``` prettyprint
+```perl
 cpan Role::Tiny
 ```
 
@@ -32,7 +32,7 @@ cpan Role::Tiny
 
 A role is a declared in a module file (\*.pm). Let's create a role called "Shape", which we would expect all Shape classes to implement:
 
-``` prettyprint
+```perl
 package Shape;
 
 use Role::Tiny;
@@ -48,7 +48,7 @@ The code starts with the usual package declaration. By importing [Role::Tiny](ht
 
 Let's develop a Point class that will implement the Shape role. A point is a simple 2d shape located using an x and y value for Cartesian coordinates.
 
-``` prettyprint
+```perl
 package Point;
 
 use Role::Tiny::With;
@@ -68,7 +68,7 @@ sub new {
 
 As before the file begins with a package declaration. To be able to add roles to a class, we use "Role::Tiny::With". This imports the "with" function which is use to import roles. We've also declared a constructor method that takes an x and y coordinate as parameters to store the point's location. At this stage we have not added the "getArea" method required by the Shape role - so what would happen if we tried to create a Point object? We can test this at the command line:
 
-``` prettyprint
+```perl
 perl -MPoint -we 'my $p = Point->new(5,5)'
 Can't apply Shape to Point - missing getArea at /home/sillymoose/perl5/perlbrew/perls/perl-5.16.3/lib/site_perl/5.16.3/Role/Tiny.pm line 306.
 Compilation failed in require.
@@ -77,7 +77,7 @@ BEGIN failed--compilation aborted.
 
 As shown above, Perl will raise an exception if a class uses a role but doesn't implement its required methods. Let's add a "getArea" method to the Point class:
 
-``` prettyprint
+```perl
 package Point;
 
 use Role::Tiny::With;
@@ -103,7 +103,7 @@ The "getArea" sub returns the area of the point object (1). For other shapes suc
 
 A can be more than just a list of required methods - roles can define methods which the consuming class can use, just like a subclass inherits methods from its parent class. To see this in action let's add get and set color methods to the Shape role.
 
-``` prettyprint
+```perl
 package Shape;
 
 use Role::Tiny;
@@ -125,7 +125,7 @@ sub setColor {
 
 Now we can get and set the color of any Point object. We can test this at the command line:
 
-``` prettyprint
+```perl
 perl -MPoint -we 'my $p = Point->new(5,5); $p->setColor("blue"); print $p->getColor'
 ```
 
@@ -133,7 +133,7 @@ perl -MPoint -we 'my $p = Point->new(5,5); $p->setColor("blue"); print $p->getCo
 
 When a class uses a role, it also gets a boolean "does" method. This can be used to check if the class implements a specific role. For example we can quickly check for the presence of our "Shape" role in our Point class at the command line:
 
-``` prettyprint
+```perl
 perl -MPoint -we 'my $p = Point->new(5,5); print $p->does("Shape")'
 ```
 

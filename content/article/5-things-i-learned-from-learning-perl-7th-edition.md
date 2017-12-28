@@ -16,7 +16,7 @@ The 7th edition of [Learning Perl](https://www.learning-perl.com/) is due to be 
 
 You probably know that Perl supports a bunch of [file test operators](http://perldoc.perl.org/functions/-X.html) that do useful things like check if a file exists, if it's readable and so on:
 
-``` prettyprint
+```perl
   if (-e $filepath && -r $filepath) {
     ... 
   }
@@ -24,7 +24,7 @@ You probably know that Perl supports a bunch of [file test operators](http://per
 
 But did you know that since version 5.10, you can stack file test operators?
 
-``` prettyprint
+```perl
   if (-e -r $filepath) {
     ...
   }
@@ -36,19 +36,19 @@ This way is cleaner and shorter. Oh and bonus! file test operators work on fileh
 
 Learning Perl has a lot of anecdotes about Perl history in it. You might have used the `glob` function before:
 
-``` prettyprint
+```perl
 my @json_files = glob '*.json';
 ```
 
 This returns all file names ending in `.json` in the current working directory. Glob takes a string of patterns separated by whitespace, so you can provide multiple patterns:
 
-``` prettyprint
+```perl
   my @config_files = glob '*.json *.toml *.ini';
 ```
 
 Instead of using the word `glob` you can use angle brackets:
 
-``` prettyprint
+```perl
   my @json_files = <*.json>;
 ```
 
@@ -58,20 +58,20 @@ These angle brackets treat the text between them like a double-quoted string. On
 
 In many C-based languages you can write numbers in hexadecimal and octal notation, and you can in Perl too:
 
-``` prettyprint
+```perl
   my $byte_max = 0xff;
   my $permissions = 0755;
 ```
 
 In Perl though, you can also write binary numbers inline, with the prefix `0b`:
 
-``` prettyprint
+```perl
   my $bits = 0b10111000;
 ```
 
 This can make it easier to work with binary data; instead of using hexadecimal notation and doing the mental arithmetic to calculate values, you can write binary data inline. For example, let's say you are reviewing some code:
 
-``` prettyprint
+```perl
   if ($bit_array & 0x40) {
     ...
   }
@@ -79,7 +79,7 @@ This can make it easier to work with binary data; instead of using hexadecimal n
 
 To understand this example in hexadecimal, you have to calculate that 4 * 16 = 64, and then either just know, or convert that number to binary to find out that the 7th bit is flipped, and understand that this is testing whether `$bit_array` has that bit flipped too. Here's the same code with inline binary:
 
-``` prettyprint
+```perl
   if ($bit_array & 0b1000000) {
     ...
   }
@@ -112,14 +112,14 @@ Woah, mine is pretty out of date. I should upgrade ...
 
 The Perl built-in functions [exec](http://perldoc.perl.org/functions/exec.html) and [system](http://perldoc.perl.org/functions/system.html) *may* invoke the shell when running a system command. Generally you want to avoid this as invoking the shell is slower than executing the command directly. Perl looks at the first argument passed to `exec` or `system` and if it contains shell [metacharacters](http://faculty.salina.k-state.edu/tim/unix_sg/shell/metachar.html) invokes the shell.
 
-``` prettyprint
+```perl
 my $command = join " ", $program, $arg1, $arg2;
 system $command; # may invoke shell
 ```
 
 So let's say you need to invoke a system command, and you're not sure whether the command arguments will contain metacharacters or not. If they do, the shell will be invoked and any metacharacters will be interpolated. One way to avoid the shell interpolating metacharacters is to escape them. But shell escape sequences are rarely simple (e.g. [escaping a single quote](https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings#1250279)). Learning Perl shows a better way: passing a list.
 
-``` prettyprint
+```perl
 system $program, $arg1, $arg2; # never invokes the shell
 ```
 

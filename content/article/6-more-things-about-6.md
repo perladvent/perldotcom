@@ -46,7 +46,7 @@ A repeating decimal is still a rational number, although Perl 6 doesn't yet have
 
 Perl 6 has [Failure](https://docs.perl6.org/type/Failure) objects, which wrap an exception. Many things may return such an object when something goes wrong. A [Failure](https://docs.perl6.org/type/Failure) is always `False` in Boolean context, but Perl 6 also marks it as handled when it's checked like that. Otherwise, if I try to use that object as if everything succeeded, it immediately throws its exception:
 
-``` prettyprint
+```perl
 my $file = 'not-there';
 
 unless my $fh = open $file {
@@ -64,7 +64,7 @@ The output shows that I handled the problem in the `unless`:
 
 Compare this with code that doesn't check the result of the `open` and keep going as if the filehandle is good:
 
-``` prettyprint
+```perl
 my $file = 'not-there';
 
 my $fh = open $file;
@@ -94,7 +94,7 @@ And, I'm sufficiently besotted with this idea of object-oriented programming tha
 
 So let's talk about exceptions. I haven't liked the fake ones people tried to push on me in Perl 5. If I can't actually handle it and continue the program, I don't think it's a proper exception. It's just a different way to return a value.
 
-``` prettyprint
+```perl
 CATCH {
 	default {
 		put "Problem with file: {.^name} --> {.message}";
@@ -123,7 +123,7 @@ My estimation of a language is mostly based on how easy I can create new strings
 
 Scalars, arrays, and hashes (yes, hashes!) can interpolate directly, although you need to add the subscript characters for the latter two:
 
-``` prettyprint
+```perl
 say "This one has a $scalar";
 say "The array needs braces: @array[]";
 say "The hash needs curlies: %hash{}";
@@ -131,7 +131,7 @@ say "The hash needs curlies: %hash{}";
 
 Better than that, though, is that I can interpolate anything by enclosing it in braces within the string. Perl 6 evaluates the code in the braces and replaces the block with the last evaluated expression:
 
-``` prettyprint
+```perl
 say "There are { $scalar.elems } elements";
 say "The object's name is { $object.^name }";
 say "The sum is { 2 + 2 }";
@@ -145,7 +145,7 @@ I could do this with `sprintf`, and sometimes I think that's more appropriate. B
 
 Have something in a scalar that you want to format in a different way? There's a method for that. This isn't one of the exciting new features because `printf` has been around forever. Similar to the interpolation, this might seem like a small thing, put in the times I've used it I've been quite pleased despite the voice at the back of my head that says "It's just `sprintf` you idiot!"
 
-```prettyprint
+```perl
 my @buffer = Buf.new( ... );
 @buffer.map( { .fmt: "%02x" } ).join( ' ' ).put;
 ```
@@ -154,7 +154,7 @@ I forego the parens there and give the arguments to `.fmt` by putting a colon af
 
 For some reason I really like this more than what everyone reading this article is thinking:
 
-```prettyprint
+```perl
 $buffer.map( { sprintf "%02x", $_ } ).join( ' ' )
 ```
 
@@ -164,7 +164,7 @@ Perl 6 has lists of lists (ever since the [Great List Refactor](https://perl6adv
 
 And, a list is an object, and as a single thingy you can store it in a scalar variable. It knows that it is a list:
 
-```prettyprint
+```perl
 my $scalar = ( 1, 2, 3 );
 # my $scalar = 1, 2, 3;  # Nope!
 
@@ -177,7 +177,7 @@ scalar: List
 
 You can have literal lists of lists:
 
-```prettyprint
+```perl
 my @array = ( ( 1, 2 ), qw/a b/ );
 
 put "elems: { @array.elems }";
@@ -193,7 +193,7 @@ List
 
 But here's something even better. You can go the other way. I go from the flat list of this buffer (list of numbers representing octets in this case) to two-element lists that I can iterate over. This is quite handy for dealing with binary formats:
 
-```prettyprint
+```perl
 my Buf $buf =
 	Buf.new( 0xDE, 0xAD, 0xBE, 0xEF );
 

@@ -25,7 +25,7 @@ Recently I've been reading [Penetration Testing With Perl](https://www.packtpub.
 
 If you're connected to a network, it's helpful to know the IP addresses of all of the other hosts on the same network. This [script](https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/livehost_scanner) starts by detecting the network device name (or accepting it as an argument) and initializing a packet capture object:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature 'say';
@@ -59,7 +59,7 @@ my $pcap = Net::Frame::Dump::Online->new(
 
 It then detects the gateway IP (the Ip address of the network controller) and sends a broadcast packet to every IP address in the subnet. The packet capture object `$pcap` will detect any responses. It then prints out the respondent's IP and MAC address.
 
-``` prettyprint
+```perl
 printf "Gateway IP: %s\nStarting scan\n", $device->gatewayIp;
 
 $pcap->start;
@@ -92,7 +92,7 @@ END { say "Exiting."; $pcap->stop }
 
 If I run this script on my home network, I get the following output
 
-``` prettyprint
+```perl
 $ sudo $(which perl) livehost_scanner
 Gateway IP: 192.168.1.1
 Starting scan
@@ -112,7 +112,7 @@ Now I've identified the addresses of two hosts on my network, if I was an attack
 
 One way to fingerprint a host is using their [MAC address](https://en.wikipedia.org/wiki/MAC_address). The first half of the address is the Organisationally Unique Identifier (OUI). The IEEE provide a [file](http://standards-oui.ieee.org/oui.txt) that lists all authorized OUIs and their manufacturer. So to identify the Manufacturer of the network device of the host, all we have to do is lookup their OUI in the file. This [script](https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/id_target) does that:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -143,14 +143,14 @@ sub oui_lookup
 
 If I run this script on the Gateway MAC address, I can identify the access point manufacturer:
 
-``` prettyprint
+```perl
 $ ./id_target 10:0d:7f:81:31:c2
 Address: 10:0d:7f:81:31:c2, MAC Manufacturer: NETGEAR INC.,
 ```
 
 Aha! so the access point is made by Netgear. There was another host detected on my network at address `192.168.1.3`. I can try and fingerprint them too:
 
-``` prettyprint
+```perl
 $ ./id_target 68:09:27:03:d0:35
 Address: 68:09:27:03:d0:35, MAC Manufacturer: Apple
 ```

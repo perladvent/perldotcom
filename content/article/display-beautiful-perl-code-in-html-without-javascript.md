@@ -28,7 +28,7 @@ The [prettify.js](https://code.google.com/p/google-code-prettify/) library does 
 
 You'll need PPI::Prettify and can install it via CPAN at the terminal:
 
-``` prettyprint
+```perl
 $ cpan PPI::Prettify
 ```
 
@@ -38,7 +38,7 @@ In terms of OS compatibility, PPI::Prettify is pure-Perl so you should be able t
 
 PPI::Prettify exports a prettify() method that takes a string of Perl code, and returns it tokenized with \<span\> tags. To be safe, PPI::Prettify employs HTML encoding on all token content. Let's whip up a quick script to demo prettify():
 
-``` prettyprint
+```perl
 use warnings;
 use strict;
 use PPI::Prettify;
@@ -84,7 +84,7 @@ The script uses the [\_\_DATA\_\_](http://perltricks.com/article/24/2013/5/11/Pe
 
 Running that script returns the Perl code surrounded by \<span\> tags. This is a summary of the markup produced by prettify():
 
-``` prettyprint
+```perl
 <pre class="prettyprint"><span class="com"># a simple OO class
 </span><span class="pln">
 </span><span class="kwd">package</span><span class="pln"> </span><span class="atn">Shape</span><span class="pln">;</span>
@@ -94,7 +94,7 @@ Running that script returns the Perl code surrounded by \<span\> tags. This is a
 
 The example below shows how the markup looks in HTML (using the [desert](http://code.google.com/p/google-code-prettify/source/browse/trunk/styles/desert.css?r=198) CSS theme).
 
-``` prettyprint
+```perl
 # a simple OO class
 
 package Shape;
@@ -133,7 +133,7 @@ Two things to note here: disabling JavaScript will have no effect on the syntax 
 
 It's easy to prettify existing Perl code from a file. You can do this in one line of Perl at the terminal:
 
-``` prettyprint
+```perl
 $ perl -MPPI::Prettify -MFile::Slurp -e '$code=read_file("output");print prettify({code=>$code})'
 ```
 
@@ -141,13 +141,13 @@ $ perl -MPPI::Prettify -MFile::Slurp -e '$code=read_file("output");print prettif
 
 The prettify() method also takes an optional debug parameter:
 
-``` prettyprint
+```perl
 my $html = prettify({ code => $code, debug => 1 });
 ```
 
 Debug mode will provide the same output, however every tag will be given a "title" attribute with the original PPI::Token class as the value. This can help you to understand how the original PPI::Token class maps to the markup by hovering the cursor over the text. The code from earlier has been printed with debug mode turned on. Try hovering!
 
-``` prettyprint
+```perl
 # a simple OO class
 
 package Shape;
@@ -184,7 +184,7 @@ sub set_color {
 
 You may want to change how certain tokens of Perl code are marked up. PPI::Prettify exports the mapping in a hashref, called $MARKUP\_RULES. Every PPI::Token class is a key, with the value being the CSS class name that prettify.js uses (and the prettify CSS themes expect). For example PPI::Token::Comment is mapped to "com":
 
-``` prettyprint
+```perl
 'PPI::Token::Comment' => 'com'
 ```
 

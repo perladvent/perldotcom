@@ -25,7 +25,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 
 [App::Skeletor](https://metacpan.org/pod/App::Skeletor) bootstraps new Perl projects based on customizable templates. Similar to Dist::Zilla (*why do all these builder tools have such great names?*) but intentionally less ambitious, App::Skeletor looks more useful as a component of a Perl app or a starter kit for module developers. You can run it from the terminal:
 
-``` prettyprint
+```perl
 $ skeletor --template Skeletor::Template::Example \
   --as My::App \
   --directory ~/Projects \ 

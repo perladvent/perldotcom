@@ -26,7 +26,7 @@ The Net::GitHub module provides a perly interface to GitHub's feature-rich API. 
 
 Grab yourself a copy of [Net::GitHub](https://metacpan.org/pod/Net::GitHub) (make sure it's version 0.68 or higher). The CPAN Testers [results](http://matrix.cpantesters.org/?dist=Net-GitHub+0.68) show that it builds on all major platforms, including Windows. You can install it via from CPAN at the command line:
 
-``` prettyprint
+```perl
 $ cpan Net::GitHub
 ```
 
@@ -34,7 +34,7 @@ $ cpan Net::GitHub
 
 First we need to create a search object. You can search GitHub anonymously up to 5 times per minute or if you authenticate, 20 times per minute. The module [documentation](https://metacpan.org/pod/Net::GitHub) shows examples of how to authenticate, so we'll proceed here unauthenticated.
 
-``` prettyprint
+```perl
 use Net::GitHub::V3;
 
 # unauthenticated
@@ -45,7 +45,7 @@ my %data = $search->repositories({ q => 'docker'});
 
 The code above creates a `$search` object, and initiates a repo search for docker. The `%data` hash contains the search results. Let's have a look at them:
 
-``` prettyprint
+```perl
 {'incomplete_results' => bless( do{\(my $o = 0)}, 'JSON::XS::Boolean' ),
  'total_count' => 12830,
  'items' => [ {
@@ -90,7 +90,7 @@ I've truncated the results for the sake of brevity, to show the top level key va
 
 Let's update the code to pull more results. GitHub permits up to 100 results per API call and a 1,000 results per search.
 
-``` prettyprint
+```perl
 use Net::GitHub::V3;
 
 my $gh = Net::GitHub::V3->new;
@@ -111,7 +111,7 @@ The code above executes the same search as before, except now I'm passing the `p
 
 So now we have a full set of results in , what can we do with it? One analysis that could be interesting is a count by programming language. Every repo hash contains a `language` key value pair, so we can extract and count it. Lets see which language most docker-related repos are written in.
 
-``` prettyprint
+```perl
 use Net::GitHub::V3;
 
 my $gh = Net::GitHub::V3->new;
@@ -141,7 +141,7 @@ Let's walk through this code. First of all, I changed the search argument to lim
 
 Next I declared the `%languages` hash and iterated through the results, extracting each repo's language. Where language was `undef`, I labelled the repo "Other". Finally I sorted the results and printed them using [printf](http://perldoc.perl.org/functions/printf.html)to get a nicely formatted output. Here are the results:
 
-``` prettyprint
+```perl
      Shell:   238
      Other:    58
     Python:    13

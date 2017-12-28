@@ -25,7 +25,7 @@ Imagine this scenario: you're using the DateTime module but you can't remember t
 
 `perldoc` is a command line program for reading Perl documentation. It comes with Perl, so if you've got Perl installed, perldoc should be available too. Using perldoc is easy: as you've already seen, to view the documentation of a module you've installed, at the command line type:
 
-``` prettyprint
+```perl
 $ perldoc Module::Name
 ```
 
@@ -35,7 +35,7 @@ perldoc will search for the module and if it finds it, display the module's docu
 
 Perl has a huge number of built-in functions, about 224 depending on the Perl version. Who can remember exactly how they all work? I know I can't. To lookup a Perl function, use perldoc with the `-f` switch. For instance to look up the documentation on the `rindex` function:
 
-``` prettyprint
+```perl
 $ perldoc -f rindex
 ```
 
@@ -49,7 +49,7 @@ Which will display:
 
 Aha! This is all well and good, but what do you do if you can't remember the function name? Well you could use [B::Keywords](https://metacpan.org/pod/B::Keywords), but another way would be to check out `perlfunc` the Perl documentation on built-in functions. To read it, with perldoc just type:
 
-``` prettyprint
+```perl
 $ perldoc perlfunc
 ```
 
@@ -57,13 +57,13 @@ $ perldoc perlfunc
 
 As with functions, Perl has a large number of predefined variables that do everything from storing the program name to tracking the state of the regex engine. They're really useful, but often have obscure names like `$^O` (the OS name). So if you find yourself needing to check whether you're looking at a list separator (`$"`) or an output separator (`$/`), just use perldoc with the `-v` switch:
 
-``` prettyprint
+```perl
 $ perldoc -v $/
 ```
 
 Because some predefined variables have weird names, you may need to quote them on the command line for perldoc to work:
 
-``` prettyprint
+```perl
 $ perldoc -v '$"'
 ```
 
@@ -73,7 +73,7 @@ The predefined variables documentation is known as `perlvar`. It's well worth a 
 
 Perl has a lot of great documentation, but it can be hard to remember the names of all of the entries. If you ever want to browse the table of contents, use `perl`:
 
-``` prettyprint
+```perl
 $ perldoc perl
 ```
 
@@ -81,7 +81,7 @@ Many people recommend perltoc for this, but for finding relevant entries, I thin
 
 Perl also has an extensive FAQ, (another entry that's worth a read through). It has loads of answers to common queries. As usual you can read it with `perldoc faq`, but you can also search it using the `-q` switch. Want to know if there are any good IDEs for Perl? (a common newbie question):
 
-``` prettyprint
+```perl
 $ perl -q ide
 ```
 
@@ -113,13 +113,13 @@ $ perl -q ide
 
 perldoc isn't just about documentation. If you need to find out where a module is installed, using the `-l` switch, perldoc will return the filepath of the module:
 
-``` prettyprint
+```perl
 $ perldoc -l Test::More
 ```
 
 If you get the path, you can open it in an editor directly:
 
-``` prettyprint
+```perl
 $ vi $(perldoc -l Test::More)
 ```
 
@@ -129,7 +129,7 @@ One trick here: some modules don't have any POD in them, for those modules, use 
 
 Finally, perldoc can also display module source code. Just use the `-m` switch:
 
-``` prettyprint
+```perl
 $ perldoc -m Test::More
 ```
 

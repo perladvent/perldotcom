@@ -19,14 +19,14 @@
 
 Perl's split function has a useful feature that will split a string into characters. This works by supplying an empty regex pattern ("//") to the split function. This can be used to easily split a word into an array of letters, for example:
 
-``` prettyprint
+```perl
 my $word = 'camel';
 my @letters = split(//, $word);
 ```
 
 Perl's official documentation has more on the split function. You can read it [online](http://perldoc.perl.org/functions/split.html) or by running the following command at the terminal:
 
-``` prettyprint
+```perl
 perldoc -f split
 ```
 

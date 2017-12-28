@@ -31,7 +31,7 @@ I have to know JavaScript to control Firefox directly. I can telnet into the Moz
 
 I'm not going to control Firefox directly, though, because I'm going to let some Perl modules do that for me. The basic interface of [WWW::Mechanize::Firefox](http://www.metacpan.org/module/WWW::Mechanize::Firefox) is the same as [WWW::Mechanize](http://www.metacpan.org/module/WWW::Mechanize):
 
-``` prettyprint
+```perl
 #!/usr/local/perls/perl-5.20.0/bin/perl
 use v5.10;
 use WWW::Mechanize::Firefox;
@@ -65,7 +65,7 @@ That's not even the good part yet.
 
 Since I'm connected to a JavaScript terminal, I can evaluate JavaScript code. The `eval` returns the result and its type:
 
-``` prettyprint
+```perl
 use v5.10;
 use WWW::Mechanize::Firefox;
 
@@ -81,7 +81,7 @@ say "2+2 is $result (type $type)";
 
 That evaluates the JavaScript in its own context, which isn't that interesting for me. I want to interact and control parts of a web page. To do that, I use the `eval_in_page`. That runs the JavaScript with everything else going on in the current tab, including all the JavaScript code it has loaded. Here's an example that uses the StackExchange JavaScript to change the view from the desktop mode to the mobile mode:
 
-``` prettyprint
+```perl
 use v5.10;
 use WWW::Mechanize::Firefox;
 

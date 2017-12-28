@@ -33,7 +33,7 @@ I've spent entire evenings waiting for layers of CPAN dependencies to install on
 
 Here's a quick-and-dirty benchmark of installing [Device::WebIO](https://metacpan.org/pod/Device::WebIO) from a fresh deployment on an SD card bought directly from the ODROID store:
 
-``` prettyprint
+```perl
 $ time sudo cpanm Device::WebIO
 ...
 real    5m0.980s
@@ -43,7 +43,7 @@ sys     0m18.780s
 
 Then [Dancer](https://metacpan.org/pod/Dancer) immediately after that (which has quite the dependency list):
 
-``` prettyprint
+```perl
 $ time sudo cpanm Dancer
 ...
 real    18m40.347s
@@ -61,7 +61,7 @@ Booting the board up, using a random monitor laying around the hackerspace, it s
 
 The preinstalled perl is:
 
-``` prettyprint
+```perl
 $ perl -v
 
 This is perl 5, version 18, subversion 2 (v5.18.2) built for arm-linux-gnueabihf-thread-multi-64int

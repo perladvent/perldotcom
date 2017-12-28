@@ -55,7 +55,7 @@ Sometimes instead of asking which modules are in the Perl Core what we really me
 
 `perldoc` won't show us the core modules that we already have, and in the case of missing core modules, Module::CoreList can't help either (its results are based on internal lists of modules that *should* be there, not which files are actually present). A simple way I handle this is to use the following script to search the contents of `@INC`; the directories which `perl` searches for modules:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use 5.10.3;
 use Path::Tiny 'path';
@@ -123,7 +123,7 @@ What about programs? To search for Perl programs I prepared a list of Perl progr
 
 Then I used the following script, called `find_binary` to check for the programs:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 my $bin = shift or die "You must provide a binary name to search for\n";
 

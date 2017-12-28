@@ -24,7 +24,7 @@ Perl's flexible syntax accepts all kinds of shenanigans and hackery. This articl
 
 Imagine we have a class call Boomerang with a single method, throw. The code looks like this:
 
-``` prettyprint
+```perl
 package Boomerang;
 use strict;
 use warnings;
@@ -46,7 +46,7 @@ sub throw {
 
 To use the Boomerang class and throw method, we have a script called throw.pl:
 
-``` prettyprint
+```perl
 use Boomerang;
 use strict;
 use warnings;
@@ -59,7 +59,7 @@ $stick->throw;
 
 The code in throw.pl shown above creates a new Boomerang object called $stick. It then calls the throw method on $stick three times. All throw does is print a statement declaring how many feet (a random integer) the Boomerang was thrown. Running throw.pl gives us this output:
 
-``` prettyprint
+```perl
 perl throw.pl
 I flew 230 feet!
 I flew 17 feet!
@@ -70,7 +70,7 @@ I flew 31 feet!
 
 Let's update throw.pl to remove the object reference altogether:
 
-``` prettyprint
+```perl
 use Boomerang;
 use strict;
 use warnings;
@@ -83,7 +83,7 @@ Boomerang->new
 
 Running throw.pl gives the same output as previously:
 
-``` prettyprint
+```perl
 perl throw.pl
 I flew 36 feet!
 I flew 25 feet!
@@ -98,7 +98,7 @@ So **why** does this code work? It works because of several conditions:
 
 If you're still not clear why this code works, consider that another way to write the same code in throw.pl would be like this:
 
-``` prettyprint
+```perl
 use Boomerang;
 use strict;
 use warnings;

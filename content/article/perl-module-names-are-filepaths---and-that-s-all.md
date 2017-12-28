@@ -12,7 +12,7 @@
 
 It's common in Perl parlance to treat the words "module" and "package" as synonyms, and in practice they almost refer to the same thing. A module name is shorthand for a filepath, but a package name refers to a namespace within the Perl symbol table. It's easy to forget this because module names and packages are written in the same colon-separated notation, and conventionally we give packages the same name as the module filepath. For example:
 
-``` prettyprint
+```perl
 require Test::More; # load Test/More.pm
 
 Test::More::ok 1; # call the ok function in the Test::More namespace
@@ -28,7 +28,7 @@ In this example, `Test::More` appears twice, but it really refers to two separat
 
 I'll make a quick module called "ACME::Foo::Bar", `lib/ACME/Foo/Bar.pm` looks like this:
 
-``` prettyprint
+```perl
 package Whatever2;
 
 our $VERSION = 0.01;
@@ -55,7 +55,7 @@ Perl happily loads the ACME::Foo::Bar module and the `Whatever2` namespace (I or
 
 By adding a makefile, I can make this an installable distribution, `Makefile.PL`:
 
-``` prettyprint
+```perl
 use 5.008000;
 
 use ExtUtils::MakeMaker;
@@ -71,7 +71,7 @@ WriteMakefile(
 
 Hell, I can add some tests while we're at it, `t/whatever.t`:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 use Test::More;
 

@@ -31,13 +31,13 @@ You must be using Perl version 5.14 or greater.
 
 These are easy. To convert a file to Unix-style line endings (as used by Linux, BSD, OSX) just open up the terminal and run:
 
-``` prettyprint
+```perl
 perl -pi.bak -e 's/\R/\012/' /path/to/file
 ```
 
 This code works by replacing any line break characters ("\\R") with a single line feed character ("\\012"). The "\\R" meta-character is available in Perl from version 5.10 onwards, it's useful because it will even work for files with mixed line ending styles. The in-place switch ("i") creates a backup of the original file with the extension ".bak". To convert a file from Unix to Windows-style line endings, use this:
 
-``` prettyprint
+```perl
 perl -pi.bak -e 's/\R/\015\012/' /path/to/file
 ```
 
@@ -53,25 +53,25 @@ Things are trickier on Windows; there are a few things to be aware of:
 
 If you're using cmd.exe or PowerShell the following Perl one liner will convert a file to Windows-style line endings:
 
-``` prettyprint
+```perl
 perl -pe "binmode(STDOUT);s/\R/\015\012/" /path/to/file > /path/to/new/file
 ```
 
 The main differences here are: replacing single-quotes with double-quotes, "binmode(STDOUT)" to turn off Perl's CRLF line endings and the use of redirect "\>" to write the contents to a different file, instead of using the in-place switch. To convert a file to Unix-style line endings on cmd.exe this will work:
 
-``` prettyprint
+```perl
 perl -pe "binmode(STDOUT);s/\R/\012/" /path/to/file > /path/to/new/file
 ```
 
 On PowerShell a few more changes are required. To convert to Unix-style line endings use:
 
-``` prettyprint
+```perl
 perl -ne "open(OUT, q(>>), q(/path/to/new/file));binmode(OUT);print OUT s/\R/\012/r" /path/to/file
 ```
 
 So what just happened there? First of all we changed the command line switch "p" to "n". This stops Perl from printing every line it processes to standard output. Instead we opened an appending filehandle "OUT" to our output file and printed the result ourselves. The reason we had to do this was that PowerShell automatically interprets standard output as Unicode and replaces Unix-style endings with Windows CRLF endings. Hence using the re-direct method ("\>") does not work. And before you try, piping the output like this generates an error:
 
-``` prettyprint
+```perl
 perl -pe "binmode(STDOUT);s/\R/\012/r" /path/to/file | set-content /path/to/new/file -Encoding Byte
 ```
 

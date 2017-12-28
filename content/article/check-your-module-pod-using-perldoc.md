@@ -19,7 +19,7 @@
 
 Perl ships with a command-line program called perldoc that makes it easier to search and read Perl's vast documentation in the POD markup language. If perldoc is called with the -F flag, it will display the POD markup of an input file - this can be useful when your are developing a new Perl distribution and want to check the appearance of the POD in your module before it appears on CPAN for all to see.
 
-``` prettyprint
+```perl
 # Pass a local file to perldoc
 
 perldoc -F ProxyManager.pm
@@ -27,7 +27,7 @@ perldoc -F ProxyManager.pm
 
 This will then display the POD markup:
 
-``` prettyprint
+```perl
 ProxyManager(3)                                            
 
 NAME

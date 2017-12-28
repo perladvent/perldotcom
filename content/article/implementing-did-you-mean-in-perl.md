@@ -25,13 +25,13 @@ A couple of weeks ago Yuki Nishijima released a clever Ruby [gem](http://www.yuk
 
 Devel::DidYouMean is available on CPAN now, you can install it at the command line:
 
-``` prettyprint
+```perl
 $ cpan Devel::DidYouMean
 ```
 
 To use the module, just import it with `use` like any other module:
 
-``` prettyprint
+```perl
 # script.pl
 use Devel::DidYouMean;
 
@@ -40,7 +40,7 @@ print substring('have a nice day', 0, 6);
 
 This code calls a builtin function "substring", which does not exist. Running the above code we get a more *helpful* error message:
 
-``` prettyprint
+```perl
 Undefined subroutine 'substring' not found in main. Did you mean substr? at script.pl line 4.
 ```
 
@@ -48,7 +48,7 @@ Undefined subroutine 'substring' not found in main. Did you mean substr? at scri
 
 As I alluded to in the introduction, DidYouMean.pm defines a subroutine using the `AUTOLOAD` function which catches missed subroutine calls. But by default this subroutine only exists within the Devel::DidYouMean namespace so it would only fire when there was a missed method call like `Devel::DidYouMean->some_method;`. This is not very useful! So I used some symbol-table black magic to load the module into every namespace at runtime:
 
-``` prettyprint
+```perl
 CHECK {
     # add autoload to main
     *{ main::AUTOLOAD } = Devel::DidYouMean::AUTOLOAD;

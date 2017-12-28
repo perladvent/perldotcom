@@ -27,7 +27,7 @@
 
 To use this example, you'll need to install [DBIx::Class::InflateColumn::FS](https://metacpan.org/pod/DBIx::Class::InflateColumn::FS) from CPAN. The CPAN Testers [results](http://matrix.cpantesters.org/?dist=DBIx-Class-InflateColumn-FS+0.01007) show that it should run on all platforms, including Windows. You'll also need [DBIx::Class::Schema::Loader](https://metacpan.org/pod/DBIx::Class::Schema::Loader) and [File::MimeInfo](https://metacpan.org/pod/File::MimeInfo) if you don't already have them and [SQLite3](https://sqlite.org/). To install the Perl modules, open the terminal and enter:
 
-``` prettyprint
+```perl
 $ cpan DBIx::Class::InflateColumn::FS DBIx::Class::Schema::Loader File::MimeInfo
 ```
 
@@ -35,7 +35,7 @@ $ cpan DBIx::Class::InflateColumn::FS DBIx::Class::Schema::Loader File::MimeInfo
 
 Let's create an example class for handling file uploads. DBIx::Class maps objects to database tables, so we need to create a database table that represents our file upload object. This is the SQL code for creating the upload table:
 
-``` prettyprint
+```perl
 create table upload (
     id          integer     primary key,
     file        text        not null,
@@ -45,19 +45,19 @@ create table upload (
 
 Save the code into a script called create\_upload.sql and run it at the command line:
 
-``` prettyprint
+```perl
 $ sqlite3 MyApp.db < create_upload.sql
 ```
 
 This will create the upload table. Next we can use the "dbicdump" app that comes with DBIx::Class::Schema::Loader to create the basic result class for us:
 
-``` prettyprint
+```perl
 $ dbicdump MyApp::Schema dbi:SQLite:MyApp.db
 ```
 
 Open up the newly-created MyApp/Schema/Result/Upload.pm in a text editor and add the following code, below the line beginning "\# DO NOT MODIFY ...":
 
-``` prettyprint
+```perl
 use File::MimeInfo 'extensions';
 
 __PACKAGE__->load_components("InflateColumn::FS");
@@ -82,7 +82,7 @@ This code enables the DBIx::Class::InflateColumn::FS plugin on the "file" attrib
 
 This script will create an upload object:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -102,7 +102,7 @@ my $upload = $schema->resultset('Upload')->
 
 Saving the script as "create\_upload.pl" we can call it at the terminal, passing the filepath to the file we want to save:
 
-``` prettyprint
+```perl
 $ perl create_upload.pl perltricks_logo.png
 ```
 
@@ -112,7 +112,7 @@ Just by creating the object, DBIx::Class::InflateColumn::FS will save the file i
 
 This script will retrieve the upload object. DBIx::Class::InflateColumn::FS automatically inflates the "file" column to be a [Path::Class::File](https://metacpan.org/pod/Path::Class::File) object, which gives us many convenience methods:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -153,7 +153,7 @@ $upload->file->opena;
 
 DBIx::Class::InflateColumn::FS makes it super-simple to delete files. Simply call delete on the result object to delete it from the table and the file system:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;

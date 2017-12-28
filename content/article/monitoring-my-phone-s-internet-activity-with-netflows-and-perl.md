@@ -22,7 +22,7 @@ I installed [ntop](https://www.ntop.org/) and setup a virtual interface pointing
 
 Luckily I speak [chainsaw](https://en.wikipedia.org/wiki/Perl), and whipped up this script to do the job:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use IO::Socket::INET;
 use Data::Netflow;

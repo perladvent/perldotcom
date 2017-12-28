@@ -25,7 +25,7 @@
 
 Recently I've been working on a [game engine](https://github.com/sillymoose/March) which uses a composition pattern for its actors. I'm using [Role::Tiny](https://metacpan.org/pod/Role::Tiny) to create the roles. Role::Tiny is really convenient as it lets you use roles with native OO Perl, without committing to a whole object system like Moose. A typical role looks like this:
 
-``` prettyprint
+```perl
 package March::Attribute::Id;
 use 5.020;
 use Role::Tiny;
@@ -42,7 +42,7 @@ sub id ($self)
 
 All this role does is return the id attribute of the consuming class (yes I'm using [signatures](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures) throughout). I wanted to write unit tests for this role, but I didn't want to a create test class to test the role. So how do you construct an object from a package that has no constructor? The answer is by using `bless` in your test file:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Test::More;
@@ -58,7 +58,7 @@ done_testing();
 
 This code creates an object called `$self` by blessing a hashref with the package name of the role that I want to test. It adds a key value pair for the id attribute, and then tests that the role's id method returns the correct id value. I can execute the tests using `prove`:
 
-``` prettyprint
+```perl
 $ prove -vl t/Attribute/Id.t 
 t/Attribute/Id.t .. 
 ok 1 - use March::Attribute::Id;
@@ -72,7 +72,7 @@ Result: PASS
 
 This is another role I want to test:
 
-``` prettyprint
+```perl
 package March::Attribute::Direction;
 use 5.020;
 use Role::Tiny;
@@ -102,7 +102,7 @@ sub direction ($self, $new_direction = 0)
 
 This role gets and sets the direction vector for the consuming class. The challenge with testing this role is that it requires the consuming class to implement an `id` method. Role::Tiny's `requires` function is a great way to ensure that the consuming class meets the requirements of the role. But how do we test it without creating a real class with an `id` sub? What I do is declare the required sub in the test file:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Test::More;
@@ -129,7 +129,7 @@ done_testing();
 
 The magic line is `sub March::Attribute::Direction::id { 107 };` which adds the sub to the role I'm testing (it just returns the value 107). Now I can test the `direction` method, again using `prove`:
 
-``` prettyprint
+```perl
 $ prove -lv t/Attribute/Direction.t 
 t/Attribute/Direction.t .. 
 ok 1 - use March::Attribute::Direction;
@@ -149,7 +149,7 @@ Result: PASS
 
 One drawback I've encountered with this approach can be seen with the following role and test file:
 
-``` prettyprint
+```perl
 package Data::Inspector;
 use Role::Tiny;
 
@@ -164,7 +164,7 @@ sub inspect_data
 
 This role has a method called `inspect_data` which simply returns a dump of any data reference pass to it. This is the test file:
 
-``` prettyprint
+```perl
 use Test::More;
 use Data::Dumper;
 

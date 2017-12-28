@@ -34,7 +34,7 @@ I had been anticipating too many headaches from not using \*nix tools, but I dec
 
 I started with Rakudo Star - a Perl 6 distribution that bundles some useful modules and a package manager. I downloaded [rakudo-star-2014.09.tar.gz](http://rakudo.org/downloads/star/), extracted it and ran the configure script:
 
-``` prettyprint
+```perl
 C:\Src> perl Configure.pl --gen-moar
 ```
 
@@ -54,7 +54,7 @@ Open a "VS2013 x64 Native Tools Command Prompt". You can find the shortcuts unde
 
 Run the following commands to get the Rakudo source and build it for MoarVM:
 
-``` prettyprint
+```perl
 > git clone https://github.com/rakudo/rakudo.git
 > cd rakudo
 > perl Configure.pl --gen-moar --gen-nqp --backends=moar --prefix=C:/opt/Perl6
@@ -64,7 +64,7 @@ N.B. Make sure this is a native Windows `perl`, not a Cygwin version in case you
 
 Running `Configure.pl` will pull in the rest of the components necessary to build Rakudo. The rest is easy:
 
-``` prettyprint
+```perl
 > nmake
 > nmake test
 > nmake spectest
@@ -75,7 +75,7 @@ Run spectest only if you are really patient or curious. When those tests were do
 
 You can also add the `Perl6\bin` path to your user path. If everything worked as smoothly as it did for me, try:
 
-``` prettyprint
+```perl
 > perl6 -v
 This is perl6 version 2014.10-114-gf8f6feb built on MoarVM version
 2014.10-17-g05b25a6
@@ -83,7 +83,7 @@ This is perl6 version 2014.10-114-gf8f6feb built on MoarVM version
 
 And just for fun:
 
-``` prettyprint
+```perl
 > perl6 -e "'Hello World!'.say"
 Hello World!
 ```

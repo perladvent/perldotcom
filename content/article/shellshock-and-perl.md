@@ -30,7 +30,7 @@ If the platform is a Unix-based operating system and Bash is the default termina
 
 Every version of Bash through 4.3 is vulnerable to Shellshock. To find out your Bash version, fire up the terminal and enter this command to print the version:
 
-``` prettyprint
+```perl
 $ echo $BASH_VERSION
 4.2.47(1)-release
 ```
@@ -41,13 +41,13 @@ Seeing as my version of Bash is below 4.3, my system is possible vulnerable to S
 
 Shellshock exploits a flaw in how Bash parses environment variables; Bash allows functions to be stored in environment variables, but the issue is Bash will execute any code placed after the function in the environment variable value. Let's craft an example:
 
-``` prettyprint
+```perl
 $ export SHELLSHOCK="() { ignore; };echo danger"
 ```
 
 This code creates a new environment variable called `SHELLSHOCK` (it's customary to have environment variable names in uppercase). The value of the new variable is an anonymous function which does nothing: `() { ignore; };` followed by: `echo danger` and it's the latter portion of this code which is the risk. Every time Bash processes its environment variables, that code will be executed. For example if I run that statement and then type:
 
-``` prettyprint
+```perl
 $ bash -c "echo Hello, World"
 danger
 Hello, World
@@ -65,14 +65,14 @@ The Perl built-in functions `exec` and `system` will invoke a new shell process 
 
 Let's see an example of Perl triggering Shellshock by invoking the shell via Perl:
 
-``` prettyprint
+```perl
 $ perl -e 'system "echo test"'
 test
 ```
 
 Hmm what happened here? The command ran fine but "danger" was not printed - Shellshock failed. It turns out that Perl doesn't *always* invoke the shell using: `/bin/sh -c`. Instead to be more efficient, Perl will usually call [execvp](http://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/fork/exec.html). According to [perldoc](http://perldoc.perl.org/functions/system.html), only when the system command contains [metacharacters](http://www.sal.ksu.edu/faculty/tim/unix_sg/shell/metachar.html), will Perl invoke the shell directly. Let's test that:
 
-``` prettyprint
+```perl
 $ perl -e 'system "echo test >> test.log"'
 danger
 ```
@@ -83,20 +83,20 @@ Aha, this worked! We used the metacharacters `>>` to redirect the output of `ech
 
 Instead of worrying about whether our system calls contain metacharacters, we can go one better and delete the `SHELLSHOCK` environment variable before executing any system command. Perl stores the environment variables in `%ENV`, so I'll start by delete the variable from there:
 
-``` prettyprint
+```perl
 $ perl -e 'delete $ENV{SHELLSHOCK};system "echo test >> shellshock.log"'
 ```
 
 In this one liner, I'm front-running the risky `system`command with a `delete` of the `SHELLSHOCK` environment variable. I can see this thwarted Shellshock as "danger" was not printed out. Of course in this test environment I know the name of the dangerous environment variable, but usually I won't, so to find it, you'd have to iterate through the `%ENV` hash and delete (or substitute) any suspicious variable. This one liner prints risky environment variables by using a regex to identify any environment variable that contains code after a function declaration:
 
-``` prettyprint
+```perl
 $ perl -E 'for (keys %ENV) { say if $ENV{$_} =~ /};.+/ }'
 SHELLSHOCK
 ```
 
 As you can see, it correctly identified the `SHELLSHOCK` environment variable and printed it to command line. From here it's a trivial step to delete the variable instead of printing it:
 
-``` prettyprint
+```perl
 $ perl -e 'for (keys %ENV) { delete $ENV{$_} if $ENV{$_} =~ /};./ }'
 ```
 

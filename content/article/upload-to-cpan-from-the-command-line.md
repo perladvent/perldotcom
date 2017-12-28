@@ -21,19 +21,19 @@ The Perl module [CPAN::Uploader](https://metacpan.org/module/CPAN::Uploader) com
 
 To upload modules to CPAN you must have a registered [PAUSE](http://pause.perl.org/pause/query) account. Registration is free and an account is usually activated within 24 hours. Once you have a registered PAUSE account, install CPAN::Uploader via the command line:
 
-``` prettyprint
+```perl
 cpan CPAN::Uploader
 ```
 
 Once CPAN::Uploader has installed (it has a bunch of dependencies, including C libraries for NetSSLeay) at the command line type:
 
-``` prettyprint
+```perl
 cpan-upload
 ```
 
 You should see the cpan-upload help output displayed:
 
-``` prettyprint
+```perl
 Please provide at least one file name.
 usage: cpan-upload [options] file-to-upload
     -v --verbose       enable verbose logging
@@ -50,13 +50,13 @@ usage: cpan-upload [options] file-to-upload
 
 To upload a file to PAUSE, the syntax is like this:
 
-``` prettyprint
+```perl
 cpan-upload -u username -p password My-App-0.01.tar.gz
 ```
 
 Where username and password are your PAUSE account credentials followed by the filepath(s) to the files you want to upload. On a successful load, cpan-upload will display the following output:
 
-``` prettyprint
+```perl
 registering upload with PAUSE web server
 POSTing upload for My-App-0.01.tar.gz to https://pause.perl.org/pause/authenquery
 PAUSE add message sent ok [200]
@@ -66,7 +66,7 @@ PAUSE add message sent ok [200]
 
 The 2 step method involves calling cpan-upload with just your username and the filepath to the files to be uploaded. cpan-upload will then prompt for your password, which is entered directly into Perl, in a hidden format:
 
-``` prettyprint
+```perl
 cpan-upload -u sillymoos My-App-0.01.tar.gz 
 PAUSE Password:
 POSTing upload for My-App-0.01.tar.gz to https://pause.perl.org/pause/authenquery

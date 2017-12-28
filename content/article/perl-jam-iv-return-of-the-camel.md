@@ -73,7 +73,7 @@ The modulo operators take two numbers and does something to them. For `$m % $n`,
 | - | - | |
 
 
-``` prettyprint
+```perl
 my( $m, $n ) = @ARGV;
 
 $m //= 137;
@@ -108,7 +108,7 @@ Running this give different results depending on the location of the unary minus
 
 That unary minus operator is two precedence levels above the modulo operator. That Perl makes one operator better than another is a whole other issue, but that's the way it is and we can't fix it now. Try it again. Use the parentheses (a feature Perl stole from LISP, which had some extra to spare) to separate the operators:
 
-``` prettyprint
+```perl
 my( $m, $n ) = @ARGV;
 
 $m //= 137;

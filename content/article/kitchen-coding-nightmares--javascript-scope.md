@@ -28,13 +28,13 @@ Lately at the [Recurse Center](https://www.recurse.com/) I've been developing a 
 
 Variables are declared with the `var` keyword:
 
-``` prettyprint
+```perl
 var name = "David";
 ```
 
 Variables are functionally-scoped, which means that if declared within a function, the variable is private to the function block. Variables declared outside of functions are globally scoped. And there is no other type of block scoping (such as within if-else or for loops).
 
-``` prettyprint
+```perl
 var name = "David";
 
 function log_name (name) // private
@@ -54,19 +54,19 @@ console.log(name); // Jon NOT David
 
 Function names are stored as variables under the same scoping rules as ordinary variables. There are two ways to declare functions:
 
-``` prettyprint
+```perl
 function log_name () { }
 ```
 
 and:
 
-``` prettyprint
+```perl
 var log_name = function () { }
 ```
 
 Both of these are the same. Which means it's possible to inadvertently overwrite a function with another variable declaration:
 
-``` prettyprint
+```perl
 function name () { return "David"; }
 var name = "John";
 name(); // error, name is not a function anymore
@@ -76,7 +76,7 @@ name(); // error, name is not a function anymore
 
 JavaScript interpreters have a initial-runtime phase, (similar to Perl's `BEGIN`), where all variable declarations are executed before other code. This is known as "hoisting", but practically what it means is that you can use a variable before you declare it!
 
-``` prettyprint
+```perl
 console.log(name); // yep, this works
 var name = "David";
 ```
@@ -85,7 +85,7 @@ var name = "David";
 
 JavaScript makes heavy use of anonymous functions and callbacks.To modify the scope of a function, JavaScript<sup>1</sup> provides [bind](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind?redirectlocale=en-US&redirectslug=JavaScript%2FReference%2FGlobal_Objects%2FFunction%2Fbind). This is easier to understand by example. If I have a point object and I want a method to draw it to the canvas, by loading an image:
 
-``` prettyprint
+```perl
 Point.prototype.draw = function()
 {
   var ctx = get_canvas_context(); // declared elsewhere
@@ -113,7 +113,7 @@ The first thing you can do to avoid clashes is adopt a naming convention. For ex
 
 Another technique for managing variable scope is to only allow one `var` statement per scope. So a typical program might look like this:
 
-``` prettyprint
+```perl
 // declare global scope variables
 var foo = "/root/assets",
     bar = 0;
@@ -136,13 +136,13 @@ function execute (foo)
 
 This is a convention all Perl programmers should be comfortable with. Enable [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) in JavaScript. Just like with Perl, JavaScript's strict mode can catch [several](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode#Changes_in_strict_mode) cases of variable-related bugs. Enable it globally with:
 
-``` prettyprint
+```perl
 "use strict";
 ```
 
 Generally JavaScript experts [recommend](http://yuiblog.com/blog/2010/12/14/strict-mode-is-coming-to-town/) using a functionally-scoped version of strict - in this case the declaration is placed inside a function block. This is useful to prevent script concatenation errors (where an imported script does not satisfy the strict rules).
 
-``` prettyprint
+```perl
 (function () {
    "use strict";
    // this function is strict...
@@ -155,7 +155,7 @@ If you were thinking a simple way to solve all of the namespace clashes was with
 
 There are solutions to this limitation though. In [JavaScript the Definitive Guide](http://www.amazon.com/JavaScript-Definitive-Guide-Activate-Guides/dp/0596805527/ref=dp_ob_title_bk), author David Flanagan proposes using objects as namespaces (sixth edition, section 9.9.1). Each object's scope can be used to encapsulate the behavior and data specific to that domain. For example:
 
-``` prettyprint
+```perl
 // everything is scoped to point.*
 var point = {};
 point.Point = function (_x, _y) {

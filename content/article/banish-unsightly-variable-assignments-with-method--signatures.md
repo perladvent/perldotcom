@@ -23,7 +23,7 @@ One drawback of Perl is that its subroutines and methods do not have signatures 
 
 Method::Signatures exports a subroutine called "func" which can replace the "sub" built-in function. Let's look at a typical Perl subroutine:
 
-``` prettyprint
+```perl
 use Carp qw/croak/;
 sub extract_domain {
     my $url = @_;
@@ -34,7 +34,7 @@ sub extract_domain {
 
 We can refactor this subroutines using "func" which accepts a signature (list of variables):
 
-``` prettyprint
+```perl
 use Method::Signatures;
 func extract_domain ($url) {
     # code continues ...
@@ -47,7 +47,7 @@ Replacing "sub" with "func" means that it will declare $url, croak if $\_[0] doe
 
 Method::Signatures also exports a subroutine called "method" that can replace "sub" in object-oriented code. In addition to accepting a signature argument like "func", "method" automatically declares and assigns $self. Consider the difference between this code extract (taken from [Nginx::Log::Entry](https://metacpan.org/module/Nginx::Log::Entry)):
 
-``` prettyprint
+```perl
 package Entry;
 use Time::Piece;
 use Nginx::ParseLog;
@@ -91,7 +91,7 @@ sub get_request {
 
 and a refactored version using "method":
 
-``` prettyprint
+```perl
 package Entry_New;
 use Time::Piece;
 use Nginx::ParseLog;
@@ -133,7 +133,7 @@ By using "method" we were able to remove all the boilerplate declarations and ch
 
 Does using Method::Signatures come with a significant performance hit? We can test the performance impact by comparing the vanilla and refactored Entry classes from earlier in this article. We'll use the [Benchmark::Forking](https://metacpan.org/module/Benchmark::Forking) module to improve the benchmark accuracy. This is the benchmark script:
 
-``` prettyprint
+```perl
 use Benchmark::Forking qw/cmpthese/;
 use Entry;
 use Entry_New;
@@ -165,7 +165,7 @@ cmpthese (100, {
 
 This script reads an Nginx access log of 10000 entries into @log. For both Entry and Entry\_New, it will test 100 times the performance of initializing an Entry object and calling the accessor methods of the object. It does this for every entry in @log. Running the benchmark script returned the following result:
 
-``` prettyprint
+```perl
             s/iter   Entry_New   Entry
 Entry_New   1.65        --        -1%
 Entry       1.63        1%        --

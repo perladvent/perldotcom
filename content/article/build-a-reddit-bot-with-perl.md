@@ -29,7 +29,7 @@ A busier Perl subreddit is good for the community; more links on /r/perl should 
 
 You'll need a Reddit account to use the API. I like to use [Reddit::Client](https://metacpan.org/pod/Reddit::Client) as it works well, has good documentation and maintains a session cache. This is a subroutine for posting links to Reddit:
 
-``` prettyprint
+```perl
 use warnings;
 use strict;
 use Reddit::Client;
@@ -63,7 +63,7 @@ Next, the subroutine checks if the `$reddit` object has an active session or not
 
 This code will work in ideal scenarios, but what if something goes wrong? For example, Reddit imposes restrictions on the posting of links: the same link cannot be posted twice to the same subreddit, proxy domains are banned and links cannot be posted too frequently. In order to capture the error messages, I'm going to wrap the `submit_link` method in a try/catch block.
 
-``` prettyprint
+```perl
 use warnings;
 use strict;
 use Reddit::Client;
@@ -111,7 +111,7 @@ In addition to the try/catch, I've added a `log_error` subroutine which will wri
 
 Now I have a subroutine for posting links to Reddit, I need a way to monitor blog feeds and post links to new articles. Most blogs provide feed data via RSS or atom data, for example [blogs.perl.org](http://blogs.perl.org) uses atom. I can monitor this feed using [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny) and [XML::Atom::Client](https://metacpan.org/pod/XML::Atom::Client).
 
-``` prettyprint
+```perl
 use XML::Atom::Client;
 use HTTP::Tiny;
 
@@ -148,14 +148,14 @@ This code declares a subroutine called `check_feed` which accepts a URL as param
 
 To check for relevant content, I can use a regex to match against keywords. If the text contains words like "Perl" or "CPAN", I assume it's Perl related. This is the regex:
 
-``` prettyprint
+```perl
 #  must contain a Perl keyword to be considered relevant
 my $looks_perly = qr/\b(?:perl|cpan|cpanminus|moose|metacpan|modules?)\b/i;
 ```
 
 To filter out stale content, I need to set a threshold for how long posts should be considered fresh. I can then subtract the publication date of the blog post from the current datetime to see if the publication date exceeds my threshold or not. I'm going to use 24 hours as my threshold:
 
-``` prettyprint
+```perl
 use Time::Piece;
 use Time::Seconds;
 
@@ -175,7 +175,7 @@ This code uses the `strptime` function in Time::Piece to extract the publication
 
 Putting it all together, the code looks like this:
 
-``` prettyprint
+```perl
 use warnings;
 use strict;
 use Reddit::Client;

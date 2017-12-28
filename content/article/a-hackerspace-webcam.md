@@ -28,7 +28,7 @@ Using [Device::WebIO::RaspberryPi](https://metacpan.org/pod/Device::WebIO::Raspb
 
 The basic boilerplate sets up pin 17 as input, and then sets the image width, height, and JPEG quality (between 0 and 100, higher is better quality, but larger file size).
 
-``` prettyprint
+```perl
 my $rpi = Device::WebIO::RaspberryPi->new;
 $rpi->set_as_input( 17 );
 $rpi->img_set_width( 0, 800 );
@@ -38,7 +38,7 @@ $rpi->img_set_quality( 0, 70 );
 
 The next step is to have something that polls the input pin on a regular basis (once a second will do). There are many ways to do this, and I choose an [AnyEvent](https://metacpan.org/pod/AnyEvent) timer.
 
-``` prettyprint
+```perl
 my $condvar = AnyEvent->condvar;
 my $input_timer; $input_timer = AnyEvent->timer(
     after    => 1,
@@ -54,7 +54,7 @@ This sets an global var `$INPUT`. That gets picked up by another timer, which ta
 
 The method `img_stream()` will return a filehandle for reading the image:
 
-``` prettyprint
+```perl
 my $fh = $rpi->img_stream( 0, 'image/jpeg' );
 ```
 
@@ -62,7 +62,7 @@ The method takes a channel number for the camera (if you have one camera, you ha
 
 Once you have the filehandle, use `scp` to upload it. A simple but crude method is to create a temporary file (with [File::Temp](https://metacpan.org/pod/File::Temp)) and then call `scp` as an external program:
 
-``` prettyprint
+```perl
 use File::Temp 'tempdir';
 my ($tmp_fh, $tmp_filename) = tempfile();
 

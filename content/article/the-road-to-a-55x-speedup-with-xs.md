@@ -20,7 +20,7 @@ Enter [URI::XSEscape](https://metacpan.org), a "quick and dirty" (the authors' w
 
 First let's look at my naive C encode implementation:
 
-``` prettyprint
+```perl
 void *uri_encode (char *uri, const char *special_chars, char *buffer)
 {
   int i = 0;
@@ -59,7 +59,7 @@ void *uri_encode (char *uri, const char *special_chars, char *buffer)
 
 Basically what this does is loop through the `uri` string, looking characters that are in the `special_chars` string, and if it finds a match, it percent encodes the character with `sprintf` and appends the result to `buffer` which is the encoded string. Compare this with the encode function from `URI::XSEscape` (I've simplified it slightly):
 
-``` prettyprint
+```perl
 Buffer* uri_encode(Buffer* src, int length,
                    Buffer* tgt)
 {
@@ -103,7 +103,7 @@ This code also avoid a subtle bug with my implementation: Perl strings can conta
 
 At this point I updated the encode/decode functions in URI::Encode::XS to be table based like URI::XSEscape and saw huge gains in performance, making URI::Encode::XS about 25 times faster than URI::Escape (URI::Encode::XS doesn't support user-defined escape values, so it's simpler than URI::XSEscape). I thought a 25x improvement was as good as it got, and was about done with the module, when I was contacted by [Christian Hansen](https://metacpan.org/author/CHANSEN) (author of [Time::Moment](https://metacpan.org/release/Time-Moment)). Christian overhauled my simple XS code to make it safer and faster. This is what became of the `uri_encode` C function:
 
-``` prettyprint
+```perl
 size_t uri_encode (const char *src, const size_t len, char *dst)
 {
   size_t i = 0, j = 0;
@@ -133,7 +133,7 @@ This version looks up the character value in a pre-computed table and then uses 
 
 To me the most magical thing about XS code is you call it from Perl:
 
-``` prettyprint
+```perl
 use URI::Encode::XS 'uri_encode';
 
 my $encoding = uri_encode($some_string); # super fast

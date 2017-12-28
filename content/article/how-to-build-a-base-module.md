@@ -12,7 +12,7 @@
 
 When working on large Perl projects, a base module is a nice way to setup a standard set of imported routines for the other modules in the project. With a base module you can configure a logger, turn on pragmas and import any other useful routines. Instead of typing:
 
-``` prettyprint
+```perl
 use warnings;
 use strict;
 use Data::Dumper 'Dumper';
@@ -22,7 +22,7 @@ use Log::Log4perl 'get_logger';
 
 and so on, you can type:
 
-``` prettyprint
+```perl
 use MyBase;
 ```
 
@@ -32,7 +32,7 @@ This saves typing all those boilerplate `use` statements at the top of every mod
 
 I'll write an example base module called `MyBase.pm` to show you how I do it. There are three basic cases I need to be able to export: pragmas, symbols defined in the MyBase namespace and symbols from other namespaces. In Perl a symbol is usually a reference to a variable or a subroutine. This is my starting code:
 
-``` prettyprint
+```perl
 package MyBase;
 
 sub import {}
@@ -46,7 +46,7 @@ In Perl the `import` subroutine is important: it's called every time the module 
 
 Take a look at the [Modern::Perl](https://metacpan.org/pod/Modern::Perl) [source](https://metacpan.org/source/CHROMATIC/Modern-Perl-1.20150127/lib/Modern/Perl.pm#L30). The `import` subroutine just calls `import` on the pragmas *it* wants to import. Clever and easy!
 
-``` prettyprint
+```perl
 package MyBase;
 use v5.10.0;
 use warnings;
@@ -67,7 +67,7 @@ Now any module that includes `use MyBase;` will get warnings, strict and all of 
 
 By foreign symbols I mean subroutines and variables declared in other modules, like `Data::Dumper::Dumper`. That's a subroutine that's always handy to have available:
 
-``` prettyprint
+```perl
 package MyBase;
 use v5.10.0;
 use warnings;
@@ -97,7 +97,7 @@ Here I've added `use Data::Dumper;` to import the module. Later within `import()
 
 There are many types of local symbols that might be useful to export: global config hashrefs (maybe one for dev and another for production), accessors for singletons like loggers and queues and so on. My application uses [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl), so I'll export a subroutine to get the logger:
 
-``` prettyprint
+```perl
 package MyBase;
 use v5.10.0;
 use warnings;
@@ -143,7 +143,7 @@ One thing to consider when adding functionality like this is to do the initializ
 
 Scalars are easy too, here's how I might export the project version:
 
-``` prettyprint
+```perl
 ${"$caller\:\:VERSION"}  = *{"MyBase\:\:VERSION"};
 ```
 
@@ -154,7 +154,7 @@ Notice that the first character of that line has changed from an asterisk (for t
 
 Perl has pretty helpful error messages, but I like to see stack traces to figure out what caused an exception. This is easy to add to a base module using the `confess` subroutine from the [Carp](https://metacpan.org/pod/Carp) module:
 
-``` prettyprint
+```perl
 package MyBase;
 use v5.10.0;
 use warnings;
@@ -202,7 +202,7 @@ I've added a line to import the Carp module, and within the `BEGIN` block I inst
 
 I'm not sure my code handles all edge cases. It works for my needs, but if you're sharing the project code, consider using [Import::Base](https://metacpan.org/pod/Import::Base) which can do all of this for you. Here's what my base module looks like, re-written to use Import::Base:
 
-``` prettyprint
+```perl
 package MyBase;
 use base 'Import::Base';
 use v5.10.0;

@@ -28,7 +28,7 @@ Signals are types of messages sent by an operating system to a process such as a
 
 All Perl programs have the global variable %SIG hash which contains keys corresponding to each signal type. When a signal is sent to a Perl program, the value of the matching key name in %SIG is automatically de-referenced. This makes it possible to assign code references to handle specific signals by adding a coderef to the signal's key value in %SIG. Let's use an example Perl script called sleeper.pl to demonstrate. All sleeper.pl does is sleep for 20 seconds:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -37,7 +37,7 @@ sleep(20);
 
 Now let's update sleeper.pl to handle an interrupt signal using %SIG:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -48,14 +48,14 @@ sleep(20);
 
 If we run sleeper.pl on the command line and press control-c to send a SIGINT to it, we can see the our code ref was executed:
 
-``` prettyprint
+```perl
 perl sleeper.pl
 ^CCaught a sig int Interrupted system call at projects/scripts/sleeper.pl line 4.
 ```
 
 By updating the various key-value pairs in %SIG it's possible to handle specific signals, for example we can update sleeper.pl to handle a terminate signal:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -67,7 +67,7 @@ sleep(20);
 
 It's often easier to define a signal handling subroutine rather than using anonymous subroutines for every signal you wish to catch. Let's update sleeper.pl accordingly:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -87,7 +87,7 @@ Now the signal\_handler subroutine will be called everytime sleeper.pl receives 
 
 sigtrap is a useful Perl pragma that makes handling signals easier than manipulating %SIG directly. The sigtrap pragma recognizes three groups of signals: normal-signals (HUP, PIPE, INT, TERM), error-signals (ABRT, BUS, EMT, FPE, ILL, QUIT, SEGV, SYS and TRAP) and old-interface-signals (ABRT, BUS, EMT, FPE, ILL, PIPE, QUIT, SEGV, SYS, TERM, and TRAP). Using sigtrap we can update sleeper.pl to die when any of the normal-signals are received:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use sigtrap qw/die normal-signals/;
@@ -97,7 +97,7 @@ sleep(20);
 
 Instead of calling die we can have sigtrap call the signal\_handler routine that we defined previously:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use sigtrap qw/handler signal_handler normal-signals/;
@@ -119,7 +119,7 @@ It's common to call die when handling SIGINT and SIGTERM. die is useful because 
 
 Not every signal can be handled: on POSIX compliant systems (such as BSD, Linux and OSX) SIGSTOP and SIGKILL cannot be caught, blocked or ignored. See the [signal man page](http://man7.org/linux/man-pages/man7/signal.7.html) for further details. Not every signal needs to be handled - each signal has a default program behavior (disposition) which may not affect the running of the program (also defined on the man page). You can find a list of signals Perl recognizes by printing %SIG at the command line:
 
-``` prettyprint
+```perl
 perl -e 'foreach (keys %SIG) { print "$_\n" }'
 ```
 

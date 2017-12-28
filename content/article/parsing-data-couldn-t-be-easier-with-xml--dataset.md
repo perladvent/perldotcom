@@ -24,7 +24,7 @@
 
 The CPAN Testers results [show](http://matrix.cpantesters.org/?dist=XML-Dataset+0.006) that XML::Dataset v0.06 will run on any platform with Perl (down to 5.8.9). To install the module with CPAN, open up the terminal and type:
 
-``` prettyprint
+```perl
 $ cpan XML::Dataset
 ```
 
@@ -32,7 +32,7 @@ $ cpan XML::Dataset
 
 To use XML::Dataset you'll need some stringified XML source data and a data profile. A profile is just a plaintext schema which specifies the data you'd like to extract. Let's look at an example:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use XML::Dataset;
@@ -69,7 +69,7 @@ The code above declares a simple XML dataset ($sample\_data) and a data profile 
 
 XML::Dataset exports the "parse\_using\_profile" function which extracts the data using our data profile and returns a Perl data structure. We use [Data::Printer](https://metacpan.org/pod/Data::Printer) to print out the results. Running this code we get this output:
 
-``` prettyprint
+```perl
 \ {
     colleagues   [
         [0] {
@@ -91,7 +91,7 @@ XML::Dataset exports the "parse\_using\_profile" function which extracts the dat
 
 Note that XML::Dataset had no problem extracting the one email address that was present in the data, even though the other colleagues did not have that attribute. What if we wanted to collect emails and phone numbers, but in separate datasets? All we need to do is update $sample\_data\_profile with two datasets:
 
-``` prettyprint
+```perl
 my $sample_data_profile
     = q(colleagues
             colleague
@@ -102,7 +102,7 @@ my $sample_data_profile
 
 Re-running the code, XML::Dataset now produces two datasets for us:
 
-``` prettyprint
+```perl
 \ {
     emails   [
         [0] {
@@ -137,7 +137,7 @@ Re-running the code, XML::Dataset now produces two datasets for us:
 
 Let's write a program to parse a a more realistic data set. Many websites provide a sitemap that lists all of the content on the website, and when it was last updated. This information is used by search engines to optimize their crawling routines. The sitemap has a defined xml format, so it's a cinch to parse it with XML::Dataset:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use XML::Dataset;
@@ -160,7 +160,7 @@ p parse_using_profile($sitemap_data, $sitemap_data_profile);
 
 The code above downloads the PerlTricks.com sitemap using [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny) and extracts every URL and last modified timestamp from the sitemap. Running the code, we get this output:
 
-``` prettyprint
+```perl
 \ {
     sitemap_locations_modified   [
         [0]  {

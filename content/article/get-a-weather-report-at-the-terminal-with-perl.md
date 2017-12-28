@@ -26,7 +26,7 @@ Getting a weather forecast can be a chore; you have to navigate to the right web
 
 You'll need an API key for Wunderground.com (sign up [here](http://www.wunderground.com/weather/api/) it's free). You'll also need to install WWW::Wunderground.::API. The CPAN Testers [results](http://matrix.cpantesters.org/?dist=WWW-Wunderground-API+0.06) show that it runs on most platforms, including Windows. You can install the module at the command line:
 
-``` prettyprint
+```perl
 $ cpan WWW::Wunderground::API
 ```
 
@@ -34,7 +34,7 @@ $ cpan WWW::Wunderground::API
 
 Using WWW::Wunderground::API, I created a script that would pull an hourly forecast for my local city:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -70,7 +70,7 @@ for (@{ $w->hourly })
 
 In the script I use code\>binmode to switch the standard output to UTF8 mode. This lets me print some cool degrees symbols later on. I then connect to the Wunderground API, passing my API key and location (location can be a city name or a zip code). Finally I print out the weather forecast using printf to format the output nicely. I saved the script as `weather` and ran it at the command line:
 
-``` prettyprint
+```perl
 $ weather
 Time      ℉   ℃   Rain %  Conditions          
 11:00 PM  69  21       3  Partly Cloudy                 
@@ -117,7 +117,7 @@ The results show an hourly forecast with the temperature in Fahrenheit and Celsi
 
 So the script is nice, but how can we make it better? Well, I'm rarely in the same place all the time, and I expect most people mover around too, so it would good to be more flexible and let the user type in the location, rather than using the same location every time:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -159,7 +159,7 @@ for (@{ $w->hourly })
 
 I've updated the code to store a default location called `$home_location`. I then ask the user to enter a City or zip code, making sure to [chomp](http://perldoc.perl.org/functions/chomp.html) the result. Later in the API call, the code: `$location || $home_location` will submit the home location unless the user has entered a location. Running the script now, I can get the weather for London easily:
 
-``` prettyprint
+```perl
 $ weather
 Enter city or zip code (New York City, NY): London, UK
 Time      ℉   ℃   Rain %  Conditions          
@@ -178,7 +178,7 @@ Time      ℉   ℃   Rain %  Conditions
 
 The [WWW::Wunderground::API](https://metacpan.org/pod/WWW::Wunderground::API) documentation shows how to use [Cache::FileCache](https://metacpan.org/pod/Cache::FileCache) to cache the weather results locally. When you setup the cache, you can specify an expiry parameter - until the cache expires the WWW::Wunderground::API will use the cached results instead of the Wunderground API. This prevents unnecessary API calls and makes the script faster:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;

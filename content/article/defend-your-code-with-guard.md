@@ -20,7 +20,7 @@ I can't always trust my subroutines to leave the world in the same way that they
 
 Consider the case where I want to change the current working directory temporarily in my subroutine. If I'm not careful, the rest of the ends up in an unexpected directory since `chdir` has process-level effect:
 
-``` prettyprint
+```perl
 sub do_some_work {
   state $dir = '/usr/local/etc';
   chdir $dir or die "Could not change to $dir! $!";
@@ -33,7 +33,7 @@ Since I don't change back to the starting directory, after I call `do_some_work`
 
 If I were careful, I would have done the work to save the current working directory before I changed it, and I would have changed back to that directory. The `getcw` from the [Cwd](https://metacpan.org/pod/Cwd) module from the Standard Library:
 
-``` prettyprint
+```perl
 use Cwd qw(getcwd);
 
 sub do_some_work {
@@ -57,7 +57,7 @@ I also have to call another `chdir` when I'm done, and I probably have to add so
 
 Enter the [Guard](https://metacpan.org/pod/Guard) module that lets me define blocks of code that run at the end of the subroutine. Somewhere in the scope I create a guard with `scope_guard` and that guard runs at scope exit:
 
-``` prettyprint
+```perl
 use v5.10;
 
 use Cwd qw(getcwd);
@@ -93,13 +93,13 @@ The output shows which each part thinks the current working directory should be:
 
 This is still a little bit ugly. The `scope_guard` only takes a block or `sub {}` argument, so I can't refactor its argument into a subroutine. This doesn't work:
 
-``` prettyprint
+```perl
 scope_guard make_sub_ref();  # wrong sort of argument
 ```
 
 I can make a guard in a variable, though, to get around this. Instead of doing its work at scope exit, the variable guard does its work when it's cleaned up (which we might do on our own before the end of its scope). In this example, I use [Perl v5.20 subroutine signatures](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures) just because I can (they are really nice even if they are experimental):
 
-``` prettyprint
+```perl
 use v5.20;
 use feature qw(signatures);
 no warnings qw(experimental::signatures);
@@ -138,7 +138,7 @@ Here's a bonus trick and one of the reasons I wanted to show the subroutine sign
 
 :
 
-``` prettyprint
+```perl
 sub make_guard ( $old_directory = getcwd() ) {
   return guard {
     say "Guard thinks old directory is $old_directory";
@@ -149,7 +149,7 @@ sub make_guard ( $old_directory = getcwd() ) {
 
 With the default value, I can simplify my call to `make_guard` while still having the flexibility to supply an argument:
 
-``` prettyprint
+```perl
 my $guard = make_guard();
 ```
 

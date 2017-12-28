@@ -28,13 +28,13 @@ I love Perl's [split](http://perldoc.perl.org/functions/split.html) function. Fa
 
 To split a sentence into words, you might think about using a whitespace regex pattern like `/\s+/` which splits on contiguous whitespace. Split will ignore trailing whitespace, but what if the input string has *leading* whitespace? A better option is to use a single space string: `' '`. This is a special case where Perl emulates awk and will split on all contiguous whitespace, trimming any leading or trailing whitespace as well.
 
-``` prettyprint
+```perl
 my @words = split ' ', $sentence;
 ```
 
 Or loop through each word and do something:
 
-``` prettyprint
+```perl
 use 5.010;
 say for (split ' ', ' 12 Angry Men ');
 # 12
@@ -44,7 +44,7 @@ say for (split ' ', ' 12 Angry Men ');
 
 The single-space pattern is also the default pattern for `split`, which by default operates on `$_`. This can lead to some seriously minimalist code. For example if I needed to split every name in a list of full names and do something with them:
 
-``` prettyprint
+```perl
 for (@full_names)
 {
     for (split)
@@ -60,7 +60,7 @@ And who says Perl looks like line noise?
 
 To split a word into separate letters, just pass an empty regex `//` to split:
 
-``` prettyprint
+```perl
 my @letters = split //, $word;
 ```
 
@@ -68,7 +68,7 @@ my @letters = split //, $word;
 
 It's tempting to reach for a regex when parsing strings, but for URLs or filepaths `split` usually works better. For example if you wanted to get the parent directory from a filepath:
 
-``` prettyprint
+```perl
 my @directories = split '/', '/home/user/documents/business_plan.ods';
 my $parent_directory = $directories[-2];
 ```
@@ -79,7 +79,7 @@ Here I split the filepath on slash and use the negative index `-2` to get the pa
 
 How many times have you parsed a comma separated file, but didn't want all of the columns in the file? Let's say you wanted the first 3 columns from a file, you might do it like this:
 
-``` prettyprint
+```perl
 while <$read_file>
 {
     my @columns = split /,/;
@@ -92,7 +92,7 @@ while <$read_file>
 
 This is all well and good, but `split` can return a limited number of results if you want:
 
-``` prettyprint
+```perl
 while <$read_file>
 {
     my ($name, $email, $account) = split /,/;
@@ -102,7 +102,7 @@ while <$read_file>
 
 Or to revisit an earlier example, splitting on whitespace:
 
-``` prettyprint
+```perl
 for (@full_names)
 {
     my ($firstname, $lastname) = split;

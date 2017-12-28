@@ -28,7 +28,7 @@ Adding tweet automation to an existing app can bring several benefits. Firstly i
 
 The core code for writing tweets is very simple. I'm using the [Net::Twitter::Lite](https://metacpan.org/pod/Net::Twitter::Lite) distribution, which supports the latest version of the Twitter [API](https://dev.twitter.com/rest/public).
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Net::Twitter::Lite::WithAPIv1_1;
@@ -53,7 +53,7 @@ The code imports `Net::Twitter::Lite::WithAPIv1_1` to use the new Twitter API. T
 
 Now I can send one tweet by adding this line to my code:
 
-``` prettyprint
+```perl
 tweet("This is a computer speaking!");
 ```
 
@@ -61,7 +61,7 @@ tweet("This is a computer speaking!");
 
 So far so good huh? However this code isn't very safe. What if `$text` is not provided as an argument, or our environment variables are not declared, or the call to Twitter fails? I'll add some checks to handle these scenarios:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Net::Twitter::Lite::WithAPIv1_1;
@@ -105,7 +105,7 @@ This code is largely the same as before, except now it checks for the required v
 
 You might be wondering if it's necessary to call `die` at all. Can't we just return `undef` instead and keep our code running? The advantage of calling `die` is that the caller of the `tweet` subroutine is better placed to decide how to handle the issue, and so we defer that decision to them. If the calling code doesn't handle `die` correctly, we know the program will exit. But if we returned `undef`, we would have no such assurances. This doesn't mean however that the code *has* to exit. Let's assume I had hundreds of tweets to send out, maybe I just want to log the error somewhere and keep going:
 
-``` prettyprint
+```perl
 foreach my $text (@tweet_texts)
 {
   try
@@ -121,7 +121,7 @@ foreach my $text (@tweet_texts)
 
 If I was printing a sequence of tweets, where ordering is important, I could still log the error but then call `die` to exit the program:
 
-``` prettyprint
+```perl
 foreach my $text (@sequence_of_texts)
 {
   try
@@ -142,7 +142,7 @@ So now the code is safer, how else can it be improved? One famous restriction is
 
 When I think about the contents of tweets that I send, I'm usually tweeting links to articles about Perl. Invariably they will include some text, a url and a hashtag. It's useful to break these out into separate arguments to `tweet()` because to make everything fit, you could truncate the text, but you wouldn't want to truncate a url or hashtag as it might change the meaning and/or break the url.
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Net::Twitter::Lite::WithAPIv1_1;

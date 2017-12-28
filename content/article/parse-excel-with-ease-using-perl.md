@@ -29,7 +29,7 @@ In the business world, it seems like Excel spreadsheets are everywhere. Recently
 
 You'll need to install [Spreadsheet::Read](https://metacpan.org/pod/Spreadsheet::Read) and a couple of interface modules. [Spreadsheet::ParseExcel](https://metacpan.org/pod/Spreadsheet::ParseExcel) is an interface for Excel 2003 spreadsheets and [Spreadsheet::XLSX](https://metacpan.org/pod/Spreadsheet::XLSX) is for reading the modern Excel format. You can install all three modules from the terminal using cpan:
 
-``` prettyprint
+```perl
 $ cpan Spreadsheet::ParseExcel Spreadsheet::XLSX Spreadsheet::Read
 ```
 
@@ -37,7 +37,7 @@ $ cpan Spreadsheet::ParseExcel Spreadsheet::XLSX Spreadsheet::Read
 
 Let's parse the spreadsheet shown in the cover image, which contains an income statement. Spreadsheet::Read provides a simple, unified interface for reading spreadsheets. It exports the `ReadData` function which requires a filepath to the spreadsheet:
 
-``` prettyprint
+```perl
 use Spreadsheet::Read;
 
 my $workbook = ReadData('income_statement.xlsx');
@@ -45,7 +45,7 @@ my $workbook = ReadData('income_statement.xlsx');
 
 Now `$workbook` contains the data structure representing the spreadsheet. We can inspect this structure by printing it with [Data::Printer](https://metacpan.org/pod/Data::Printer):
 
-``` prettyprint
+```perl
 \ [
     [0] {
         error     undef,
@@ -105,13 +105,13 @@ Now `$workbook` contains the data structure representing the spreadsheet. We can
 
 This shows that `$workbook` is an arrayref, whose first element describes the file, and subsequent elements represent the individual worksheets. The `label` key pair contains the worksheet name, access it like this:
 
-``` prettyprint
+```perl
 $workbook->[1]{label}; #Sheet1
 ```
 
 Cells can be referenced using Excel's grid notation ("A3") or via standard Perl array access. The different between these is formatting:
 
-``` prettyprint
+```perl
 $workbook->[1]{C2}; #$ 50,000.00
 
 $workbook->[1]{cell}[3][2]; #50000
@@ -121,7 +121,7 @@ So if you need to perform additional processing on the data you're extracting (s
 
 Perhaps you want to loop through two columns at once and print them? No problem:
 
-``` prettyprint
+```perl
 for (2..7) {
     print "$workbook->[1]{cell}[2][$_]: $workbook->[1]{cell}[3][$_]\n"; 
 }

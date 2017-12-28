@@ -69,7 +69,7 @@ Finally the "settings" link let's you update the stack name, description and tar
 
 To install modules from Stratopan you'll need [cpanm](https://metacpan.org/pod/release/MIYAGAWA/App-cpanminus-1.7001/bin/cpanm). You can install this via cpan from the terminal:
 
-``` prettyprint
+```perl
 cpan App::cpanminus
 ```
 
@@ -79,14 +79,14 @@ Once cpanm has installed, open one of your stacks on Stratopan and copy the stac
 
 At the terminal type "cpanm --mirror-only --mirror " and paste your copied stack URL and enter one or more module names that you wish to install. For example to install [WWW::CheckHTML](https://metacpan.org/pod/WWW::CheckHTML) from my master stack:
 
-``` prettyprint
+```perl
 cpanm --mirror-only --mirror 
 https://stratopan.com/sillymoose/WebStuff/master WWW::CheckHTML
 ```
 
 If all goes well you should see the following installation dialogue:
 
-``` prettyprint
+```perl
 --> Working on WWW::CheckHTML
 Fetching https://stratopan.com/sillymoose/WebStuff/master/authors/id/S/SI/SILLYMOOS/WWW-CheckHTML-0.04.tar.gz ... OK
 Configuring WWW-CheckHTML-0.04 ... OK

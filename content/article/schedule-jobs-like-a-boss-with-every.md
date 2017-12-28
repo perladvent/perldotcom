@@ -29,13 +29,13 @@ You need to have cron, which comes with most Unix-based platforms (e.g. Linux, M
 
 every was developed by [Rebecca](http://re-becca.org/) and is hosted on her [Github](https://github.com/iarna/App-Every) page. You can download it directly from the command line using wget:
 
-``` prettyprint
+```perl
 $ wget 'https://raw.github.com/iarna/App-Every/master/packed/every'
 ```
 
 Or curl:
 
-``` prettyprint
+```perl
 $ curl -O 'https://raw.github.com/iarna/App-Every/master/packed/every'
 ```
 
@@ -45,13 +45,13 @@ Save every to /usr/bin or add the parent directory to your PATH variable so you 
 
 The command to every to schedule a job takes the form: "every [num] unit program" (num defaults to one). So for example if you wanted to schedule a shell script to run every minute, type the following:
 
-``` prettyprint
+```perl
 $ every minute script.sh
 ```
 
 Which creates the following crontab:
 
-``` prettyprint
+```perl
 SHELL=/bin/bash
 PATH=/home/sillymoose/perl5/perlbrew/bin:/home/sillymoose/perl5/perlbrew/perls/perl-5.16.3/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/home/sillymoose/.local/bin:/home/sillymoose/bin:
 */1 * * * * cd "/home/sillymoose";  script.sh
@@ -61,7 +61,7 @@ every translates the command into a new crontab entry and prints it on the comma
 
 Other units that every recognizes are: hour, day, week, month and the day of the week (e.g. Wednesday). The following are all valid every commands:
 
-``` prettyprint
+```perl
 $ every 10 hours script.sh
 
 $ every mon script.sh
@@ -71,7 +71,7 @@ $ every 3 months script.sh
 
 One really cool feature of modern cron installs is that you can schedule a job to run on reboot. every also supports this:
 
-``` prettyprint
+```perl
 $ every @reboot script.sh
 ```
 

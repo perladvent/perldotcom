@@ -26,7 +26,7 @@ Instead of treating it like a number, using [bitwise operators](https://en.wikip
 
 To store a boolean in the first bit of the array, we can use bitwise or equals (`|=`). Here's how that looks in C pseudocode:
 
-``` prettyprint
+```perl
 short bit_array = 0;
 bit_array |= 1 << 6;
 ```
@@ -40,7 +40,7 @@ This is called a bitmask. Next I use or equals to update `bit_array` with the bi
 
 If we wanted to store a boolean in the fourth bit, we'd do this:
 
-``` prettyprint
+```perl
 bit_array |= 1 << 3;
 ```
 
@@ -50,7 +50,7 @@ So now the `bit_array` looks like this:
 
 To test if a particular bit is set, I can use bitwise and (`&`):
 
-``` prettyprint
+```perl
 if (bit_array & (1 << 6)) {
   /* the seventh column is true */
 }
@@ -64,7 +64,7 @@ I'm going to use a contrived example to show how bit arrays work in Perl. Imagin
 
 Here is the class:
 
-``` prettyprint
+```perl
 package Pizza::Order;
 use utf8;
 
@@ -131,7 +131,7 @@ The `print_state` method uses [printf](http://perldoc.perl.org/functions/printf.
 
 More interesting perhaps, is the `remove_topping` method. This uses bitwise not (`~`) to invert a bitmask and then bitwise and (`&`) equals to unset it. Pretty nifty, huh? Here's a quick script to test it:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 use Pizza::Order;
 
@@ -146,7 +146,7 @@ print "$_\n" for $order->get_toppings();
 
 This prints:
 
-``` prettyprint
+```perl
 01000000000001
 eggplant
 tomato
@@ -158,7 +158,7 @@ The first line is the current state of the `$order` object. It shows the first, 
 
 One thing to watch out for when storing bit arrays on disk is code change. Imagine if I had several years' worth of pizza orders saved in a database. Then one day, we stopped offering bbq chicken. It would be tempting to update the toppings hash like this:
 
-``` prettyprint
+```perl
 my %toppings = (
   tomato        => 1 << 0,
   cheese        => 1 << 1,
@@ -178,7 +178,7 @@ my %toppings = (
 
 I deleted the `bbq_chicken` entry and bumped up the remaining toppings bitmasks. The problem is compatibility: in all the historical pizza orders, `olives` (for example) had a bitmask of `00000010000000` but in the new code, its bitmask is one lower. So if I tried to load a historical order with this class, the toppings data would be wrong. One way to handle this is remove, but not reuse, the bitmask for the deleted entry.
 
-``` prettyprint
+```perl
 my %toppings = (
   tomato        => 1 << 0,
   cheese        => 1 << 1,

@@ -21,7 +21,7 @@ The first public appearance is probably Randal Schwartz's Usenet [post](https://
 
 Randal included the following code in his reply:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 require 5; # new features, new bugs!
 print
@@ -43,7 +43,7 @@ You probably can't imagine how shocking this could be back then. Perl 5 was offi
 
 Randal, however, knew the _decorate-sort-undecorate_ technique from LISP, especially since he's solidly in the emacs camp in the editor wars. Renzo on [Code Review](http://codereview.stackexchange.com/a/138436/13050) fixed up my attempt at a LISP version:
 
-``` prettyprint
+```perl
 (defun schwartzian-transform (list costly-function predicate)
 "sort a list of objects over the value of a function applied to them,
 by applying the Schwartzian Transform (https://en.wikipedia.org/wiki/Schwartzian_transform)
@@ -134,7 +134,7 @@ Indeed it has haunted us since then, but that's not the end of the story.
 
 Randal's use of the anonymous array is interesting, but it's not the only way to decorate the original value. You could compute the values and store them in a hash. Joseph Hall came up with something called the Orcish Maneuver - a clever pun on [Orc](http://lotr.wikia.com/wiki/Orcs) (perhaps) and "OR Cache". This doesn't use the [map](http://perldoc.perl.org/functions/map.html) function  or references:
 
-``` prettyprint
+```perl
 my @sorted = sort {
   ( $times{$a} ||= -M $a ) <=>
   ( $times{$b} ||= -M $b )

@@ -33,7 +33,7 @@ The simplest way to throw an exception is with Perl's built-in `die` function. J
 
 Let's say we're writing unit tests for the following package which exports the `double_integer` subroutine:
 
-``` prettyprint
+```perl
 package Double;
 use Exporter;
 @ISA = 'Exporter';
@@ -53,7 +53,7 @@ sub double_integer
 
 This code will `die` unless the double\_integer subroutine is called with a positive integer. I'll save this package as `Double.pm`. Let's write a test script for this package. Test::Exception exports the `dies_ok` function that checks the code dies as expected:
 
-``` prettyprint
+```perl
 use Test::Exception tests => 1;
 use Double;
 
@@ -62,7 +62,7 @@ dies_ok { double_integer() } 'double_integer() dies with no number';
 
 `dies_ok` is clever, it won't actually let your code die and the program exit, as that would interrupt testing! Instead it catches any thrown exceptions so testing can continue. My program should also die if `double_integer` is called with a non-number as an argument. I can add more tests for some common scenarios:
 
-``` prettyprint
+```perl
 use Test::Exception test => 6;
 use Double;
 
@@ -76,7 +76,7 @@ dies_ok { double_integer('2.5') } 'double_integer() dies with a decimal';
 
 I can also check the code throws the right exception with `throws_ok`:
 
-``` prettyprint
+```perl
 use Test::Exception tests => 1;
 use Double;
 
@@ -88,7 +88,7 @@ The `throws_ok` function checks that the code throws an exception, but also that
 
 Test::Exception is fully compatible with Test::More so you can combine functions from both libraries in the same file:
 
-``` prettyprint
+```perl
 use Test::More;
 use Test::Exception;
 use Double;
@@ -117,7 +117,7 @@ done_testing();
 
 Now the test script checks both that the function throws the appropriate exception when the argument is wrong, and it returns the argument doubled when the argument is valid. If I save this test file as `Double.t` I can run the tests at the terminal:
 
-``` prettyprint
+```perl
 $ perl Double.t
 ok 1 - double_integer() dies with no number
 ok 2 - double_integer() dies with undef

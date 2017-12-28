@@ -22,7 +22,7 @@ Perl is remarkably flexible and allows you to achieve all kinds of wizardry with
 
 An interesting example of this can be seen in [Nginx::ParseLog](https://metacpan.org/source/NRG/Nginx-ParseLog-1.01/lib/Nginx/ParseLog.pm), I've reproduced the relevant code:
 
-``` prettyprint
+```perl
 if ( $log_string =~ m/^($ip)\s-\s (.*?)\s         \[(.*?)\]\s  "(.*?)"\s  (\d+)\s  (\d+)\s     "(.*?)"\s  "(.*?)"$/x) {
     my $deparsed = { };
     my $c = 0;

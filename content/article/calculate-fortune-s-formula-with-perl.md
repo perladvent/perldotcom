@@ -25,7 +25,7 @@ Algorithm::Kelly exports the `optimal_f` sub, which takes two parameters: the pr
 
 For example if I want to find the optimal f of a bet which has a 50% chance of winning, and pays 3-to-1:
 
-``` prettyprint
+```perl
 use Algorithm::Kelly;
 
 my $optimal_f = optimal_f(0.5, 3);
@@ -33,7 +33,7 @@ my $optimal_f = optimal_f(0.5, 3);
 
 Here `optimal_f` returns a value of `0.25`, which means I should place 25% of my bankroll on this bet. Let's look at another example: a bet which has 12% chance of occurring and pays 5-to-1. I can also calculate optimal f at the command line:
 
-``` prettyprint
+```perl
 $ perl -MAlgorithm::Kelly -E 'say optimal_f(0.12, 5)';
 -0.056
 ```

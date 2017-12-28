@@ -20,20 +20,20 @@
 
 A popular way to build a list of literal quotes in Perl is to use the quote whitespace operator (qw). It's terse, versatile and elegant. To see why, let's look at a typical statement using a list of strings:
 
-``` prettyprint
+```perl
 # import the Encode module and three subroutines
 use Encode ('decode', 'encode', 'find_encoding');
 ```
 
 To define the list of strings in Perl we had to encase every string with apostrophes, separated by commas and surrounded by parentheses. That's a lot of fluff, and opens the door to easy mistakes such as using speechmarks (") when you needed an apostrophe. Instead of doing that, we could have used the quote whitespace operator:
 
-``` prettyprint
+```perl
 use Encode qw/decode encode find_encoding/;
 ```
 
 The quote whitespace operator takes a list delimiter followed by a list of plain strings separated by whitespace and returns list of literal quoted strings. The delimiter can be an ASCII symbol (slash / is a popular choice), brackets or parentheses. Let's review some more examples:
 
-``` prettyprint
+```perl
 # assign a list of an array
 my @ny_boroughs = qw{Bronx Brooklyn Manhattan Queens Staten_Island};
 

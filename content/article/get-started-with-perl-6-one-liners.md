@@ -39,7 +39,7 @@ Let's step through this code.
 
 To run a one-liner, just type it into the terminal:
 
-``` prettyprint
+```perl
 > perl6 -e 'say "Hello, World!"'
 Hello, World!
 ```
@@ -48,13 +48,13 @@ Hello, World!
 
 If you want to load a file, just add the path to the file after the program code:
 
-``` prettyprint
+```perl
 > perl6 -e 'for (lines) { say $_ }' /path/to/file.txt
 ```
 
 This program prints every line in `/path/to/file.txt`. You may know that `$_` is the default variable, which in this case is the current line being looped through. `lines` is a list that is automatically created for you whenever you pass a filepath to a one-liner. Now let's re-write that one liner, step-by-step. These one liners are all equivalent:
 
-``` prettyprint
+```perl
 > perl6 -e 'for (lines) { say $_ }' /path/to/file.txt
 > perl6 -e 'for (lines) { $_.say }' /path/to/file.txt
 > perl6 -e 'for (lines) { .say }' /path/to/file.txt
@@ -66,19 +66,19 @@ Just like `$_` is the default variable, methods called on the default variable c
 
 The `-n` option changes the behavior of the program: it executes the code once for every line of the file. To uppercase and print every line of `/path/to/file.txt` you can type:
 
-``` prettyprint
+```perl
 > perl6 -ne '.uc.say' /path/to/file.txt
 ```
 
 The `-p` option is just like `-n` except that it will automatically print `$_`. This means that another way we could uppercase a file would be:
 
-``` prettyprint
+```perl
 > perl6 -pe '$_ = $_.uc' /path/to/file.txt
 ```
 
 Or by applying a shortcut, this does the same thing:
 
-``` prettyprint
+```perl
 > perl6 -pe '.=uc' /path/to/file.txt
 ```
 
@@ -88,19 +88,19 @@ The `-n` and `-p` options are really useful and often spare the programmer from 
 
 The final thing you should know is how to load a module. This is really powerful as you can extend Perl 6's capabilities by importing external libraries. The `-M` switch stands for load module:
 
-``` prettyprint
+```perl
 > perl6 -M URI::Encode -e 'say encode_uri("/10 ways to crush it with Perl 6")'
 ```
 
 The code `-M URI::Encode` loads the URI::Encode module, which exports the `encode_uri` subroutine. It prints:
 
-``` prettyprint
+```perl
 %2F10%20ways%20to%20crush%20it%20with%20Perl%206
 ```
 
 What if you have a module that is not installed in a standard location? In this case using `-M` alone won't work, as Perl won't find the module. For these scenarios, just pass use the `-I` switch to include the directory:
 
-``` prettyprint
+```perl
 > perl6 -I lib -M URI::Encode -e 'say encode_uri("www.example.com/10 ways to crush it with Perl 6")'
 ```
 
@@ -108,13 +108,13 @@ Now Perl 6 will search for URI::Encode in `lib` as well as the standard install 
 
 Finally, if you want a summary of all of these options, just use the `-h` option:
 
-``` prettyprint
+```perl
 > perl6 -h
 ```
 
 This will print:
 
-``` prettyprint
+```perl
     With no arguments, enters a REPL. With a "[programfile]" or the "-e" option, compiles the given program and by default also executes the compiled code.
  
     -c                   check syntax only (runs BEGIN and CHECK blocks)

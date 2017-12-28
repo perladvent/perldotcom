@@ -29,7 +29,7 @@ In Perl 6 a grammar is a special type of class for parsing text. The idea is to 
 
 There were a few challenges. First, consider how would you define a regex for lists? In pod, lists can contain lists, so can a definition include itself? The answer is yes, a recursive definition is fine, as long as it doesn't match a zero length string, which leads to an infinite loop. Here's the definition:
 
-``` prettyprint
+```perl
 token over_back { <over>
                     [
                       <_item> | <paragraph> | <verbatim_paragraph> | <blank_line> |
@@ -54,7 +54,7 @@ For simplicity's sake, I tried to name the tokens the same as how they're writte
 
 This is one pattern I really love and used over and over in the grammar:
 
-``` prettyprint
+```perl
 [ <pod_section> | <?!before <pod_section> > .]*
 ```
 
@@ -62,7 +62,7 @@ The pattern is useful when you have a pattern to capture, but if there's no matc
 
 The grammar can be used to parse standalone and inline pod. It will extract every pod section it finds into match object (basically a Perl data structure), ready for processing. It's easy to use:
 
-``` prettyprint
+```perl
 use Pod::Perl5::Grammar;
 
 my $match = Pod::Perl5::Grammar.parse($pod);
@@ -76,7 +76,7 @@ my $match = Pod::Perl5::Grammar.parsefile("/path/to/some.pod");
 
 So far so cool, but we can do more. Action classes are regular Perl 6 classes that can be given to the grammar at parse time. They provide behavior (actions) for token matching events. Just name the methods in the action class the same as the token they should be executed on. I wrote a pod-to-HTML action [class](https://github.com/dnmfarrell/Pod-Perl5/blob/master/lib/Pod/Perl5/ToHTML.pm). Here is the method for converting `=head1` to HTML:
 
-``` prettyprint
+```perl
 method head1 ($/)
 {
   self.add_to_html('body', "<h1>{$/<singleline_text>.Str}</h1>\n");
@@ -99,7 +99,7 @@ To this:
 
 This can happen because the italics and bold token regexes match first. So to get around this issue, I used a buffer to store the HTML from the transformed sub-tokens, and then when a paragraph token is matched, it substitutes its own text with the contents of the buffer. The action class code for this looks like this:
 
-``` prettyprint
+```perl
 method paragraph ($/ is copy)
 {
   my $original_text = $/<text>.Str.chomp;
@@ -126,7 +126,7 @@ method bold ($/)
 
 One thing to watch out for with action classes is regex handling. **Every** action class example I've seen uses `$/` in the method signature. This is a mistake, as guess what this does:
 
-``` prettyprint
+```perl
 method head1 ($/)
 {
   if $/.Str ~~ m/foobar/ # silly example
@@ -140,7 +140,7 @@ method head1 ($/)
 
 Mushroom cloud-style boom. When `$/` is passed to `head1` it is read only. Executing **any** regex in the same lexical scope will attempt to overwrite `$/`. This bit me a few times and with help from \#perl6, I ended up using this pattern:
 
-``` prettyprint
+```perl
 method head1 ($/ is copy)
 {
   my $match = $/;
@@ -153,7 +153,7 @@ method head1 ($/ is copy)
 
 Adding `is copy` to the signature creates a copy instead of a reference for `$/`. I then copy the match variable into `$match`, so that the following regex can clobber `$/`. I \*think\* a better solution is this:
 
-``` prettyprint
+```perl
 method head1 ($match)
 {
   if $match.Str ~~ m/foobar/
@@ -167,7 +167,7 @@ I think it's that simple, just don't name the signature parameter `$/` and all t
 
 To use an action class, just pass it to the grammar:
 
-``` prettyprint
+```perl
 use Pod::Perl5::Grammar;
 use Pod::Perl5::ToHTML;
 
@@ -186,7 +186,7 @@ PerlTricks.com articles are written in HTML. Special snowflake style HTML with c
 
 As Perl 6 grammars are classes, they can be inherited and overridden. So I can add my Twitter and Metacpan formatting codes to the grammar like this:
 
-``` prettyprint
+```perl
 grammar Pod::Perl5::Grammar::PerlTricks is Pod::Perl5::Grammar
 {
   token twitter  { @\< <name> \> }
@@ -196,7 +196,7 @@ grammar Pod::Perl5::Grammar::PerlTricks is Pod::Perl5::Grammar
 
 I'll also need to override the `format_codes` token to include the new tokens:
 
-``` prettyprint
+```perl
 token format_codes  {
   [
     <italic>|<bold>|<code>|<link>
@@ -208,7 +208,7 @@ token format_codes  {
 
 It's that easy. The new grammar will parse all pod, plus my two new formatting codes. Of course the action class Pod::Perl5::Pod can be extended and overridden too, and would look something like this:
 
-``` prettyprint
+```perl
 Pod::Perl5::ToHTML::PerlTricks is Pod::Perl5::ToHTML
 {
   method twitter ($match)
@@ -230,7 +230,7 @@ Pod::Perl5::ToHTML::PerlTricks is Pod::Perl5::ToHTML
 
 There's a cleaner way to manage groups of tokens, it's called [multi-dispatch](http://design.perl6.org/S06.html#Routine_modifiers). Instead of defining `format_codes` as a list of alternative tokens it can match against, we declare a prototype method, and declare each formatting method as a `multi` of the prototype. Check this out:
 
-``` prettyprint
+```perl
 proto token format_codes  { * }
 multi token format_codes:italic { I\< <multiline_text>  \>  }
 multi token format_codes:bold   { B\< <multiline_text>  \>  }
@@ -240,7 +240,7 @@ multi token format_codes:code   { C\< <multiline_text>  \>  }
 
 Now when this grammar is inherited, there is no need to override `format_codes`. Instead I can declare the new tokens as multis:
 
-``` prettyprint
+```perl
 grammar Pod::Perl5::Grammar::PerlTricks is Pod::Perl5::Grammar
 {
   token format_codes:twitter  { @\< <name> \> }
@@ -250,7 +250,7 @@ grammar Pod::Perl5::Grammar::PerlTricks is Pod::Perl5::Grammar
 
 Using multi-dispatch also has the modest benefit of simplifying the data extraction path when working with a match object. For instance, these code extracts the link section from the 3rd paragraph of a pod block:
 
-``` prettyprint
+```perl
 is $match<pod_section>[0]<paragraph>[2]<text><format_codes>[0]<link><section>.Str # regular version
 is $match<pod_section>[0]<paragraph>[2]<text><format_codes>[0]<section>.Str # multi dispatch equivalent
 ```

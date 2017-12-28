@@ -21,7 +21,7 @@ Now I'm not sure exactly where the "addressable memory limitation" line is, but 
 
 For these tests I wanted to check the typical operations that a bit array would be used for: setting / unsetting a bitmask and converting the bit array into a binary string. I came up with the follow test script:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -65,19 +65,19 @@ This script loops over numbers of increasing size, creating bitmasks with them, 
 
 Whilst all of the bitwise operations passed, the string length test failed as soon as the bitmask size was larger than 64 bits (my machine is 64 bit, I expect on a 32 bit compiled Perl it would fail after 32 bits). So what to do about this? Is it that `sprintf` cannot print integers larger than 64 bit? After trying a bunch of different functions, I tried the simplest: including a length argument to `sprintf`. So this line:
 
-``` prettyprint
+```perl
 cmp_ok length(sprintf "%b", $bitmask), '==', $shift_size,
 ```
 
 Became:
 
-``` prettyprint
+```perl
 cmp_ok length(sprintf "%0${shift_size}b", $bitmask), '==', $shift_size,
 ```
 
 I'm pleased to report that the change worked, and all tests passed (on Perl 5.10 and higher). Here is the finished script:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;

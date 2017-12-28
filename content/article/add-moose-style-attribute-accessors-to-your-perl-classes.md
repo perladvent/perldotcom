@@ -25,7 +25,7 @@
 
 The Point class below has two attributes (x, y) and get/set methods for each attribute written in the vanilla Perl object oriented style.
 
-``` prettyprint
+```perl
 package Point;
 
 sub new {
@@ -60,7 +60,7 @@ sub set_y {
 
 Last week Rob Hoelz wrote a [fascinating post](http://hoelz.ro/blog/oh-my-glob) on Perl typeglobs, and we can use the a typeglob to help with our Point class attribute accessors. This is the updated class:
 
-``` prettyprint
+```perl
 package Point;
 
 my @attributes;
@@ -89,7 +89,7 @@ Gone are the individual get/set accessors and in their place is a BEGIN block. T
 
 What's nice about this approach is that adding additional attributes can be done simply by adding the attribute names to @attributes, whereas in the original Point class we would have needed to add two new methods and update the constructor method every time a new attribute was added. Additionally this approach supports the Moose-style syntax: when an argument is provided it sets the attribute value, else it gets it. E.g.
 
-``` prettyprint
+```perl
 $point->x; #get x
 $point->x(5); #set x to 5
 ```

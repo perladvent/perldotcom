@@ -26,7 +26,7 @@ When Dave Rolsky came out with [DateTime](http://www.metacpan.org/module/DateTim
 
 [DateTime](http://www.metacpan.org/module/DateTime) can represent dates and tell me various things about them, such as the day of the quarter, give me locale-specific names, format them in interesting ways, and also give me the difference between dates:
 
-``` prettyprint
+```perl
 use Date::Time;
 
 my $dt = DateTime->new(
@@ -54,7 +54,7 @@ my $duration = $now - $dt;
 
 [DateTime](http://www.metacpan.org/module/DateTime) doesn't parse dates. Separate modules in the same namespace can do that while returning a [DateTime](http://www.metacpan.org/module/DateTime) object. For instance, the [DateTime::Format::W3CDTF](http://www.metacpan.org/module/DateTime::Format::W3CDTF) module parses dates and turn them into objects:
 
-``` prettyprint
+```perl
 use DateTime::Format::W3CDTF;
 
 my $w3c = DateTime::Format::W3CDTF->new;
@@ -80,7 +80,7 @@ The [Time::Moment](http://www.metacpan.org/module/Time::Moment) distribution com
 
 Let's make a more interesting benchmark that constructs an object from a string, add a day to it, and check if it's before today. As with every benchmark, you have to check it against your particular use:
 
-``` prettyprint
+```perl
 use Benchmark;
 use DateTime;
 use Time::Moment;

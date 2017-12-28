@@ -29,7 +29,7 @@ Programs can use the lock file principle to prevent multiple instances of themse
 
 Perl provides the [flock](http://perldoc.perl.org/functions/flock.html) function for file locking. It takes a filehandle and a constant value for the lock type. So to get an exclusive lock on a file, I could do:
 
-``` prettyprint
+```perl
 open my $file, ">", "app.lock" or die $!; 
 flock $file, 2 or die "Unable to lock file $!";
 # we have the lock
@@ -37,7 +37,7 @@ flock $file, 2 or die "Unable to lock file $!";
 
 This code starts by opening a write filehandle to the file `app.lock`. If successful, it attempts to get an exclusive lock on the file by calling flock with the number 2. An exclusive lock means no other process can access the file whilst the lock is active. Remembering the constant values for lock types can be a pain, so helpfully the [Fcntl](https://metacpan.org/pod/Fcntl) module will export constant names if you ask nicely. I'll update the code to do that:
 
-``` prettyprint
+```perl
 use Fcntl qw(:flock);
 open my $file, ">", "app.lock" or die $!; 
 flock $file, LOCK_EX or die "Unable to lock file $!";
@@ -50,7 +50,7 @@ This code does the same thing as before but we don't need to remember the consta
 
 So far so good but we have a problem. If the file is locked, `flock` will block and keep our program waiting around until the lock is removed. I want is the program to exit immediately if it can't obtain the lock. The only way to check if a file is locked is with `flock` though! Fortunately the `flock` developers had considered this issue, and I can pass an extra argument to indicate I want a non-blocking lock.
 
-``` prettyprint
+```perl
 use Fcntl qw(:flock);
 open my $file, ">", "app.lock" or die $!; 
 flock $file, LOCK_EX|LOCK_NB or die "Unable to lock file $!";
@@ -63,7 +63,7 @@ I've added `|LOCK_NB` to the flock arguments and now it will return false immedi
 
 I'm going to put this locking code into a quick script so I can test the lock functionality:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Fcntl qw(:flock);
 open my $file, ">", "app.lock" or die $!; 
@@ -74,7 +74,7 @@ sleep(60);
 
 I'll save the script as `sleep60.pl` and test it at the terminal:
 
-``` prettyprint
+```perl
 $ chmod 700 sleep60.pl
 $ ./sleep60.pl&
 [2] 21505
@@ -88,7 +88,7 @@ Looking good! I tried to run the script twice and the second time, the system pr
 
 Using an external file feels kind-of-dirty. What I'd really like to do is tidy up by deleting the lockfile once the program has finished. However unlocking and deleting the file involves extra steps which may introduce a [race condition](https://en.wikipedia.org/wiki/Race_condition). Instead of deleting the file, what if we never created it? One way to do this is to use the [\_\_DATA\_\_](http://perltricks.com/article/24/2013/5/11/Perl-tokens-you-should-know) filehandle, like so:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Fcntl qw(:flock);
 flock DATA, LOCK_EX|LOCK_NB or die "Unable to lock file $!";
@@ -99,7 +99,7 @@ __DATA__
 
 This version of the script opens a lock on the `DATA` filehandle and creates no external files. Mark Jason Dominus [showed](http://perl.plover.com/yak/flock/samples/slide006.html) this ingenious trick years ago. Another trick Mark showed was to open the lockfile on the program file itself:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Fcntl qw(:flock);
 open our $file, '<', $0 or die $!;

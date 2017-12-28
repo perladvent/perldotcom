@@ -32,19 +32,19 @@ So there are 5 criteria, but how you do implement them? I've created a [new web 
 
 If you'd like to download the app and follow along you can, but this step is optional. You're going to need at least Perl 5.14.4 and a git installed. To download the app from our github page, just open up the command line and enter:
 
-``` prettyprint
+```perl
 $ git clone https://github.com/dnmfarrell/SecApp_login
 ```
 
 There's no way around it; this app has a lot of dependencies. To ease the burden, start by installing [cpanminus](https://metacpan.org/pod/App::cpanminus) at the command line:
 
-``` prettyprint
+```perl
 $ cpan App::cpanminus
 ```
 
 I prefer to use cpanminus when installing lots of modules: it's less of a memory hog than cpan, outputs less line noise by default, and has the useful "--notest" option if you want to install modules without testing them (and save a lot of time). Now change into the newly cloned app directory, and use cpanminus to install the app's dependencies:
 
-``` prettyprint
+```perl
 $ cd SecApp_login
 $ cpanm --installdeps .
 --> Working on .
@@ -56,7 +56,7 @@ The "--installdeps" switch instructs cpanminus to search the current directory f
 
 Once all the modules are installed, test run the application with the following command:
 
-``` prettyprint
+```perl
 $ TESTING=1 script/secapp_server.pl 
 HTTP::Server::PSGI: Accepting connections at http://0:3000/
 ```
@@ -83,7 +83,7 @@ Information leaks give would-be attackers clues that undermine the login securit
 
 In SecApp I've turned off the typical Catalyst information leaks. In the root application file [SecApp.pm](https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp.pm) the "-Debug" plugin has been removed, which prints a full stack trace in the case of an error:
 
-``` prettyprint
+```perl
 use Catalyst qw/
     Static::Simple
     Authentication
@@ -95,7 +95,7 @@ use Catalyst qw/
 
 Further down the same file, the "X-Catalyst" HTTP header has been disabled by modifying the package configuration. This stops the header from being inserted to every response:
 
-``` prettyprint
+```perl
 # Disable X-Catalyst header
 enable_catalyst_header => 0,
 ```
@@ -114,7 +114,7 @@ The [The Web Application Hacker's Handbook](http://www.amazon.com/gp/product/111
 
 In SecApp [Root.pm](https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Controller/Root.pm#L11), we use Catalyst's auto Controller function to check that every request is over SSL:
 
-``` prettyprint
+```perl
 # this method will be called everytime
 sub auto :Private {
     my ($self, $c) = @_;
@@ -134,7 +134,7 @@ The method "$c-\>req-\>secure" will return true if the connection is via SSL. If
 
 Now it could be irritating for users who try to load the login page and get a 404 error. So using Catalyst's end method, we also set the Strict-Transport-Security HTTP header which instructs browsers to load all pages via https. This is the code:
 
-``` prettyprint
+```perl
 sub end : ActionClass('RenderView') {
   my ($self, $c) = @_;
 
@@ -150,7 +150,7 @@ SecApp sets several other security headers in the [end method](https://github.co
 
 SecApp only authenticates login requests received via POST. We achieve this by using Catalyst's chained dispatching and HTTP method matching:
 
-``` prettyprint
+```perl
 sub login :Chained('/') PathPart('login') CaptureArgs(0) {}
 
 sub login_auth :Chained('login') PathPart('') Args(0) POST {
@@ -174,7 +174,7 @@ The [code](https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Con
 
 Finally, SecApp stores the passwords in an hashed format, using a relatively strong algorithm (bcrypt). The following code in [User.pm](https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp/Schema/Result/User.pm#L130) adds the functionality:
 
-``` prettyprint
+```perl
 __PACKAGE__->add_columns(
             'password' => {
                 passphrase => 'rfc2307',
@@ -195,7 +195,7 @@ The code that validates credentials can also contain weaknesses. Passwords shoul
 
 The [Catalyst::Plugin::Authentication](https://metacpan.org/pod/Catalyst::Plugin::Authentication) module makes authentication easy. SecApp keeps the login process simple: just a username and password form, with an optional CAPTCHA. Here is the full login code:
 
-``` prettyprint
+```perl
 sub login_auth :Chained('login') PathPart('') Args(0) POST {
   my ($self, $c) = @_;
   my $captcha_response 
@@ -238,7 +238,7 @@ Let's walk through the code. If the CAPTCHA functionality is enabled, the login 
 
 So the code looks good, but how do we know if it will do the right thing in all cases? Fortunately [Catalyst::Test](https://metacpan.org/pod/Catalyst::Test) can make unit testing an application's methods easy. SecApp has the test file [Root.t](https://github.com/dnmfarrell/SecApp_login/blob/master/t/Root.t) which tests the login function with many different combinations of credentials, such as null, zero-length string, correct username incorrect password etc. Running these tests makes it easy to confirm that the login function does the right thing. Want to check for yourself? At the command line run:
 
-``` prettyprint
+```perl
 $ TESTING=1 perl -Ilib t/Root.t
 ```
 

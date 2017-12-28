@@ -27,7 +27,7 @@ I [covered](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-nativ
 
 All of the benchmarks came from variations of this code:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Benchmark::Forking 'cmpthese';
@@ -112,7 +112,7 @@ It could be argued that the native subroutine signatures are plenty fast as they
 
 Adding a nameless slurpy parameter ("@") to the subroutine signature removes the upper limit on how many arguments can be passed to the subroutine. Let's add the slurpy parameter to the subroutine signature in our benchmark code. I've also updated the code to take two parameters - the level where previously Method::Signatures and subroutine signatures exhibited similar performance:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Benchmark::Forking 'cmpthese';

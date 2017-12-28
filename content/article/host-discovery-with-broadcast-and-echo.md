@@ -30,7 +30,7 @@ An ICMP message of type 8 means echo request and hosts are expected to respond w
 
 If you're running a modern Linux, you can test this out at the command line using `ping` (other versions may work without the "-b" switch):
 
-``` prettyprint
+```perl
 $ ping -b 255.255.255.255
 WARNING: pinging broadcast address
 PING 255.255.255.255 (255.255.255.255) 56(84) bytes of data.
@@ -46,7 +46,7 @@ Here you see one other host on my network is responding at the address `192.168.
 
 It's possible to implement ping using nothing but core Perl modules. That is, if Perl is installed, this [script](https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/livehost_echo) should work:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 use strict;
 use warnings;
@@ -84,7 +84,7 @@ The source and destination IP fields in the unpacked message are stored as 32 bi
 
 Running this script on my network, I can see the same host as was returned by `ping`:
 
-``` prettyprint
+```perl
 $ sudo ./livehost_echo                                 
 28 bytes from 192.168.1.4
 ```
@@ -93,7 +93,7 @@ $ sudo ./livehost_echo
 
 The primary issue with this technique is it can only discover hosts that respond to broadcast requests, and many do not. For example Chromebooks, smart phones and Linux machines usually don't reply (OSX machines and many versions of Windows do though). This can be an advantage though: because the response rate to broadcast is different to unicast, the echo script can be used in conjunction with unicast to fingerprint hosts. If a machine responds to a unicast message but not a broadcast, we learn something about the identity of that host. For example if I use the [livehost\_scanner](https://github.com/dnmfarrell/Penetration-Testing-With-Perl/blob/master/livehost_scanner) script on my home network:
 
-``` prettyprint
+```perl
 sudo $(which perl) livehost_scanner                                                                                                                  
 Gateway IP: 192.168.1.1
 Starting scan

@@ -27,7 +27,7 @@
 
 If XML::LibXML is croaking on a later part of the HTML, try turning on recovery mode, which will return all of the correctly parsed HTML up until XML::LibXML encountered the error.
 
-``` prettyprint
+```perl
 use XML::LibXML;
 
 my $xml = XML::LibXML->new( recover => 1 );
@@ -44,7 +44,7 @@ HTML::Scrubber provides both whitelist and blacklist functions to include or exc
 
 By default HTML::Scrubber removes all tags, but in the case of a duplicate doctype declaration, you just need that one tag removed. Let's remove all div tags too for good measure:
 
-``` prettyprint
+```perl
 use HTML::Scrubber;
 
 my $scrubber = HTML::Scrubber->new( deny => [ 'doctype', 'div' ],
@@ -61,7 +61,7 @@ If the subset HTML you want to parse has a unique identifier (such as an id attr
 
 For example recently I had to extract an HTML table from a badly-formed web page. Fortunately the table had an id attribute, which made extracting it with a regex a piece-of-cake:
 
-``` prettyprint
+```perl
 if ( $html =~ /(<table id="t2">.*?<\/table>)/s ) {
     my $dom = XML::LibXML->load_html( string => $1 );
     ...

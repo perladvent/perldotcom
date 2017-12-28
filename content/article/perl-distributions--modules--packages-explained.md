@@ -27,7 +27,7 @@
 
 A Perl package is just a section of code defined in a .pm file, like this:
 
-``` prettyprint
+```perl
 package Data::Connector;
 
 sub connect {
@@ -41,7 +41,7 @@ The start of the package begins with the "package" declaration. A package is a l
 
 A module is a .pm file ("pm" means Perl Module). When you import a module with "require" or "use", you are literally referencing the file name and not the package(s) contained in the file. For example to import the "Data::Connector" package defined above, we could save it in a file called "Whatever.pm" and later reference it in a script like this:
 
-``` prettyprint
+```perl
 use Whatever;
 
 # call connect subroutine declared in Data::Connector package

@@ -23,13 +23,13 @@ The Perl [eval function](http://perldoc.perl.org/functions/eval.html) will execu
 
 Let's imagine that we want to execute this Perl statement stored in 'print.txt':
 
-``` prettyprint
+```perl
 print "it works! \n";
 ```
 
 We can write a simple Perl script called 'eval.pl' that will slurp 'print.txt' into a string, and then call eval on the string:
 
-``` prettyprint
+```perl
 use File::Slurp;
 use strict;
 use warnings;
@@ -40,7 +40,7 @@ eval $command;
 
 Now we can run 'eval.pl' to prove it works:
 
-``` prettyprint
+```perl
 perl eval.pl
 it works!
 ```
@@ -49,13 +49,13 @@ it works!
 
 When eval is called on a string containing Perl code, the code is executed within a sub lexical scope in main - similar to as if it was written within a block. This makes it possible to declare variables in the main program, and execute them in code contained in text files with eval. Let's update 'print.txt' to print a variable:
 
-``` prettyprint
+```perl
 print $message;
 ```
 
 And 'eval.pl' to declare $message and set the text to be printed:
 
-``` prettyprint
+```perl
 use File::Slurp;
 use strict;
 use warnings;
@@ -68,7 +68,7 @@ eval $command;
 
 Now running the code we can see the injected message is printed:
 
-``` prettyprint
+```perl
 perl eval.pl
 We injected this message
 ```

@@ -46,13 +46,13 @@ Click the "Fork" button to copy the repo into our own perltricks/xperl5 repo:
 
 Now we've forked the repo, we can commit changes to our forked version. To start we'll need to download the Perl exercises from our forked repo. We can do this from the command line:
 
-``` prettyprint
+```perl
 $ git clone https://github.com/sillymoose/xperl5.git
 ```
 
 This will download the xperl5 repo into a directory called "xperl5". Next download the list of common exercises:
 
-``` prettyprint
+```perl
 $ git clone https://github.com/exercism/x-common.git
 ```
 
@@ -62,7 +62,7 @@ This will download the latest list of available exercises to the "x-common" dire
 
 Once you've found an exercise that needs to be ported, you'll want to find that exercise in one of the other languages repos. It's far easier to translate an exercise than to write it from scratch yourself! The Ruby, Python and JavaScript repos have most of the exercises, so we'll start with one of those. For example to download the Ruby exercises repo, just type this command:
 
-``` prettyprint
+```perl
 $ git clone https://github.com/exercism/xruby.git
 ```
 
@@ -72,13 +72,13 @@ If the xruby directory doesn't have the exercise you're looking to port, try clo
 
 To port an exercise you need to provide the exercise test file and an Example.pm module which passes the tests. Earlier this week I ported the "leap" exercise from Ruby to Perl. This involved three steps. First I created the new exercise subdirectory in the xperl5 directory:
 
-``` prettyprint
+```perl
 $ mkdir xperl5/leap
 ```
 
 Next, I translated the Ruby test file "xruby/leap/leap\_test.rb":
 
-``` prettyprint
+```perl
 require 'date'
 require 'minitest/autorun'
 require_relative 'year'
@@ -121,7 +121,7 @@ end
 
 to "xperl5/leap/leap.t":
 
-``` prettyprint
+```perl
 use warnings;
 use strict;
 use Test::More tests => 7;
@@ -144,7 +144,7 @@ do {
 
 Finally I ported the example answer "xruby/leap/example.rb":
 
-``` prettyprint
+```perl
 require 'delegate'
 
 class Year < SimpleDelegator
@@ -167,7 +167,7 @@ end
 
 Here is the Perl version, "xperl5/leap/Example.pm":
 
-``` prettyprint
+```perl
 package Example;
 use warnings;
 use strict;
@@ -188,7 +188,7 @@ __PACKAGE__;
 
 Run the test file at the command line:
 
-``` prettyprint
+```perl
 $ EXERCISM=1 prove leap.t
 leap.t .. ok   
 All tests successful.
@@ -202,7 +202,7 @@ All of our tests passed, so we can commit these files. I also [ported](https://g
 
 Now that we've ported the files, we need to add them to the forked xperl5 repository and commit the change. Here's are the commands to do that:
 
-``` prettyprint
+```perl
 $ cd xperl5
 $ git add leap/Example.pm leap/leap.t
 $ git commit -am 'Added the leap exercise'

@@ -22,7 +22,7 @@ The result is [hacktoberfest.pl](https://github.com/briandfoy/ghojo/blob/master/
 
 The ghojo project is still very much in its infancy (which means there's all sorts of pull request opportunities). But I allow quite a bit of flexibility by accepting a callback for things I expect to return many items:
 
-``` prettyprint
+```perl
 use Ghojo;
 
 my $ghojo = Ghojo->new( { token => ... } );
@@ -39,7 +39,7 @@ Each time I find a repo—and you don't have to know how I do that—I run that 
 
 That callback deals with a repo, but each repo has a list of issues. I want to process this list of issues as I run into them. So what I need is a callback to process a repo with a nested callback for the issues:
 
-``` prettyprint
+```perl
 use v5.24;
 
 use Ghojo;

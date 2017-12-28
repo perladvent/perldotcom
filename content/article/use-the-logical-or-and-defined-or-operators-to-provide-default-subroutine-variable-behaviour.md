@@ -23,7 +23,7 @@ Perl subroutines do not have signatures so variables must be initialized and arg
 
 One trick that Perl programmers use is the logical-or operator ('||') to provide default behaviour for subroutine arguments. The default behaviour will only occur if the argument is provided is false (undefined, zero or a zero-length string). Imagine that we're developing a subroutine that processes data for car insurance quotes - we'll need to collect some basic data such as the applicant's date of birth, sex and number of years driving. All of the arguments are mandatory - we can use the logical-or operator to return early if these arguments are false.
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -44,7 +44,7 @@ What this subroutine code does is assign the first element of the default array 
 
 Since version 5.10.0 Perl has has had the defined-or operator ('//'). This will check if the variable is defined, and if it is not, Perl will execute the code on the right-side of the operator. We can use it to simplify our subroutine code:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use 5.10.0;
@@ -65,7 +65,7 @@ In the modified code above, first we have included a line to use Perl 5.10.0 or 
 
 We can also use defined-or to provide default values for subroutine arguments. For example if we assumed that all users of our subroutine are male, we can change the $sex variable to default to 'M'.
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use 5.10.0;

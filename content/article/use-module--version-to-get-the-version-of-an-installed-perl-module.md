@@ -22,7 +22,7 @@ In response to our article [3 quick ways to find out the version number of an in
 
 Once [Module::Version](https://metacpan.org/module/Module::Version) is installed, to get the version number of Module::Build (for example) using mversion, go to the command line and type:
 
-``` prettyprint
+```perl
 mversion Module::Build
 ```
 

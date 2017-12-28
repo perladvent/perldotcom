@@ -30,7 +30,7 @@ You'll need to install WWW::YouTube::Download. The CPAN Testers [results](http:/
 
 You can install the module via CPAN at the command line:
 
-``` prettyprint
+```perl
 $ cpan WWW:YouTube::Download
 ```
 
@@ -38,7 +38,7 @@ $ cpan WWW:YouTube::Download
 
 When you install WWW::YouTube::Download, it comes with a command-line app, "youtube-download". Using it couldn't be easier. Simply open the command line and type the program name with the URL or video id of the video to download. For example:
 
-``` prettyprint
+```perl
 $ youtube-download http://www.youtube.com/watch?v=ju1IMxGSuNE
 ```
 
@@ -48,7 +48,7 @@ $ youtube-download http://www.youtube.com/watch?v=ju1IMxGSuNE
 
 At the command line, type or paste the following command, replacing $id with the id of the video you want to download:
 
-``` prettyprint
+```perl
 $ perl -MWWW::YouTube::Download -e 'WWW::YouTube::Download->new->download(q/$id/)'
 ```
 
@@ -64,13 +64,13 @@ On Windows, you'll need to replace the apostrophes with double quotes (").
 
 The video id is the alphanumeric code value for "v" in the URL of the video you want to download. For example with this URL:
 
-``` prettyprint
+```perl
 http://www.youtube.com/watch?v=ju1IMxGSuNE
 ```
 
 "ju1IMxGSuNE" is the video id, because if you look in the URL after the question mark, v=ju1IMxGSuNE, which means "the value for v equals ju1IMxGSuNE". If you have a URL but can't work out the video id, WWW::YouTube::Download provides a video\_id method. This one liner will print out the video id, just replace $url with the actual YouTube URL.
 
-``` prettyprint
+```perl
 $ perl -MWWW::YouTube::Download -E 'say WWW::YouTube::Download->new->video_id(q{$url})'
 ```
 
@@ -78,7 +78,7 @@ $ perl -MWWW::YouTube::Download -E 'say WWW::YouTube::Download->new->video_id(q{
 
 We can expand the concepts used in the one liner into a fully-fledged Perl script, called "download.pl":
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -93,13 +93,13 @@ if (@ARGV) {
 
 The script takes a YouTube URL as an argument. It gets the video id of the URL, then downloads the video into the current directory. As an added bonus, the script will save the file with the title of the video, instead of the default which is the video id. You can run the script at the command line, passing the URL of the YouTube video to download. For example:
 
-``` prettyprint
+```perl
 $ ./download.pl http://www.youtube.com/watch?v=ju1IMxGSuNE
 ```
 
 You may need to set the script's permissions to executable using chmod:
 
-``` prettyprint
+```perl
 $ chmod 755 download.pl
 ```
 

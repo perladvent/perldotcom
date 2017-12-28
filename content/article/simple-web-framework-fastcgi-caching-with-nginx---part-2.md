@@ -25,7 +25,7 @@
 
 You'll need Perl v5.12.3 or greater to install [Nginx::FastCGI::Cache](https://metacpan.org/pod/Nginx::FastCGI::Cache). The CPAN Testers [results](http://matrix.cpantesters.org/?dist=Nginx-FastCGI-Cache+0.008) show that it runs on most platforms including Windows. To install the module using CPAN, just open the terminal and type:
 
-``` prettyprint
+```perl
 $ cpan Nginx::FastCGI::Cache
 ```
 
@@ -33,7 +33,7 @@ $ cpan Nginx::FastCGI::Cache
 
 In an nginx virtual host file, the "fastcgi\_cache\_path" directive sets the root directory from where nginx will build the cache. nginx uses the variables of the "fastcgi\_cache\_key" directive to create an md5 hexadecimal hash key as the filename. The "levels" value determines the number of subdirectories and the subdirectories name length. For example, with this configuration:
 
-``` prettyprint
+```perl
 fastcgi_cache_path  /var/cache/nginx levels=1:2
                     keys_zone=app_cache:50m
                     inactive=60m;
@@ -46,7 +46,7 @@ A GET request for "http://perltricks.com/" would have a key of "httpGETperltrick
 
 I wrote [Nginx::FastCGI::Cache](https://metacpan.org/pod/Nginx::FastCGI::Cache) to make it easy to purge individually cached fastcgi responses from the nginx cache. For example:
 
-``` prettyprint
+```perl
 use Nginx::FastCGI::Cache;
  
 my $nginx_cache = Nginx::FastCGI::Cache->new({ location => '/var/cache/nginx' });
@@ -55,13 +55,13 @@ $nginx_cache->purge_file("http://perltricks.com/");
 
 This will convert the URL into the md5 hashed cache key, and delete it from the nginx cache directory. By default "purge\_file" assumes the HTTP request type is GET. If you want to purge a file for a different request type, simply include it as a parameter:
 
-``` prettyprint
+```perl
 $nginx_cache->purge_file("http://perltricks.com/", "HEAD");
 ```
 
 If you want to blow away the whole cache, use the "purge\_cache" method:
 
-``` prettyprint
+```perl
 $nginx_cache->purge_cache;
 ```
 
@@ -79,7 +79,7 @@ Whenever you have a program that is going to recursively delete all files in a d
 
 By default, nginx will not cache a fastcgi response that includes a "Set-Cookie" header. Depending on how you are using cookies, you may want to have nginx cache the response and ignore the "Set-Cookie" header. This can be done by adding this line to your virtual host file:
 
-``` prettyprint
+```perl
 fastcgi_ignore_headers "Set-Cookie";
 ```
 
@@ -87,7 +87,7 @@ Bear in mind that the "set-Cookie" header will be removed from the response alto
 
 By default nginx will only cache GET and HEAD requests. This is a good default, but you may want to restrict the cache to just GET responses, or enable other kinds of HTTP requests such as POST. If so, add the fastcgi\_cache\_methods directive to your nginx virtual host file. For example to only cache GET requests:
 
-``` prettyprint
+```perl
 fastcgi_cache_methods GET;
 ```
 

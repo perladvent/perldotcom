@@ -24,7 +24,7 @@
 
 You'll need to install a copy of the latest Perl developer release (v5.19.8). You can get this with Perlbrew:
 
-``` prettyprint
+```perl
 $ perlbrew install perl-5.19.8
 $ perlbrew switch perl-5.19.8
 ```
@@ -33,7 +33,7 @@ Or you can download and build Perl v5.19.8 from [cpan.org](http://www.cpan.org/s
 
 Once 5.19.8 is installed, you'll need the [experimental](https://metacpan.org/pod/experimental) distribution. Install it via cpan at the command line:
 
-``` prettyprint
+```perl
 $ cpan experimental
 ```
 
@@ -41,14 +41,14 @@ $ cpan experimental
 
 In Perl we're used to using the circumfix operation to dereference variables. The circumfix operation involves wrapping our reference in curly braces and prepending the appropriate variable sigil. For example, to dereference an array:
 
-``` prettyprint
+```perl
 my $array_ref = [1, 2, 3];
 push @{$array_ref}, 4;
 ```
 
 Here we declare an array reference, then use the circumfix operation ("@{}") to dereference the array, enabling us to push the scalar onto the array. Stylistically the circumfix operation is ugly. Perl syntax is already awash with sigils and curly braces and we don't need any more. Circumfix dereferences can also be hard to read in the case of deeply nested references, as the dereferencing sigil is on the left, whilst the chain of dereferencing arrows grow to the right:
 
-``` prettyprint
+```perl
 my $deep_array_ref = [[[[[1,2,3]]]]];
 push @{$deep_array_ref->[0][0][0][0]}, 4;
 ```
@@ -57,7 +57,7 @@ push @{$deep_array_ref->[0][0][0][0]}, 4;
 
 Postfix dereferencing is a new feature and a drop-in replacement for circumfix dereferencing. Instead of wrapping the reference with a circumfix operation, we append a dereferencing sigil to the end of the reference. Let's revisit the previous two examples using postfix dereferencing:
 
-``` prettyprint
+```perl
 use experimental 'postderef';
 
 my $array_ref = [1, 2, 3];
@@ -69,7 +69,7 @@ push $deep_array_ref->[0][0][0][0]->@*, 4;
 
 Here we dereferenced the arrays using the postfix operation ("-\>@\*"). You can even get the array's last element index:
 
-``` prettyprint
+```perl
 use experimental 'postderef';
 
 my $array_ref = [1, 2, 3];
@@ -82,7 +82,7 @@ This is cleaner than circumfix as there are no extra curly braces, it's more int
 
 Arrays aren't the only beneficiary of this new feature. Postfix dereferencing works with scalars, hashes, coderefs and globs too:
 
-``` prettyprint
+```perl
 use experimental 'postderef';
 use feature 'say';
 

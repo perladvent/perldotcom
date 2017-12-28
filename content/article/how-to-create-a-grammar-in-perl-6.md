@@ -27,20 +27,20 @@ Module names can be described as identifiers separated by 2 colons, [File::Compa
 
 Perl 6 Grammars are built from regexes. I need two regexes: one for matching identifiers and one for matching the double colon separators. For the identifier regex, I'll use:
 
-``` prettyprint
+```perl
 <[A..Za..z_]> # begins with letter or underscore
 <[A..Za..z0..9]> ** 0..* # zero or more alpanumeric
 ```
 
 Remember we're using Perl 6 regexes, so things might look a little different if you're used to Perl 5 style regexes. A character class is defined by `<[ ... ]>` and ranges are defined using the range operator `..` instead of a hyphen. This regex matches any leading letter or underscore followed by zero or more alphanumeric characters. Matching two colons is easy:
 
-``` prettyprint
+```perl
 \:\: # colon pairs
 ```
 
 Grammars are defined using the `grammar` keyword, followed by the name of the grammar. I'm going to call this grammar `Legal::Module::Name`
 
-``` prettyprint
+```perl
 grammar Legal::Module::Name
 {
   ...
@@ -49,7 +49,7 @@ grammar Legal::Module::Name
 
 Now I can add the regexes as tokens to the grammar:
 
-``` prettyprint
+```perl
 grammar Legal::Module::Name
 {
   token identifier
@@ -67,7 +67,7 @@ grammar Legal::Module::Name
 
 Every Grammar needs a token called `TOP`, which is the starting point for the grammar:
 
-``` prettyprint
+```perl
 grammar Legal::Module::Name
 {
   token TOP
@@ -93,7 +93,7 @@ The `TOP` token defines a valid module name as one that begins with an identifie
 
 Now I've got the grammar, it's time to put it into action. The `parse` method runs the grammar on a string and if successful, returns a match object. This code parses the `$proposed_module_name` string, and either prints out the match object or an error message if the propose module name is invalid.
 
-``` prettyprint
+```perl
 my $proposed_module_name = 'Super::New::Module';
 my $match_obj = Legal::Module::Name.parse($proposed_module_name);
 
@@ -109,7 +109,7 @@ else
 
 This code prints:
 
-``` prettyprint
+```perl
 ｢Super::New::Module｣
  identifier => ｢Super｣
  separator => ｢::｣
@@ -122,7 +122,7 @@ This code prints:
 
 Rather than dumping the contents of the match object to the command line, we can extract matched tokens from the match object. This uses the same quoting syntax often used elsewhere in Perl 6 (e.g. named regexes and hash keys):
 
-``` prettyprint
+```perl
 say $match_obj[0].Str; # Super
 say $match_obj[1].Str; # New
 say $match_obj[2].Str; # Module
@@ -134,7 +134,7 @@ say $match_obj; # all 3 captures
 
 So far the grammar can detect if a proposed module name is legal or not, and produces a match object from which it's easy to extract the components of the module name. Perl 6 also let's you add an action class which defines extra behaviour for matched tokens. I'd like to add a warning when a module name has too many identifiers, in other words, it's a legal module name, but the user might want to shorten it. First I define the action class itself:
 
-``` prettyprint
+```perl
 class Module::Name::Actions
 {
   method TOP($/)
@@ -151,7 +151,7 @@ As you can see this is an ordinary Perl 6 class definition. I've added one metho
 
 I then initialize the action class and pass it as an argument in to `parse`:
 
-``` prettyprint
+```perl
 my $actions = Module::Name::Actions.new; 
 my $match_obj = Legal-Module-Name.parse($proposed_module_name, :actions($actions));
 ```

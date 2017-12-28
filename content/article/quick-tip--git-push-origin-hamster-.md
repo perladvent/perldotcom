@@ -21,20 +21,20 @@
 
 My typing is horrible. I make mistakes all the time. I'm an avid [Vim](http://www.vim.org/) user but I still use the arrow keys. I'm one of those people who need technology that does what they meant, not what they asked for. So if you're a coder like me, you probably see this a lot:
 
-``` prettyprint
+```perl
 $ git push origin amster
 error: src refspec amster does not match any.
 ```
 
 Fortunately there is a simple workaround: Git's [symbolic references](https://git-scm.com/docs/git-symbolic-ref). I can add a symbolic reference for `amster`:
 
-``` prettyprint
+```perl
 $ git symbolic-ref refs/heads/amster refs/heads/master
 ```
 
 And now Git does what I meant:
 
-``` prettyprint
+```perl
 $ git push origin amster
 Counting objects: 3, done.
 Delta compression using up to 4 threads.

@@ -27,7 +27,7 @@ Arrays in Perl contain an ordered list of values that can be accessed using buil
 
 In Perl variables are identified using sigils. Arrays use @ (as in 'a' for array), so the format is: @any\_name\_you\_choose\_here. Arrays are initialised by assigning a list of values (comma separated values between parentheses). Unlike more formal languages, Perl arrays can contain a mix of numbers, strings, objects and references.
 
-``` prettyprint
+```perl
 my @empty_array;
 
 my @another_empty_array = ();
@@ -43,7 +43,7 @@ my @random_collection = (2013, 'keyboard', 'perltricks.com', 30);
 
 The length of an array (aka the 'size') is the count of the number of elements in the array. To find the array length, use the array in a scalar context:
 
-``` prettyprint
+```perl
 my @numbers = (1, 2, 3, 4, 5);
 my $array_length = @numbers; 
 print $array_length;
@@ -56,7 +56,7 @@ Arrays can be accessed in a variety of ways: by directly accessing an element, s
 
 When directly accessing an array element, use the array name prefaced with the scalar sigil ($) instead of (@) and the index number of the element enclosed in square brackets. Arrays are zero-based, which means that the first element's index number is 0 (not 1!).
 
-``` prettyprint
+```perl
 my @names_start_with_j = ('John', 'Judy', 'Julia', 'James', 'Jennifer');
 $names_start_with_j[0]; # John
 $names_start_with_j[4]; # Jennifer
@@ -64,7 +64,7 @@ $names_start_with_j[4]; # Jennifer
 
 The implication of zero-based indexing is that the index number of the last element in an array is equal to the length of the array minus one.
 
-``` prettyprint
+```perl
 my @numbers = (11, 64, 29, 22, 100);
 my $numbers_array_length = @numbers;
 my $last_element_index = numbers_array_length - 1;
@@ -79,7 +79,7 @@ For simpler ways to access the last element of an array - see our [recent articl
 
 Arrays elements can be accessed sequentially using a foreach loop to iterate through the array one element at a time.
 
-``` prettyprint
+```perl
 my @names_start_with_j = ('John', 'Judy', 'Julia', 'James', 'Jennifer');
 foreach my $element (@names_start_with_j) {
     print "$element\n";
@@ -99,7 +99,7 @@ Perl arrays are dynamic in length, which means that elements can be added to and
 
 **shift** removes and returns the first element from the array, reducing the array length by 1.
 
-``` prettyprint
+```perl
 my @compass_points = ('north', 'east', 'south', 'west');
 my $direction = shift @compass_points;
 print $direction; 
@@ -108,7 +108,7 @@ print $direction;
 
 If no array is passed to shift, it will operate on @\_. This makes it useful in subroutines and methods where by default @\_ contains the arguments from the subroutine / method call. E.G.:
 
-``` prettyprint
+```perl
 print_caller("perltricks");
 sub print_caller {
     my $caller_name = shift;
@@ -119,7 +119,7 @@ sub print_caller {
 
 The other three array functions work similarly to shift. **unshift** receives and inserts a new element into the front of the array increasing the array length by 1.**push** receives and inserts a new element to the end of the array, increasing the array length by 1. **pop** removes and returns the last element in the array, reducing the array length by 1.
 
-``` prettyprint
+```perl
 my @compass_points = ('north', 'east', 'south', 'west');
 my $direction = 'north-east';
 unshift @compass_points, $direction;
@@ -133,7 +133,7 @@ push @compass, $new_direction; # put $west back
 
 A simple way to check if an array is null or defined is to examine it in a scalar context to obtain the number of elements in the array. If the array is empty, it will return 0, which Perl will also evaluate as boolean false. Bear in mind that this is not quite the same thing as undefined, as it is possible to have an empty array.
 
-``` prettyprint
+```perl
 my @empty_array;
 if (@empty_array) {
     # do something - will not be reached if the array has 0 elements

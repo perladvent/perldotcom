@@ -66,7 +66,7 @@ The data here is part of a standard under the [National Marine Electronics Assoc
 
 This being Perl, there is already a CPAN module that knows how to parse that data: [GPS::NMEA](https://metacpan.org/pod/GPS::NMEA). Here it is in action:
 
-``` prettyprint
+```perl
 use GPS::NMEA;
 my $gps = GPS::NMEA->new(
     Port => '/dev/ttyAMA0',

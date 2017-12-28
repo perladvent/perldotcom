@@ -34,7 +34,7 @@ Change the region value to the [AWS region](http://docs.aws.amazon.com/AmazonRDS
 
 S3 organizes files by bucket. Every bucket has URI-like name, which is unique across AWS. So if you're going to host a website on S3, you'll need to create a bucket for the website. This can be done via the AWS [web interface](https://aws.amazon.com/), the command-line [app](http://docs.aws.amazon.com/cli/latest/reference/s3/mb.html) or with Paws:
 
-``` prettyprint
+```perl
 use Paws;
 my $s3 = Paws->service('S3', region => 'us-east-1');
 $s3->CreateBucket(Bucket => 'mystaticwebsite.com', ACL => 'public-read');
@@ -45,7 +45,7 @@ The `ACL` argument specifies that the bucket can be read publicly, but not edite
 
 S3 files are stored as objects in buckets. Every file has a key, which is similar to the filename. I've developed a [script](https://github.com/dnmfarrell/Paws-tools/blob/master/s3-upload) called `s3-upload` which uses Paws to upload files to S3 buckets. It uses [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to parse command line options. It requires `--bucket` for the S3 bucket name, `--region` for the AWS region, and `--files` for the directory filepath:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use Getopt::Long 'GetOptions';
 use Paws;
@@ -72,7 +72,7 @@ delete_stale_objects($s3, $remote_objects, $local_objects) if $DELETE_STALE;
 
 I've omitted the subroutine definitions for brevity (see the [source](https://github.com/dnmfarrell/Paws-tools/blob/master/s3-upload) for details). The script begins by validating the input options, then creates an `$s3` object. It calls `get_remote_objects` which returns a hashref of keys (files) and their last modified time currently in the bucket. It passes this to `upload` which only uploads files that have been modified since being uploaded to S3 (you don't want to upload the entire website if only one file has changed). `upload` does many things, but essentially, it uses [PutObject](https://metacpan.org/pod/Paws::S3::PutObject) to upload files:
 
-``` prettyprint
+```perl
 sub upload {
   ...
   $s3->PutObject(
@@ -104,7 +104,7 @@ The script will print any files uploaded to STDOUT and all other output to STDER
 
 Whilst the above script does the job, there are some features missing that are useful for static websites. Firstly, you might want to specify the MIME type of the files being uploaded. This is so when browsers fetch the files, S3 responds with the correct content type [header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type). Otherwise, HTML files may not be displayed as websites, images may be downloaded instead of displayed, and so on. I use [Media::Type::Simple](https://metacpan.org/pod/Media::Type::Simple) for this:
 
-``` prettyprint
+```perl
 use Media::Type::Simple;
 ...
 # setup mime types, add missing

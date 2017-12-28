@@ -27,14 +27,14 @@ STDOUT is the Perl filehandle for printing standard output. Unless a filehandle 
 
 Before you launch your favourite text editor and start hacking Perl code, you may just need to redirect the program output in the terminal. On UNIX-based systems you can write to a file using "\>" and append to a file using "\>\>". Both write and append will create the file if it doesn't exist.
 
-``` prettyprint
+```perl
 perl program.pl > /path/to/log.txt
 perl program.pl >> /path/to/log.txt
 ```
 
 On Windows a similar effect can be achieved using PowerShell using a pipe operator ("|") and "set-content" to write, or "add-content" to append (the pipe will not redirect STDERR).
 
-``` prettyprint
+```perl
 perl program.pl | set-content /path/to/log.txt
 perl program.pl | add-content /path/to/log.txt
 ```
@@ -47,7 +47,7 @@ If a terminal redirect is not specific enough for your needs, you can use one of
 
 Perl's built-in function [select](http://perldoc.perl.org/functions/select.html) changes the standard output filehandle to the filehandle provided as an argument. This makes it easy to globally redirect and restore standard output.
 
-``` prettyprint
+```perl
 use feature qw/say/;
 use autodie;
 
@@ -69,7 +69,7 @@ say 'This should show in the terminal';
 
 Perl's [local](http://perldoc.perl.org/functions/local.html) built-in function is another option for redirecting STDOUT. The local function creates a lexically-scoped copy of any variable passed to it. By enclosing local in a do block, the code below limits the STDOUT redirect to the block scope and STDOUT is automatically restored after the closing block brace ("}"). By definition this is not a global solution for redirecting STDOUT.
 
-``` prettyprint
+```perl
 use feature qw/say/;
 use autodie;
 
@@ -88,7 +88,7 @@ say 'This should show in the terminal';
 
 A third way to redirect and restore STDOUT is to copy the STDOUT filehandle before replacing it. This copy can then be restored when required. As with select, this will have a global affect on the Perl program.
 
-``` prettyprint
+```perl
 use feature qw/say/;
 use autodie;
 

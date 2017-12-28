@@ -30,7 +30,7 @@ The CPAN website's [recent uploads](http://search.cpan.org/recent) page maintain
 
 Chris Williams' [CPAN::Recent::Uploads](https://metacpan.org/module/CPAN::Recent::Uploads) module offers a programmatic interface to track recent CPAN uploads. It provides a "recent" function that accepts two optional arguments: the time from which to view uploads since and the URL of the CPAN mirror to use. By default it will return a list of modules released in the past week on the CPAN mirror "ftp://ftp.funet.fi/pub/CPAN/". The module's [documentation](https://metacpan.org/module/CPAN::Recent::Uploads) also has an example Perl one liner. To see CPAN::Recent::Uploads in action, enter this at the command-line:
 
-``` prettyprint
+```perl
 # print a list of this week's CPAN releases
 perl -MCPAN::Recent::Uploads -le "print for CPAN::Recent::Uploads->recent;"
 ```

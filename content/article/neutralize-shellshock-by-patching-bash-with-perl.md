@@ -34,7 +34,7 @@ Bashfix has a minimal set of requirements, so you should be able to run it on an
 
 Using bashfix is fairly straightforward:
 
-``` prettyprint
+```perl
 $ git clone https://github.com/sillymoose/bashfix.git
 $ cd bashfix
 $ chmod +x bashfix.pl

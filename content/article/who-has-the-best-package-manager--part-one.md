@@ -82,7 +82,7 @@ Packagist linked to the source repos on GitHub. The code was easy to navigate al
 
 Installation with PHP Composer is done by marking the target package as "required" in a json file. packages can be installed directly using Composer on the command line:
 
-``` prettyprint
+```perl
 $ composer.phar require "laravel/framework": "4.2.8" 
 ```
 

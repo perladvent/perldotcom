@@ -26,7 +26,7 @@
 
 This token contains the name of the package which is declared at the top of any Perl module e.g:
 
-``` prettyprint
+```perl
 package Perltricks::Example;
 use strict;
 use warnings;

@@ -25,7 +25,7 @@ EDIT: *Article updated on 9th February 2014 to include ExtUtils::MakeMaker solut
 
 The "\_\_DATA\_\_" token is a Perl keyword that signifies the end of the code in the file. Any text that appears after the token is automatically read into the DATA filehandle at runtime. For example, let's include the Perl TIOBE statistics for the past decade as YAML data in a Perl test file:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use YAML::XS;
@@ -62,7 +62,7 @@ FindBin is a fabulous little module that comes with core Perl and provides the "
 
 First we have our Tiobe Perl YAML data, saved in the file perl\_tiobe.yaml:
 
-``` prettyprint
+```perl
 ---
 2014: 0.917
 2013: 2.264
@@ -78,7 +78,7 @@ First we have our Tiobe Perl YAML data, saved in the file perl\_tiobe.yaml:
 
 Next we reference the file in our modified test script:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use YAML::XS;
@@ -104,7 +104,7 @@ Another way to include data files with a Perl distribution is to place them in a
 
 If your distribution uses ExtUtils::MakeMaker, you can use [File::ShareDir::Install](https://metacpan.org/pod/File::ShareDir::Install) in your Makefile.PL to copy the data files. Here is a vanilla Makefile.PL for a fictional module " Data::File":
 
-``` prettyprint
+```perl
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
@@ -143,7 +143,7 @@ In the Makefile we import File::ShareDir:Install, and pass our "share" directory
 
 If you are using [Module::Build](https://metacpan.org/pod/Module::Build::API), update Build.PL file with the [share\_dir](https://metacpan.org/pod/https://metacpan.org/pod/Module::Build::API#share_dir) directive. Here's a vanilla Build.PL for a fictional module "Data::File":
 
-``` prettyprint
+```perl
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
@@ -177,7 +177,7 @@ The "share\_dir" directive in the example Build.PL above instructs Module::Build
 
 Whether your distribution uses a Makefile.PL or a Build.PL, accessing the data file is now a matter of code. Here is a stripped-own File.pm file from our fictional module "Data::File":
 
-``` prettyprint
+```perl
 package Data::File;
 use strict;
 use warnings;

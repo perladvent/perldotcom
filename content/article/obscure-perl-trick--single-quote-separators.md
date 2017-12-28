@@ -23,7 +23,7 @@ How interesting! Ada uses a single quote as an [attribute delimiter](https://en.
 
 In Perl, I can replace the use of the two colon separator with a single quote. So this simple package declaration and script:
 
-``` prettyprint
+```perl
 package My::Customer;
 
 sub name { 'Dobby the Sheep' }
@@ -35,7 +35,7 @@ print My::Customer::name();
 
 Becomes:
 
-``` prettyprint
+```perl
 package My'Customer;
 
 sub name { 'Dobby the Sheep' }

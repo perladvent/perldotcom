@@ -14,7 +14,7 @@ If you've got a Perl script that does something useful, you might want to put it
 
 So let's say I've got this Perl script:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -65,7 +65,7 @@ You can also use `#!/usr/bin/perl` and it will be overwritten by the install pro
 
 I should also add some documentation, so the final script looks like this:
 
-``` prettyprint
+```perl
 #!perl
 use strict;
 use warnings;
@@ -126,7 +126,7 @@ I've included installation instructions here, you'll see why later.
 
 The CPAN toolchain requires at least one package in every distribution<sup>1</sup>, so I'm going to make a stub `lib/App/foo.pm`:
 
-``` prettyprint
+```perl
 package App::foo;
 
 our $VERSION = 0.01;
@@ -160,7 +160,7 @@ This stub module does a couple of important things: having the package means CPA
 
 The other file we need is `Makefile.PL`. This is a Perl script which will create the Makefile that builds, tests and installs the module. Later I'll use some of the built-in routines in the Perl toolchain to use our Makefile.PL to do a bit more than that.
 
-``` prettyprint
+```perl
 use 5.008004;
 use ExtUtils::MakeMaker;
 

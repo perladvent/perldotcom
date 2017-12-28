@@ -23,7 +23,7 @@ Every time I reinvent it I write it a little differently than I did before, and 
 
 One day I had a small task to prune a directory tree and I wanted to look at the largest files in it. I knew about `du` and that it could show me a list of files and their sizes:
 
-``` prettyprint
+```perl
 $ du -a
 16  ./apache2/extra
 16  ./apache2/original/extra
@@ -41,13 +41,13 @@ The problem is the command's depth-first traversal. I could play various tricks 
 
 The first part is easy. I can open a pipe to the external command (see my earlier article [Stupid open tricks](http://perltricks.com/article/182/2015/7/15/Stupid-open---tricks)). This time, I use the three-argument pipe-open instead of the two-argument form I'd used earlier.
 
-``` prettyprint
+```perl
 open my $pipe, '-|', 'du -a';
 ```
 
 After that, I need to display the data. My concept is that the on-screen list will update with the largest files so far. I take each line of output, split it into its size and filename, and add them to the list. I've created a class to handle that, including the parts that decide which files are large enough to display:
 
-``` prettyprint
+```perl
 my $files = Local::files->new;
 
 while( <$pipe> ) {
@@ -61,7 +61,7 @@ while( <$pipe> ) {
 
 The next part I update for Perl 5.12's [package NAME BLOCK](http://www.effectiveperlprogramming.com/2013/08/declare-packages-outside-of-their-block/) syntax that allows me to declare the `package` outside of its block:
 
-``` prettyprint
+```perl
 package Local::files {
   ...
 }
@@ -71,7 +71,7 @@ The rest is list manipulation and Curses stuff. I won't go through the list code
 
 The setup for Curses is easy. It knows the screen size already:
 
-``` prettyprint
+```perl
 sub init ($self) {   
   initscr;
   curs_set(0); # hide cursor
@@ -86,13 +86,13 @@ sub init ($self) {
 
 I need to remember to undo all the magic that Curses does by calling `endwin` at the end, so I put the `DESTROY` right after the part I go through the initial setup:
 
-``` prettyprint
+```perl
 sub DESTROY { endwin; }
 ```
 
 Once I have the sorted list, I have to draw it to the screen. This involves two things. I need to erase what's already there so a shorter filename doesn't leave parts of a longer filename it might replace. The `addstr` puts text on the screen (the top-left corner being (1,1)). None of the new text shows up until I call `refresh`:
 
-``` prettyprint
+```perl
 sub draw ($self) {
   for( my $i = 0; $i < MAX; $i++ ) {
     next if $self->size_at( $i ) == 0 or $self->name_at( $i ) eq '';

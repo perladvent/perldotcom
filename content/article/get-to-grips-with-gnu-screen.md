@@ -27,7 +27,7 @@ GNU Screen is a terminal multiplexer, a program that manages terminal windows. I
 
 Start Screen by simply typing `screen` at the command line:
 
-``` prettyprint
+```perl
 $ screen
 ```
 
@@ -61,13 +61,13 @@ By default Screen prevents scrolling using the X-Window scrollbar (it also doesn
 
 Screen sessions can be put into the background just like any other terminal process. Screen will keep open any terminal processes (like ssh sessions). This is very useful - if you find yourself working with more than 5 or 6 windows, it might be easier to detach and start a new screen session than adding more windows. To detach screen, the combination is `Control + a, d`. When you detach, screen will print the session name and return to the terminal prompt. To re-attach to a detached session just use `screen -r`:
 
-``` prettyprint
+```perl
 $ screen -r
 ```
 
 If you have more than one screen session, you can display all detached sessions with `-ls`:
 
-``` prettyprint
+```perl
 $ screen -ls
 There are screens on:
     30549.pts-1.localhost   (Detached)
@@ -78,19 +78,19 @@ There are screens on:
 
 Then just re-attach to the session you want by providing the session name as an option to `-r`
 
-``` prettyprint
+```perl
 $ screen -r 29207
 ```
 
 But if you've really got multiple Screen sessions going, it can be hard to remember what they're all doing. So when you start Screen, use the `-S` option to give the session a name:
 
-``` prettyprint
+```perl
 $ screen -S aws_ec2
 ```
 
 If you name all your sessions, it's much easier to know which one to re-attach to:
 
-``` prettyprint
+```perl
 $ screen -ls
 There are screens on:
     31155.aws_ec2   (Detached)
@@ -107,14 +107,14 @@ Screen is highly configurable which is good because you'll probably want to chan
 
 To stop your ssh sessions from timing out, add the following to your `~/.ssh/config` file:
 
-``` prettyprint
+```perl
 # dont timeout connections
 ServerAliveInternal 600
 ```
 
 If the `~/.ssh/config` file didn't already exist, you may have to change the permissions on the file:
 
-``` prettyprint
+```perl
 $ chmod 644 ~/.ssh/config
 ```
 
@@ -122,7 +122,7 @@ This option will have ssh send a byte every 10 minutes to the remote server to k
 
 Like many other terminal programs, screen will look for a runcom config file (`~/.screenrc`). I like the following options:
 
-``` prettyprint
+```perl
 # no welcome message
 startup_message off
 

@@ -12,7 +12,7 @@
 
 Have you ever had the experience of doing something a certain way for a long time, and then you discover a better way? This happened to me last week, when I was working on some code that needed to empty a file. Emptying a file is a common operation - maybe you have a session log file to write to, or want to limit disk space use, or whatever. Here's how I usually do it:
 
-``` prettyprint
+```perl
 # empty the file
 { open my $session_file, '>', 'path/to/sessionfile' }
 ```
@@ -21,7 +21,7 @@ This opens a write filehandle on the file, effectively setting its length to zer
 
 The other day though, I came across the [truncate](http://perldoc.perl.org/functions/truncate/html) function. This does exactly what you'd think it does: truncates files. It takes two arguments: the file path (or filehandle), and the length. So if you need to truncate a file, you can do:
 
-``` prettyprint
+```perl
 truncate 'path/to/sessionfile', 0;
 ```
 

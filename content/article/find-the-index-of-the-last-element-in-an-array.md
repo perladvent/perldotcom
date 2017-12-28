@@ -19,7 +19,7 @@
 
 Most Perl programmers know that to find the size of an array, the array must called in a scalar context like this:
 
-``` prettyprint
+```perl
 # Declare the array
 my @numbers_array = (41,67,13,9,62); 
 # Get the array size
@@ -28,7 +28,7 @@ my $size_of_array = @numbers_array;
 
 This understanding can lead to programmers applying a scalar context to an array to access its last element (subtracting 1 because arrays are zero-based).
 
-``` prettyprint
+```perl
 print $numbers_array[@numbers_array - 1];
 # 62
 ```
@@ -37,7 +37,7 @@ print $numbers_array[@numbers_array - 1];
 
 Perl has a 'last-index' variable for arrays ($\#array\_name).
 
-``` prettyprint
+```perl
 print $#numbers_array; 
 # 4
 print $numbers_array[$#numbers_array]; 
@@ -46,7 +46,7 @@ print $numbers_array[$#numbers_array];
 
 The last index operator ($\#array\_name) also works on arrayrefs if you insert an extra dollar sigil:
 
-``` prettyprint
+```perl
 my $arrayref = [41, 67, 13, 9, 62];
 print $#$arrayref;
 # 4
@@ -58,7 +58,7 @@ print $$arrayref[$#$arrayref];
 
 Perl provides a shorter syntax for accessing the last element of an array: negative indexing. Negative indices track the array from the end, so -1 refers to the last element, -2 the second to last element and so on.
 
-``` prettyprint
+```perl
 # Declare the array
 my @cakes = qw(victoria_sponge chocolate_gateau carrot);
 print $cakes[-1]; # carrot

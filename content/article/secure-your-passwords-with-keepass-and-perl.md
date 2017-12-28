@@ -23,7 +23,7 @@
 
 You'll need to install [File::KeePass](https://metacpan.org/pod/File::KeePass). The CPAN testers [results](http://matrix.cpantesters.org/?dist=File-KeePass+2.03) show that it runs on all modern Perls and many platforms including Windows. To install the module with CPAN, fire up the terminal and enter:
 
-``` prettyprint
+```perl
 $ cpan File::KeePass
 ```
 
@@ -33,7 +33,7 @@ You may want to install [KeePassX](https://www.keepassx.org/), an open source im
 
 The KeePass password manager stores all passwords in an encrypted database file. All username/password entries are stored in collections of entries called "groups". File::KeePass provides for methods creating all of these items:
 
-``` prettyprint
+```perl
 use File::KeePass;
 
 my $kp_db = File::KeePass->new;
@@ -53,7 +53,7 @@ In the code above we start by instantiating a new File::KeePass object. The "add
 
 Save the code as "create\_keepass\_db.pl" and run it on the command line with this command:
 
-``` prettyprint
+```perl
 $ perl create_keepass_db.pl
 ```
 
@@ -69,7 +69,7 @@ Once you've entered the master password, KeePassX will show the main window, whi
 
 Instead of using a GUI like KeePass or KeePassX, you can read the contents of the database file using File::KeePass:
 
-``` prettyprint
+```perl
 use File::KeePass;
 
 my $kp_db = File::KeePass->new;
@@ -79,7 +79,7 @@ my $groups = $kp_db->groups;
 
 Here we opened our newly-created KeePass database file using the "load\_db" method. The "groups" method returns an arrayref of groups. Each group is a hashref that also contains an arrayref of entries. Printing $groups with Data::Dumper, we can see this more clearly:"
 
-``` prettyprint
+```perl
 $VAR1 = [
           {
             'icon' => 0,
@@ -112,7 +112,7 @@ $VAR1 = [
 
 File::KeePass provides methods for searching for entries. In order to update an entry, we have to retrieve it, update it, and then save the database file. Because entries are just hashrefs, this is easy:
 
-``` prettyprint
+```perl
 use File::KeePass;
 
 my $kp_db = File::KeePass->new;

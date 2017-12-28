@@ -36,7 +36,7 @@ The LSM303DLHC chip in question also contains a magnetometer, and is available o
 
 Device::LSM303DLHC uses the Linux scheme of accessing I2C devices under `/dev/i2c-*`. On the Raspberry Pi, the I2C pins on the GPIO header are available at `/dev/i2c-1`. Device::LSM303DLHC divides the two functions of this chip into two objects. You start by initializing the main object with the I2C path, fetching the accelerometer object, and enabling it:
 
-``` prettyprint
+```perl
 my $dev = Device::LSM303DLHC->new({
     I2CBusDevicePath => '/dev/i2c-1',
 });
@@ -46,7 +46,7 @@ $accel->enable;
 
 The `$accel` object gives us convenience methods for returning the acceleration vector in different units. With `getAccelerationVectorInG()`, we get the g rating, while `getAccelerationVecotrInMSS()` gives us m/s<sup>2</sup>, among a few others. I like to use the g rating:
 
-``` prettyprint
+```perl
 while(1) {
     my $acc_angle = $accel->getAccelerationVectorInG;
     say "Accel: $$acc_angle{x}, $$acc_angle{y}, $$acc_angle{z}";

@@ -29,7 +29,7 @@ berrybrew is written in C\#. If you have git you can install berrybrew by clonin
 
 To download the project with git and compile it with [Mono](http://www.mono-project.com/) type the following commands at the terminal:
 
-``` prettyprint
+```perl
 > git clone https://github.com/sillymoose/berrybrew
 > mcs src/berrybrew.cs -lib:lib -r:ICSharpCode.SharpZipLib.dll -out:bin/berrybrew.exe
 ```
@@ -40,7 +40,7 @@ This will output a fresh binary in the `bin` directory.
 
 The `available` command lists available Strawberry Perls and whether they're installed:
 
-``` prettyprint
+```perl
 > berrybrew available
 
 The following Strawberry Perls are available:
@@ -59,7 +59,7 @@ The following Strawberry Perls are available:
 
 The output shows that I have both versions of Perl 5.20.1 installed. I can install another version using the `install` command:
 
-``` prettyprint
+```perl
 > berrybrew install 5.10.1_32
 Downloading http://strawberryperl.com/download/5.10.1.2/strawberry-perl-5.10.1.2-portable.zip to C:\Users\dfarrell\AppData\Local\Temp\gp5d33yg.qjo/strawberry-pe
 rl-5.10.1.2-portable.zip
@@ -82,7 +82,7 @@ The following Strawberry Perls are available:
 
 berrybrew will download a temporary zip archive, confirm the checksums match, and extract the files to `C:\berrybrew`. Finally I can use the newly installed Perl with the `switch` command:
 
-``` prettyprint
+```perl
 > berrybrew switch 5.10.1_32
 Switched to 5.10.1_32, start a new terminal to use it.
 ```

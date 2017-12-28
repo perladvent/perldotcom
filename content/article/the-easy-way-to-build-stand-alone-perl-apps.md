@@ -22,7 +22,7 @@ The Perl toolchain has such a large install base it's tempting to just upload yo
 
 You'll need a Unix-based system (Linux, OSX, BSD) and to install [App::FatPacker](https://metacpan.org/pod/App::FatPacker). It runs on every version of Perl from 5.8.8 upwards, so just fire up the terminal and enter the following:
 
-``` prettyprint
+```perl
 cpan App::FatPacker
 ```
 
@@ -30,7 +30,7 @@ cpan App::FatPacker
 
 You can convert any typical Perl script into a standalone app, as long as it doesn't have XS dependencies (see "Alternatives to App::Fatpacker" below for more info on how to create apps with XS dependencies). One suggestion would be to use the following shebang line:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 ```
 
@@ -40,7 +40,7 @@ This shebang line will call the "env" program passing "perl" as a parameter. Thi
 
 This couldn't be simpler: once you have your Perl script ready to go, open the terminal and enter the following, replacing the paths with your own:
 
-``` prettyprint
+```perl
 fatpack pack /path/to/script > /path/to/app
 ```
 
@@ -50,7 +50,7 @@ This will pack all of the dependencies used by your script into a single executa
 
 Now that your app is in a single file, distributing and running it is a piece of cake. Simply copy the file to any directory in your $PATH. In order to be able to run your new app, you'll need to set it's permission to be executable. You can do this with chmod:
 
-``` prettyprint
+```perl
 chmod 755 /path/to/app
 ```
 
@@ -60,7 +60,7 @@ Now the app should run simply by entering the app filename in the terminal.
 
 Let say we have the following script, BillCalc.pl which calculates how much each person should pay at dinner using the fictitious "Math::Bill" library.
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -77,7 +77,7 @@ say 'Each person should pay: ' . $bill->apportion . ' each';
 
 We can pack BillCalc.pl into a single file app using App::Fatpacker:
 
-``` prettyprint
+```perl
 fatpack pack BillCalc.pl > BillCalc
 BillCalc.pl syntax OK
 ```
@@ -86,19 +86,19 @@ App::Fatpacker prints out a confirmation message ("BillCalc.pl syntax OK") and w
 
 Let's move this to a directory in my $PATH, /home/sillymoose/local/bin
 
-``` prettyprint
+```perl
 mv BillCalc /home/sillymoose/local/bin
 ```
 
 And change the file permissions to be executable:
 
-``` prettyprint
+```perl
 chmod 755 /home/sillymoose/local/bin/BillCalc
 ```
 
 Now we can run the BillCalc app at the command line:
 
-``` prettyprint
+```perl
 BillCalc 120 3
 Each person should pay: 40 each
 ```

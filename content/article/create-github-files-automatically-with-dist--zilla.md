@@ -27,7 +27,7 @@ Traditionally Dist::Zilla makes a distinction between your code and the files ne
 
 To use the code in this article, you'll need to install Dist::Zilla and the two plugin modules described below. You can do that with `cpan`:
 
-``` prettyprint
+```perl
 $ cpan Dist::Zilla \
   Dist::Zilla::Plugin::ReadmeAnyFromPod  \
   Dist::Zilla::Plugin::CopyFilesFromBuild
@@ -35,7 +35,7 @@ $ cpan Dist::Zilla \
 
 If you're installing Dist::Zilla consider using [cpanminus](https://metacpan.org/pod/App::cpanminus) instead, with no tests for a much faster install:
 
-``` prettyprint
+```perl
 $ cpanm --notest Dist::Zilla \ 
   Dist::Zilla::Plugin::ReadmeAnyFromPod \
   Dist::Zilla::Plugin::CopyFilesFromBuild
@@ -52,7 +52,7 @@ Ryan's module [Dist::Zilla::Plugin::ReadmeAnyFromPod](https://metacpan.org/pod/D
 
 If I build the distribution with Dist::Zilla, it will generate a new readme for me, including the author, copyright and version information in addition to the documentation already in the main module.
 
-``` prettyprint
+```perl
 $ dzil build && dzil clean
 ```
 
@@ -69,7 +69,7 @@ I use another module from Ryan, [Dist::Zilla::Plugin::CopyFilesFromBuild](https:
 
 This will copy the license out of the build directory into the root project directory. The `exclude_filename` clause is there so that during the *next* build, Dist::Zilla does not include the generated license in the working directory of files. Running this in the same way as before, I can generate whatever license text I want for my distribution (the type of license is specified in the `dist.ini`).
 
-``` prettyprint
+```perl
 $ dzil build && dzil clean
 ```
 
@@ -125,7 +125,7 @@ Here's a `dist.ini` from a [repo](https://github.com/dnmfarrell/Settlers-Game) o
 
 To use this config with Dist::Zilla you'll need some additional plugins:
 
-``` prettyprint
+```perl
 $ cpan Dist::Zilla::Plugin::Clean \
   Dist::Zilla::Plugin::GithubMeta \
   Dist::Zilla::Plugin::ChangelogFromGit \

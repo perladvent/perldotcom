@@ -21,7 +21,7 @@ An anonymous function in Perl is an unnamed subroutine. But what are they good f
 
 Imagine that you've developed the following script. The script receives a directory path as a parameter and recursively searches the child directories of the path, printing any file name it finds:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -49,7 +49,7 @@ listFiles($ARGV[0]);
 
 The most re-usable aspect of this script is the recursive directory searching logic. If you wanted to develop a file name searching script (similar to the find program in Linux), you could start by copying and pasting the script above, and then updating the code to provide the required behavior. An alternative way would be to change the core subroutine to accept an anonymous function as an argument, and then execute that function on every file it finds. Such a subroutine would look like this:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -83,7 +83,7 @@ The "walkDir" subroutine in the code above accepts two arguments: the directory 
 
 We can re-use the same walkDir subroutine for our file-searching script and all we have to do is update the anonymous function behavior:
 
-``` prettyprint
+```perl
 walkDir($ARGV[0], 
         sub { 
             my $filename = shift;
@@ -93,7 +93,7 @@ walkDir($ARGV[0],
 
 To create a grep-like tool, we would replace the previous code with this:
 
-``` prettyprint
+```perl
 use File::Slurp;
 walkDir($ARGV[0],
         sub {

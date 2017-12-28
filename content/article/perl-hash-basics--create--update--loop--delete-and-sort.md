@@ -31,13 +31,13 @@ Hashes are one of Perl's core data types. This article describes the main functi
 
 A hash is an unsorted collection of key value pairs. Within a hash a key is a unique string that references a particular value. A hash can be modified once initialized. Because a hash is unsorted, if it's contents are required in a particular order then they must be sorted on output. Perl uses the '%' symbol as the variable sigil for hashes. This command will **declare an empty hash**:
 
-``` prettyprint
+```perl
 my %hash;
 ```
 
 Similar to the syntax for arrays, hashes can also be declared using a list of comma separated values:
 
-``` prettyprint
+```perl
 my %weekly_temperature = ('monday', 65, 'tuesday', 68, 'wednesday', 71, 'thursday', 53, 'friday', 60);
 ```
 
@@ -45,7 +45,7 @@ In the code above, Perl takes the first entry in the list as a key ('monday'), a
 
 The **'fat comma'** operator looks like an arrow ('=\>') and allows the declaration of key value pairs instead of using a comma. This makes for cleaner and more readable code. Additionally there is no need to quote strings for keys when using the fat comma. Using the fat comma, the same declaration of %weekly\_temperature would look like this:
 
-``` prettyprint
+```perl
 my %weekly_temperature = (
     monday    => 65, 
     tuesday   => 68,
@@ -59,7 +59,7 @@ my %weekly_temperature = (
 
 To access the value of a key value pair, Perl requires the key encased in curly brackets.
 
-``` prettyprint
+```perl
 my %weekly_temperature = (
     monday    => 65, 
     tuesday   => 68,
@@ -77,7 +77,7 @@ Note that strings do not need to be quoted when placed between the curly bracket
 
 A slice is a list of values. In Perl a slice can be read into an array, assigned to individual scalars, or used as an input to a function or subroutine. Slices are useful when you only want to extract a handful of values from a hash. For example:
 
-``` prettyprint
+```perl
 my %weekly_temperature = (
     monday    => 65,
     tuesday   => 68,
@@ -101,7 +101,7 @@ The code above declares the 'weekly\_temperature' hash as usual. What's unusual 
 
 The values function returns a list of the values contained in a hash. It's possible to loop through the list of returned values and perform operations on them (e.g. print). For example:
 
-``` prettyprint
+```perl
 my %weekly_temperature = (
     monday    => 65, 
     tuesday   => 68,
@@ -125,7 +125,7 @@ A couple more tips when working with key value pairs of a hash: the code is more
 
 The keys function returns a list of the keys contained in a hash. A common way to access all the key value pairs of a hash is to use loop through the list returned by the keys function. For example:
 
-``` prettyprint
+```perl
 my %consultant_salaries = (
     associate        => 25000,
     senior_associate => 40000,
@@ -149,7 +149,7 @@ In the above code we used the keys function to return a list of keys, looped tho
 
 The each function returns all keys and values of a hash, one at a time:
 
-``` prettyprint
+```perl
 my %consultant_salaries = (
     associate        => 25000,
     senior_associate => 40000,
@@ -171,7 +171,7 @@ while (my ($key, $value) = each %consultant_salaries) {
 
 To add a new pair to a hash, use this syntax:
 
-``` prettyprint
+```perl
 # declare the hash as usual
 my %fruit_pairs = (apples => 'oranges');
 
@@ -190,7 +190,7 @@ while (my ($key, $value) = each %fruit_pairs) {
 
 To remove a key value pair from a hash use the delete function. Delete requires the key of the pair in order to delete it from the hash:
 
-``` prettyprint
+```perl
 my %fruit_pairs = (apples => 'oranges');
 
 # use the delete function with the pair's key
@@ -201,7 +201,7 @@ delete $fruit_pairs{apples};
 
 To update the value of a pair, simply assign it a new value using the same syntax as to add a new key value pair. The difference here is that the key already exists in the hash:
 
-``` prettyprint
+```perl
 my %fruit_pairs = (apples => 'oranges');
 # assign a new value to the pair
 $fruit_pairs{apples} = 'bananas';
@@ -211,7 +211,7 @@ $fruit_pairs{apples} = 'bananas';
 
 To empty a hash, re-declare it with no members:
 
-``` prettyprint
+```perl
 my %fruit_pairs = (apples => 'oranges');
 
 # empty the hash
@@ -222,7 +222,7 @@ my %fruit_pairs = (apples => 'oranges');
 
 Quick answer: use the same syntax for assigning / updating a value with the increment or decrement operator:
 
-``` prettyprint
+```perl
 my %common_word_count = (
     the => 54,
     and => 98,
@@ -240,7 +240,7 @@ $common_word_count{a}--;
 
 Although the internal ordering of a hash is random, it is possible to sort the output from a hash into a more useful sequence. Perl provides the sort function to (obviously) sort lists of data. By default it sorts alphabetically:
 
-``` prettyprint
+```perl
 my %common_word_count = (
     the => 54,
     and => 98,
@@ -269,7 +269,7 @@ Let's review the code above. The compare block receives the hash keys using the 
 
 Numerically sorting a hash requires using a compare block as in the previous example, but substituting the 'cmp' operator for the numerical comparison operator ('\<=\>'):
 
-``` prettyprint
+```perl
 my %common_word_count = (
             the => 54,
             and => 98,
@@ -285,7 +285,7 @@ foreach my $key (sort {$common_word_count{$a} <=> $common_word_count{$b}} keys %
 
 To get the size of a hash, simply call the keys function in a scalar context. This can be done by assigning the return value of keys to a scalar variable:
 
-``` prettyprint
+```perl
 my %common_word_count = (
             the => 54,
             and => 98,

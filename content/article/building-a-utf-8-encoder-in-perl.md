@@ -34,7 +34,7 @@ Decoding is simply the process in reverse: converting a sequence of bytes back i
 
 To encode UTF-8, I need to convert a codepoint (which is just a number), into a sequence of bytes. As there are four different byte sequences defined in the UTF-8 table, there are four scenarios to handle:
 
-``` prettyprint
+```perl
 sub codepoint_to_bytes {
   my $codepoint = shift;
 
@@ -76,7 +76,7 @@ The process for three byte and four byte encoding follows the same approach, wit
 
 If I wanted to get UTF-8 encoded bytes for the [Television](http://www.fileformat.info/info/unicode/char/1f4fa/fontsupport.htm) codepoint (U+1F4FA) I could use the code like so:
 
-``` prettyprint
+```perl
 my $bytes = codepoint_to_bytes(0x1F4FA);
 ```
 
@@ -88,7 +88,7 @@ Perl tries "to make the easy things easy, and the hard things possible" as the s
 
 There are two ways to do that. The old, discouraged way is to use the [bytes pragma](https://metacpan.org/pod/bytes). The newer way is to use the [Encode](https://metacpan.org/pod/Encode#SYNOPSIS) module to encode the scalar as bytes and remove its UTF-8 flag. After that, Perl's functions will treat the scalar as a sequence of bytes instead of characters:
 
-``` prettyprint
+```perl
 use Encode 'encode';
 
 sub bytes_to_codepoint {
@@ -109,7 +109,7 @@ In the subroutine `bytes_to_codepoint` I use `encode()` to populate `$input` wit
 Now I know the number of bytes passed to `bytes_to_codepoint`, it's just a matter of reversing the binary operations from the encoding process:
 
 
-``` prettyprint
+```perl
 if ($len == 1) {
   return $bytes[0];
 }
@@ -139,7 +139,7 @@ If there is just one byte, I return it as-is because the codepoint number is the
 
 The same logic applies to three byte and four byte sequences, I just update the bitwise operations to match the UTF-8 scheme. The final code looks like this:
 
-``` prettyprint
+```perl
 use Encode 'encode';
 
 sub bytes_to_codepoint {
@@ -175,7 +175,7 @@ sub bytes_to_codepoint {
 
 Let's say I wanted to get the codepoint for the [Tokyo Tower](http://www.fileformat.info/info/unicode/char/1f5fc/index.htm) I can call the code like this:
 
-``` prettyprint
+```perl
 use utf8;
 my $codepoint = bytes_to_codepoint('🗼');
 ```

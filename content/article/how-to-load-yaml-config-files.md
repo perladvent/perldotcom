@@ -39,7 +39,7 @@ Let's walkthrough config.yaml: the config file starts with three hyphens ("---")
 
 Perl's [YAML::XS](https://metacpan.org/module/YAML::XS) module provides a `LoadFile` subroutine that can be used to read any YAML file into a scalar variable. This script loads the "config.yaml" config file and prints it using [Data::Dumper](https://metacpan.org/pod/Data::Dumper):
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use YAML::XS 'LoadFile';
@@ -52,7 +52,7 @@ print Dumper($config);
 
 If we run this script we get the following results:
 
-``` prettyprint
+```perl
 $VAR1 = {
           'emailName' => 'David',
           'credentials' => {
@@ -72,7 +72,7 @@ These results show that config.yaml has been read into `$config` as a hash refer
 
 So far the script reads the contents of config.yaml into `$config`. To access the config data we need to dereference the data from `$config`. The following script shows examples of accessing the config scalar, array and hash data.
 
-``` prettyprint
+```perl
 use YAML::XS 'LoadFile';
 use feature 'say';
 

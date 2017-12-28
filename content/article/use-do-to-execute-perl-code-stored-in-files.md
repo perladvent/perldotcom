@@ -23,13 +23,13 @@ Following our [recent article](http://perltricks.com/article/26/2013/5/28/Execut
 
 This is a the text file 'print.txt':
 
-``` prettyprint
+```perl
 print "it works! \n";
 ```
 
 Here is the original solution using eval:
 
-``` prettyprint
+```perl
 use File::Slurp;
 use strict;
 use warnings;
@@ -40,7 +40,7 @@ eval $command;
 
 and here is the same code re-written using do:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 

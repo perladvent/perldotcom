@@ -20,13 +20,13 @@
 
 Perl modules are usually installed via CPAN on the command line. This is invoked with the following syntax:
 
-``` prettyprint
+```perl
 cpan My::Module
 ```
 
 CPAN will always try to install the latest stable version of a module, which is a sensible default, however this may not always be the required behaviour. To have CPAN install a specific version of a module, you need to provide the full module distribution filename including the author. For example to install the module Set::Object version 1.28, at the command line type:
 
-``` prettyprint
+```perl
 cpan SAMV/Set-Object-1.28.tar.gz
 ```
 

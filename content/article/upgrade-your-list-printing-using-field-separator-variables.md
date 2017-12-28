@@ -21,7 +21,7 @@
 
 A typical way to print every element of an array in Perl is using a foreach loop:
 
-``` prettyprint
+```perl
 my @sportscar_brands = qw/Ferrari Aston_Martin Lambourgini/;
 foreach my $brand (@sportscar_brands){
     print "$brand\n";
@@ -33,7 +33,7 @@ foreach my $brand (@sportscar_brands){
 
 An alternative method is to set value of the the output field separator variable ($,). When printing a list or array Perl injects this variable between elements. Hence, if you set the output field separator to a newline (\\n) you will achieve the same affect as the previous example, without the foreach loop.
 
-``` prettyprint
+```perl
 $, = "\n"; # set the output field separator to newline
 my @sportscar_brands = qw/Ferrari Aston_Martin Lambourgini/;
 print @sportscar_brands;
@@ -44,7 +44,7 @@ print @sportscar_brands;
 
 The output field separator also works on lists:
 
-``` prettyprint
+```perl
 $, = "\n";
 print qw/Ferrari Aston_Martin Lambourgini/;
 # Ferrari
@@ -54,11 +54,11 @@ print qw/Ferrari Aston_Martin Lambourgini/;
 
 There is another variable called the list separator ($"). Perl injects the value of $" between the elements of an array in an interpolated string. The subtle difference here is that the output field separator will apply when using print, however the list separator applies to all arrays in an interpolated string context. For example:
 
-``` prettyprint
+```perl
 $" = "\n"; # set the list separator to newline
 ```
 
-``` prettyprint
+```perl
 my @normalcar_brands = qw/Ford Honda Toyota Fiat/;
 print @normalcar_brands; # not inside an interpolated string
 # FordHondaToyotaFiat

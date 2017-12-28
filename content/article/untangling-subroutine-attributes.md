@@ -16,7 +16,7 @@ Subroutine attributes are optional labels that can be included in a subroutine d
 
 Perl has several subroutine attributes built-in. A useful one is `lvalue` which tells Perl that the subroutine refers to a variable that persists beyond individual calls. A common case is using them as method getter/setters:
 
-``` prettyprint
+```perl
 package Foo;
 
 sub new { bless {}, shift }
@@ -43,7 +43,7 @@ By adding the attribute `:lvalue` to the `bar` subroutine, I can use it like a v
 To use custom attributes in a package, you must provide a subroutine called `MODIFY_CODE_ATTRIBUTES`. Perl will call this subroutine during compilation if it find any custom subroutine attributes. It's called once for every subroutine with custom attributes. `MODIFY_CODE_ATTRIBUTES` receives the package name, a coderef to the subroutine and a list of the attributes it declared:
 
 
-``` prettyprint
+```perl
 package Sub::Attributes;
 
 sub MODIFY_CODE_ATTRIBUTES {
@@ -59,7 +59,7 @@ sub _internal_function :Private {
 
 I've created a new package with the required subroutine - all it does is return an empty list. I've then declared an empty subroutine called `_internal_function` which has a custom attribute, `Private`. I want to do the impossible and create truly private subroutines in Perl by making any subroutine with the `Private` attribute only callable by its own package. But what if I misspell `Private`?  If we received any attributes we didn't recognize, `MODIFY_CODE_ATTRIBUTES` can add them to a list and Perl will throw a compile time error:
 
-``` prettyprint
+```perl
 package Sub::Attributes;
 
 sub MODIFY_CODE_ATTRIBUTES {
@@ -82,7 +82,7 @@ I've updated to code to declare and return `@disallowed` - an array of any unrec
 
 Now any subroutine in the package can use the attribute `Private` but it doesn't do anything. I need to add some behavior!
 
-``` prettyprint
+```perl
 package Sub::Attributes;
 use B 'svref_2object';
 
@@ -141,7 +141,7 @@ If you're wondering why I bothered to create `$old_coderef` at all, it's so that
 
 Now any calls to `_internal_function` will croak unless they come from within Sub::Attributes:
 
-``` prettyprint
+```perl
 use Sub::Attributes;
 
 Sub::Attributes::call_internal_function(); # ok
@@ -152,7 +152,7 @@ Sub::Attributes::_internal_function(); # croak!
 
 If it seems dumb to create custom attributes and then elsewhere in the same code, validate those attributes, join the club. To get the most out of this system, you have to make your custom attributes re-usable. Fortunately, just a few changes are needed:
 
-``` prettyprint
+```perl
 package Sub::Attributes;
 use B 'svref_2object';
 
@@ -200,7 +200,7 @@ Rather than hardcoding the package name, I've made it dynamic. The key change he
 
 Why optionally return a coderef? Imagine if I created an attribute called `After` which behaved like the `after` function in [Class::Method::Modifiers](https://metacpan.org/pod/Class::Method::Modifiers). In this case the subroutine with the private attribute would be reference a _different_ subroutine. That might look like this:
 
-``` prettyprint
+```perl
 sub foo { }
 
 sub logger :After(foo) {
@@ -219,7 +219,7 @@ I store the attributes for a subroutine under the package name in the symbol tab
 
 The `attribute` [docs](http://perldoc.perl.org/attributes.html) mention another subroutine, called `FETCH_CODE_ATTRIBUTES` that given a coderef, should return the attributes for the referenced subroutine. When `attributes::get` is called, it passes the class of the declaring package, which is `Sub::Attributes`:
 
-``` prettyprint
+```perl
 # $class == "Sub::Attributes"
 sub FETCH_CODE_ATTRIBUTES {
   my ($class, $coderef) = @_;
@@ -231,7 +231,7 @@ sub FETCH_CODE_ATTRIBUTES {
 
 I don't see a way to find out the package name of the original subroutine. `FETCH_CODE_ATTRIBUTTES` is not required and if it's not there Perl won't throw an exception if `attributes::get` is called. Instead I provided the `sub_attributes` method which does work:
 
-``` prettyprint
+```perl
 sub sub_attributes {
   my ($package) = @_;
   my $class_name = ref $package || $package;
@@ -241,7 +241,7 @@ sub sub_attributes {
 
 This returns the attributes stored for a package. This might be useful if other packages want to inspect the attributes for a package's subroutine. it can be called as an object method or class method:
 
-``` prettyprint
+```perl
 package Foo;
 use base 'Sub::Attributes';
 
@@ -255,7 +255,7 @@ $foo->sub_attributes(); # works also
 
 It's generally good practice to use the `strict` and `warnings` pragmas to help detect issues with our code. However the code so far will emit some warnings and an exception if we add those pragmas as-is. This code will add the pragmas but make Perl ignore the violations:
 
-``` prettyprint
+```perl
 use strict;
 no strict 'refs';
 use warnings;
@@ -270,7 +270,7 @@ The `reserved` warning is of particular interest here. This would be caused by u
 
 If you've gone to the hard work of setting up the code for inheritable custom attributes, why not make it extensible? That way consuming packages can add their own custom attributes.
 
-``` prettyprint
+```perl
 package Sub::Attributes;
 use strict;
 no strict 'refs';
@@ -348,7 +348,7 @@ sub sub_attributes {
 
 I've moved the `%allowed` hash into a `BEGIN` block - this has to be declared at compile time so it's available for `MODIFY_CODE_ATTRIBUTES`. Now new custom attributes can be added by modifying `%Sub::Attributes::attributes`. I also added a new custom attribute `After` which implements causes the subroutine to be called after another one, like this:
 
-``` prettyprint
+```perl
 sub foo { }
 
 sub bar :After(foo) {

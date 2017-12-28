@@ -22,7 +22,7 @@ When cached website files are updated on S3, they need to be invalidated from th
 
 Using CloudFront with Paws is pretty easy. For cache invalidation all you really need is a CloudFront distribution id, and a list of files to be invalidated. This is the script:
 
-``` prettyprint
+```perl
 #!/usr/bin/env perl
 use strict;
 use warnings;
@@ -62,7 +62,7 @@ $cfront->CreateInvalidation(
 
 As before, I use [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to process the command line options. The script requires a CloudFront distribution id and an AWS region string. The `--keys` switch is optional as the script also reads keys from `STDIN`. This snippet is curious:
 
-``` prettyprint
+```perl
 # don't block on empty STDIN
 STDIN->blocking(0);
 @KEYS = map { chomp;"/$_" } @KEYS, <STDIN>;
@@ -72,14 +72,14 @@ It sets the `STDIN` filehandle to non-blocking mode. That way, if STDIN is empty
 
 The script then creates a Paws CloudFront object, and the [Time::HiRes](https://metacpan.org/pod/Time::HiRes) `gettimeofday` function is used to calculate a cheap unique id (it returns the current epoch seconds and microseconds).
 
-``` prettyprint
+```perl
 my $cfront = Paws->service('CloudFront', region => $REGION);
 my $uid    = join '-', gettimeofday();
 ```
 
 Finally, the script calls the `CreateInvalidation` method to send the data to AWS CloudFront:
 
-``` prettyprint
+```perl
 $cfront->CreateInvalidation(
   DistributionId    => $DISTRIBUTION_ID,
   InvalidationBatch => {

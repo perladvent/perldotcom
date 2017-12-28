@@ -22,7 +22,7 @@
 
 Consider the slurpy parameter optimization from this week's subroutine signatures [article](http://perltricks.com/article/88/2014/5/12/Benchmarking-subroutine-signatures). We know from speed benchmarks that the signature becomes ~30% faster with a slurpy parameter, and we can reason about why that is the case, but B::Deparse can *show* us why. Here is the code for two signatures, one normal and one using the slurpy parameter:
 
-``` prettyprint
+```perl
 use feature 'signatures';
 
 sub normal_signature ($foo) {}
@@ -32,13 +32,13 @@ sub slurpy_signature ($foo, @) {}
 
 Now if we save the code as signatures.pl, we can use B::Deparse to inspect it at the command line:
 
-``` prettyprint
+```perl
 $ perl -MO=Deparse signatures.pl
 ```
 
 This generates the following output:
 
-``` prettyprint
+```perl
 sub normal_signature {
     use feature 'signatures';
     die 'Too many arguments for subroutine' unless @_ <= 1;

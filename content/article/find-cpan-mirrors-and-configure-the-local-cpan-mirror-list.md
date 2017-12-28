@@ -29,7 +29,7 @@ An online list of public CPAN mirrors can be found [here](http://mirrors.cpan.or
 
 Once you have identified the URLs of the CPAN mirrors you want to use, fire up the terminal and load the cpan shell:
 
-``` prettyprint
+```perl
 cpan
 
 cpan shell -- CPAN exploration and modules installation (v2.00)
@@ -42,7 +42,7 @@ cpan[1]>
 
 The CPAN mirror list is stored in the "urllist" variable. To view the list of mirrors, type "o conf urllist" in the CPAN shell:
 
-``` prettyprint
+```perl
 cpan[1]>o conf urllist
     urllist           
     0 [http://httpupdate3.cpanel.net/CPAN/]
@@ -55,7 +55,7 @@ cpan[1]>o conf urllist
 
 To add a CPAN mirror use the "unshift" or "push" functions to add the mirror's url to the front or end of the mirror list. Make sure that the URL for the mirror **includes the scheme** (http, ftp).
 
-``` prettyprint
+```perl
 cpan[2]> o conf urllist push http://mirror.waia.asn.au/pub/cpan/
 ```
 
@@ -63,7 +63,7 @@ cpan[2]> o conf urllist push http://mirror.waia.asn.au/pub/cpan/
 
 To remove a CPAN mirror use the "shift" or "pop" functions to remove the mirror URL from the front or end of the mirror list:
 
-``` prettyprint
+```perl
 cpan[3]> o conf urllist pop
 ```
 
@@ -71,7 +71,7 @@ cpan[3]> o conf urllist pop
 
 To overwrite the existing mirror list with a new one, just provide the URLs to the new mirrors as a space separated list:
 
-``` prettyprint
+```perl
 cpan[4]> o conf urllist http://mirror.waia.asn.au/pub/cpan/ ftp://mirrors.coopvgg.com.ar/CPAN/
 ```
 
@@ -79,7 +79,7 @@ cpan[4]> o conf urllist http://mirror.waia.asn.au/pub/cpan/ ftp://mirrors.coopvg
 
 Once you have updated the CPAN mirror list, make sure you commit the changes to file so they are saved beyond the current session:
 
-``` prettyprint
+```perl
 cpan[5]> o conf commit
 commit: wrote '/home/sillymoose/.cpan/CPAN/MyConfig.pm'
 ```
@@ -88,7 +88,7 @@ commit: wrote '/home/sillymoose/.cpan/CPAN/MyConfig.pm'
 
 You can also edit the CPAN config file directly. For local user Perl installations this is \*/CPAN/MyConfig.pm and system Perl installations \*/CPAN/Config.pm (the parent directory will depend on the platform). When editing the file, urllist is a hash key for an array reference of mirror urls. Note the urls are quoted using Perl's quoting operator ("q"). Simply edit and save the file.
 
-``` prettyprint
+```perl
 'urllist' => [
     q[http://httpupdate3.cpanel.net/CPAN/], 
     q[http://httpupdate23.cpanel.net/CPAN/], 

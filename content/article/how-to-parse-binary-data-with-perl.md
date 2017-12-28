@@ -16,7 +16,7 @@ Parsing binary data is one of those tasks that seems to come up rarely, but is u
 
 Start things off *right* by opening a filehandle to binary file:
 
-``` prettyprint
+```perl
 use autodie;
 open my $fh, '<:raw', '/usr/share/zoneinfo/America/New_York';
 ```
@@ -29,7 +29,7 @@ Next I use the `:raw` IO layer to open a filehandle to a binary file. This will 
 
 All binary files have a specific format that they follow. In the case of the zoneinfo files, the first 44 bytes/octets are the header, so I'll grab that:
 
-``` prettyprint
+```perl
 use autodie;
 open my $fh, '<:raw', '/usr/share/zoneinfo/America/New_York';
 
@@ -59,7 +59,7 @@ The `unpack` function takes a template of the binary data to read (this is defin
 
 The header begins with the magic chars "TZif", this is 4 bytes. The template code `a4` matches this. Next is the version, this is a single ASCII character matched by `a` (the strings are not space or null terminated, I could have use `A` instead). The next 15 bytes are reserved and can be ignored, so I use `x15` to skip over them. Finally there are 6 numbers of type long. Each one is separate variable so I must write `N` 6 times instead of `N6`.
 
-``` prettyprint
+```perl
 use autodie;
 open my $fh, '<:raw', '/usr/share/zoneinfo/America/New_York';
 

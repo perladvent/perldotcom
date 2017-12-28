@@ -48,7 +48,7 @@ Perl's `ref` function is a reliable and secure way to determine the data type of
 
 This is the vulnerable code, from an example CGI application:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use CGI;
@@ -77,7 +77,7 @@ In both cases Perl provided methods for securely parsing untrusted input, but th
 
 Netanel is referring to this code from his talk, which uses the argument type to decide what to do:
 
-``` prettyprint
+```perl
 sub test {
   $arg1 = @_; # Get an argument
 

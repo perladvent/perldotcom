@@ -28,7 +28,7 @@ If you want to write object oriented Perl code using modern Perl tools, consider
 
 A Perl class is defined in a Perl module file (\*.pm) with a package declaration. At a minimum the class must contain a constructor method and optionally can contain additional class methods and attributes. As with all Perl packages, it must return a true value (normally 1, this is placed at the end of the file). A minimal example Perl class would look like this:
 
-``` prettyprint
+```perl
 # This is the package declaration
 package Shape;
 
@@ -46,7 +46,7 @@ The example Shape class must be saved in a file called 'Shape.pm'.
 
 The constructor method is a Perl subroutine that returns an object which is an instance of the class. It is convention to name the constructor method 'new', but it can be any valid subroutine name. The constructor method works by using the [bless](http://perldoc.perl.org/functions/bless.html) function on a hash reference and the class name (the package name). When new is called, the package name 'Shape' is in the default array @\_ and [shift](http://perldoc.perl.org/functions/shift.html) is used to take the package name from @\_ and pass it to the bless function. Let's modify the constructor method to convey this behaviour more clearly:
 
-``` prettyprint
+```perl
 package Shape;
 
 sub new {
@@ -64,7 +64,7 @@ This style of coding the constructor is a common pattern seen frequently in Perl
 
 Essentially a Perl object is a blessed reference to a hash reference. This hash reference stores the key value pairs of data which are the object's attributes. Let's add some useful attributes to our Shape class:
 
-``` prettyprint
+```perl
 package Shape;
 
 sub new {
@@ -82,7 +82,7 @@ sub new {
 
 The Shape class has been given color, length and width attributes. We can access these attributes by using our Shape class in a Perl program, let's call it 'Draw.pl' (it should be saved in the same directory as Shape.pm):
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -103,7 +103,7 @@ Let's review the key lines: 'use feature qw/say/;' enables the say function whic
 
 At the moment Shape.pm is quite rigid; every Shape object we use will have the same color, length and width values. We can increase the flexibility of the Shape class by accepting arguments that set the values of color, length and width attributes. Let's modify the Shape.pm constructor accordingly:
 
-``` prettyprint
+```perl
 package Shape; 
  
 sub new { 
@@ -121,7 +121,7 @@ sub new {
 
 When calling any subroutine in Perl the arguments are contained in the default array variable @\_. The Shape.pm constructor now expects a hash reference containing the attribute values in its arguments, and assigns this to $args. We can update Draw.pl to pass those arguments:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -144,7 +144,7 @@ say $shape->{width};
 
 Now we can create Shape objects of different colors, lengths and widths. But what if we don't pass all the arguments in our Perl program? In this case the object will initialize with those attributes as null. To avoid that, we can set default values that are overridden if the argument is present when the object is constructed. We can use the logical or operator || to achieve this effect in Shape.pm:
 
-``` prettyprint
+```perl
 package Shape;
 
 sub new {
@@ -162,7 +162,7 @@ sub new {
 
 Now we have the best of both worlds: when using Shape.pm you can optionally pass the attribute values or the Shape will be constructed with the default values. We can prove this by updating and running Draw.pl:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -185,7 +185,7 @@ In Draw.pl we initialized $red\_shape with an argument pair (color =\> red), but
 
 It is possible to insert new attributes into an object's hash reference, for example we could calculated the area of a shape using it's length and width attributes:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -212,7 +212,7 @@ Now $red\_shape has the attributes: color, length, width and area.
 
 Methods are simply Perl subroutines that belong to a class. The Shape class already has one method, the constructor called new. Let's add a new method to Shape.pm to calculate and return the area:
 
-``` prettyprint
+```perl
 package Shape;
 
 sub new {
@@ -236,7 +236,7 @@ sub get_area {
 
 We've added the get\_area method (it's good practice to be descriptive when naming your methods by using the verb-noun style). When an object method is called the first element of the default array @\_ will contain the package name and a reference to the object. In the get\_area method we store this argument in $self. We then dereference the length and width attributes to calculate and return $area. We can update Draw.pl to use the new area method:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -256,7 +256,7 @@ say $red_shape->get_area;
 
 Accessor methods are subroutines which access object attributes.This is better than directly dereferencing the attributes in the object's hash reference, as it leads to more readable and maintainable code (particularly if you follow the verb-noun style of naming methods). We can update Shape.pm with get and set methods for its color attribute:
 
-``` prettyprint
+```perl
 package Shape;
 
 sub new {
@@ -289,7 +289,7 @@ sub set_color {
 
 Let's update Draw.pl to use the new methods:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -316,7 +316,7 @@ Using the example methods of get\_color and set\_color, it should be obvious how
 
 A builder method is an internal subroutine that is used to set the value of an object attribute at construction. A convention used by Perl programmers is to denote internal methods by prepending an underscore to their name. Let's add a builder method to Shape.pm that sets the creation datetime, using the [Time::Piece](http://perldoc.perl.org/Time/Piece.html) core module:
 
-``` prettyprint
+```perl
 package Shape;
 use Time::Piece;
 
@@ -363,7 +363,7 @@ sub get_datetime {
 
 The \_set\_datetime builder method is called at construction within the new method. A corresponding accessor to get the datetime has also been added. We can test this by updating Draw.pl to use it:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;
@@ -379,7 +379,7 @@ say $shape->get_datetime;
 
 A destructor method is automatically called by Perl when all references to an object go out of scope - it is never called directly. Destructor methods are useful if the class creates temporary files or threads that must be cleaned up if the object is destroyed. They can also be useful for event logging. Perl provides a special destructor method name, 'DESTROY' that must be used when declaring a destructor.
 
-``` prettyprint
+```perl
 package Shape;
 use Time::Piece;
 
@@ -436,7 +436,7 @@ A key concept of object oriented programming is the ability to create sub-classe
 
 Let's say we wanted to implement circle shape. Currently Shape.pm has length and width attributes - these work for rectangular shapes but not for circles as they require radius, diameter and circumference attributes instead. We can subclass Shape.pm to create a new Circle class that inherits the methods of Shape and implements new circle-specific functionality:
 
-``` prettyprint
+```perl
 package Shape::Circle;
 use parent Shape;
 
@@ -470,7 +470,7 @@ sub get_area {
 
 The Circle.pm file should be saved in Shape/Circle.pm. The line 'use parent Shape;' informs Perl that Circle.pm inherits from the Shape class. The Circle class has now inherited the datetime and color methods from Shape, but also provides new circle-specific methods. Note that Circle.pm also inherited the 'new' and 'get\_area' methods from Shape.pm, however it has overridden them by re-defining them in Circle.pm. Let's test Circle.pm out using Draw.pl:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use feature qw/say/;

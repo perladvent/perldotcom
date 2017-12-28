@@ -18,7 +18,7 @@
 
 You get the idea - Perl has a repetition operator (x) that repeats the scalar or list on its left by the number on it's right (like multiplication).
 
-``` prettyprint
+```perl
 my $string = 'I like chocolate';
 print $string x 10;
 #results
@@ -28,7 +28,7 @@ I like chocolateI like chocolateI like chocolateI like chocolateI like chocolate
 
 You may be able to think of more useful employment for this operator, like this:
 
-``` prettyprint
+```perl
 perl -CS -e 'print qq!\N{U+2661} \N{U+2665}! x 1000;'
 ```
 

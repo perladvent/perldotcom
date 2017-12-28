@@ -47,7 +47,7 @@ Bisect run treats certain exit values specially: 125 means the code cannot be te
 
 To fix this, wrap the call to `t/foo.t` in a shell script which caps the return value of the test script at 127:
 
-``` prettyprint
+```perl
 #!/bin/sh
 "$@"
 rv=$?

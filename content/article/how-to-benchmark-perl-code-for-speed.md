@@ -35,7 +35,7 @@ One thing to keep in mind with benchmarks is that they are affected by the envir
 
 Benchmarks are most interesting when comparing performance of code - so we're going to focus on methods that do that. Benchmark provides a `timethese` subroutine which continuously executes sets of Perl code for a number of CPU seconds and then prints out the results. Let's compare the speed difference of two common Perl operations: array assignment using the shift built in function and direct array assignment using equals:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Benchmark qw/cmpthese timethese/;
@@ -56,7 +56,7 @@ timethese(-10, {
 
 Running the code above yielded the following results:
 
-``` prettyprint
+```perl
 Benchmark: running equalsAssign, shiftAssign for at least 10 CPU seconds...
 equalsAssign: 10 wallclock secs (10.32 usr +  0.00 sys = 10.32 CPU) @ 150112.98/s (n=1549166)
 shiftAssign: 11 wallclock secs (10.43 usr +  0.00 sys = 10.43 CPU) @ 148529.82/s (n=1549166)
@@ -68,7 +68,7 @@ The key metric to focus on is the rate per CPU second. This shows that the shift
 
 The `cmpthese` subroutine provided the Benchmark module accepts the same arguments and `timethese` shown above, but prints out a useful comparison grid of the results to show which code block was faster by %. Helpfully it also includes the rate per CPU second.
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 use Benchmark qw/cmpthese timethese/;
@@ -89,7 +89,7 @@ cmpthese(-10, {
 
 Executing this code returned the following results:
 
-``` prettyprint
+```perl
                  Rate  shiftAssign equalsAssign
 shiftAssign  142529/s           --          -4%
 equalsAssign 148159/s           4%           --

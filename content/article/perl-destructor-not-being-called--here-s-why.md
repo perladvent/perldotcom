@@ -22,7 +22,7 @@
 
 If you're using a Perl destructor method ('DESTROY', 'DEMOLISH') it may not be called if the Perl process is terminated abruptly by a signal. To fix this, just add the sigtrap pragma to your program:
 
-``` prettyprint
+```perl
 use sigtrap qw/die normal-signals/;
 ```
 

@@ -19,13 +19,13 @@
 
 A quick way to list all non-core modules installed via CPAN using the command line:
 
-``` prettyprint
+```perl
 perldoc perllocal
 ```
 
 Note that if you are using perlbrew and have several different versions of Perl installed, the perllocal command will only output modules installed for the active Perl version. If you execute the perllocal command and see this:
 
-``` prettyprint
+```perl
 no documentation found for "perllocal"
 ```
 

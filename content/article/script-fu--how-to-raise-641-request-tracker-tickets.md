@@ -23,13 +23,13 @@ I spent most of the NYC Perl Hackathon (thanks Bloomberg!) hacking on Perl 6 stu
 
 A typical skip/todo directive looks like this:
 
-``` prettyprint
+```perl
 #?rakudo todo "doesn't work yet due to copying of arrays"
 ```
 
 This tells Rakudo to skip the following block of tests. For each skip/todo directive, a new RT ticket had to be raised and the ticket number added to the skip directive line in the test file, like this:
 
-``` prettyprint
+```perl
 #?rakudo todo "doesn't work yet due to copying of arrays RT #99999"
 ```
 
@@ -37,7 +37,7 @@ This makes it easier for the Rakudo team to identify the remaining bugs or missi
 
 I cloned the Perl 6 test suite, roast and after working through the workflow for reporting a single ticket, I wondered how many other skip/todo directives were missing RT tickets. To find out, I used a little `grep` magic:
 
-``` prettyprint
+```perl
 $ grep -rlP '#?rakudo.+?(?:skip|todo)(?:(?!RT).{2})+$' ./ | wc -l
 ```
 
@@ -47,7 +47,7 @@ This tells grep to recursively search for files in the current directory, and fo
 
 I wrote a quick script to find all the skip/todo directives again, only this time I would capture the filename, line number and description:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -103,7 +103,7 @@ sub scan_directory
 
 The script is fairly simple: it's a recursive directory scanner that scans files for Rakudo skip/todo blocks. The script uses the following line of code with backticks to execute the `rt` command line program, raise a ticket in the Perl 6 queue and captures the response:
 
-``` prettyprint
+```perl
 my $response = `rt create -t ticket set subject="$subject" queue=perl6 priority=0`;
 ```
 
@@ -115,7 +115,7 @@ The script then extracts the RT ticket number from the `$response`, and prints o
 
 Configuring and using the RT command line client is simple, but finding out how to do it can be a hard - most of the sources I looked at were out of date, and the RT CPAN [namespace](https://metacpan.org/search?q=RT&size=20) has so many burned-out carcasses that Mad Max would be comfortable there. To use the command line client, first install RT::Client::CLI:
 
-``` prettyprint
+```perl
 $ cpan RT::Client::CLI
 ```
 
@@ -133,7 +133,7 @@ That's it, RT is now configured! Try out some [commands](http://requesttracker.w
 
 Now that I had the RT ticket numbers I needed to go back and add them to the skip/todo directives in the unit test files in roast. I scripted that too:
 
-``` prettyprint
+```perl
 use strict;
 use warnings;
 
@@ -175,19 +175,19 @@ while (my $line = <$tickets>)
 
 This took a couple of attempts to get right. At first I thought I would try using `open` with an awesome read/write filehandle using `+<` but that turned out to be more trouble than it was worth. The other challenge was inserting the RT ticket number within the quoted string on the line, rather than outside of it. So this:
 
-``` prettyprint
+```perl
 #?rakudo todo "doesn't work yet due to copying of arrays"
 ```
 
 Would become this:
 
-``` prettyprint
+```perl
 #?rakudo todo "doesn't work yet due to copying of arrays RT #124652"
 ```
 
 The challenge here is that different descriptions use different delimiters to capture the description, either single or double quotes. In the script, this line handles that problem:
 
-``` prettyprint
+```perl
 $line =~ s/('|")\s*$/ RT #$ticket_num$1\n/;
 ```
 

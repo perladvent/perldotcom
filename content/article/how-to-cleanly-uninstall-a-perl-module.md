@@ -22,7 +22,7 @@
 
 CPAN makes installing Perl modules easy but when it comes to removing Perl modules, you have to roll your own solution\*. Fortunately the Perl core includes the ExtUtils modules that can help. The script below accepts the Module::Name as an argument, and will delete all files and empty directories associated with that module.
 
-``` prettyprint
+```perl
 # uninstall_perl_module.pl from PerlTricks.com
 
 use 5.14.2;
@@ -56,13 +56,13 @@ foreach my $dir (sort($installed_modules->directory_tree($module))) {
 
 Save the script code above into a text file saved as 'uninstall\_perl\_module.pl'. So if we wanted to uninstall the venerable `Acme::Dot` module, we would open up the terminal, navigate to directory containing uninstall\_perl\_module.pl and type:
 
-``` prettyprint
+```perl
 $ perl uninstall_perl_module.pl Acme::Dot
 ```
 
 and the script will remove the module for you. It will **retain non-empty directories**, as it uses [rmdir](http://perldoc.perl.org/functions/rmdir.html).
 
-``` prettyprint
+```perl
 removing /home/sillymoose/perl5/perlbrew/perls/perl-5.14.2/man/man3/Acme::Dot.3
 removing /home/sillymoose/perl5/perlbrew/perls/perl-5.14.2/lib/site_perl/5.14.2/Acme/Dot.pm
 ...
@@ -72,7 +72,7 @@ removing /home/sillymoose/perl5/perlbrew/perls/perl-5.14.2/lib/site_perl/5.14.2/
 
 [App::cpanminus](https://metacpan.org/pod/App::cpanminus) is a popular alternative CPAN client that can be used to manage Perl distributions. It has many great features, including uninstalling modules. Once you've installed App::cpanminus, to remove the `Acme::Dot` module, at the command line type:
 
-``` prettyprint
+```perl
 $ cpanm --uninstall Acme::Dot
 ```
 

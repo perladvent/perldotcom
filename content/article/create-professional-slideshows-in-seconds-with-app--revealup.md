@@ -24,7 +24,7 @@
 
 You'll need to grab App::revealup from CPAN. The latest version (0.03) should run on most platforms including Windows. At the command line type:
 
-``` prettyprint
+```perl
 $ cpan App::revealup
 ```
 
@@ -32,7 +32,7 @@ $ cpan App::revealup
 
 App::revealup transforms markdown documents into slide shows, so let's start by creating a basic presentation file, called presentation.md:
 
-``` prettyprint
+```perl
 A quick guide to markdown  as served by `App::revealup`  
 David Farrell  
 [PerlTricks.com](http://perltricks.com)
@@ -43,7 +43,7 @@ As you can see, markdown is easy to read. The code above is a single slide prese
 
 To view this slide in presentation mode, at the command line type:
 
-``` prettyprint
+```perl
 $ revealup server presentation.md --port 5000
 ```
 
@@ -53,7 +53,7 @@ Now open your browser and navigate to http://localhost:5000. You should see some
 
 Let's add a second slide to showcase how different headers appear. In App::revealup the horizontal slide separator is three hyphens in a row ("---").
 
-``` prettyprint
+```perl
 A quick guide to markdown  as served by `App::revealup`  
 David Farrell  
 [PerlTricks.com](http://perltricks.com)
@@ -72,7 +72,7 @@ App::reveal dynamically reads the source presentation file, so you can leave the
 
 You can add vertical slides too. These are delimited by three underscores ("\_\_\_"):
 
-``` prettyprint
+```perl
 A quick guide to markdown  as served by `App::revealup`  
 David Farrell  
 [PerlTricks.com](http://perltricks.com)
@@ -112,13 +112,13 @@ One nice feature is if you ever want to zoom out, just press the escape key:
 
 App::revealup is the glue between the [reveal.js](http://lab.hakim.se/reveal-js/#/) library and the source markdown file. It launches a PSGI web server, and compiles a basic HTML document which loads reveal.js and any required libraries or css. You can override the default css theme by passing an extra command line option:
 
-``` prettyprint
+```perl
 $ revealup server presentation.md --port 5000 --theme solarized.css
 ```
 
 App::revealup installs all of the basic reveal.js [themes](https://github.com/hakimel/reveal.js/tree/master/css/theme) or you can provide your own:
 
-``` prettyprint
+```perl
 $ revealup server presentation.md --port 5000 --theme "/path/to/custom.css"
 ```
 

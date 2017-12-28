@@ -18,19 +18,19 @@
 
 The shebang line is the first line of code in a Perl script and usually looks like this:
 
-``` prettyprint
+```perl
 #!/usr/bin/perl
 ```
 
 The shebang line is the path to the Perl binary, and allows programmers to invoke Perl scripts directly instead of passing the script filename as an argument to Perl itself.
 
-``` prettyprint
+```perl
 ./myperltrick.pl #execute directly, no need to type 'perl' first
 ```
 
 However, the shebang line is **not mandatory**, and reduces the portability of Perl scripts (by requiring execute permissions and maintaining the shebang). It also obfuscates which version of Perl is being called when a script is executed, which can make debugging more difficult.
 
-``` prettyprint
+```perl
 ./myperltrick.pl
 Cant locate Catalyst.pm in @INC (@INC contains: /etc/perl /usr/local/lib/perl/5.14.2 /usr/local/share/perl/5.14.2 /usr/lib/perl5 /usr/share/perl5 /usr/lib/perl/5.14 /usr/share/perl/5.14 /usr/local/lib/site_perl .) at ./perltricks.pl line 2.
 BEGIN failed--compilation aborted at ./perltricks.pl line 2.
@@ -40,7 +40,7 @@ BEGIN failed--compilation aborted.
 
 By not including the shebang line, programmers can write one-less line of code and retain modularity by separating the behaviour of the script from the executing programme.
 
-``` prettyprint
+```perl
 perl myperltricks.pl #this works fine
 ```
 

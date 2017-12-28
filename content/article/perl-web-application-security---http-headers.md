@@ -32,33 +32,33 @@ All three of major Perl web frameworks provide some kind of identifying header. 
 
 Web servers often broadcast information about themselves by default. For example:
 
-``` prettyprint
+```perl
 Server: nginx/1.4.6
 ```
 
 This is risky for the same reason that revealing information about the underlying Perl web application is. To disable the server header in nginx, just add this line to your nginx.conf or virtual host file:
 
-``` prettyprint
+```perl
 server_tokens off;
 ```
 
 For Apache 1.3x add these lines to your virtual host file:
 
-``` prettyprint
+```perl
 ServerTokens Prod
 ServerSignature Off
 ```
 
 For Apache 2.x, these lines will load the mod\_headers module, and remove the server header:
 
-``` prettyprint
+```perl
 LoadModule headers_module /usr/lib/apache/modules/mod_headers.so
 Header unset Server
 ```
 
 All of the major Perl web frameworks ship with web servers that set the server header:
 
-``` prettyprint
+```perl
 # Catalyst
 Server: HTTP::Server::PSGI
 
@@ -71,7 +71,7 @@ Server: Perl Dancer 1.3121
 
 These headers can be overwritten within the application code. For instance, if we wanted to change the server to appear to be nginx:
 
-``` prettyprint
+```perl
 # Catalyst
 $c->response->header('Server' => 'nginx');
 
@@ -86,7 +86,7 @@ header 'Server' => 'nginx';
 
 This header can prevent your application responses from being loaded within frame or iframe HTML elements (see the [spec](http://tools.ietf.org/html/rfc7034)). This is to prevent clickjacking requests where your application response is displayed on another website, within an invisible iframe, which then hijacks the user's request when they click a link on your website. Here's how to disable it in the respective web frameworks:
 
-``` prettyprint
+```perl
 # Catalyst
 $c->response->header('X-Frame-Options' => 'DENY');
 
@@ -101,7 +101,7 @@ header 'X-Frame-Options' => 'DENY';
 
 This header instructs the requester to load all content from the domain via HTTPS and not load any content unless there is a valid ssl certificate. This header can help prevent man-in-middle attacks as it ensures that all HTTP requests and responses are encrypted. The Strict-Transport-Security header has a max-age parameter that defines how long in seconds to enforce the policy for. Here's how to add it to your Perl web application:
 
-``` prettyprint
+```perl
 # Catalyst
 $c->response->header('Strict-Transport-Security' => 'max-age=3600');
 
@@ -116,13 +116,13 @@ header 'Strict-Transport-Security' => 'max-age=3600';
 
 The CSP header sets a whitelist of domains from which content can be safely loaded. This prevents most types of XSS attack, assuming the malicious content is not hosted by a whitelisted domain. For example this line specifies that all content should only be loaded from the responding domain:
 
-``` prettyprint
+```perl
 X-Content-Security-Policy: default-src 'self'
 ```
 
 There is [a lot to CSP](http://www.html5rocks.com/en/tutorials/security/content-security-policy%0A) ([spec](http://www.w3.org/TR/CSP/)) and browser support is [fairly good](http://caniuse.com/#feat=contentsecuritypolicy). One downside to the whitelist approach is it's not compatible with ad services like Google's adsense as you won't know the domains in advance in order to whitelist them. To set the header in your facourite Perl web application, use on of these lines:
 
-``` prettyprint
+```perl
 # Catalyst
 $c->response->header('X-Content-Security-Policy' => "default-src 'self'");
 
@@ -137,7 +137,7 @@ header 'X-Content-Security-Policy' => "default-src 'self'";
 
 This is an IE only header that is used to disable mime sniffing. The vulnerability is that IE will auto-execute any script code contained in a file when IE attempts to detect the file type. This is disabled by default in IE anyway, but to enforce it:
 
-``` prettyprint
+```perl
 # Catalyst
 $c->response->header('X-Content-Type-Options' => 'nosniff');
 
@@ -152,7 +152,7 @@ header 'X-Content-Type-Options' => 'nosniff';
 
 This is another IE-only header that prevents IE from opening an HTML file directly on download from a website. The security issue here is, if a browser opens the file directly, it can run as if it were part of the site. To add this header, use one of these lines:
 
-``` prettyprint
+```perl
 # Catalyst
 $c->response->header('X-Download-Options' => 'noopen');
 
@@ -167,7 +167,7 @@ header 'X-Download-Options' => 'noopen';
 
 This is the final IE-only header. It was introduced in IE8 as part of the cross-site-scripting (XSS) filter functionality (more [here](http://blogs.msdn.com/b/ieinternals/archive/2011/01/31/controlling-the-internet-explorer-xss-filter-with-the-x-xss-protection-http-header.aspx)). The header can force IE to turn on its XSS filter. Additionally it has an optional setting called "mode" that can force IE to block the entire page if an XSS attempt is detected. Here's how to add it:
 
-``` prettyprint
+```perl
 # Catalyst
 $c->response->header('X-XSS-Protection' => "1; 'mode=block'");
 
@@ -186,13 +186,13 @@ You may prefer to add these headers in the web server configuration, rather than
 
 tThere are a number of ways to check which headers your application is returning. Firstly you can use curl (replace perltricks.com with the URL to check):
 
-``` prettyprint
+```perl
 curl -I perltricks.com
 ```
 
 This will return the HTTP headers only:
 
-``` prettyprint
+```perl
 HTTP/1.1 200 OK
 Server: nginx
 Date: Mon, 31 Mar 2014 01:54:59 GMT
