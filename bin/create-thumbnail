@@ -1,0 +1,53 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use Imager;
+use JSON::XS;
+use Path::Tiny 'path';
+
+# for each article filename in ARGV, creates a thumbnail version of the article's image
+
+my $json = JSON::XS->new->pretty;
+
+for my $filename (@ARGV) {
+  eval {
+    my $front_matter_str = join '', `bin/front-matter-json $filename`;
+    die "failed to get front-matter from $filename" unless $front_matter_str;
+
+    my $front_matter = $json->decode($front_matter_str);
+    return unless $front_matter->{image};
+
+    my $image_path = path "static$front_matter->{image}";
+
+    my $img = Imager->new();
+    $img->read(file => $image_path) or
+      die "Cannot load $image_path: ", $img->errstr;
+
+    my $thumb_img  = scale_to_thumbnail($img);
+    my $basename   = $image_path->basename;
+    my $thumb_path = $image_path->parent->child("thumb_$basename");
+
+    $thumb_img->write(file => $thumb_path);
+    $front_matter->{thumbnail} = $thumb_path =~ s(^static)()r;
+    my $front_matter_with_thumb = $json->encode($front_matter);
+
+    my $article_text = join '', `bin/no-front-matter-json $filename`;
+
+    open my $article_fh, '>:raw', $filename or die $!;
+    print $article_fh $front_matter_with_thumb, $article_text;
+  };
+  print STDERR "Error processing $filename: $@" if $@;
+}
+
+sub scale_to_thumbnail {
+  my $img = shift;
+  no strict 'refs';
+
+  # scale on the narrowest axis
+  my $scale_attribute = $img->getheight > $img->getwidth ? 'xpixels' : 'ypixels';
+
+  my $thumb_img = $img->scale($scale_attribute => 150);
+  die $img->errstr unless $thumb_img;
+
+  return $thumb_img;
+}
