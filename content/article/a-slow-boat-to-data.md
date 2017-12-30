@@ -2,7 +2,7 @@
   {
     "title"  : "A slow boat to data",
     "authors": ["nadim-khemir"],
-    "date"   : "2017-12-29T09:28:27",
+    "date"   : "2018-01-01T09:28:27",
     "tags"   : ["data-dumper", "data-dump-tree"],
     "draft"  : true,
     "image"  : null,
@@ -223,10 +223,10 @@ There are several areas that could use some help. Perhaps you can work on one of
 * You could write a data display application that would accept data structures via a socket and present them to the user. It should display multiple renderings and let the user chose which rendering to display. A bit like a log viewer but for data renderings
 * Become a co-maintainer and help maintain the module!
 
-### Other articles
+### Other articles/links
 
 - [Perl 6 Data::Dump::Tree version 1.5](http://blogs.perl.org/users/nadim_khemir/2017/08/perl-6-datadumptree-version-15.html)
 - [Take a walk on the C side, ddt, du du, du du ...](http://blogs.perl.org/users/nadim_khemir/2017/08/take-a-walk-on-the-c-side.html)
 - [Show me the data!](https://perl6advent.wordpress.com/2016/12/21/show-me-the-data/)
-- `Data::Dump::Tree` is the continuation of my Perl 5 [Data::TreeDumper](http://www.metacpan.org/pod/Data::TreeDumper)
+- `Data::Dump::Tree` is the continuation of my Perl 5 module [Data::TreeDumper](http://www.metacpan.org/pod/Data::TreeDumper)
 
