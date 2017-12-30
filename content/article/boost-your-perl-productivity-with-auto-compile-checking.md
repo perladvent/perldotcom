@@ -1,9 +1,12 @@
 {
+   "description" : "An easy trick that saves you time",
    "authors" : [
       "david-farrell"
    ],
-   "description" : "An easy trick that saves you time",
+   "slug" : "133/2014/11/10/Boost-your-Perl-productivity-with-auto-compile-checking",
+   "image" : "/images/133/8CD1623C-68E1-11E4-99FF-327195E830D2.jpeg",
    "categories" : "testing",
+   "date" : "2014-11-10T14:01:51",
    "draft" : false,
    "tags" : [
       "perl",
@@ -16,9 +19,7 @@
       "syntastic"
    ],
    "title" : "Boost your Perl productivity with auto-compile checking",
-   "slug" : "133/2014/11/10/Boost-your-Perl-productivity-with-auto-compile-checking",
-   "image" : "/images/133/8CD1623C-68E1-11E4-99FF-327195E830D2.jpeg",
-   "date" : "2014-11-10T14:01:51"
+   "thumbnail" : "/images/133/thumb_8CD1623C-68E1-11E4-99FF-327195E830D2.jpeg"
 }
 
 

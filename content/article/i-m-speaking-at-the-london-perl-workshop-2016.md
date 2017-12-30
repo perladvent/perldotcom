@@ -1,14 +1,19 @@
-
-  {
-    "title"  : "I'm speaking at the London Perl Workshop 2016",
-    "authors": ["david-farrell"],
-    "date"   : "2016-11-24T09:27:54",
-    "tags"   : ["lpw", "london"],
-    "draft"  : false,
-    "image"  : "/images/58/onion_white_bg.png",
-    "description" : "Join us for an exciting day of technical talks and fun",
-    "categories": "community"
-  }
+{
+   "categories" : "community",
+   "date" : "2016-11-24T09:27:54",
+   "image" : "/images/58/onion_white_bg.png",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Join us for an exciting day of technical talks and fun",
+   "thumbnail" : "/images/58/thumb_onion_white_bg.png",
+   "title" : "I'm speaking at the London Perl Workshop 2016",
+   "tags" : [
+      "lpw",
+      "london"
+   ],
+   "draft" : false
+}
 
 The [London Perl Workshop](http://act.yapc.eu/lpw2016/) is a **free** one day Perl conference happening in London, on Saturday 3rd December 2016. Currently there are [32](http://act.yapc.eu/lpw2016/talks) technical talks scheduled, on topics like Modern Perl, Plack, Docker, HTTP2, OpenGL and of course, Perl 6.
 

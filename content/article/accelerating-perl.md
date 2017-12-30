@@ -1,20 +1,21 @@
 {
-   "title" : "Accelerating Perl",
-   "categories" : "hardware",
+   "authors" : [
+      "timm-murray"
+   ],
    "slug" : "159/2015/3/16/Accelerating-Perl",
+   "categories" : "hardware",
+   "thumbnail" : "/images/159/thumb_66B64C42-C698-11E4-ACD6-AD6E0EA848F6.jpeg",
+   "draft" : false,
    "tags" : [
       "raspberry",
       "pi",
       "hardware",
       "accelerometer"
    ],
+   "title" : "Accelerating Perl",
    "description" : "Things move quickly with Perl. Use accelerometers to find out just how quickly.",
-   "draft" : false,
-   "image" : "/images/159/66B64C42-C698-11E4-ACD6-AD6E0EA848F6.jpeg",
    "date" : "2015-03-16T10:04:29",
-   "authors" : [
-      "timm-murray"
-   ]
+   "image" : "/images/159/66B64C42-C698-11E4-ACD6-AD6E0EA848F6.jpeg"
 }
 
 

@@ -1,14 +1,21 @@
-
-  {
-    "title"  : "AWS Cloudfront cache invalidation with Paws",
-    "authors": ["david-farrell"],
-    "date"   : "2017-04-03T08:12:14",
-    "tags"   : ["aws", "cloudfront", "s3", "paws"],
-    "draft"  : false,
-    "image"  : "/images/deploy-a-static-website-with-aws-s3-and-paws/aws-logo.png",
-    "description" : "Another useful AWS script built with Paws",
-    "categories": "development"
-  }
+{
+   "image" : "/images/deploy-a-static-website-with-aws-s3-and-paws/aws-logo.png",
+   "title" : "AWS Cloudfront cache invalidation with Paws",
+   "tags" : [
+      "aws",
+      "cloudfront",
+      "s3",
+      "paws"
+   ],
+   "description" : "Another useful AWS script built with Paws",
+   "date" : "2017-04-03T08:12:14",
+   "categories" : "development",
+   "draft" : false,
+   "thumbnail" : "/images/deploy-a-static-website-with-aws-s3-and-paws/thumb_aws-logo.png",
+   "authors" : [
+      "david-farrell"
+   ]
+}
 
 In [Deploy a static website with Paws]({{< relref "deploy-a-static-website-with-aws-s3-and-paws.md" >}}), I developed a simple script to upload files to AWS S3, using [Paws](https://metacpan.org/pod/Paws). In this article I'll describe a script to invalidate CloudFront caches: this can be used to force CloudFront to re-cache files which have changed on S3.
 

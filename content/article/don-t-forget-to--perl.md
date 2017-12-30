@@ -1,14 +1,19 @@
-
-  {
-    "title"  : "Don't forget to #Perl",
-    "authors": ["david-farrell"],
-    "date"   : "2016-09-28T08:05:37",
-    "tags"   : ["twitter", "hashtag"],
-    "draft"  : false,
-    "image"  : "/images/don-t-forget-to--perl/perl_hashtag.png",
-    "description" : "Help users find Perl related tweets more easily",
-    "categories": "community"
-  }
+{
+   "draft" : false,
+   "categories" : "community",
+   "image" : "/images/don-t-forget-to--perl/perl_hashtag.png",
+   "description" : "Help users find Perl related tweets more easily",
+   "thumbnail" : "/images/don-t-forget-to--perl/thumb_perl_hashtag.png",
+   "authors" : [
+      "david-farrell"
+   ],
+   "title" : "Don't forget to #Perl",
+   "tags" : [
+      "twitter",
+      "hashtag"
+   ],
+   "date" : "2016-09-28T08:05:37"
+}
 
 When it comes to open source communities, programming comes first, but talking about programming is a close second. Perl programmers are pretty good about blogging (the [Perly-Bot app](https://github.com/dnmfarrell/Perly-Bot) that populates our community articles sidebar tracks around 30 blogs), but I've noticed that on Twitter, many Perl-related tweets lack a `#Perl` hashtag. That's a shame, as it helps others discover Perl related tweets via search, clicking the hashtag and in the "highlights" notification on the Twitter mobile app.
 

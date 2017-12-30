@@ -1,19 +1,20 @@
 {
+   "date" : "2014-01-24T03:17:09",
+   "description" : "We catch up with the prolific CPAN module author",
+   "title" : "An interview with Steven Haryanto",
    "tags" : [
       "community",
       "cpan",
       "interview"
    ],
-   "description" : "We catch up with the prolific CPAN module author",
-   "date" : "2014-01-24T03:17:09",
-   "draft" : false,
-   "title" : "An interview with Steven Haryanto",
-   "categories" : "community",
+   "image" : "/images/62/EC2865E0-FF2E-11E3-811B-5C05A68B9E16.png",
+   "slug" : "62/2014/1/24/An-interview-with-Steven-Haryanto",
    "authors" : [
       "david-farrell"
    ],
-   "image" : "/images/62/EC2865E0-FF2E-11E3-811B-5C05A68B9E16.png",
-   "slug" : "62/2014/1/24/An-interview-with-Steven-Haryanto"
+   "draft" : false,
+   "thumbnail" : "/images/62/thumb_EC2865E0-FF2E-11E3-811B-5C05A68B9E16.png",
+   "categories" : "community"
 }
 
 

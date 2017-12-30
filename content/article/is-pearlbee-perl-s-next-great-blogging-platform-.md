@@ -1,11 +1,8 @@
 {
-   "draft" : false,
-   "image" : "/images/69/EC51073E-FF2E-11E3-94AE-5C05A68B9E16.png",
+   "date" : "2014-02-17T04:09:21",
    "authors" : [
       "david-farrell"
    ],
-   "slug" : "69/2014/2/17/Is-PearlBee-Perl-s-next-great-blogging-platform-",
-   "categories" : "apps",
    "tags" : [
       "community",
       "blog",
@@ -14,9 +11,13 @@
       "evozon",
       "open_source"
    ],
-   "date" : "2014-02-17T04:09:21",
+   "title" : "Is PearlBee Perl's next great blogging platform?",
    "description" : "We review the new open source blogging platform",
-   "title" : "Is PearlBee Perl's next great blogging platform?"
+   "thumbnail" : "/images/69/thumb_EC51073E-FF2E-11E3-94AE-5C05A68B9E16.png",
+   "slug" : "69/2014/2/17/Is-PearlBee-Perl-s-next-great-blogging-platform-",
+   "draft" : false,
+   "image" : "/images/69/EC51073E-FF2E-11E3-94AE-5C05A68B9E16.png",
+   "categories" : "apps"
 }
 
 

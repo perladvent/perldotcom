@@ -1,16 +1,17 @@
 {
-   "draft" : false,
-   "slug" : "187/2015/8/18/Laptop-review--Dell-XPS-13-2015",
-   "title" : "Laptop review: Dell XPS 13 2015",
-   "categories" : "hardware",
-   "description" : "An excellent machine",
    "image" : "/images/187/E8C99470-454E-11E5-847C-220CFC9DDBA7.jpeg",
    "date" : "2015-08-18T12:34:12",
+   "description" : "An excellent machine",
+   "title" : "Laptop review: Dell XPS 13 2015",
    "tags" : [
       "dell",
       "laptop",
       "xps"
    ],
+   "draft" : false,
+   "thumbnail" : "/images/187/thumb_E8C99470-454E-11E5-847C-220CFC9DDBA7.jpeg",
+   "categories" : "hardware",
+   "slug" : "187/2015/8/18/Laptop-review--Dell-XPS-13-2015",
    "authors" : [
       "david-farrell"
    ]

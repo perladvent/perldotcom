@@ -1,9 +1,4 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
-   "categories" : "cpan",
    "tags" : [
       "git",
       "gps",
@@ -16,11 +11,17 @@
       "pocket",
       "airbrake"
    ],
-   "draft" : false,
-   "slug" : "176/2015/6/4/What-s-new-on-CPAN---May-2015",
    "title" : "What's new on CPAN - May 2015",
+   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "draft" : false,
+   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "categories" : "cpan",
+   "date" : "2015-06-04T15:35:56",
+   "authors" : [
+      "david-farrell"
+   ],
    "description" : "Our curated guide to last month's new CPAN uploads",
-   "date" : "2015-06-04T15:35:56"
+   "slug" : "176/2015/6/4/What-s-new-on-CPAN---May-2015"
 }
 
 

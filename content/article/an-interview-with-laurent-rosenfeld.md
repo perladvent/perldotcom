@@ -1,14 +1,19 @@
-
-  {
-    "title"  : "Thinking about Perl 6",
-    "authors": ["brian-d-foy"],
-    "date"   : "2017-04-25T08:23:17",
-    "tags"   : ["oreilly", "interview"],
-    "draft"  : false,
-    "image"  : "/images/laurent-rosenfeld-interview/think_perl_6_cover.jpeg",
-    "description" : "An Interview with Laurent Rosenfeld, author of Think Perl 6",
-    "categories": "perl-6"
-  }
+{
+   "description" : "An Interview with Laurent Rosenfeld, author of Think Perl 6",
+   "authors" : [
+      "brian-d-foy"
+   ],
+   "image" : "/images/laurent-rosenfeld-interview/think_perl_6_cover.jpeg",
+   "categories" : "perl-6",
+   "date" : "2017-04-25T08:23:17",
+   "draft" : false,
+   "tags" : [
+      "oreilly",
+      "interview"
+   ],
+   "thumbnail" : "/images/laurent-rosenfeld-interview/thumb_think_perl_6_cover.jpeg",
+   "title" : "Thinking about Perl 6"
+}
 
 *brian d foy interviews Laurent Rosenfeld, whose new book [Think Perl 6](http://shop.oreilly.com/product/0636920065883.do) from O'Reilly Media, comes out this summer and is available for pre-order. This book joins a series of [Think ...](http://greenteapress.com/wp/think-python/) books targeting different subjects and is provided for free under a [Creative Commons license](http://creativecommons.org/licenses/by-nc/3.0/).*
 

@@ -1,13 +1,7 @@
 {
-   "slug" : "206/2015/12/24/Quick-tip--git-push-origin-hamster-",
    "authors" : [
       "david-farrell"
    ],
-   "date" : "2015-12-24T17:20:05",
-   "draft" : false,
-   "image" : "/images/206/7CC46A3A-AA60-11E5-B179-9189815E78B2.jpeg",
-   "description" : "Making git do you what mean with symbolic references",
-   "title" : "Quick tip: git push origin hamster?",
    "tags" : [
       "git",
       "symbolic",
@@ -15,7 +9,14 @@
       "master",
       "branch"
    ],
-   "categories" : "apps"
+   "title" : "Quick tip: git push origin hamster?",
+   "date" : "2015-12-24T17:20:05",
+   "image" : "/images/206/7CC46A3A-AA60-11E5-B179-9189815E78B2.jpeg",
+   "categories" : "apps",
+   "slug" : "206/2015/12/24/Quick-tip--git-push-origin-hamster-",
+   "draft" : false,
+   "description" : "Making git do you what mean with symbolic references",
+   "thumbnail" : "/images/206/thumb_7CC46A3A-AA60-11E5-B179-9189815E78B2.jpeg"
 }
 
 

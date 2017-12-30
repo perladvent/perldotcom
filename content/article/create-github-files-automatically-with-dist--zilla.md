@@ -1,11 +1,6 @@
 {
-   "date" : "2015-12-09T13:46:17",
-   "categories" : "development",
-   "image" : "/images/203/081F6A04-9E7B-11E5-B6F6-9162ABEC0845.jpeg",
-   "slug" : "203/2015/12/9/Create-GitHub-files-automatically-with-Dist--Zilla",
-   "description" : "Automate the boring stuff, help others",
    "title" : "Create GitHub files automatically with Dist::Zilla",
-   "draft" : false,
+   "thumbnail" : "/images/203/thumb_081F6A04-9E7B-11E5-B6F6-9162ABEC0845.jpeg",
    "tags" : [
       "cpan",
       "module",
@@ -13,9 +8,15 @@
       "pause",
       "dzil"
    ],
+   "draft" : false,
+   "categories" : "development",
+   "date" : "2015-12-09T13:46:17",
+   "image" : "/images/203/081F6A04-9E7B-11E5-B6F6-9162ABEC0845.jpeg",
+   "slug" : "203/2015/12/9/Create-GitHub-files-automatically-with-Dist--Zilla",
    "authors" : [
       "david-farrell"
-   ]
+   ],
+   "description" : "Automate the boring stuff, help others"
 }
 
 

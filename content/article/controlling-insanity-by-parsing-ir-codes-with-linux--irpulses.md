@@ -1,22 +1,23 @@
-  {
-      "title": "Controlling insanity by parsing IR codes with Linux::IRPulses",
-      "image": "/images/controlling-insanity-by-parsing-ir-codes-with-linux--irpulses/chopsticks.png",
-      "tags": [
-          "perl",
-          "ir",
-          "linux_irpulses",
-          "lirc",
-          "remote",
-          "raspberry_pi"
-      ],
-      "draft": false,
-      "date": "2016-03-08T08:37:00",
-      "description": "Parsing IR remote codes",
-      "authors" : [
-          "timm-murray"
-      ],
-      "categories": "hardware"
-  }
+{
+   "tags" : [
+      "perl",
+      "ir",
+      "linux_irpulses",
+      "lirc",
+      "remote",
+      "raspberry_pi"
+   ],
+   "draft" : false,
+   "thumbnail" : "/images/controlling-insanity-by-parsing-ir-codes-with-linux--irpulses/thumb_chopsticks.png",
+   "title" : "Controlling insanity by parsing IR codes with Linux::IRPulses",
+   "categories" : "hardware",
+   "description" : "Parsing IR remote codes",
+   "authors" : [
+      "timm-murray"
+   ],
+   "date" : "2016-03-08T08:37:00",
+   "image" : "/images/controlling-insanity-by-parsing-ir-codes-with-linux--irpulses/chopsticks.png"
+}
 
 
 *Sending information with pulsing invisible light can be surprisingly complex.

@@ -1,11 +1,7 @@
 {
-   "image" : "/images/154/91EE4478-B617-11E4-A56B-890CDB487E9F.png",
-   "date" : "2015-02-23T14:12:06",
-   "title" : "Build a Twitter bot with Perl",
-   "categories" : "web",
-   "slug" : "154/2015/2/23/Build-a-Twitter-bot-with-Perl",
-   "description" : "Automating tweets can win you more followers!",
    "draft" : false,
+   "title" : "Build a Twitter bot with Perl",
+   "thumbnail" : "/images/154/thumb_91EE4478-B617-11E4-A56B-890CDB487E9F.png",
    "tags" : [
       "perl",
       "reddit",
@@ -14,9 +10,14 @@
       "automation",
       "tweet"
    ],
+   "slug" : "154/2015/2/23/Build-a-Twitter-bot-with-Perl",
+   "description" : "Automating tweets can win you more followers!",
    "authors" : [
       "david-farrell"
-   ]
+   ],
+   "date" : "2015-02-23T14:12:06",
+   "categories" : "web",
+   "image" : "/images/154/91EE4478-B617-11E4-A56B-890CDB487E9F.png"
 }
 
 

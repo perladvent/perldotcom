@@ -1,14 +1,20 @@
-
-  {
-    "title"  : "Announcing Geo::libpostal",
-    "authors": ["david-farrell"],
-    "date"   : "2016-07-19T08:33:59",
-    "tags"   : ["libpostal","geocode","openstreetmap"],
-    "draft"  : false,
-    "image"  : "/images/announcing-geo--libpostal/openstreetmap-small.png",
-    "description" : "Perl bindings for libpostal, the address parsing library",
-    "categories": "data"
-  }
+{
+   "draft" : false,
+   "title" : "Announcing Geo::libpostal",
+   "thumbnail" : "/images/announcing-geo--libpostal/thumb_openstreetmap-small.png",
+   "tags" : [
+      "libpostal",
+      "geocode",
+      "openstreetmap"
+   ],
+   "description" : "Perl bindings for libpostal, the address parsing library",
+   "authors" : [
+      "david-farrell"
+   ],
+   "categories" : "data",
+   "date" : "2016-07-19T08:33:59",
+   "image" : "/images/announcing-geo--libpostal/openstreetmap-small.png"
+}
 
 [libpostal](https://github.com/openvenues/libpostal) is a C library for normalizing and parsing international street addresses. It's built from [OpenStreetMap](http://www.openstreetmap.org/) data, supports normalization in over 60 languages and can parse addresses from over 100 countries. It's blindingly fast and now you can use it with Perl using [Geo::libpostal](https://metacpan.org/pod/Geo::libpostal), a new module I wrote.
 

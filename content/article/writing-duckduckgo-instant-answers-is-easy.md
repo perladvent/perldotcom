@@ -1,20 +1,21 @@
 {
-   "title" : "Writing DuckDuckGo instant answers is easy",
-   "slug" : "169/2015/4/20/Writing-DuckDuckGo-instant-answers-is-easy",
+   "date" : "2015-04-20T12:33:17",
+   "authors" : [
+      "david-farrell"
+   ],
    "tags" : [
       "duckduckgo",
       "perldoc",
       "cheatsheet",
       "app_duckpan"
    ],
+   "title" : "Writing DuckDuckGo instant answers is easy",
+   "thumbnail" : "/images/169/thumb_5E030C7A-E6E1-11E4-9A7F-886D1846911D.jpeg",
+   "description" : "The privacy-focused search engine has a helpful community and great tools",
    "image" : "/images/169/5E030C7A-E6E1-11E4-9A7F-886D1846911D.jpeg",
    "categories" : "community",
-   "description" : "The privacy-focused search engine has a helpful community and great tools",
    "draft" : false,
-   "date" : "2015-04-20T12:33:17",
-   "authors" : [
-      "david-farrell"
-   ]
+   "slug" : "169/2015/4/20/Writing-DuckDuckGo-instant-answers-is-easy"
 }
 
 

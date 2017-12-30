@@ -1,6 +1,11 @@
 {
-   "slug" : "102/2014/7/15/Generate-static-websites-from-dynamic-Perl-web-apps",
+   "description" : "App::Wallflower generates static apps from PSGI applications",
+   "thumbnail" : "/images/102/thumb_72C9C7DC-0AF2-11E4-B70D-23925E2B53EB.jpeg",
    "draft" : false,
+   "slug" : "102/2014/7/15/Generate-static-websites-from-dynamic-Perl-web-apps",
+   "image" : "/images/102/72C9C7DC-0AF2-11E4-B70D-23925E2B53EB.jpeg",
+   "categories" : "web",
+   "date" : "2014-07-15T12:26:52",
    "title" : "Generate static websites from dynamic Perl web apps",
    "tags" : [
       "nginx",
@@ -11,10 +16,6 @@
       "psgi",
       "framework"
    ],
-   "description" : "App::Wallflower generates static apps from PSGI applications",
-   "image" : "/images/102/72C9C7DC-0AF2-11E4-B70D-23925E2B53EB.jpeg",
-   "categories" : "web",
-   "date" : "2014-07-15T12:26:52",
    "authors" : [
       "david-farrell"
    ]

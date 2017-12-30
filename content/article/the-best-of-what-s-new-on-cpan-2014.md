@@ -1,14 +1,4 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "categories" : "cpan",
-   "description" : "Some modules you may have missed last year",
-   "date" : "2015-01-15T14:44:40",
-   "image" : "/images/145/9F324420-9CC4-11E4-8F7D-457B20B41B38.png",
-   "title" : "The best of what's new on CPAN 2014",
-   "draft" : false,
-   "slug" : "145/2015/1/15/The-best-of-what-s-new-on-CPAN-2014",
    "tags" : [
       "ffi",
       "mojo",
@@ -22,7 +12,18 @@
       "js",
       "phantomjs",
       "pic"
-   ]
+   ],
+   "thumbnail" : "/images/145/thumb_9F324420-9CC4-11E4-8F7D-457B20B41B38.png",
+   "title" : "The best of what's new on CPAN 2014",
+   "draft" : false,
+   "image" : "/images/145/9F324420-9CC4-11E4-8F7D-457B20B41B38.png",
+   "categories" : "cpan",
+   "date" : "2015-01-15T14:44:40",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Some modules you may have missed last year",
+   "slug" : "145/2015/1/15/The-best-of-what-s-new-on-CPAN-2014"
 }
 
 

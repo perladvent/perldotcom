@@ -1,18 +1,19 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "categories" : "apps",
-   "title" : "Get GNOME 3 popup alerts for IRC",
-   "slug" : "95/2014/6/9/Get-GNOME-3-popup-alerts-for-IRC",
-   "description" : "Don't miss your IRC chats and messages",
    "draft" : false,
-   "date" : "2014-06-09T12:34:25",
+   "thumbnail" : "/images/95/thumb_ED13777E-FF2E-11E3-8E65-5C05A68B9E16.png",
+   "title" : "Get GNOME 3 popup alerts for IRC",
    "tags" : [
       "irssi",
       "irc",
       "gnome3"
    ],
+   "slug" : "95/2014/6/9/Get-GNOME-3-popup-alerts-for-IRC",
+   "description" : "Don't miss your IRC chats and messages",
+   "authors" : [
+      "david-farrell"
+   ],
+   "categories" : "apps",
+   "date" : "2014-06-09T12:34:25",
    "image" : "/images/95/ED13777E-FF2E-11E3-8E65-5C05A68B9E16.png"
 }
 

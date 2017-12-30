@@ -1,13 +1,6 @@
 {
+   "title" : "What's new on CPAN - December 2014",
    "categories" : "cpan",
-   "image" : "/images/142/C1BC7C64-948A-11E4-907D-A439A59D04B1.png",
-   "description" : "A curated look at the latest CPAN uploads",
-   "authors" : [
-      "david-farrell"
-   ],
-   "slug" : "142/2015/1/5/What-s-new-on-CPAN---December-2014",
-   "date" : "2015-01-05T13:50:44",
-   "draft" : false,
    "tags" : [
       "dancer",
       "tcp",
@@ -17,7 +10,15 @@
       "geo_code",
       "bitcoin"
    ],
-   "title" : "What's new on CPAN - December 2014"
+   "draft" : false,
+   "slug" : "142/2015/1/5/What-s-new-on-CPAN---December-2014",
+   "thumbnail" : "/images/142/thumb_C1BC7C64-948A-11E4-907D-A439A59D04B1.png",
+   "image" : "/images/142/C1BC7C64-948A-11E4-907D-A439A59D04B1.png",
+   "description" : "A curated look at the latest CPAN uploads",
+   "authors" : [
+      "david-farrell"
+   ],
+   "date" : "2015-01-05T13:50:44"
 }
 
 

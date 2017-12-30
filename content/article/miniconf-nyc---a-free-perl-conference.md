@@ -1,19 +1,20 @@
 {
-   "draft" : false,
+   "image" : "/images/175/3103D79E-F9D4-11E4-8FFE-C354103B7DD2.png",
+   "categories" : "community",
+   "date" : "2015-05-14T12:26:37",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Training, hackathon, lightning talks and swag",
    "slug" : "175/2015/5/14/Miniconf-NYC---a-free-Perl-conference",
    "tags" : [
       "open_source",
       "nyc",
       "miniconf"
    ],
-   "categories" : "community",
-   "image" : "/images/175/3103D79E-F9D4-11E4-8FFE-C354103B7DD2.png",
-   "description" : "Training, hackathon, lightning talks and swag",
-   "authors" : [
-      "david-farrell"
-   ],
    "title" : "Miniconf NYC - a free Perl conference",
-   "date" : "2015-05-14T12:26:37"
+   "thumbnail" : "/images/175/thumb_3103D79E-F9D4-11E4-8FFE-C354103B7DD2.png",
+   "draft" : false
 }
 
 

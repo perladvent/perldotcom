@@ -1,19 +1,20 @@
 {
-   "categories" : "web",
-   "description" : "Using Mojolicious as a TCP/WebSocket Bridge",
-   "draft" : false,
-   "date" : "2016-02-02T13:41:18",
+   "thumbnail" : "/images/212/thumb_0156BEFE-C9B2-11E5-A2BB-E80C3AD1818C.jpeg",
+   "title" : "Get an in-browser remote desktop with Mojolicious and noVNC",
    "tags" : [
       "mojolicious",
       "websockets",
       "novnc"
    ],
+   "draft" : false,
+   "categories" : "web",
+   "date" : "2016-02-02T13:41:18",
+   "image" : "/images/212/0156BEFE-C9B2-11E5-A2BB-E80C3AD1818C.jpeg",
    "slug" : "212/2016/2/2/Get-an-in-browser-remote-desktop-with-Mojolicious-and-noVNC",
+   "description" : "Using Mojolicious as a TCP/WebSocket Bridge",
    "authors" : [
       "joel-berger"
-   ],
-   "title" : "Get an in-browser remote desktop with Mojolicious and noVNC",
-   "image" : "/images/212/0156BEFE-C9B2-11E5-A2BB-E80C3AD1818C.jpeg"
+   ]
 }
 
 

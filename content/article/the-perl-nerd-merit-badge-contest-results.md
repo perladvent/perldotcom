@@ -1,16 +1,16 @@
 {
-   "categories" : "community",
-   "slug" : "73/2014/2/28/The-Perl-Nerd-Merit-Badge-Contest-results",
+   "draft" : false,
+   "tags" : [],
+   "thumbnail" : "/images/73/thumb_EC75761E-FF2E-11E3-BD48-5C05A68B9E16.png",
+   "title" : "The Perl Nerd Merit Badge Contest results",
+   "description" : "Three winners, three awesome Perl tricks. Read on to find out more...",
    "authors" : [
       "david-farrell"
    ],
-   "title" : "The Perl Nerd Merit Badge Contest results",
-   "tags" : [
-   ],
-   "description" : "Three winners, three awesome Perl tricks. Read on to find out more...",
+   "slug" : "73/2014/2/28/The-Perl-Nerd-Merit-Badge-Contest-results",
    "image" : "/images/73/EC75761E-FF2E-11E3-BD48-5C05A68B9E16.png",
-   "date" : "2014-02-28T13:57:22",
-   "draft" : false
+   "categories" : "community",
+   "date" : "2014-02-28T13:57:22"
 }
 
 

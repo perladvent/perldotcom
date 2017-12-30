@@ -1,15 +1,16 @@
 {
-   "slug" : "70/2014/2/19/Last-2-days-of-the-Perl-Nerd-Merit-Badge-Contest",
-   "draft" : false,
-   "date" : "2014-02-19T14:18:31",
-   "title" : "Last 2 days of the Perl Nerd Merit Badge Contest",
-   "image" : "/images/70/EC59DF9E-FF2E-11E3-AD4D-5C05A68B9E16.png",
-   "tags" : [],
-   "description" : "Code snippets large and small, get them in!",
    "authors" : [
       "david-farrell"
    ],
-   "categories" : "community"
+   "tags" : [],
+   "title" : "Last 2 days of the Perl Nerd Merit Badge Contest",
+   "date" : "2014-02-19T14:18:31",
+   "image" : "/images/70/EC59DF9E-FF2E-11E3-AD4D-5C05A68B9E16.png",
+   "categories" : "community",
+   "draft" : false,
+   "slug" : "70/2014/2/19/Last-2-days-of-the-Perl-Nerd-Merit-Badge-Contest",
+   "thumbnail" : "/images/70/thumb_EC59DF9E-FF2E-11E3-AD4D-5C05A68B9E16.png",
+   "description" : "Code snippets large and small, get them in!"
 }
 
 

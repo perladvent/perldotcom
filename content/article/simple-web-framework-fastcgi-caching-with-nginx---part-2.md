@@ -1,13 +1,5 @@
 {
-   "draft" : false,
-   "authors" : [
-      "david-farrell"
-   ],
-   "slug" : "77/2014/3/17/Simple-web-framework-FastCGI-caching-with-nginx---part-2",
-   "date" : "2014-03-17T01:54:09",
-   "categories" : "web",
-   "description" : "Safely purge individually cached upstream responses",
-   "image" : "/images/77/EC900B50-FF2E-11E3-B753-5C05A68B9E16.jpeg",
+   "title" : "Simple web framework FastCGI caching with nginx - part 2",
    "tags" : [
       "module",
       "nginx",
@@ -15,7 +7,16 @@
       "mojolicious",
       "cache"
    ],
-   "title" : "Simple web framework FastCGI caching with nginx - part 2"
+   "authors" : [
+      "david-farrell"
+   ],
+   "date" : "2014-03-17T01:54:09",
+   "image" : "/images/77/EC900B50-FF2E-11E3-B753-5C05A68B9E16.jpeg",
+   "categories" : "web",
+   "slug" : "77/2014/3/17/Simple-web-framework-FastCGI-caching-with-nginx---part-2",
+   "draft" : false,
+   "thumbnail" : "/images/77/thumb_EC900B50-FF2E-11E3-B753-5C05A68B9E16.jpeg",
+   "description" : "Safely purge individually cached upstream responses"
 }
 
 

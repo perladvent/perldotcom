@@ -1,20 +1,21 @@
 {
+   "thumbnail" : "/images/54/thumb_EBF9E79C-FF2E-11E3-A3E3-5C05A68B9E16.jpeg",
+   "draft" : false,
+   "categories" : "community",
    "slug" : "54/2013/12/18/An-interview-with-Peteris-Krumins",
    "authors" : [
       "david-farrell"
    ],
+   "image" : "/images/54/EBF9E79C-FF2E-11E3-A3E3-5C05A68B9E16.jpeg",
+   "description" : "We talk about his favourite Perl one liners, publishing books and Perl on Windows!",
+   "date" : "2013-12-18T03:47:38",
    "title" : "An interview with Peteris Krumins",
-   "categories" : "community",
    "tags" : [
       "powershell",
       "bash",
       "interview",
       "one_liner"
-   ],
-   "draft" : false,
-   "image" : "/images/54/EBF9E79C-FF2E-11E3-A3E3-5C05A68B9E16.jpeg",
-   "date" : "2013-12-18T03:47:38",
-   "description" : "We talk about his favourite Perl one liners, publishing books and Perl on Windows!"
+   ]
 }
 
 

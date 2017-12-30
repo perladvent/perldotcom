@@ -1,14 +1,20 @@
-
-  {
-    "title"  : "What's New on CPAN - Annual Edition",
-    "authors": ["david-farrell"],
-    "date"   : "2017-07-03T11:45:31",
-    "tags"   : ["tpc","yapc","talk"],
-    "draft"  : false,
-    "image"  : "/images/whats-new-on-cpan-annual-edition/title-slide.png",
-    "description" : "Video and slides from my Perl Conference Talk",
-    "categories": "cpan"
-  }
+{
+   "draft" : false,
+   "title" : "What's New on CPAN - Annual Edition",
+   "thumbnail" : "/images/whats-new-on-cpan-annual-edition/thumb_title-slide.png",
+   "tags" : [
+      "tpc",
+      "yapc",
+      "talk"
+   ],
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Video and slides from my Perl Conference Talk",
+   "categories" : "cpan",
+   "date" : "2017-07-03T11:45:31",
+   "image" : "/images/whats-new-on-cpan-annual-edition/title-slide.png"
+}
 
 Last month I spoke at The Perl Conference in Alexandria, VA. I presented "What's new on CPAN - annual edition". Here's the video of the talk:
 

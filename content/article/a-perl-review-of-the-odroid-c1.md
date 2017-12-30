@@ -1,21 +1,22 @@
 {
-   "draft" : false,
-   "date" : "2015-02-11T13:53:33",
    "image" : "/images/152/4BE8EC88-B1F5-11E4-9EED-41DCDA487E9F.jpeg",
+   "authors" : [
+      "timm-murray"
+   ],
+   "date" : "2015-02-11T13:53:33",
    "description" : "This little board shows a lot of promise for Perl-based hardware projects",
+   "categories" : "hardware",
    "title" : "A Perl Review of the ODROID-C1",
+   "slug" : "152/2015/2/11/A-Perl-Review-of-the-ODROID-C1",
+   "thumbnail" : "/images/152/thumb_4BE8EC88-B1F5-11E4-9EED-41DCDA487E9F.jpeg",
+   "draft" : false,
    "tags" : [
       "dancer",
       "hardware",
       "odroid",
       "raspberrypi",
       "device_webio"
-   ],
-   "slug" : "152/2015/2/11/A-Perl-Review-of-the-ODROID-C1",
-   "authors" : [
-      "timm-murray"
-   ],
-   "categories" : "hardware"
+   ]
 }
 
 

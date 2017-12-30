@@ -1,4 +1,14 @@
 {
+   "date" : "2015-05-07T11:47:25",
+   "categories" : "cpan",
+   "image" : "/images/172/CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
+   "slug" : "172/2015/5/7/What-s-new-on-CPAN---April-2015",
+   "description" : "Our curated guide to last month's new CPAN uploads",
+   "authors" : [
+      "david-farrell"
+   ],
+   "thumbnail" : "/images/172/thumb_CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
+   "title" : "What's new on CPAN - April 2015",
    "tags" : [
       "json",
       "jasmine",
@@ -10,16 +20,7 @@
       "dynamodb",
       "minecraft"
    ],
-   "authors" : [
-      "david-farrell"
-   ],
-   "categories" : "cpan",
-   "image" : "/images/172/CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
-   "title" : "What's new on CPAN - April 2015",
-   "draft" : false,
-   "description" : "Our curated guide to last month's new CPAN uploads",
-   "slug" : "172/2015/5/7/What-s-new-on-CPAN---April-2015",
-   "date" : "2015-05-07T11:47:25"
+   "draft" : false
 }
 
 

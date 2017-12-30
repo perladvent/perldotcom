@@ -1,12 +1,7 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "image" : "/images/108/52AEDC46-1CA2-11E4-81FD-87E12D77B041.png",
+   "thumbnail" : "/images/108/thumb_52AEDC46-1CA2-11E4-81FD-87E12D77B041.png",
    "slug" : "108/2014/8/5/Parse-Excel-with-ease-using-Perl",
-   "date" : "2014-08-05T13:41:48",
-   "title" : "Parse Excel with ease using Perl",
-   "description" : "Spreadsheet::Read makes parsing spreadsheets too easy",
+   "draft" : false,
    "tags" : [
       "cpan",
       "excel",
@@ -19,7 +14,13 @@
       "spreadsheet_read"
    ],
    "categories" : "data",
-   "draft" : false
+   "title" : "Parse Excel with ease using Perl",
+   "date" : "2014-08-05T13:41:48",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Spreadsheet::Read makes parsing spreadsheets too easy",
+   "image" : "/images/108/52AEDC46-1CA2-11E4-81FD-87E12D77B041.png"
 }
 
 

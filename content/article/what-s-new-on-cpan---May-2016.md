@@ -1,8 +1,7 @@
 {
-   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
-   "date" : "2016-06-07T18:17:24",
    "draft" : false,
-   "categories": "cpan",
+   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "title" : "What's new on CPAN - May 2016",
    "tags" : [
       "msgpuck",
       "gtk3",
@@ -15,11 +14,13 @@
       "pem",
       "ffi"
    ],
-   "description" : "A curated look at May's new CPAN uploads",
    "authors" : [
       "david-farrell"
    ],
-   "title" : "What's new on CPAN - May 2016"
+   "description" : "A curated look at May's new CPAN uploads",
+   "date" : "2016-06-07T18:17:24",
+   "categories" : "cpan",
+   "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png"
 }
 
 

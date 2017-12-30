@@ -1,13 +1,5 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "categories" : "community",
-   "description" : "Quack & Hack, the NY.PM Hackathon and Mojoconf",
    "date" : "2015-03-31T13:25:56",
-   "title" : "3 Awesome Perl Events in NYC this Spring/Summer",
-   "image" : "/images/166/EF80587C-D7A7-11E4-97B7-189F4E596431.jpeg",
-   "slug" : "166/2015/3/31/3-Awesome-Perl-Events-in-NYC-this-Spring-Summer",
    "tags" : [
       "community",
       "duckduckgo",
@@ -18,7 +10,16 @@
       "ny_pm",
       "bloomberg"
    ],
-   "draft" : false
+   "title" : "3 Awesome Perl Events in NYC this Spring/Summer",
+   "authors" : [
+      "david-farrell"
+   ],
+   "thumbnail" : "/images/166/thumb_EF80587C-D7A7-11E4-97B7-189F4E596431.jpeg",
+   "description" : "Quack & Hack, the NY.PM Hackathon and Mojoconf",
+   "image" : "/images/166/EF80587C-D7A7-11E4-97B7-189F4E596431.jpeg",
+   "categories" : "community",
+   "draft" : false,
+   "slug" : "166/2015/3/31/3-Awesome-Perl-Events-in-NYC-this-Spring-Summer"
 }
 
 

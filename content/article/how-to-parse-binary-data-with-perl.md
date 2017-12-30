@@ -1,14 +1,23 @@
-
-  {
-    "title"  : "How to parse binary data with Perl",
-    "authors": ["david-farrell"],
-    "date"   : "2016-04-18T19:56:47",
-    "tags"   : [ "binary","unpack", "png", "tzfile", "olsen", "zoneinfo"],
-    "draft"  : false,
-    "image"  : "/images/how-to-parse-binary-data-with-perl/hackers_internet.jpg",
-    "description" : "Parsing binary data is easy with unpack",
-    "categories": "data"
-  }
+{
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Parsing binary data is easy with unpack",
+   "date" : "2016-04-18T19:56:47",
+   "categories" : "data",
+   "image" : "/images/how-to-parse-binary-data-with-perl/hackers_internet.jpg",
+   "draft" : false,
+   "thumbnail" : "/images/how-to-parse-binary-data-with-perl/thumb_hackers_internet.jpg",
+   "title" : "How to parse binary data with Perl",
+   "tags" : [
+      "binary",
+      "unpack",
+      "png",
+      "tzfile",
+      "olsen",
+      "zoneinfo"
+   ]
+}
 
 Parsing binary data is one of those tasks that seems to come up rarely, but is useful to know. Many common file types like images, music, timestamps, network packets and auth logs all come in binary flavors. Unfortunately it's nowhere near as exciting as the fictitious depictions from [Hackers](https://en.wikipedia.org/wiki/Hackers_%28film%29). The good news though is parsing binary data with Perl is easy using the `unpack` function. I'm going to walk you through the three steps you'll need when working with binary data.
 

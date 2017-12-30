@@ -1,7 +1,5 @@
 {
    "title" : "Rescue legacy code with modulinos",
-   "image" : "/images/107/A5A75EBE-1DCE-11E4-98FE-791D03099C34.png",
-   "draft" : false,
    "tags" : [
       "module",
       "package",
@@ -13,10 +11,13 @@
    "authors" : [
       "brian-d-foy"
    ],
-   "slug" : "107/2014/8/7/Rescue-legacy-code-with-modulinos",
-   "description" : "How the modules-as-programs pattern provides a development path for scripts",
    "date" : "2014-08-07T12:22:42",
-   "categories" : "development"
+   "slug" : "107/2014/8/7/Rescue-legacy-code-with-modulinos",
+   "draft" : false,
+   "image" : "/images/107/A5A75EBE-1DCE-11E4-98FE-791D03099C34.png",
+   "categories" : "development",
+   "thumbnail" : "/images/107/thumb_A5A75EBE-1DCE-11E4-98FE-791D03099C34.png",
+   "description" : "How the modules-as-programs pattern provides a development path for scripts"
 }
 
 

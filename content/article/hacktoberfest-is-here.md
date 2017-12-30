@@ -1,14 +1,24 @@
-
-  {
-    "title"  : "Hacktoberfest is here",
-    "authors": ["brian-d-foy"],
-    "date"   : "2016-10-02T10:51:01",
-    "tags"   : ["perl","github", "pull-request","git", "digitalocean", "hacktoberfest", "ghojo"],
-    "draft"  : false,
-    "image"  : "/images/hacktoberfest-is-here/hacktoberfest-2016.png",
-    "description" : "Send those Perl GitHub pull requests!",
-    "categories": "community"
-  }
+{
+   "tags" : [
+      "perl",
+      "github",
+      "pull-request",
+      "git",
+      "digitalocean",
+      "hacktoberfest",
+      "ghojo"
+   ],
+   "title" : "Hacktoberfest is here",
+   "thumbnail" : "/images/hacktoberfest-is-here/thumb_hacktoberfest-2016.png",
+   "draft" : false,
+   "image" : "/images/hacktoberfest-is-here/hacktoberfest-2016.png",
+   "categories" : "community",
+   "date" : "2016-10-02T10:51:01",
+   "authors" : [
+      "brian-d-foy"
+   ],
+   "description" : "Send those Perl GitHub pull requests!"
+}
 
 [Hacktoberfest](https://hacktoberfest.digitalocean.com/) is here, and you can be part of the effort to make Perl the most popular language in the month long festival of patches and pull requests.
 

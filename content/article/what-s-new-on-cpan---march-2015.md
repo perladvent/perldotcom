@@ -1,7 +1,13 @@
 {
-   "title" : "What's New on CPAN - March 2015",
+   "description" : "Our monthly curated guide to the best new CPAN uploads",
+   "authors" : [
+      "david-farrell"
+   ],
    "slug" : "168/2015/4/7/What-s-New-on-CPAN---March-2015",
    "image" : "/images/168/81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "date" : "2015-04-07T05:48:52",
+   "categories" : "cpan",
+   "draft" : false,
    "tags" : [
       "gs1",
       "postgres",
@@ -13,13 +19,8 @@
       "email",
       "extjs"
    ],
-   "authors" : [
-      "david-farrell"
-   ],
-   "date" : "2015-04-07T05:48:52",
-   "draft" : false,
-   "categories" : "cpan",
-   "description" : "Our monthly curated guide to the best new CPAN uploads"
+   "thumbnail" : "/images/168/thumb_81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "title" : "What's New on CPAN - March 2015"
 }
 
 

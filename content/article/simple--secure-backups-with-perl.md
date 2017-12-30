@@ -1,13 +1,12 @@
 {
-   "categories" : "apps",
-   "draft" : false,
    "slug" : "185/2015/8/27/Simple--secure-backups-with-Perl",
    "authors" : [
       "david-farrell"
    ],
-   "title" : "Simple, secure backups with Perl",
+   "draft" : false,
+   "thumbnail" : "/images/185/thumb_487F38FA-4C68-11E5-A045-6BD5FB9DDBA7.jpeg",
+   "categories" : "apps",
    "date" : "2015-08-27T13:09:11",
-   "image" : "/images/185/487F38FA-4C68-11E5-A045-6BD5FB9DDBA7.jpeg",
    "description" : "Creating encrypted, compressed archives",
    "tags" : [
       "stasis",
@@ -18,7 +17,9 @@
       "encryption",
       "security",
       "privacy"
-   ]
+   ],
+   "title" : "Simple, secure backups with Perl",
+   "image" : "/images/185/487F38FA-4C68-11E5-A045-6BD5FB9DDBA7.jpeg"
 }
 
 

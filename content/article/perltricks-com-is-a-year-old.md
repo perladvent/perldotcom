@@ -1,19 +1,20 @@
 {
-   "categories" : "community",
-   "description" : "PerlTricks.com launched a year ago. Happy Birthday us!",
-   "title" : "PerlTricks.com is a year old",
-   "authors" : [
-      "david-farrell"
-   ],
-   "image" : "/images/78/EC9ABC80-FF2E-11E3-B5EC-5C05A68B9E16.jpeg",
    "tags" : [
       "community",
       "news",
       "perltricks"
    ],
-   "slug" : "78/2014/3/21/PerlTricks-com-is-a-year-old",
+   "title" : "PerlTricks.com is a year old",
+   "authors" : [
+      "david-farrell"
+   ],
+   "date" : "2014-03-21T13:02:04",
+   "image" : "/images/78/EC9ABC80-FF2E-11E3-B5EC-5C05A68B9E16.jpeg",
+   "categories" : "community",
    "draft" : false,
-   "date" : "2014-03-21T13:02:04"
+   "slug" : "78/2014/3/21/PerlTricks-com-is-a-year-old",
+   "description" : "PerlTricks.com launched a year ago. Happy Birthday us!",
+   "thumbnail" : "/images/78/thumb_EC9ABC80-FF2E-11E3-B5EC-5C05A68B9E16.jpeg"
 }
 
 

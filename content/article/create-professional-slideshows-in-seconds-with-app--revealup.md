@@ -1,20 +1,21 @@
 {
+   "description" : "App::revealup converts markdown to slick HTML slide shows",
+   "date" : "2014-06-06T12:59:56",
    "authors" : [
       "david-farrell"
    ],
    "image" : "/images/94/ED0BC132-FF2E-11E3-B6DA-5C05A68B9E16.png",
-   "description" : "App::revealup converts markdown to slick HTML slide shows",
-   "date" : "2014-06-06T12:59:56",
-   "slug" : "94/2014/6/6/Create-professional-slideshows-in-seconds-with-App--revealup",
-   "title" : "Create professional slideshows in seconds with App::revealup",
-   "categories" : "apps",
+   "draft" : false,
    "tags" : [
       "app",
       "javascript",
       "github",
       "reveal_js"
    ],
-   "draft" : false
+   "thumbnail" : "/images/94/thumb_ED0BC132-FF2E-11E3-B6DA-5C05A68B9E16.png",
+   "slug" : "94/2014/6/6/Create-professional-slideshows-in-seconds-with-App--revealup",
+   "title" : "Create professional slideshows in seconds with App::revealup",
+   "categories" : "apps"
 }
 
 

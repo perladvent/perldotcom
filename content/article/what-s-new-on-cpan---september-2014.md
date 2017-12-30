@@ -1,6 +1,14 @@
 {
+   "thumbnail" : "/images/117/thumb_5B528E4E-4AAE-11E4-B995-45A0FA3BB728.png",
+   "draft" : false,
+   "categories" : "cpan",
    "slug" : "117/2014/10/3/What-s-new-on-CPAN---September-2014",
+   "authors" : [
+      "david-farrell"
+   ],
+   "image" : "/images/117/5B528E4E-4AAE-11E4-B995-45A0FA3BB728.png",
    "description" : "Our curated guide to September's new CPAN uploads",
+   "date" : "2014-10-03T12:06:35",
    "tags" : [
       "weather",
       "hmac",
@@ -11,14 +19,7 @@
       "beer",
       "rex"
    ],
-   "draft" : false,
-   "date" : "2014-10-03T12:06:35",
-   "image" : "/images/117/5B528E4E-4AAE-11E4-B995-45A0FA3BB728.png",
-   "authors" : [
-      "david-farrell"
-   ],
-   "title" : "What's new on CPAN - September 2014",
-   "categories" : "cpan"
+   "title" : "What's new on CPAN - September 2014"
 }
 
 

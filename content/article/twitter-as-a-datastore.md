@@ -1,19 +1,20 @@
 {
    "description" : "Using social media platforms for computing applications",
-   "image" : "/images/210/B6ABE53E-C045-11E5-B2C3-641B7A54B0AF.png",
    "authors" : [
       "brian-d-foy"
    ],
-   "categories" : "web",
+   "date" : "2016-01-21T13:52:14",
+   "image" : "/images/210/B6ABE53E-C045-11E5-B2C3-641B7A54B0AF.png",
+   "draft" : false,
    "tags" : [
       "math",
       "social_media",
       "net_twitter"
    ],
-   "date" : "2016-01-21T13:52:14",
+   "thumbnail" : "/images/210/thumb_B6ABE53E-C045-11E5-B2C3-641B7A54B0AF.png",
+   "slug" : "210/2016/1/21/Twitter-as-a-datastore",
    "title" : "Twitter as a datastore",
-   "draft" : false,
-   "slug" : "210/2016/1/21/Twitter-as-a-datastore"
+   "categories" : "web"
 }
 
 

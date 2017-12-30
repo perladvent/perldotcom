@@ -1,19 +1,20 @@
 {
+   "title" : "Calculate Fortune's Formula with Perl",
    "tags" : [
       "kelly_criterion",
       "algorithm",
       "betting"
    ],
-   "draft" : false,
-   "date" : "2015-03-23T12:42:08",
-   "categories" : "data",
-   "image" : "/images/161/8E7370C2-D159-11E4-B723-63A34E596431.jpeg",
-   "description" : "Algorithm::Kelly makes it easy",
-   "slug" : "161/2015/3/23/Calculate-Fortune-s-Formula-with-Perl",
-   "title" : "Calculate Fortune's Formula with Perl",
    "authors" : [
       "david-farrell"
-   ]
+   ],
+   "date" : "2015-03-23T12:42:08",
+   "draft" : false,
+   "slug" : "161/2015/3/23/Calculate-Fortune-s-Formula-with-Perl",
+   "image" : "/images/161/8E7370C2-D159-11E4-B723-63A34E596431.jpeg",
+   "categories" : "data",
+   "description" : "Algorithm::Kelly makes it easy",
+   "thumbnail" : "/images/161/thumb_8E7370C2-D159-11E4-B723-63A34E596431.jpeg"
 }
 
 

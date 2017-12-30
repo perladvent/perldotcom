@@ -1,21 +1,22 @@
 {
-   "slug" : "198/2015/10/14/Understanding-Haskell-types",
-   "draft" : false,
    "description" : "The basics",
+   "thumbnail" : "/images/198/thumb_2812558A-6F58-11E5-9A38-7E733498AD2D.png",
    "image" : "/images/198/2812558A-6F58-11E5-9A38-7E733498AD2D.png",
+   "categories" : "development",
+   "draft" : false,
+   "slug" : "198/2015/10/14/Understanding-Haskell-types",
+   "date" : "2015-10-14T12:47:18",
    "authors" : [
       "david-farrell"
    ],
-   "date" : "2015-10-14T12:47:18",
-   "title" : "Understanding Haskell types",
-   "categories" : "development",
    "tags" : [
       "types",
       "oreilly",
       "cis194",
       "lyas",
       "ghci"
-   ]
+   ],
+   "title" : "Understanding Haskell types"
 }
 
 

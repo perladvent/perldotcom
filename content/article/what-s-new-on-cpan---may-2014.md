@@ -1,17 +1,18 @@
 {
-   "draft" : false,
    "title" : "What's new on CPAN - May 2014",
+   "tags" : [
+      "news"
+   ],
+   "description" : "A curated look at May's new CPAN uploads",
+   "date" : "2014-06-02T12:31:35",
+   "image" : "/images/93/ED019F40-FF2E-11E3-8843-5C05A68B9E16.png",
    "authors" : [
       "david-farrell"
    ],
-   "description" : "A curated look at May's new CPAN uploads",
    "slug" : "93/2014/6/2/What-s-new-on-CPAN---May-2014",
-   "image" : "/images/93/ED019F40-FF2E-11E3-8843-5C05A68B9E16.png",
    "categories" : "cpan",
-   "date" : "2014-06-02T12:31:35",
-   "tags" : [
-      "news"
-   ]
+   "draft" : false,
+   "thumbnail" : "/images/93/thumb_ED019F40-FF2E-11E3-8843-5C05A68B9E16.png"
 }
 
 

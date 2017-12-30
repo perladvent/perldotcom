@@ -1,13 +1,5 @@
 {
-   "categories" : "hardware",
    "title" : "GPS and Perl",
-   "description" : "How to find your way with Perl",
-   "slug" : "158/2015/3/10/GPS-and-Perl",
-   "image" : "/images/158/B8A4CA2A-C697-11E4-B99B-AB6E0EA848F6.jpeg",
-   "draft" : false,
-   "authors" : [
-      "timm-murray"
-   ],
    "tags" : [
       "raspberry_pi",
       "hardware",
@@ -15,7 +7,16 @@
       "nmea",
       "rs232"
    ],
-   "date" : "2015-03-10T12:43:30"
+   "date" : "2015-03-10T12:43:30",
+   "description" : "How to find your way with Perl",
+   "image" : "/images/158/B8A4CA2A-C697-11E4-B99B-AB6E0EA848F6.jpeg",
+   "authors" : [
+      "timm-murray"
+   ],
+   "slug" : "158/2015/3/10/GPS-and-Perl",
+   "categories" : "hardware",
+   "thumbnail" : "/images/158/thumb_B8A4CA2A-C697-11E4-B99B-AB6E0EA848F6.jpeg",
+   "draft" : false
 }
 
 

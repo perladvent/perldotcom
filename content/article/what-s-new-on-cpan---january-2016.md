@@ -1,20 +1,21 @@
 {
+   "description" : "A curated look at January's new CPAN uploads",
+   "authors" : [
+      "david-farrell"
+   ],
    "slug" : "213/2016/2/10/What-s-new-on-CPAN---January-2015",
+   "image" : "/images/213/AF57B300-5234-11E5-B481-F86745487EAA.png",
+   "date" : "2016-02-10T15:02:35",
    "categories" : "cpan",
+   "draft" : false,
    "tags" : [
       "github",
       "lua",
       "rpm",
       "sdcard"
    ],
-   "description" : "A curated look at January's new CPAN uploads",
-   "title" : "What's new on CPAN - January 2016",
-   "image" : "/images/213/AF57B300-5234-11E5-B481-F86745487EAA.png",
-   "date" : "2016-02-10T15:02:35",
-   "authors" : [
-      "david-farrell"
-   ],
-   "draft" : false
+   "thumbnail" : "/images/213/thumb_AF57B300-5234-11E5-B481-F86745487EAA.png",
+   "title" : "What's new on CPAN - January 2016"
 }
 
 

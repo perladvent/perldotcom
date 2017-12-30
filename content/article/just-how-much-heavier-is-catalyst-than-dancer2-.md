@@ -1,19 +1,20 @@
 {
-   "date" : "2014-05-05T12:29:09",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "We compare the two web frameworks dependencies and test suites",
    "slug" : "85/2014/5/5/Just-how-much-heavier-is-Catalyst-than-Dancer2-",
+   "image" : "/images/85/ECCE3D08-FF2E-11E3-8D5F-5C05A68B9E16.png",
+   "date" : "2014-05-05T12:29:09",
+   "categories" : "web",
+   "draft" : false,
    "tags" : [
       "catalyst",
       "dancer",
       "mvc"
    ],
-   "categories" : "web",
-   "image" : "/images/85/ECCE3D08-FF2E-11E3-8D5F-5C05A68B9E16.png",
-   "title" : "Just how much heavier is Catalyst than Dancer2?",
-   "draft" : false,
-   "description" : "We compare the two web frameworks dependencies and test suites",
-   "authors" : [
-      "david-farrell"
-   ]
+   "thumbnail" : "/images/85/thumb_ECCE3D08-FF2E-11E3-8D5F-5C05A68B9E16.png",
+   "title" : "Just how much heavier is Catalyst than Dancer2?"
 }
 
 

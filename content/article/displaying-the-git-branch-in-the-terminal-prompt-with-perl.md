@@ -1,14 +1,24 @@
-
-  {
-    "title"  : "Displaying the Git branch in the terminal prompt with and without Perl",
-    "authors": ["david-farrell"],
-    "date"   : "2016-05-13T07:57:42",
-    "tags"   : ["git", "branch", "terminal", "perl", "prompt", "bash", "sed"],
-    "draft"  : false,
-    "image"  : "/images/displaying-the-git-branch-in-the-terminal-prompt-with-perl/Git-Logo-1788C.png",
-    "description" : "Where am I again? No more typing \"git branch\"",
-    "categories": "development"
-  }
+{
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Where am I again? No more typing \"git branch\"",
+   "image" : "/images/displaying-the-git-branch-in-the-terminal-prompt-with-perl/Git-Logo-1788C.png",
+   "categories" : "development",
+   "date" : "2016-05-13T07:57:42",
+   "draft" : false,
+   "tags" : [
+      "git",
+      "branch",
+      "terminal",
+      "perl",
+      "prompt",
+      "bash",
+      "sed"
+   ],
+   "title" : "Displaying the Git branch in the terminal prompt with and without Perl",
+   "thumbnail" : "/images/displaying-the-git-branch-in-the-terminal-prompt-with-perl/thumb_Git-Logo-1788C.png"
+}
 
 One way to evolve as a programmer is to pay attention to things you do repeatedly, and replace that action with an efficient alternative. It took me a shamefully long time to realize I was typing `git branch` many times a day to check which branch I was committing code to. A more efficient way is to display the current branch name in the terminal prompt. Ideally I'd like to see something like this:
 

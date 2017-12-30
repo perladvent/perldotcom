@@ -1,5 +1,8 @@
 {
-   "categories" : "cpan",
+   "authors" : [
+      "david-farrell"
+   ],
+   "title" : "What's new on CPAN - January 2015",
    "tags" : [
       "catalyst",
       "dist_zilla",
@@ -10,15 +13,13 @@
       "devops",
       "diff"
    ],
-   "image" : "/images/149/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
-   "title" : "What's new on CPAN - January 2015",
-   "description" : "Our curated guide to last month's CPAN uploads",
-   "authors" : [
-      "david-farrell"
-   ],
-   "draft" : false,
    "date" : "2015-02-06T13:34:40",
-   "slug" : "149/2015/2/6/What-s-new-on-CPAN---January-2015"
+   "image" : "/images/149/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
+   "categories" : "cpan",
+   "draft" : false,
+   "slug" : "149/2015/2/6/What-s-new-on-CPAN---January-2015",
+   "description" : "Our curated guide to last month's CPAN uploads",
+   "thumbnail" : "/images/149/thumb_D54A503A-ADB2-11E4-874A-94B4DA487E9F.png"
 }
 
 

@@ -1,19 +1,20 @@
 {
-   "date" : "2015-02-18T13:46:33",
-   "slug" : "150/2015/2/18/Why-I-Started-Geekuni",
-   "authors" : [
-      "Andrew Solomon"
-   ],
-   "description" : "Learn more about Geekuni, the online learning environment",
+   "thumbnail" : "/images/150/thumb_B86DC024-B658-11E4-8BDD-633BD495B04B.png",
+   "title" : "Why I Started Geekuni",
    "tags" : [
       "geekuni",
       "moodle",
       "online_learning"
    ],
-   "image" : "/images/150/B86DC024-B658-11E4-8BDD-633BD495B04B.png",
-   "title" : "Why I Started Geekuni",
+   "draft" : false,
+   "date" : "2015-02-18T13:46:33",
    "categories" : "community",
-   "draft" : false
+   "image" : "/images/150/B86DC024-B658-11E4-8BDD-633BD495B04B.png",
+   "slug" : "150/2015/2/18/Why-I-Started-Geekuni",
+   "authors" : [
+      "Andrew Solomon"
+   ],
+   "description" : "Learn more about Geekuni, the online learning environment"
 }
 
 

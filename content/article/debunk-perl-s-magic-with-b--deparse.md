@@ -1,5 +1,4 @@
 {
-   "draft" : false,
    "authors" : [
       "david-farrell"
    ],
@@ -7,11 +6,13 @@
       "debugging",
       "module"
    ],
-   "categories" : "development",
-   "slug" : "89/2014/5/15/Debunk-Perl-s-magic-with-B--Deparse",
-   "date" : "2014-05-15T12:19:51",
    "title" : "Debunk Perl's magic with B::Deparse",
+   "date" : "2014-05-15T12:19:51",
+   "slug" : "89/2014/5/15/Debunk-Perl-s-magic-with-B--Deparse",
+   "draft" : false,
    "image" : "/images/89/ECED30D2-FF2E-11E3-9A57-5C05A68B9E16.jpeg",
+   "categories" : "development",
+   "thumbnail" : "/images/89/thumb_ECED30D2-FF2E-11E3-9A57-5C05A68B9E16.jpeg",
    "description" : "We show you how to peak behind the curtain and inspect Perl code"
 }
 

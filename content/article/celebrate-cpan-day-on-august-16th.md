@@ -1,6 +1,4 @@
 {
-   "image" : "/images/109/BBF98ECA-227F-11E4-8F73-364B03099C34.png",
-   "description" : "Give back to the community on CPAN day",
    "tags" : [
       "cpan",
       "module",
@@ -10,14 +8,17 @@
       "pause",
       "celebration"
    ],
-   "slug" : "109/2014/8/13/Celebrate-CPAN-day-on-August-16th",
+   "title" : "Celebrate CPAN day on August 16th",
+   "thumbnail" : "/images/109/thumb_BBF98ECA-227F-11E4-8F73-364B03099C34.png",
+   "draft" : false,
+   "image" : "/images/109/BBF98ECA-227F-11E4-8F73-364B03099C34.png",
    "categories" : "community",
    "date" : "2014-08-13T12:43:17",
    "authors" : [
       "david-farrell"
    ],
-   "draft" : false,
-   "title" : "Celebrate CPAN day on August 16th"
+   "description" : "Give back to the community on CPAN day",
+   "slug" : "109/2014/8/13/Celebrate-CPAN-day-on-August-16th"
 }
 
 

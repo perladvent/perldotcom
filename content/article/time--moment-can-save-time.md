@@ -1,6 +1,12 @@
 {
-   "title" : "Time::Moment can save time",
+   "authors" : [
+      "brian-d-foy"
+   ],
    "date" : "2015-02-02T14:04:40",
+   "description" : "A useful alternative to DateTime",
+   "image" : "/images/148/050708F8-AAE4-11E4-AC4E-C3E39EE10EC8.png",
+   "thumbnail" : "/images/148/thumb_050708F8-AAE4-11E4-AC4E-C3E39EE10EC8.png",
+   "slug" : "148/2015/2/2/Time--Moment-can-save-time",
    "tags" : [
       "time",
       "datetime",
@@ -8,13 +14,8 @@
       "moment"
    ],
    "draft" : false,
-   "slug" : "148/2015/2/2/Time--Moment-can-save-time",
-   "description" : "A useful alternative to DateTime",
-   "authors" : [
-      "brian-d-foy"
-   ],
-   "image" : "/images/148/050708F8-AAE4-11E4-AC4E-C3E39EE10EC8.png",
-   "categories" : "data"
+   "categories" : "data",
+   "title" : "Time::Moment can save time"
 }
 
 

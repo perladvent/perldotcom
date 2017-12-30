@@ -1,14 +1,28 @@
 {
-   "title" : "What's new on CPAN - August 2016",
+   "description" : "A curated look at August's new CPAN uploads",
+   "thumbnail" : "/images/192/thumb_AF57B300-5234-11E5-B481-F86745487EAA.png",
+   "draft" : false,
+   "categories" : "cpan",
    "image" : "/images/192/AF57B300-5234-11E5-B481-F86745487EAA.png",
+   "date" : "2016-09-07T02:46:10",
+   "title" : "What's new on CPAN - August 2016",
+   "tags" : [
+      "farmhash",
+      "medium",
+      "xisbn",
+      "mailgun",
+      "opan",
+      "statsite",
+      "band-in-a-box",
+      "imager",
+      "monorail",
+      "kinesis",
+      "facebook",
+      "template-pure"
+   ],
    "authors" : [
       "david-farrell"
-   ],
-   "date" : "2016-09-07T02:46:10",
-   "draft" : false,
-   "tags" : ["farmhash","medium","xisbn","mailgun","opan","statsite","band-in-a-box","imager","monorail","kinesis","facebook","template-pure"],
-   "categories" : "cpan",
-   "description" : "A curated look at August's new CPAN uploads"
+   ]
 }
 
 

@@ -1,18 +1,19 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
    "date" : "2014-05-09T03:14:01",
-   "categories" : "data",
-   "description" : "So simple a llama could do it",
-   "image" : "/images/87/ECE462D6-FF2E-11E3-A828-5C05A68B9E16.jpeg",
+   "title" : "Parsing data couldn't be easier with XML::Dataset",
    "tags" : [
       "cpan",
       "xml",
       "data",
       "parse"
    ],
-   "title" : "Parsing data couldn't be easier with XML::Dataset",
+   "authors" : [
+      "david-farrell"
+   ],
+   "thumbnail" : "/images/87/thumb_ECE462D6-FF2E-11E3-A828-5C05A68B9E16.jpeg",
+   "description" : "So simple a llama could do it",
+   "image" : "/images/87/ECE462D6-FF2E-11E3-A828-5C05A68B9E16.jpeg",
+   "categories" : "data",
    "slug" : "87/2014/5/9/Parsing-data-couldn-t-be-easier-with-XML--Dataset",
    "draft" : false
 }

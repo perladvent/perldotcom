@@ -1,14 +1,23 @@
-
-  {
-    "title"  : "Larry Wall interviewed in San Francisco",
-    "authors": ["david-farrell"],
-    "date"   : "2017-10-16T09:26:05",
-    "tags"   : ["larry-wall","interview","infoq","erlang","elixir","perl-6"],
-    "draft"  : false,
-    "image"  : "/images/larry-wall-interviewed-in-san-francisco/larry-wall-interview-sf.jpg",
-    "description" : "Larry was interviewed in San Francisco at Erlang & Elixir Factory SF Bay Area 2017 conference",
-    "categories": "community"
-  }
+{
+   "tags" : [
+      "larry-wall",
+      "interview",
+      "infoq",
+      "erlang",
+      "elixir",
+      "perl-6"
+   ],
+   "title" : "Larry Wall interviewed in San Francisco",
+   "thumbnail" : "/images/larry-wall-interviewed-in-san-francisco/thumb_larry-wall-interview-sf.jpg",
+   "draft" : false,
+   "image" : "/images/larry-wall-interviewed-in-san-francisco/larry-wall-interview-sf.jpg",
+   "categories" : "community",
+   "date" : "2017-10-16T09:26:05",
+   "description" : "Larry was interviewed in San Francisco at Erlang & Elixir Factory SF Bay Area 2017 conference",
+   "authors" : [
+      "david-farrell"
+   ]
+}
 
 Larry was interviewed in San Francisco at Erlang & Elixir Factory SF Bay Area 2017 conference. As you'd expect from Larry, the talk covered many interesting topics including:
 

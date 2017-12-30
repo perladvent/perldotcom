@@ -1,20 +1,21 @@
 {
-   "categories" : "community",
-   "authors" : [
-      "david-farrell"
-   ],
-   "description" : "The open source programming puzzler that will level-up your Perl programming",
-   "date" : "2014-05-19T01:15:07",
-   "slug" : "90/2014/5/19/Become-a-better-programmer-with-exercism-io",
-   "image" : "/images/90/ECF71624-FF2E-11E3-A119-5C05A68B9E16.png",
    "draft" : false,
-   "title" : "Become a better programmer with exercism.io",
    "tags" : [
       "community",
       "windows",
       "app",
       "open_source"
-   ]
+   ],
+   "title" : "Become a better programmer with exercism.io",
+   "thumbnail" : "/images/90/thumb_ECF71624-FF2E-11E3-A119-5C05A68B9E16.png",
+   "description" : "The open source programming puzzler that will level-up your Perl programming",
+   "authors" : [
+      "david-farrell"
+   ],
+   "slug" : "90/2014/5/19/Become-a-better-programmer-with-exercism-io",
+   "image" : "/images/90/ECF71624-FF2E-11E3-A119-5C05A68B9E16.png",
+   "date" : "2014-05-19T01:15:07",
+   "categories" : "community"
 }
 
 

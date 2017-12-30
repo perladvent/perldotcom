@@ -1,14 +1,6 @@
 {
    "title" : "Rip music from anywhere with Audacity",
    "categories" : "apps",
-   "slug" : "186/2015/7/30/Rip-music-from-anywhere-with-Audacity",
-   "authors" : [
-      "david-farrell"
-   ],
-   "date" : "2015-07-30T12:49:46",
-   "image" : "/images/186/64E2322C-36BA-11E5-9DA9-7C7FB8BB4BA2.png",
-   "draft" : false,
-   "description" : "Open source software makes it easy",
    "tags" : [
       "youtube",
       "bandcamp",
@@ -17,7 +9,16 @@
       "pandora",
       "portaudio",
       "mp3"
-   ]
+   ],
+   "draft" : false,
+   "slug" : "186/2015/7/30/Rip-music-from-anywhere-with-Audacity",
+   "thumbnail" : "/images/186/thumb_64E2322C-36BA-11E5-9DA9-7C7FB8BB4BA2.png",
+   "image" : "/images/186/64E2322C-36BA-11E5-9DA9-7C7FB8BB4BA2.png",
+   "description" : "Open source software makes it easy",
+   "authors" : [
+      "david-farrell"
+   ],
+   "date" : "2015-07-30T12:49:46"
 }
 
 

@@ -9,14 +9,15 @@
       "ubuntu",
       "debian"
    ],
-   "categories" : "linux",
+   "thumbnail" : "/images/prevent-harmful-updates-with-versionlock/thumb_software padlock.jpg",
+   "title" : "Prevent harmful Linux updates with versionlock",
+   "description" : "How to avoid breaking software updates",
    "authors" : [
       "david-farrell"
    ],
-   "date" : "2016-03-21T20:46:17",
-   "title" : "Prevent harmful Linux updates with versionlock",
-   "description" : "How to avoid breaking software updates",
-   "image" : "/images/prevent-harmful-updates-with-versionlock/software padlock.jpg"
+   "image" : "/images/prevent-harmful-updates-with-versionlock/software padlock.jpg",
+   "categories" : "linux",
+   "date" : "2016-03-21T20:46:17"
 }
 
 

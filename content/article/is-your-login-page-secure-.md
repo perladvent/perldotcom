@@ -1,20 +1,21 @@
 {
+   "thumbnail" : "/images/84/thumb_ECC1012E-FF2E-11E3-B566-5C05A68B9E16.jpeg",
+   "draft" : false,
    "categories" : "security",
+   "slug" : "84/2014/4/28/Is-your-login-page-secure-",
    "authors" : [
       "david-farrell"
    ],
-   "title" : "Is your login page secure?",
+   "image" : "/images/84/ECC1012E-FF2E-11E3-B566-5C05A68B9E16.jpeg",
    "date" : "2014-04-28T03:14:13",
    "description" : "A bumper article on secure web application logins with Catalyst",
-   "image" : "/images/84/ECC1012E-FF2E-11E3-B566-5C05A68B9E16.jpeg",
-   "slug" : "84/2014/4/28/Is-your-login-page-secure-",
+   "title" : "Is your login page secure?",
    "tags" : [
       "catalyst",
       "mvc",
       "security",
       "authentication"
-   ],
-   "draft" : false
+   ]
 }
 
 

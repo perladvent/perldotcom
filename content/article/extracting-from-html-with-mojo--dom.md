@@ -1,11 +1,10 @@
 {
-   "date" : "2015-01-08T14:01:42",
-   "categories" : "data",
-   "title" : "Extracting from HTML with Mojo::DOM",
-   "slug" : "143/2015/1/8/Extracting-from-HTML-with-Mojo--DOM",
-   "draft" : false,
-   "description" : "No HTML or regexes necessary",
    "image" : "/images/143/BD58A4DE-973E-11E4-8923-CF4520B41B38.png",
+   "categories" : "data",
+   "draft" : false,
+   "slug" : "143/2015/1/8/Extracting-from-HTML-with-Mojo--DOM",
+   "thumbnail" : "/images/143/thumb_BD58A4DE-973E-11E4-8923-CF4520B41B38.png",
+   "description" : "No HTML or regexes necessary",
    "authors" : [
       "brian-d-foy"
    ],
@@ -14,7 +13,9 @@
       "mojolicious",
       "parse",
       "dom"
-   ]
+   ],
+   "title" : "Extracting from HTML with Mojo::DOM",
+   "date" : "2015-01-08T14:01:42"
 }
 
 

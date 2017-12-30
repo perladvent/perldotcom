@@ -1,13 +1,6 @@
 {
-   "draft" : false,
-   "description" : "A curated look at September's new CPAN uploads",
-   "slug" : "196/2015/10/1/What-s-new-on-CPAN---September-2015",
+   "date" : "2015-10-01T13:49:32",
    "title" : "What's new on CPAN - September 2015",
-   "image" : "/images/196/FA370A74-683C-11E5-9273-385046321329.png",
-   "categories" : "cpan",
-   "authors" : [
-      "david-farrell"
-   ],
    "tags" : [
       "json",
       "libpuzzle",
@@ -17,7 +10,15 @@
       "diachronic",
       "neovim"
    ],
-   "date" : "2015-10-01T13:49:32"
+   "authors" : [
+      "david-farrell"
+   ],
+   "thumbnail" : "/images/196/thumb_FA370A74-683C-11E5-9273-385046321329.png",
+   "description" : "A curated look at September's new CPAN uploads",
+   "categories" : "cpan",
+   "image" : "/images/196/FA370A74-683C-11E5-9273-385046321329.png",
+   "slug" : "196/2015/10/1/What-s-new-on-CPAN---September-2015",
+   "draft" : false
 }
 
 

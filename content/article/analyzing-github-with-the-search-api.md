@@ -1,6 +1,8 @@
 {
-   "title" : "Analyzing GitHub with the search API",
-   "description" : "Net::GitHub makes it easy to search GitHub",
+   "date" : "2014-09-05T12:11:51",
+   "authors" : [
+      "david-farrell"
+   ],
    "tags" : [
       "github",
       "git",
@@ -9,14 +11,13 @@
       "api",
       "net_github"
    ],
-   "authors" : [
-      "david-farrell"
-   ],
+   "title" : "Analyzing GitHub with the search API",
+   "thumbnail" : "/images/112/thumb_87727BBA-34A1-11E4-B2A5-54317BB45C3F.png",
+   "description" : "Net::GitHub makes it easy to search GitHub",
    "draft" : false,
-   "image" : "/images/112/87727BBA-34A1-11E4-B2A5-54317BB45C3F.png",
    "slug" : "112/2014/9/5/Analyzing-GitHub-with-the-search-API",
-   "date" : "2014-09-05T12:11:51",
-   "categories" : "data"
+   "categories" : "data",
+   "image" : "/images/112/87727BBA-34A1-11E4-B2A5-54317BB45C3F.png"
 }
 
 

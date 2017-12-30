@@ -1,14 +1,24 @@
-
-  {
-    "title"  : "The road to a 55x speedup with XS",
-    "authors": ["david-farrell"],
-    "date"   : "2016-06-14T20:54:51",
-    "tags"   : ["xs", "c", "uri_encode_xs", "uri_escape", "percent_encoding", "optimization", "benchmark"],
-    "draft"  : false,
-    "image" : "/images/61/EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png",
-    "description" : "The power of C with the pleasure of Perl",
-    "categories": "development"
-  }
+{
+   "thumbnail" : "/images/61/thumb_EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png",
+   "description" : "The power of C with the pleasure of Perl",
+   "draft" : false,
+   "image" : "/images/61/EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png",
+   "categories" : "development",
+   "date" : "2016-06-14T20:54:51",
+   "title" : "The road to a 55x speedup with XS",
+   "tags" : [
+      "xs",
+      "c",
+      "uri_encode_xs",
+      "uri_escape",
+      "percent_encoding",
+      "optimization",
+      "benchmark"
+   ],
+   "authors" : [
+      "david-farrell"
+   ]
+}
 
 Lately my client has been concerned with improving their application speed, so naturally I started to think about XS, Perl's C macro language. With XS you can write C code and call it from Perl.
 

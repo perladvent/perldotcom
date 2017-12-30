@@ -1,14 +1,24 @@
-
-  {
-    "title"  : "Promoting Perl community articles",
-    "authors": ["david-farrell"],
-    "date"   : "2016-05-26T08:53:36",
-    "tags"   : ["ruby", "perl", "perly_bot", "reddit", "twitter", "stackoverflow", "perlmonks"],
-    "draft"  : false,
-    "image"  : "/images/promoting-perl-community-articles/newspaper.png",
-    "description" : "",
-    "categories": "community"
-  }
+{
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "",
+   "image" : "/images/promoting-perl-community-articles/newspaper.png",
+   "categories" : "community",
+   "date" : "2016-05-26T08:53:36",
+   "draft" : false,
+   "tags" : [
+      "ruby",
+      "perl",
+      "perly_bot",
+      "reddit",
+      "twitter",
+      "stackoverflow",
+      "perlmonks"
+   ],
+   "thumbnail" : "/images/promoting-perl-community-articles/thumb_newspaper.png",
+   "title" : "Promoting Perl community articles"
+}
 
 The last part of Justin Searls' [talk](https://vimeo.com/165527044#t=28m10s) has some great advice for promoting Ruby that applies to Perl too. If you haven't seen it, I'd encourage you to watch it. Justin points out that some tech projects like Ruby on Rails are essentially, done. They're feature complete and achieve everything they set out to accomplish. This means that they're no longer cutting edge tech, and consequently fewer articles are written about them.
 

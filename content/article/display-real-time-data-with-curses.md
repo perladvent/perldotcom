@@ -1,19 +1,20 @@
 {
    "categories" : "data",
    "date" : "2015-10-06T13:18:48",
-   "draft" : false,
+   "image" : "/images/197/B45BD4D2-6C2C-11E5-BA94-117C46321329.png",
+   "slug" : "197/2015/10/6/Display-real-time-data-with-Curses",
    "description" : "How to create terminal interfaces",
-   "title" : "Display real-time data with Curses",
    "authors" : [
       "brian-d-foy"
    ],
-   "image" : "/images/197/B45BD4D2-6C2C-11E5-BA94-117C46321329.png",
-   "slug" : "197/2015/10/6/Display-real-time-data-with-Curses",
+   "title" : "Display real-time data with Curses",
+   "thumbnail" : "/images/197/thumb_B45BD4D2-6C2C-11E5-BA94-117C46321329.png",
    "tags" : [
       "terminal",
       "du",
       "filesystem"
-   ]
+   ],
+   "draft" : false
 }
 
 

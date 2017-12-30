@@ -1,13 +1,5 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "image" : "/images/151/2E921FA4-B008-11E4-BF49-19CBDA487E9F.jpeg",
-   "description" : "It's easy and fast to do",
-   "categories" : "web",
-   "slug" : "151/2015/2/9/Build-a-Reddit-bot-with-Perl",
-   "title" : "Build a Reddit bot with Perl",
-   "draft" : false,
+   "date" : "2015-02-09T13:41:04",
    "tags" : [
       "xml",
       "perl",
@@ -17,7 +9,16 @@
       "atom",
       "bot"
    ],
-   "date" : "2015-02-09T13:41:04"
+   "title" : "Build a Reddit bot with Perl",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "It's easy and fast to do",
+   "thumbnail" : "/images/151/thumb_2E921FA4-B008-11E4-BF49-19CBDA487E9F.jpeg",
+   "image" : "/images/151/2E921FA4-B008-11E4-BF49-19CBDA487E9F.jpeg",
+   "categories" : "web",
+   "draft" : false,
+   "slug" : "151/2015/2/9/Build-a-Reddit-bot-with-Perl"
 }
 
 

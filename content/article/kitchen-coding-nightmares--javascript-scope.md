@@ -1,10 +1,12 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "slug" : "204/2015/12/17/Kitchen-coding-nightmares--JavaScript-scope",
+   "description" : "Some JavaScript gotchas and solutions",
+   "thumbnail" : "/images/204/thumb_60B8AF26-A444-11E5-A7E3-5B35815E78B2.png",
    "categories" : "development",
    "image" : "/images/204/60B8AF26-A444-11E5-A7E3-5B35815E78B2.png",
+   "draft" : false,
+   "slug" : "204/2015/12/17/Kitchen-coding-nightmares--JavaScript-scope",
+   "date" : "2015-12-17T14:13:13",
+   "title" : "Kitchen coding nightmares: JavaScript scope",
    "tags" : [
       "perl",
       "javascript",
@@ -15,10 +17,9 @@
       "requirejs",
       "jshint"
    ],
-   "draft" : false,
-   "title" : "Kitchen coding nightmares: JavaScript scope",
-   "date" : "2015-12-17T14:13:13",
-   "description" : "Some JavaScript gotchas and solutions"
+   "authors" : [
+      "david-farrell"
+   ]
 }
 
 

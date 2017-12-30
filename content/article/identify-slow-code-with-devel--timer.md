@@ -1,14 +1,22 @@
-
-  {
-    "title"  : "Identify slow code with Devel::Timer",
-    "authors": ["david-farrell"],
-    "date"   : "2016-08-17T08:38:50",
-    "tags"   : ["devel-timer", "benchmark", "refactor", "optimize", "speed"],
-    "draft"  : false,
-    "image"  : "/images/identify-slow-code-with-devel--timer/stopwatch.png",
-    "description" : "How timing statements can help you pinpoint bottlenecks",
-    "categories": "development"
-  }
+{
+   "thumbnail" : "/images/identify-slow-code-with-devel--timer/thumb_stopwatch.png",
+   "description" : "How timing statements can help you pinpoint bottlenecks",
+   "draft" : false,
+   "categories" : "development",
+   "image" : "/images/identify-slow-code-with-devel--timer/stopwatch.png",
+   "date" : "2016-08-17T08:38:50",
+   "authors" : [
+      "david-farrell"
+   ],
+   "tags" : [
+      "devel-timer",
+      "benchmark",
+      "refactor",
+      "optimize",
+      "speed"
+   ],
+   "title" : "Identify slow code with Devel::Timer"
+}
 
 Program speed is an important factor in programming. No one wants their program to execute more slowly. As a general purpose programming language, Perl is usually fast enough for most things, and when it isn't, we have some great tools to help us make it faster. We can use the [Benchmark](https://metacpan.org/pod/Benchmark) module to compare code and [Devel::NYTProf](https://metacpan.org/pod/Devel::NYTProf) to produce detailed analyses of our programs.
 

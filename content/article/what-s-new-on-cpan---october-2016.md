@@ -1,14 +1,27 @@
 {
-   "tags" : ["tibia","pandoc","tnt","bread-board","raspberry-pi","png","netfilter","text-xslate", "ajv", "bson", "test2"],
-   "description" : "A curated look at October's new CPAN uploads",
-   "date" : "2016-11-03T03:57:34",
-   "title" : "What's new on CPAN - October 2016",
+   "image" : "/images/199/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
    "categories" : "cpan",
-   "draft" : false,
+   "date" : "2016-11-03T03:57:34",
+   "description" : "A curated look at October's new CPAN uploads",
    "authors" : [
       "david-farrell"
    ],
-   "image" : "/images/199/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png"
+   "tags" : [
+      "tibia",
+      "pandoc",
+      "tnt",
+      "bread-board",
+      "raspberry-pi",
+      "png",
+      "netfilter",
+      "text-xslate",
+      "ajv",
+      "bson",
+      "test2"
+   ],
+   "thumbnail" : "/images/199/thumb_D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
+   "title" : "What's new on CPAN - October 2016",
+   "draft" : false
 }
 
 Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!

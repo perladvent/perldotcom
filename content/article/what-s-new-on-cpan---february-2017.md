@@ -1,14 +1,27 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "description" : "A curated look at February's new CPAN uploads",
    "image" : "/images/156/18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
    "date" : "2017-03-13T08:29:48",
-   "tags" : ["facebook", "taskwarrior", "fitbit", "foreman", "hadoop", "pdf", "piper", "proc-tored", "git", "raspberrypi", "amazon"],
-   "draft" : false,
+   "description" : "A curated look at February's new CPAN uploads",
    "title" : "What's new on CPAN - February 2017",
-   "categories" : "cpan"
+   "tags" : [
+      "facebook",
+      "taskwarrior",
+      "fitbit",
+      "foreman",
+      "hadoop",
+      "pdf",
+      "piper",
+      "proc-tored",
+      "git",
+      "raspberrypi",
+      "amazon"
+   ],
+   "thumbnail" : "/images/156/thumb_18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
+   "draft" : false,
+   "categories" : "cpan",
+   "authors" : [
+      "david-farrell"
+   ]
 }
 
 

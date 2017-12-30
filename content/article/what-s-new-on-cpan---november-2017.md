@@ -1,14 +1,27 @@
 {
+   "description" : "A curated look at November's new CPAN uploads",
+   "thumbnail" : "/images/what-s-new-on-cpan---november-2017/thumb_perl-onion-xmas.png",
    "draft" : false,
-   "title" : "What's new on CPAN - November 2017",
    "categories" : "cpan",
+   "image" : "/images/what-s-new-on-cpan---november-2017/perl-onion-xmas.png",
+   "date" : "2017-12-22T16:57:02",
    "authors" : [
       "david-farrell"
    ],
-   "image" : "/images/what-s-new-on-cpan---november-2017/perl-onion-xmas.png",
-   "description" : "A curated look at November's new CPAN uploads",
-   "tags" : ["adler2","youtube","beanstalk","deathbycaptcha","pokemon","martian", "starman","windows","json-schema", "kerberos", "s3"],
-   "date" : "2017-12-22T16:57:02"
+   "tags" : [
+      "adler2",
+      "youtube",
+      "beanstalk",
+      "deathbycaptcha",
+      "pokemon",
+      "martian",
+      "starman",
+      "windows",
+      "json-schema",
+      "kerberos",
+      "s3"
+   ],
+   "title" : "What's new on CPAN - November 2017"
 }
 
 Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!

@@ -1,8 +1,11 @@
 {
+   "thumbnail" : "/images/157/thumb_95B8DF42-C33B-11E4-8714-11450EA848F6.jpeg",
+   "description" : "Does your code blow up the way you expect it to?",
+   "draft" : false,
+   "slug" : "157/2015/3/5/How-to-test-for-exceptions-in-Perl",
+   "categories" : "testing",
+   "image" : "/images/157/95B8DF42-C33B-11E4-8714-11450EA848F6.jpeg",
    "date" : "2015-03-05T13:27:17",
-   "authors" : [
-      "david-farrell"
-   ],
    "tags" : [
       "test_more",
       "test",
@@ -10,12 +13,10 @@
       "test_exception",
       "tap"
    ],
-   "slug" : "157/2015/3/5/How-to-test-for-exceptions-in-Perl",
    "title" : "How to test for exceptions in Perl",
-   "categories" : "testing",
-   "description" : "Does your code blow up the way you expect it to?",
-   "draft" : false,
-   "image" : "/images/157/95B8DF42-C33B-11E4-8714-11450EA848F6.jpeg"
+   "authors" : [
+      "david-farrell"
+   ]
 }
 
 

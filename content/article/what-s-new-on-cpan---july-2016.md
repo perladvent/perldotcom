@@ -1,14 +1,24 @@
 {
    "image" : "/images/184/AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
+   "date" : "2016-08-09T09:11:11",
    "categories" : "cpan",
    "authors" : [
       "david-farrell"
    ],
    "description" : "A curated look at July's new CPAN uploads",
-   "tags" : ["socket.io","powershell","mailchimp","readonly","libffi","libpostal","apache","ieee754"],
-   "draft" : false,
+   "tags" : [
+      "socket.io",
+      "powershell",
+      "mailchimp",
+      "readonly",
+      "libffi",
+      "libpostal",
+      "apache",
+      "ieee754"
+   ],
    "title" : "What's new on CPAN - July 2016",
-   "date" : "2016-08-09T09:11:11"
+   "thumbnail" : "/images/184/thumb_AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
+   "draft" : false
 }
 
 

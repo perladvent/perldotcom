@@ -1,19 +1,20 @@
 {
-   "image" : "/images/66/EC3CE0E2-FF2E-11E3-8F16-5C05A68B9E16.png",
-   "description" : "TIMTOWDI",
    "draft" : false,
-   "categories" : "data",
-   "slug" : "66/2014/2/7/3-ways-to-include-data-with-your-Perl-distribution",
    "tags" : [
       "configuration",
       "module",
       "__data__"
    ],
    "title" : "3 ways to include data with your Perl distribution",
+   "thumbnail" : "/images/66/thumb_EC3CE0E2-FF2E-11E3-8F16-5C05A68B9E16.png",
    "authors" : [
       "david-farrell"
    ],
-   "date" : "2014-02-07T04:05:13"
+   "description" : "TIMTOWDI",
+   "slug" : "66/2014/2/7/3-ways-to-include-data-with-your-Perl-distribution",
+   "image" : "/images/66/EC3CE0E2-FF2E-11E3-8F16-5C05A68B9E16.png",
+   "date" : "2014-02-07T04:05:13",
+   "categories" : "data"
 }
 
 

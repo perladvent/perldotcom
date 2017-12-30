@@ -1,14 +1,25 @@
-
-  {
-    "title"  : "Monitoring my phone's internet activity with DD-WRT and Perl",
-    "authors": ["david-farrell"],
-    "date"   : "2017-10-26T19:56:37",
-    "tags"   : ["dd-wrt", "linux", "netflows", "rflow", "whois", "ntop", "net-whois-ip", "data-netflow"],
-    "draft"  : false,
-    "image"  : "/images/monitoring-my-phone-internet-activity-with-dd-wrt-and-perl/samsung-galaxy-s8-starry-night.jpg",
-    "description" : "Do you know who your phone is talking to?",
-    "categories": "networks"
-  }
+{
+   "image" : "/images/monitoring-my-phone-internet-activity-with-dd-wrt-and-perl/samsung-galaxy-s8-starry-night.jpg",
+   "tags" : [
+      "dd-wrt",
+      "linux",
+      "netflows",
+      "rflow",
+      "whois",
+      "ntop",
+      "net-whois-ip",
+      "data-netflow"
+   ],
+   "title" : "Monitoring my phone's internet activity with DD-WRT and Perl",
+   "description" : "Do you know who your phone is talking to?",
+   "date" : "2017-10-26T19:56:37",
+   "categories" : "networks",
+   "thumbnail" : "/images/monitoring-my-phone-internet-activity-with-dd-wrt-and-perl/thumb_samsung-galaxy-s8-starry-night.jpg",
+   "draft" : false,
+   "authors" : [
+      "david-farrell"
+   ]
+}
 
 I've had a cracked phone screen for years, but recently as the glass started falling out, I decided it was time to upgrade. I bought a Samsung [Galaxy S8](https://www.samsung.com/us/explore/galaxy-s8/), and was surprised to see "Unusual traffic from your computer network" [messages](https://support.google.com/websearch/answer/86640?hl=en) when searching via Google. This peaked my curiosity, so I decided to monitor the phone's Internet traffic to see *who* it was communicating with.
 

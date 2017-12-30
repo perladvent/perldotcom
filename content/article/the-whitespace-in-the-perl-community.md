@@ -1,18 +1,19 @@
 {
-   "date" : "2014-12-15T14:00:45",
-   "categories" : "community",
+   "thumbnail" : "/images/141/thumb_7EEFA988-8EAE-11E4-A6C2-215DA59D04B1.jpeg",
    "description" : "Find your niche",
-   "title" : "The Whitespace in the Perl community",
-   "authors" : [
-      "brian-d-foy"
-   ],
    "draft" : false,
    "slug" : "141/2014/12/15/The-Whitespace-in-the-Perl-community",
+   "image" : "/images/141/7EEFA988-8EAE-11E4-A6C2-215DA59D04B1.jpeg",
+   "categories" : "community",
+   "date" : "2014-12-15T14:00:45",
    "tags" : [
       "community",
       "opportunity"
    ],
-   "image" : "/images/141/7EEFA988-8EAE-11E4-A6C2-215DA59D04B1.jpeg"
+   "title" : "The Whitespace in the Perl community",
+   "authors" : [
+      "brian-d-foy"
+   ]
 }
 
 

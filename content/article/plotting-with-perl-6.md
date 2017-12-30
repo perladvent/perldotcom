@@ -1,14 +1,20 @@
-
-  {
-    "title"  : "Plotting With Perl 6",
-    "authors": ["moritz-lenz"],
-    "date"   : "2017-08-24T15:27:57",
-    "tags"   : ["inline-python", "matplotlib","git"],
-    "draft"  : false,
-    "image"  : "/images/plotting-with-perl-6/book-cover.jpg",
-    "description" : "Using Inline::Python and Matplotlib to visualize commit history",
-    "categories": "perl-6"
-  }
+{
+   "draft" : false,
+   "image" : "/images/plotting-with-perl-6/book-cover.jpg",
+   "categories" : "perl-6",
+   "thumbnail" : "/images/plotting-with-perl-6/thumb_book-cover.jpg",
+   "description" : "Using Inline::Python and Matplotlib to visualize commit history",
+   "authors" : [
+      "moritz-lenz"
+   ],
+   "title" : "Plotting With Perl 6",
+   "tags" : [
+      "inline-python",
+      "matplotlib",
+      "git"
+   ],
+   "date" : "2017-08-24T15:27:57"
+}
 
 (This chapter originally appeared in [Perl 6 Fundamentals: A Primer with
 Examples, Projects, and Case Studies](http://www.apress.com/9781484228982), by Moritz Lenz, published 2017 by Apress Media, LLC. Reprinted with permission.)

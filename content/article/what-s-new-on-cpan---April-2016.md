@@ -1,16 +1,24 @@
 {
    "draft" : false,
-   "categories":"cpan",
    "tags" : [
-      "pinterest","google_maps","backblaze","systemd","leftpad","blowfish","tor","tzfile"
+      "pinterest",
+      "google_maps",
+      "backblaze",
+      "systemd",
+      "leftpad",
+      "blowfish",
+      "tor",
+      "tzfile"
    ],
-   "image" : "/images/168/81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "title" : "What's new on CPAN - April 2016",
+   "thumbnail" : "/images/168/thumb_81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
    "authors" : [
       "david-farrell"
    ],
    "description" : "A curated look at April's new CPAN uploads",
-   "title" : "What's new on CPAN - April 2016",
-   "date" : "2016-05-02T14:04:49"
+   "image" : "/images/168/81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "date" : "2016-05-02T14:04:49",
+   "categories" : "cpan"
 }
 
 

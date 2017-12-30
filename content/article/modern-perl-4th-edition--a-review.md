@@ -1,8 +1,4 @@
 {
-   "categories" : "community",
-   "description" : "It gets better and better",
-   "image" : "/images/205/0EF82B78-A74E-11E5-A347-D65A815E78B2.jpeg",
-   "draft" : false,
    "authors" : [
       "david-farrell"
    ],
@@ -14,7 +10,12 @@
    ],
    "title" : "Modern Perl 4th edition, a review",
    "date" : "2015-12-21T00:02:25",
-   "slug" : "205/2015/12/21/Modern-Perl-4th-edition--a-review"
+   "draft" : false,
+   "slug" : "205/2015/12/21/Modern-Perl-4th-edition--a-review",
+   "image" : "/images/205/0EF82B78-A74E-11E5-A347-D65A815E78B2.jpeg",
+   "categories" : "community",
+   "description" : "It gets better and better",
+   "thumbnail" : "/images/205/thumb_0EF82B78-A74E-11E5-A347-D65A815E78B2.jpeg"
 }
 
 

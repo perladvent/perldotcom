@@ -1,14 +1,23 @@
 {
-   "categories" : "cpan",
+   "thumbnail" : "/images/213/thumb_AF57B300-5234-11E5-B481-F86745487EAA.png",
    "title" : "What's new on CPAN - January 2017",
-   "description" : "A curated look at January's new CPAN uploads",
+   "tags" : [
+      "chipmunk",
+      "telegram",
+      "mop",
+      "qn",
+      "fitbit",
+      "pollux",
+      "1password"
+   ],
    "draft" : false,
-   "tags" : ["chipmunk", "telegram", "mop", "qn", "fitbit", "pollux", "1password"],
+   "date" : "2017-02-13T10:05:13",
+   "categories" : "cpan",
    "image" : "/images/213/AF57B300-5234-11E5-B481-F86745487EAA.png",
    "authors" : [
       "david-farrell"
    ],
-   "date" : "2017-02-13T10:05:13"
+   "description" : "A curated look at January's new CPAN uploads"
 }
 
 

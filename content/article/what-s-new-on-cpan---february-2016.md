@@ -1,9 +1,14 @@
 {
-   "image" : "/images/156/18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
-   "categories" : "cpan",
+   "description" : "A curated look at February's new CPAN uploads",
    "authors" : [
       "david-farrell"
    ],
+   "date" : "2016-03-04T09:21:32",
+   "categories" : "cpan",
+   "image" : "/images/156/18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
+   "draft" : false,
+   "title" : "What's new on CPAN - February 2016",
+   "thumbnail" : "/images/156/thumb_18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
    "tags" : [
       "walmart",
       "wordpress",
@@ -12,11 +17,7 @@
       "git",
       "scientist",
       "catalyst"
-   ],
-   "draft" : false,
-   "title" : "What's new on CPAN - February 2016",
-   "date" : "2016-03-04T09:21:32",
-   "description" : "A curated look at February's new CPAN uploads"
+   ]
 }
 
 

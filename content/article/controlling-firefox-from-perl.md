@@ -1,19 +1,20 @@
 {
    "date" : "2014-12-08T14:13:27",
-   "slug" : "138/2014/12/8/Controlling-Firefox-from-Perl",
+   "description" : "Form submission, scraping, JavaScript execution are all possible",
+   "title" : "Controlling Firefox from Perl",
    "tags" : [
       "javascript",
       "firefox",
       "mechanize"
    ],
    "image" : "/images/138/589C58AA-7EE4-11E4-9429-0240B3613736.png",
+   "slug" : "138/2014/12/8/Controlling-Firefox-from-Perl",
    "authors" : [
       "brian-d-foy"
    ],
-   "title" : "Controlling Firefox from Perl",
-   "description" : "Form submission, scraping, JavaScript execution are all possible",
-   "categories" : "web",
-   "draft" : false
+   "thumbnail" : "/images/138/thumb_589C58AA-7EE4-11E4-9429-0240B3613736.png",
+   "draft" : false,
+   "categories" : "web"
 }
 
 

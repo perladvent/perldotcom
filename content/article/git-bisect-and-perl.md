@@ -1,14 +1,19 @@
-
-  {
-    "title"  : "Git bisect and Perl",
-    "authors": ["david-farrell"],
-    "date"   : "2017-08-08T20:27:16",
-    "tags"   : ["git", "bisect"],
-    "draft"  : false,
-    "image"  : "/images/displaying-the-git-branch-in-the-terminal-prompt-with-perl/Git-Logo-1788C.png",
-    "description" : "Bisecting Perl commits doesn't always work by itself",
-    "categories": "development"
-  }
+{
+   "image" : "/images/displaying-the-git-branch-in-the-terminal-prompt-with-perl/Git-Logo-1788C.png",
+   "description" : "Bisecting Perl commits doesn't always work by itself",
+   "date" : "2017-08-08T20:27:16",
+   "title" : "Git bisect and Perl",
+   "tags" : [
+      "git",
+      "bisect"
+   ],
+   "draft" : false,
+   "thumbnail" : "/images/displaying-the-git-branch-in-the-terminal-prompt-with-perl/thumb_Git-Logo-1788C.png",
+   "categories" : "development",
+   "authors" : [
+      "david-farrell"
+   ]
+}
 
 At [work](https://ziprecruiter.com) we have many developers committing code to a large Git repo, and a huge test suite which runs to check the software builds and operates correctly. Inevitably, developers push commits which break a test or two, and in particularly hectic moments, it can be difficult to figure out "who broke the build".
 

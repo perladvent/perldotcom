@@ -1,14 +1,24 @@
 {
-   "authors" : [
-      "david-farrell"
+   "tags" : [
+      "lol",
+      "geonet",
+      "castle-io",
+      "tiff",
+      "mariadb",
+      "neo4j",
+      "jsonsql",
+      "paws"
    ],
-   "draft" : false,
-   "tags" : ["lol", "geonet", "castle-io", "tiff", "mariadb", "neo4j", "jsonsql", "paws"],
    "title" : "What's new on CPAN - July 2017",
+   "thumbnail" : "/images/184/thumb_AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
+   "draft" : false,
    "image" : "/images/184/AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
    "date" : "2017-08-02T22:44:29",
    "categories" : "cpan",
-   "description" : "A curated look at July's new CPAN uploads"
+   "description" : "A curated look at July's new CPAN uploads",
+   "authors" : [
+      "david-farrell"
+   ]
 }
 
 

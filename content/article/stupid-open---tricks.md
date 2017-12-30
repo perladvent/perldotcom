@@ -1,19 +1,20 @@
 {
    "slug" : "182/2015/7/15/Stupid-open---tricks",
+   "description" : "Everyone tells you to use a three-argument open(), but there's a lot more you can do ...",
    "authors" : [
       "brian-d-foy"
    ],
-   "date" : "2015-07-15T12:19:04",
-   "draft" : false,
    "categories" : "development",
+   "date" : "2015-07-15T12:19:04",
    "image" : "/images/182/4C2E55EC-2AEB-11E5-A78E-67FC9CAABC69.jpeg",
+   "draft" : false,
+   "thumbnail" : "/images/182/thumb_4C2E55EC-2AEB-11E5-A78E-67FC9CAABC69.jpeg",
    "title" : "Stupid open() tricks",
    "tags" : [
       "filehandle",
       "ipc",
       "perlio"
-   ],
-   "description" : "Everyone tells you to use a three-argument open(), but there's a lot more you can do ..."
+   ]
 }
 
 

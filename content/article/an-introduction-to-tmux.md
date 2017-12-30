@@ -1,11 +1,14 @@
 {
-   "draft" : false,
-   "image" : "/images/an-introduction-to-tmux/tmux-panes.png",
-   "title" : "An introduction to Tmux",
    "authors" : [
       "david-farrell"
    ],
    "description" : "How to get started with the open source terminal multiplexer ",
+   "date" : "2016-02-24T09:29:18",
+   "categories" : "tooling",
+   "image" : "/images/an-introduction-to-tmux/tmux-panes.png",
+   "draft" : false,
+   "thumbnail" : "/images/an-introduction-to-tmux/thumb_tmux-panes.png",
+   "title" : "An introduction to Tmux",
    "tags" : [
       "command-line",
       "multiplexer",
@@ -14,9 +17,7 @@
       "terminal",
       "terminator",
       "tmux"
-   ],
-   "categories" : "tooling",
-   "date" : "2016-02-24T09:29:18"
+   ]
 }
 
 

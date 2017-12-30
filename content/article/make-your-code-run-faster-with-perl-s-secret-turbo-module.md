@@ -1,6 +1,5 @@
 {
-   "categories" : "development",
-   "title" : "Make your code run faster with Perl's secret turbo module",
+   "date" : "2014-01-21T03:22:40",
    "authors" : [
       "david-farrell"
    ],
@@ -10,11 +9,13 @@
       "optimization",
       "multithreading"
    ],
-   "date" : "2014-01-21T03:22:40",
-   "image" : "/images/61/EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png",
+   "title" : "Make your code run faster with Perl's secret turbo module",
+   "thumbnail" : "/images/61/thumb_EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png",
    "description" : "Multi-core programming is a breeze with MCE",
-   "slug" : "61/2014/1/21/Make-your-code-run-faster-with-Perl-s-secret-turbo-module",
-   "draft" : false
+   "image" : "/images/61/EC20EEA0-FF2E-11E3-9D6C-5C05A68B9E16.png",
+   "categories" : "development",
+   "draft" : false,
+   "slug" : "61/2014/1/21/Make-your-code-run-faster-with-Perl-s-secret-turbo-module"
 }
 
 

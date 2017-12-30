@@ -1,9 +1,7 @@
 {
-   "date" : "2014-10-05T18:13:45",
-   "authors" : [
-      "david-farrell"
-   ],
-   "image" : "/images/118/DF80161A-4CB5-11E4-9806-0EA0FA3BB728.png",
+   "slug" : "118/2014/10/5/Neutralize-Shellshock-by-patching-Bash-with-Perl",
+   "description" : "Unsupported Linux version? Upgrade Bash now",
+   "title" : "Neutralize Shellshock by patching Bash with Perl",
    "draft" : false,
    "tags" : [
       "bash",
@@ -12,10 +10,13 @@
       "fix",
       "bashfix"
    ],
-   "description" : "Unsupported Linux version? Upgrade Bash now",
+   "authors" : [
+      "david-farrell"
+   ],
    "categories" : "security",
-   "title" : "Neutralize Shellshock by patching Bash with Perl",
-   "slug" : "118/2014/10/5/Neutralize-Shellshock-by-patching-Bash-with-Perl"
+   "thumbnail" : "/images/118/thumb_DF80161A-4CB5-11E4-9806-0EA0FA3BB728.png",
+   "image" : "/images/118/DF80161A-4CB5-11E4-9806-0EA0FA3BB728.png",
+   "date" : "2014-10-05T18:13:45"
 }
 
 

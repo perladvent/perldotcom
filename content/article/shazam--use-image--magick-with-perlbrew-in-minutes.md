@@ -1,20 +1,21 @@
 {
-   "date" : "2014-01-01T23:43:09",
+   "categories" : "tooling",
+   "draft" : false,
+   "thumbnail" : "/images/57/thumb_EC09836E-FF2E-11E3-9F8C-5C05A68B9E16.png",
+   "authors" : [
+      "david-farrell"
+   ],
+   "slug" : "57/2014/1/1/Shazam--Use-Image--Magick-with-Perlbrew-in-minutes",
+   "image" : "/images/57/EC09836E-FF2E-11E3-9F8C-5C05A68B9E16.png",
+   "title" : "Shazam! Use Image::Magick with Perlbrew in minutes",
    "tags" : [
       "configuration",
       "sysadmin",
       "perlbrew",
       "imagemagick"
    ],
-   "categories" : "tooling",
-   "authors" : [
-      "david-farrell"
-   ],
-   "slug" : "57/2014/1/1/Shazam--Use-Image--Magick-with-Perlbrew-in-minutes",
-   "title" : "Shazam! Use Image::Magick with Perlbrew in minutes",
-   "image" : "/images/57/EC09836E-FF2E-11E3-9F8C-5C05A68B9E16.png",
-   "description" : "How to get a local non-root install of Image::Magick working with Perlbrew",
-   "draft" : false
+   "date" : "2014-01-01T23:43:09",
+   "description" : "How to get a local non-root install of Image::Magick working with Perlbrew"
 }
 
 

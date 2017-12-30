@@ -1,14 +1,24 @@
 {
-   "draft" : false,
-   "date" : "2017-06-13T09:30:00",
    "categories" : "cpan",
-   "description" : "A curated look at May's new CPAN uploads",
+   "date" : "2017-06-13T09:30:00",
    "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
-   "tags" : ["trello", "mpd", "vmware", "rpi", "aws", "clouddeploy", "sqs", "xgboost"],
-   "title" : "What's new on CPAN - May 2017",
    "authors" : [
       "david-farrell"
-   ]
+   ],
+   "description" : "A curated look at May's new CPAN uploads",
+   "title" : "What's new on CPAN - May 2017",
+   "thumbnail" : "/images/176/thumb_2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
+   "tags" : [
+      "trello",
+      "mpd",
+      "vmware",
+      "rpi",
+      "aws",
+      "clouddeploy",
+      "sqs",
+      "xgboost"
+   ],
+   "draft" : false
 }
 
 

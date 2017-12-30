@@ -1,14 +1,27 @@
 {
-   "title" : "What's new on CPAN - April 2017",
-   "image" : "/images/168/81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
-   "tags" : ["pivotal", "mastodon", "hashicorp", "pixabay", "zopfli", "io-framed","hyperscan", "pcre2", "jieba", "try-tiny","fastpbkdf2"],
-   "date" : "2017-05-07T15:57:28",
-   "categories" : "cpan",
-   "draft" : false,
    "authors" : [
       "david-farrell"
    ],
-   "description" : "A curated look at April's new CPAN uploads"
+   "description" : "A curated look at April's new CPAN uploads",
+   "image" : "/images/168/81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "date" : "2017-05-07T15:57:28",
+   "categories" : "cpan",
+   "draft" : false,
+   "tags" : [
+      "pivotal",
+      "mastodon",
+      "hashicorp",
+      "pixabay",
+      "zopfli",
+      "io-framed",
+      "hyperscan",
+      "pcre2",
+      "jieba",
+      "try-tiny",
+      "fastpbkdf2"
+   ],
+   "thumbnail" : "/images/168/thumb_81C6F1B4-DCE9-11E4-86D9-23646037288D.png",
+   "title" : "What's new on CPAN - April 2017"
 }
 
 

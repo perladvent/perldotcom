@@ -1,7 +1,7 @@
 {
    "draft" : false,
-   "categories" : "cpan",
-   "slug" : "137/2014/12/2/What-s-new-on-CPAN---November-2014",
+   "thumbnail" : "/images/137/thumb_98701E0A-7A2D-11E4-99A4-350AB3613736.png",
+   "title" : "What's new on CPAN - November 2014",
    "tags" : [
       "git",
       "aws",
@@ -13,13 +13,14 @@
       "gnucash",
       "bitbucket"
    ],
+   "slug" : "137/2014/12/2/What-s-new-on-CPAN---November-2014",
    "description" : "A curated look at the latest CPAN uploads",
-   "date" : "2014-12-02T14:15:16",
-   "title" : "What's new on CPAN - November 2014",
-   "image" : "/images/137/98701E0A-7A2D-11E4-99A4-350AB3613736.png",
    "authors" : [
       "david-farrell"
-   ]
+   ],
+   "categories" : "cpan",
+   "date" : "2014-12-02T14:15:16",
+   "image" : "/images/137/98701E0A-7A2D-11E4-99A4-350AB3613736.png"
 }
 
 

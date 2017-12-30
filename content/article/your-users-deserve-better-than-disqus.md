@@ -1,20 +1,21 @@
 {
-   "image" : "/images/104/49B63AE6-16BF-11E4-B121-52952D77B041.png",
-   "description" : "Why Disqus is not the commenting system you're looking for",
    "categories" : "community",
+   "date" : "2014-07-29T11:46:55",
+   "image" : "/images/104/49B63AE6-16BF-11E4-B121-52952D77B041.png",
+   "slug" : "104/2014/7/29/Your-users-deserve-better-than-Disqus",
+   "description" : "Why Disqus is not the commenting system you're looking for",
    "authors" : [
       "david-farrell"
    ],
+   "thumbnail" : "/images/104/thumb_49B63AE6-16BF-11E4-B121-52952D77B041.png",
+   "title" : "Your users deserve better than Disqus",
    "tags" : [
       "security",
       "disqus",
       "comments",
       "privacy"
    ],
-   "date" : "2014-07-29T11:46:55",
-   "title" : "Your users deserve better than Disqus",
-   "draft" : false,
-   "slug" : "104/2014/7/29/Your-users-deserve-better-than-Disqus"
+   "draft" : false
 }
 
 

@@ -1,7 +1,5 @@
 {
-   "categories" : "data",
    "draft" : false,
-   "image" : "/images/98/ED2BDE36-FF2E-11E3-B3B4-5C05A68B9E16.jpeg",
    "tags" : [
       "file",
       "dbix_class",
@@ -11,13 +9,16 @@
       "application",
       "web"
    ],
-   "date" : "2014-06-30T12:17:25",
    "title" : "Managing files is a breeze with this DBIx::Class plugin",
-   "slug" : "98/2014/6/30/Managing-files-is-a-breeze-with-this-DBIx--Class-plugin",
+   "thumbnail" : "/images/98/thumb_ED2BDE36-FF2E-11E3-B3B4-5C05A68B9E16.jpeg",
    "description" : "Read about how DBIx::Class::InflateColumn::FS can simplify file management in your application",
    "authors" : [
       "david-farrell"
-   ]
+   ],
+   "slug" : "98/2014/6/30/Managing-files-is-a-breeze-with-this-DBIx--Class-plugin",
+   "image" : "/images/98/ED2BDE36-FF2E-11E3-B3B4-5C05A68B9E16.jpeg",
+   "categories" : "data",
+   "date" : "2014-06-30T12:17:25"
 }
 
 

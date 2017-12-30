@@ -1,17 +1,18 @@
 {
-   "title" : "Book review: Mastering Perl 2nd edition",
-   "image" : "/images/67/EC46C580-FF2E-11E3-A987-5C05A68B9E16.png",
-   "description" : "Learn how to bend Perl to your will with brian d foy's Mastering Perl",
-   "slug" : "67/2014/2/10/Book-review--Mastering-Perl-2nd-edition",
+   "categories" : "community",
    "draft" : false,
+   "thumbnail" : "/images/67/thumb_EC46C580-FF2E-11E3-A987-5C05A68B9E16.png",
    "authors" : [
       "david-farrell"
    ],
+   "slug" : "67/2014/2/10/Book-review--Mastering-Perl-2nd-edition",
+   "image" : "/images/67/EC46C580-FF2E-11E3-A987-5C05A68B9E16.png",
+   "title" : "Book review: Mastering Perl 2nd edition",
    "tags" : [
       "book-review"
    ],
    "date" : "2014-02-10T05:24:44",
-   "categories" : "community"
+   "description" : "Learn how to bend Perl to your will with brian d foy's Mastering Perl"
 }
 
 

@@ -1,20 +1,21 @@
 {
-   "date" : "2014-03-31T12:27:39",
-   "description" : "Instantly upgrade your web application security with these headers",
    "image" : "/images/81/ECAB3C5E-FF2E-11E3-B4AE-5C05A68B9E16.jpeg",
-   "slug" : "81/2014/3/31/Perl-web-application-security---HTTP-headers",
+   "date" : "2014-03-31T12:27:39",
+   "categories" : "security",
    "authors" : [
       "david-farrell"
    ],
-   "categories" : "security",
+   "description" : "Instantly upgrade your web application security with these headers",
+   "slug" : "81/2014/3/31/Perl-web-application-security---HTTP-headers",
    "tags" : [
       "catalyst",
       "dancer",
       "mojolicious",
       "mvc"
    ],
-   "draft" : false,
-   "title" : "Perl web application security - HTTP headers"
+   "thumbnail" : "/images/81/thumb_ECAB3C5E-FF2E-11E3-B4AE-5C05A68B9E16.jpeg",
+   "title" : "Perl web application security - HTTP headers",
+   "draft" : false
 }
 
 

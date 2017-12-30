@@ -1,14 +1,28 @@
 {
+   "thumbnail" : "/images/172/thumb_CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
+   "title" : "What's new on CPAN - March 2017",
+   "tags" : [
+      "braintree",
+      "zendesk",
+      "libxml2",
+      "putty",
+      "glib",
+      "lxc",
+      "fix",
+      "starch",
+      "megaport",
+      "websocket",
+      "web-assetlib",
+      "wurm"
+   ],
    "draft" : false,
    "date" : "2017-04-14T09:13:30",
-   "tags" : ["braintree", "zendesk", "libxml2", "putty", "glib", "lxc", "fix", "starch", "megaport", "websocket", "web-assetlib", "wurm"],
    "categories" : "cpan",
+   "image" : "/images/172/CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
    "description" : "A curated look at March's new CPAN uploads",
    "authors" : [
       "david-farrell"
-   ],
-   "image" : "/images/172/CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
-   "title" : "What's new on CPAN - March 2017"
+   ]
 }
 
 

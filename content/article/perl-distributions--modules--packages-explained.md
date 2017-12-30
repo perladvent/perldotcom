@@ -1,6 +1,8 @@
 {
-   "description" : "Learn which files are in a distribution, the difference between a module and a package etc.",
-   "slug" : "96/2014/6/13/Perl-distributions--modules--packages-explained",
+   "date" : "2014-06-13T12:26:00",
+   "authors" : [
+      "david-farrell"
+   ],
    "tags" : [
       "configuration",
       "cpan",
@@ -10,13 +12,12 @@
       "distribution",
       "package"
    ],
-   "date" : "2014-06-13T12:26:00",
    "title" : "Perl distributions, modules, packages explained",
-   "authors" : [
-      "david-farrell"
-   ],
-   "categories" : "tooling",
+   "thumbnail" : "/images/96/thumb_ED19E49C-FF2E-11E3-BA0A-5C05A68B9E16.png",
+   "description" : "Learn which files are in a distribution, the difference between a module and a package etc.",
    "image" : "/images/96/ED19E49C-FF2E-11E3-BA0A-5C05A68B9E16.png",
+   "categories" : "tooling",
+   "slug" : "96/2014/6/13/Perl-distributions--modules--packages-explained",
    "draft" : false
 }
 

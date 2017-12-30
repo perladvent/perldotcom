@@ -1,10 +1,15 @@
 {
+   "slug" : "184/2015/8/4/What-s-new-on-CPAN---July-2015",
+   "description" : "A curated look at July's new CPAN uploads",
    "authors" : [
       "david-farrell"
    ],
-   "description" : "A curated look at July's new CPAN uploads",
+   "date" : "2015-08-04T12:55:33",
    "categories" : "cpan",
+   "image" : "/images/184/AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
    "draft" : false,
+   "thumbnail" : "/images/184/thumb_AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
+   "title" : "What's new on CPAN - July 2015",
    "tags" : [
       "mojo",
       "pingen",
@@ -14,11 +19,7 @@
       "crate",
       "ssh",
       "dios"
-   ],
-   "date" : "2015-08-04T12:55:33",
-   "slug" : "184/2015/8/4/What-s-new-on-CPAN---July-2015",
-   "image" : "/images/184/AFD0459E-3AA7-11E5-801C-5EB3B8BB4BA2.png",
-   "title" : "What's new on CPAN - July 2015"
+   ]
 }
 
 

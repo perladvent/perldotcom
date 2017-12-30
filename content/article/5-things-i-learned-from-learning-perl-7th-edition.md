@@ -1,14 +1,20 @@
-
-  {
-    "title"  : "5 things I learned from Learning Perl 7th Edition",
-    "authors": ["david-farrell"],
-    "date"   : "2016-09-23T08:12:54",
-    "tags"   : ["learning-perl", "oreilly", "brian-d-foy"],
-    "draft"  : false,
-    "image"  : "/images/5-things-i-learned-from-learning-perl-7th-ed/learning-perl-7-front.jpg",
-    "description" : "A surprisingly in-depth book for beginners",
-    "categories": "community"
-  }
+{
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "A surprisingly in-depth book for beginners",
+   "categories" : "community",
+   "date" : "2016-09-23T08:12:54",
+   "image" : "/images/5-things-i-learned-from-learning-perl-7th-ed/learning-perl-7-front.jpg",
+   "draft" : false,
+   "title" : "5 things I learned from Learning Perl 7th Edition",
+   "thumbnail" : "/images/5-things-i-learned-from-learning-perl-7th-ed/thumb_learning-perl-7-front.jpg",
+   "tags" : [
+      "learning-perl",
+      "oreilly",
+      "brian-d-foy"
+   ]
+}
 
 The 7th edition of [Learning Perl](https://www.learning-perl.com/) is due to be released later this month. I was one of the technical reviewers of the book - I hadn't read it since the 3rd edition where it was a course text at my University (and Perl was described as a "text processing language"!). Reviewing the book, I was struck by how much detail it contained. If you're looking for a thorough introduction to Perl, it's a great place to start. I picked up (or re-learned) a few tricks along the way, that I thought were worth sharing.
 

@@ -1,14 +1,15 @@
 {
+   "thumbnail" : "/images/56/thumb_EC020FC6-FF2E-11E3-A54F-5C05A68B9E16.png",
+   "description" : "Happy holidays; enjoy this discount on the latest Perl book until 15th January 2014",
+   "slug" : "56/2013/12/25/Get-30--off-the-new-Perl-One-Liners-book",
+   "draft" : false,
+   "image" : "/images/56/EC020FC6-FF2E-11E3-A54F-5C05A68B9E16.png",
+   "categories" : "community",
    "date" : "2013-12-25T23:50:00",
    "authors" : [
       "david-farrell"
    ],
-   "draft" : false,
-   "categories" : "community",
    "title" : "Get 30% off the new Perl One Liners book",
-   "slug" : "56/2013/12/25/Get-30--off-the-new-Perl-One-Liners-book",
-   "image" : "/images/56/EC020FC6-FF2E-11E3-A54F-5C05A68B9E16.png",
-   "description" : "Happy holidays; enjoy this discount on the latest Perl book until 15th January 2014",
    "tags" : [
       "one_liner",
       "news",

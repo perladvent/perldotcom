@@ -1,12 +1,13 @@
 {
+   "slug" : "199/2015/11/3/What-s-new-on-CPAN---October-2015",
+   "draft" : false,
+   "categories" : "cpan",
    "image" : "/images/199/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
+   "thumbnail" : "/images/199/thumb_D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
+   "description" : "A curated look at October's new CPAN uploads",
    "authors" : [
       "david-farrell"
    ],
-   "slug" : "199/2015/11/3/What-s-new-on-CPAN---October-2015",
-   "title" : "What's new on CPAN - October 2015",
-   "categories" : "cpan",
-   "draft" : false,
    "tags" : [
       "airbrake",
       "slack",
@@ -14,8 +15,8 @@
       "fnv",
       "linkedin"
    ],
-   "date" : "2015-11-03T15:24:04",
-   "description" : "A curated look at October's new CPAN uploads"
+   "title" : "What's new on CPAN - October 2015",
+   "date" : "2015-11-03T15:24:04"
 }
 
 

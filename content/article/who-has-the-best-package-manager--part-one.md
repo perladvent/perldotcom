@@ -1,4 +1,5 @@
 {
+   "title" : "Who has the best package manager? Part one",
    "tags" : [
       "cpan",
       "metacpan",
@@ -7,16 +8,16 @@
       "rubygems",
       "package_manager"
    ],
-   "image" : "/images/110/27B53D22-28C9-11E4-BF47-7C15C254CEE0.png",
-   "date" : "2014-08-21T13:03:03",
-   "categories" : "cpan",
-   "draft" : false,
    "authors" : [
       "david-farrell"
    ],
-   "title" : "Who has the best package manager? Part one",
+   "date" : "2014-08-21T13:03:03",
+   "draft" : false,
    "slug" : "110/2014/8/21/Who-has-the-best-package-manager--Part-one",
-   "description" : "Who has the best package manager and what we can we learn from all of them"
+   "categories" : "cpan",
+   "image" : "/images/110/27B53D22-28C9-11E4-BF47-7C15C254CEE0.png",
+   "description" : "Who has the best package manager and what we can we learn from all of them",
+   "thumbnail" : "/images/110/thumb_27B53D22-28C9-11E4-BF47-7C15C254CEE0.png"
 }
 
 

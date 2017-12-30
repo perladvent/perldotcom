@@ -1,20 +1,21 @@
 {
-   "authors" : [
-      "joel-berger"
-   ],
-   "description" : "Control access to your Mojo app with registration emails",
    "image" : "/images/193/8BAEFFB8-5E31-11E5-8EC0-4782D27BB60F.png",
-   "title" : "How to send verification emails using Mojolicious",
-   "slug" : "193/2015/9/18/How-to-send-verification-emails-using-Mojolicious",
    "tags" : [
       "mojo",
       "email",
       "verification",
       "automated"
    ],
-   "categories" : "web",
+   "title" : "How to send verification emails using Mojolicious",
    "date" : "2015-09-18T11:46:46",
-   "draft" : false
+   "description" : "Control access to your Mojo app with registration emails",
+   "categories" : "web",
+   "draft" : false,
+   "thumbnail" : "/images/193/thumb_8BAEFFB8-5E31-11E5-8EC0-4782D27BB60F.png",
+   "authors" : [
+      "joel-berger"
+   ],
+   "slug" : "193/2015/9/18/How-to-send-verification-emails-using-Mojolicious"
 }
 
 

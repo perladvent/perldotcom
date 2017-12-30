@@ -1,7 +1,12 @@
 {
+   "categories" : "tooling",
+   "thumbnail" : "/images/153/thumb_A8652C2A-B58C-11E4-ADDC-6A05DB487E9F.png",
+   "draft" : false,
    "authors" : [
       "david-farrell"
    ],
+   "slug" : "153/2015/2/16/Get-to-grips-with-GNU-Screen",
+   "image" : "/images/153/A8652C2A-B58C-11E4-ADDC-6A05DB487E9F.png",
    "tags" : [
       "command_line",
       "multiplexer",
@@ -11,13 +16,9 @@
       "terminator",
       "tmux"
    ],
-   "draft" : false,
-   "date" : "2015-02-16T14:15:50",
-   "categories" : "tooling",
-   "slug" : "153/2015/2/16/Get-to-grips-with-GNU-Screen",
    "title" : "Get to grips with GNU Screen",
    "description" : "Once you start using a multiplexer, you'll never go back",
-   "image" : "/images/153/A8652C2A-B58C-11E4-ADDC-6A05DB487E9F.png"
+   "date" : "2015-02-16T14:15:50"
 }
 
 

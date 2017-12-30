@@ -1,12 +1,13 @@
 {
-   "draft" : false,
+   "date" : "2016-03-01T08:57:00",
+   "categories" : "security",
+   "image" : "/images/netanel-rubins-perljam-circus/cover.jpg",
    "description" : "Responding to a misguided attack on Perl",
    "authors" : [
       "david-farrell"
    ],
-   "image" : "/images/netanel-rubins-perljam-circus/cover.jpg",
+   "thumbnail" : "/images/netanel-rubins-perljam-circus/thumb_cover.jpg",
    "title" : "Netanel Rubin's Perl Jam circus",
-   "categories" : "security",
    "tags" : [
       "chaos_communication_congress",
       "ccc",
@@ -14,7 +15,7 @@
       "netanel_rubin",
       "infosec"
    ],
-   "date" : "2016-03-01T08:57:00"
+   "draft" : false
 }
 
 

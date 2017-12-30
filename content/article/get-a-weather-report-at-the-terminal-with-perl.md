@@ -1,9 +1,12 @@
 {
-   "categories" : "development",
-   "image" : "/images/114/41950882-3961-11E4-B399-BB21EAFEB715.jpeg",
    "authors" : [
       "david-farrell"
    ],
+   "description" : "WWW::Wunderground::API makes it easy to pull weather data for your area",
+   "slug" : "114/2014/9/11/Get-a-weather-report-at-the-terminal-with-Perl",
+   "image" : "/images/114/41950882-3961-11E4-B399-BB21EAFEB715.jpeg",
+   "categories" : "development",
+   "date" : "2014-09-11T12:36:33",
    "draft" : false,
    "tags" : [
       "api",
@@ -13,10 +16,8 @@
       "terminal",
       "command_line"
    ],
-   "description" : "WWW::Wunderground::API makes it easy to pull weather data for your area",
-   "slug" : "114/2014/9/11/Get-a-weather-report-at-the-terminal-with-Perl",
-   "title" : "Get a weather report at the terminal with Perl",
-   "date" : "2014-09-11T12:36:33"
+   "thumbnail" : "/images/114/thumb_41950882-3961-11E4-B399-BB21EAFEB715.jpeg",
+   "title" : "Get a weather report at the terminal with Perl"
 }
 
 

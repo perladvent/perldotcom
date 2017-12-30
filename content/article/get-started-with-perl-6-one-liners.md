@@ -1,14 +1,12 @@
 {
-   "title" : "Get started with Perl 6 one liners",
-   "categories" : "perl-6",
    "image" : "/images/136/76F864F4-70BD-11E4-97E0-E519A241EDA8.png",
-   "description" : "One liners in Perl are better than ever",
-   "slug" : "136/2014/11/20/Get-started-with-Perl-6-one-liners",
    "date" : "2014-11-20T14:04:56",
+   "categories" : "perl-6",
+   "description" : "One liners in Perl are better than ever",
    "authors" : [
       "david-farrell"
    ],
-   "draft" : false,
+   "slug" : "136/2014/11/20/Get-started-with-Perl-6-one-liners",
    "tags" : [
       "windows",
       "one_liner",
@@ -17,7 +15,10 @@
       "command_line",
       "perl-6",
       "rakudo"
-   ]
+   ],
+   "thumbnail" : "/images/136/thumb_76F864F4-70BD-11E4-97E0-E519A241EDA8.png",
+   "title" : "Get started with Perl 6 one liners",
+   "draft" : false
 }
 
 

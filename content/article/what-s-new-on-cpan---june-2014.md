@@ -1,6 +1,8 @@
 {
-   "slug" : "100/2014/7/3/What-s-new-on-CPAN---June-2014",
-   "date" : "2014-07-03T14:00:46",
+   "authors" : [
+      "david-farrell"
+   ],
+   "title" : "What's new on CPAN - June 2014",
    "tags" : [
       "module",
       "stratopan",
@@ -17,14 +19,13 @@
       "paypal",
       "jenkins"
    ],
-   "description" : "Our curated guide to June's new CPAN uploads",
+   "date" : "2014-07-03T14:00:46",
    "image" : "/images/100/0EFC8AF6-0259-11E4-9DBD-A8FCA58B9E16.png",
-   "authors" : [
-      "david-farrell"
-   ],
+   "categories" : "cpan",
+   "slug" : "100/2014/7/3/What-s-new-on-CPAN---June-2014",
    "draft" : false,
-   "title" : "What's new on CPAN - June 2014",
-   "categories" : "cpan"
+   "thumbnail" : "/images/100/thumb_0EFC8AF6-0259-11E4-9DBD-A8FCA58B9E16.png",
+   "description" : "Our curated guide to June's new CPAN uploads"
 }
 
 

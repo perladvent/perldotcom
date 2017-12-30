@@ -1,6 +1,14 @@
 {
+   "image" : "/images/76/EC83FACC-FF2E-11E3-BBAC-5C05A68B9E16.jpeg",
+   "date" : "2014-03-11T03:18:00",
+   "authors" : [
+      "david-farrell"
+   ],
    "description" : "How to cache responses from fastcgi apps and how to clear the cache",
-   "draft" : false,
+   "categories" : "web",
+   "title" : "Simple web framework FastCGI caching with nginx - part 1",
+   "thumbnail" : "/images/76/thumb_EC83FACC-FF2E-11E3-BBAC-5C05A68B9E16.jpeg",
+   "slug" : "76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx---part-1",
    "tags" : [
       "nginx",
       "catalyst",
@@ -8,14 +16,7 @@
       "mojolicious",
       "cache"
    ],
-   "image" : "/images/76/EC83FACC-FF2E-11E3-BBAC-5C05A68B9E16.jpeg",
-   "date" : "2014-03-11T03:18:00",
-   "categories" : "web",
-   "authors" : [
-      "david-farrell"
-   ],
-   "title" : "Simple web framework FastCGI caching with nginx - part 1",
-   "slug" : "76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx---part-1"
+   "draft" : false
 }
 
 

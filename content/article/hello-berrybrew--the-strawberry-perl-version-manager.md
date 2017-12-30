@@ -1,11 +1,4 @@
 {
-   "authors" : [
-      "david-farrell"
-   ],
-   "title" : "Hello berrybrew, the Strawberry Perl version manager",
-   "draft" : false,
-   "slug" : "119/2014/10/10/Hello-berrybrew--the-Strawberry-Perl-version-manager",
-   "image" : "/images/119/64514578-501F-11E4-99D5-54C0636C7830.png",
    "tags" : [
       "windows",
       "perlbrew",
@@ -13,9 +6,17 @@
       "berrybrew",
       "strawberry_perl"
    ],
+   "title" : "Hello berrybrew, the Strawberry Perl version manager",
+   "thumbnail" : "/images/119/thumb_64514578-501F-11E4-99D5-54C0636C7830.png",
+   "draft" : false,
+   "image" : "/images/119/64514578-501F-11E4-99D5-54C0636C7830.png",
+   "categories" : "apps",
    "date" : "2014-10-10T12:39:52",
    "description" : "A fruitier perlbrew for Windows",
-   "categories" : "apps"
+   "authors" : [
+      "david-farrell"
+   ],
+   "slug" : "119/2014/10/10/Hello-berrybrew--the-Strawberry-Perl-version-manager"
 }
 
 

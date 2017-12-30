@@ -1,14 +1,21 @@
-
-  {
-    "title"  : "Deploy a static website with AWS S3 and Paws",
-    "authors": ["david-farrell"],
-    "date"   : "2017-02-21T10:04:00",
-    "tags"   : ["aws", "paws", "s3", "static-website"],
-    "draft"  : false,
-    "image"  : "/images/deploy-a-static-website-with-aws-s3-and-paws/aws-logo.png",
-    "description" : "Paws is a comprehensive Perl distribution for AWS services",
-    "categories": "development"
-  }
+{
+   "image" : "/images/deploy-a-static-website-with-aws-s3-and-paws/aws-logo.png",
+   "description" : "Paws is a comprehensive Perl distribution for AWS services",
+   "date" : "2017-02-21T10:04:00",
+   "tags" : [
+      "aws",
+      "paws",
+      "s3",
+      "static-website"
+   ],
+   "title" : "Deploy a static website with AWS S3 and Paws",
+   "draft" : false,
+   "thumbnail" : "/images/deploy-a-static-website-with-aws-s3-and-paws/thumb_aws-logo.png",
+   "categories" : "development",
+   "authors" : [
+      "david-farrell"
+   ]
+}
 
 Amazon Web Services (AWS) is Amazon's cloud services platform and S3 is the AWS file storage service. S3 is commonly used to host static websites. With Perl we have many modules for using AWS, but I like [Paws](https://metacpan.org/pod/Paws), developed by [Jose Luis Martinez](https://metacpan.org/author/JLMARTIN) which supports many AWS services, including S3. In this article I'll walk you through a Perl script I developed to upload and maintain a static website using S3 and Paws.
 

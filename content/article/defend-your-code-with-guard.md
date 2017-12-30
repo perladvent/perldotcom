@@ -1,18 +1,19 @@
 {
-   "slug" : "173/2015/5/19/Defend-your-code-with-Guard",
-   "image" : "/images/173/B0D682F6-FDC5-11E4-92B6-0F24103B7DD2.jpeg",
-   "categories" : "development",
-   "draft" : false,
-   "authors" : [
-      "brian-d-foy"
-   ],
+   "date" : "2015-05-19T12:55:00",
+   "title" : "Defend your code with Guard",
    "tags" : [
       "guard",
       "safety"
    ],
-   "title" : "Defend your code with Guard",
+   "authors" : [
+      "brian-d-foy"
+   ],
+   "thumbnail" : "/images/173/thumb_B0D682F6-FDC5-11E4-92B6-0F24103B7DD2.jpeg",
    "description" : "Guard helps you protect against unexpected changes to values",
-   "date" : "2015-05-19T12:55:00"
+   "image" : "/images/173/B0D682F6-FDC5-11E4-92B6-0F24103B7DD2.jpeg",
+   "categories" : "development",
+   "slug" : "173/2015/5/19/Defend-your-code-with-Guard",
+   "draft" : false
 }
 
 

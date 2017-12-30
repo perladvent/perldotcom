@@ -1,19 +1,20 @@
 {
+   "slug" : "191/2015/8/29/How-to-choose-a-DuckDuckGo-cheatsheet-topic",
+   "authors" : [
+      "david-farrell"
+   ],
    "draft" : false,
+   "thumbnail" : "/images/191/thumb_5E030C7A-E6E1-11E4-9A7F-886D1846911D.jpeg",
    "categories" : "community",
    "date" : "2015-08-29T09:46:29",
-   "title" : "How to choose a DuckDuckGo cheatsheet topic",
+   "description" : "Some sources of inspiration",
    "tags" : [
       "seo",
       "goodie",
       "duckduckhack"
    ],
-   "image" : "/images/191/5E030C7A-E6E1-11E4-9A7F-886D1846911D.jpeg",
-   "authors" : [
-      "david-farrell"
-   ],
-   "description" : "Some sources of inspiration",
-   "slug" : "191/2015/8/29/How-to-choose-a-DuckDuckGo-cheatsheet-topic"
+   "title" : "How to choose a DuckDuckGo cheatsheet topic",
+   "image" : "/images/191/5E030C7A-E6E1-11E4-9A7F-886D1846911D.jpeg"
 }
 
 

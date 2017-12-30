@@ -1,8 +1,11 @@
 {
-   "date" : "2015-04-15T03:05:00",
-   "title" : "Unit test your code on an in-memory database",
-   "categories" : "testing",
    "image" : "/images/167/10195802-E312-11E4-8CF6-FC456037288D.png",
+   "categories" : "testing",
+   "date" : "2015-04-15T03:05:00",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Unit tests should be self-contained, even database ones",
    "slug" : "167/2015/4/15/Unit-test-your-code-on-an-in-memory-database",
    "tags" : [
       "database",
@@ -11,10 +14,8 @@
       "testing",
       "sqlite"
    ],
-   "authors" : [
-      "david-farrell"
-   ],
-   "description" : "Unit tests should be self-contained, even database ones",
+   "thumbnail" : "/images/167/thumb_10195802-E312-11E4-8CF6-FC456037288D.png",
+   "title" : "Unit test your code on an in-memory database",
    "draft" : false
 }
 

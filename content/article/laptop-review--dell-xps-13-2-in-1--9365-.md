@@ -1,18 +1,20 @@
-
-  {
-    "title"  : "Laptop review: Dell XPS 13 2-in-1 (9365)",
-    "authors": ["david-farrell"],
-    "date"   : "2017-01-25T09:43:53",
-    "tags"   : [
+{
+   "authors" : [
+      "david-farrell"
+   ],
+   "title" : "Laptop review: Dell XPS 13 2-in-1 (9365)",
+   "tags" : [
       "dell",
       "laptop",
       "xps"
-    ],
-    "draft"  : false,
-    "image"  : "/images/laptop-review-the-xps-13-2-in-1/dell-xps-13-2-in-1.jpg",
-    "description" : "Dell goes one better with this new 2-in-1",
-    "categories": "hardware"
-  }
+   ],
+   "date" : "2017-01-25T09:43:53",
+   "image" : "/images/laptop-review-the-xps-13-2-in-1/dell-xps-13-2-in-1.jpg",
+   "categories" : "hardware",
+   "draft" : false,
+   "thumbnail" : "/images/laptop-review-the-xps-13-2-in-1/thumb_dell-xps-13-2-in-1.jpg",
+   "description" : "Dell goes one better with this new 2-in-1"
+}
 
 I've got a new computer! It's the [Dell XPS 13 2-in-1](http://www.dell.com/en-us/shop/productdetails/xps-13-9365-2-in-1-laptop) which was announced a couple of weeks ago at [CES 2017](http://arstechnica.com/gadgets/2017/01/dell-embraces-the-two-in-one-trend-with-new-xps-13-convertible/). My model has an i7 processor and 8GB RAM, and I'm running Fedora 25. I was a big fan my last [XPS 13]({{< relref "laptop-review--dell-xps-13-2015.md" >}}), and was excited to see what's changed with this version.
 

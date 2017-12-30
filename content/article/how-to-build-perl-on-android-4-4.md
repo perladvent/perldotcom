@@ -1,20 +1,21 @@
 {
-   "categories" : "tooling",
-   "description" : "A step by step guide to installing Perl 5.20 on Android KitKat",
-   "slug" : "97/2014/6/16/How-to-build-Perl-on-Android-4-4",
-   "title" : "How to build Perl on Android 4.4",
-   "date" : "2014-06-16T12:57:21",
    "authors" : [
       "david-farrell"
    ],
+   "description" : "A step by step guide to installing Perl 5.20 on Android KitKat",
+   "slug" : "97/2014/6/16/How-to-build-Perl-on-Android-4-4",
    "image" : "/images/97/ED232AE8-FF2E-11E3-9ABD-5C05A68B9E16.png",
+   "date" : "2014-06-16T12:57:21",
+   "categories" : "tooling",
+   "draft" : false,
    "tags" : [
       "configuration",
       "sysadmin",
       "android",
       "kitkat"
    ],
-   "draft" : false
+   "thumbnail" : "/images/97/thumb_ED232AE8-FF2E-11E3-9ABD-5C05A68B9E16.png",
+   "title" : "How to build Perl on Android 4.4"
 }
 
 

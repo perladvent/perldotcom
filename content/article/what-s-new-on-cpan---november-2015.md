@@ -1,9 +1,13 @@
 {
+   "authors" : [
+      "david-farrell"
+   ],
    "description" : "A curated look at November's new CPAN uploads",
-   "categories" : "cpan",
    "slug" : "202/2015/12/8/What-s-new-on-CPAN---November-2015",
-   "draft" : false,
    "image" : "/images/202/CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
+   "categories" : "cpan",
+   "date" : "2015-12-08T04:34:15",
+   "draft" : false,
    "tags" : [
       "phantomjs",
       "dynamodb",
@@ -13,11 +17,8 @@
       "consul",
       "tvmaze"
    ],
-   "date" : "2015-12-08T04:34:15",
-   "authors" : [
-      "david-farrell"
-   ],
-   "title" : "What's new on CPAN - November 2015"
+   "title" : "What's new on CPAN - November 2015",
+   "thumbnail" : "/images/202/thumb_CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png"
 }
 
 

@@ -1,8 +1,5 @@
 {
-   "image" : "/images/103/998C1D22-1144-11E4-80EC-0DC15E2B53EB.png",
-   "slug" : "103/2014/7/22/Create-static-web-apps-with-Wget",
-   "date" : "2014-07-22T12:44:13",
-   "title" : "Create static web apps with Wget",
+   "draft" : false,
    "tags" : [
       "app",
       "mvc",
@@ -14,12 +11,16 @@
       "recursion",
       "webapp"
    ],
+   "thumbnail" : "/images/103/thumb_998C1D22-1144-11E4-80EC-0DC15E2B53EB.png",
+   "title" : "Create static web apps with Wget",
+   "description" : "An alternative to Wallflower",
    "authors" : [
       "david-farrell"
    ],
-   "description" : "An alternative to Wallflower",
-   "draft" : false,
-   "categories" : "apps"
+   "slug" : "103/2014/7/22/Create-static-web-apps-with-Wget",
+   "image" : "/images/103/998C1D22-1144-11E4-80EC-0DC15E2B53EB.png",
+   "categories" : "apps",
+   "date" : "2014-07-22T12:44:13"
 }
 
 

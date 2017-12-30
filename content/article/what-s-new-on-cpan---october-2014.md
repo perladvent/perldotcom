@@ -1,13 +1,4 @@
 {
-   "image" : "/images/132/825394D0-6628-11E4-B19F-5C5395E830D2.png",
-   "categories" : "cpan",
-   "authors" : [
-      "david-farrell"
-   ],
-   "title" : "What's new on CPAN - October 2014",
-   "date" : "2014-11-07T13:22:17",
-   "description" : "A curated look at the latest CPAN uploads",
-   "slug" : "132/2014/11/7/What-s-new-on-CPAN---October-2014",
    "tags" : [
       "dancer",
       "urandom",
@@ -21,7 +12,17 @@
       "mojo",
       "sitemap"
    ],
-   "draft" : false
+   "thumbnail" : "/images/132/thumb_825394D0-6628-11E4-B19F-5C5395E830D2.png",
+   "title" : "What's new on CPAN - October 2014",
+   "draft" : false,
+   "image" : "/images/132/825394D0-6628-11E4-B19F-5C5395E830D2.png",
+   "date" : "2014-11-07T13:22:17",
+   "categories" : "cpan",
+   "description" : "A curated look at the latest CPAN uploads",
+   "authors" : [
+      "david-farrell"
+   ],
+   "slug" : "132/2014/11/7/What-s-new-on-CPAN---October-2014"
 }
 
 

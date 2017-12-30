@@ -1,16 +1,27 @@
 {
-   "date" : "2016-07-13T09:34:38",
-   "categories": "cpan",
-   "tags" : [
-     "sqlformat", "runkeeper", "plack", "eav", "svg", "xml", "u2f", "pdfunit", "ham", "wordbrain", "findagrave"
-   ],
    "title" : "What's new on CPAN - June 2016",
+   "tags" : [
+      "sqlformat",
+      "runkeeper",
+      "plack",
+      "eav",
+      "svg",
+      "xml",
+      "u2f",
+      "pdfunit",
+      "ham",
+      "wordbrain",
+      "findagrave"
+   ],
    "authors" : [
       "david-farrell"
    ],
-   "description" : "A curated look at June's new CPAN uploads",
+   "date" : "2016-07-13T09:34:38",
    "draft" : false,
-   "image" : "/images/181/88AAA022-2639-11E5-B854-07139DAABC69.png"
+   "image" : "/images/181/88AAA022-2639-11E5-B854-07139DAABC69.png",
+   "categories" : "cpan",
+   "thumbnail" : "/images/181/thumb_88AAA022-2639-11E5-B854-07139DAABC69.png",
+   "description" : "A curated look at June's new CPAN uploads"
 }
 
 

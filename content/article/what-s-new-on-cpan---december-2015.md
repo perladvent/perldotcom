@@ -1,5 +1,15 @@
 {
+   "slug" : "209/2016/1/13/What-s-new-on-CPAN---December-2015",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "A curated look at December's new CPAN uploads",
+   "categories" : "cpan",
    "date" : "2016-01-13T15:31:05",
+   "image" : "/images/209/EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
+   "draft" : false,
+   "thumbnail" : "/images/209/thumb_EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
+   "title" : "What's new on CPAN - December 2015",
    "tags" : [
       "recaptcha",
       "lets_encrypt",
@@ -8,16 +18,7 @@
       "dbgp",
       "dna",
       "dijkstra"
-   ],
-   "image" : "/images/209/EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
-   "title" : "What's new on CPAN - December 2015",
-   "slug" : "209/2016/1/13/What-s-new-on-CPAN---December-2015",
-   "categories" : "cpan",
-   "authors" : [
-      "david-farrell"
-   ],
-   "description" : "A curated look at December's new CPAN uploads",
-   "draft" : false
+   ]
 }
 
 

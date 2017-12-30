@@ -1,19 +1,20 @@
 {
-   "slug" : "64/2014/1/29/Announcing--the-Perl-Nerd-Merit-Badge-contest",
-   "draft" : false,
-   "authors" : [
-      "david-farrell"
-   ],
    "tags" : [
       "community",
       "contest",
       "velociraptor"
    ],
-   "description" : "Enter for a chance to win an exclusive Perl Nerd Merit Badge",
+   "thumbnail" : "/images/64/thumb_EC35647A-FF2E-11E3-96EE-5C05A68B9E16.png",
    "title" : "Announcing: the Perl Nerd Merit Badge contest",
+   "draft" : false,
    "image" : "/images/64/EC35647A-FF2E-11E3-96EE-5C05A68B9E16.png",
+   "categories" : "community",
    "date" : "2014-01-29T02:48:28",
-   "categories" : "community"
+   "description" : "Enter for a chance to win an exclusive Perl Nerd Merit Badge",
+   "authors" : [
+      "david-farrell"
+   ],
+   "slug" : "64/2014/1/29/Announcing--the-Perl-Nerd-Merit-Badge-contest"
 }
 
 

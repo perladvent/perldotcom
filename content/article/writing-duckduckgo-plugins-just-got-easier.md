@@ -1,19 +1,20 @@
 {
+   "thumbnail" : "/images/189/thumb_7FF3F50E-48D6-11E5-B8B3-C12EFC9DDBA7.png",
+   "draft" : false,
+   "categories" : "community",
+   "slug" : "189/2015/8/22/Writing-DuckDuckGo-plugins-just-got-easier",
    "authors" : [
       "david-farrell"
    ],
-   "categories" : "community",
    "image" : "/images/189/7FF3F50E-48D6-11E5-B8B3-C12EFC9DDBA7.png",
-   "title" : "Writing DuckDuckGo plugins just got easier",
-   "slug" : "189/2015/8/22/Writing-DuckDuckGo-plugins-just-got-easier",
-   "draft" : false,
-   "description" : "All you need is JSON",
    "date" : "2015-08-22T14:05:25",
+   "description" : "All you need is JSON",
    "tags" : [
       "community",
       "search",
       "json"
-   ]
+   ],
+   "title" : "Writing DuckDuckGo plugins just got easier"
 }
 
 

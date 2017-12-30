@@ -1,14 +1,24 @@
 {
-   "tags" : ["chrome","slack","rapi-app","ppr","coinspot","icinga","guavaring","jwt"],
+   "draft" : false,
+   "thumbnail" : "/images/181/thumb_88AAA022-2639-11E5-B854-07139DAABC69.png",
    "categories" : "cpan",
-   "image" : "/images/181/88AAA022-2639-11E5-B854-07139DAABC69.png",
-   "date" : "2017-07-18T09:27:21",
    "authors" : [
       "david-farrell"
    ],
-   "title" : "What's new on CPAN - June 2017",
+   "image" : "/images/181/88AAA022-2639-11E5-B854-07139DAABC69.png",
+   "date" : "2017-07-18T09:27:21",
    "description" : "A curated look at June's new CPAN uploads",
-   "draft" : false
+   "tags" : [
+      "chrome",
+      "slack",
+      "rapi-app",
+      "ppr",
+      "coinspot",
+      "icinga",
+      "guavaring",
+      "jwt"
+   ],
+   "title" : "What's new on CPAN - June 2017"
 }
 
 

@@ -1,20 +1,21 @@
 {
-   "date" : "2014-11-13T13:38:30",
-   "title" : "Advanced slideshow maneuvers",
-   "slug" : "134/2014/11/13/Advanced-slideshow-maneuvers",
    "authors" : [
       "david-farrell"
    ],
-   "categories" : "apps",
+   "date" : "2014-11-13T13:38:30",
+   "description" : "Get the most out of your markdown-driven presentations",
    "image" : "/images/134/4DCE5ABA-6826-11E4-80A8-F16A95E830D2.png",
+   "thumbnail" : "/images/134/thumb_4DCE5ABA-6826-11E4-80A8-F16A95E830D2.png",
+   "slug" : "134/2014/11/13/Advanced-slideshow-maneuvers",
+   "draft" : false,
    "tags" : [
       "revealjs",
       "app_revealup",
       "speaker_notes",
       "markdown"
    ],
-   "description" : "Get the most out of your markdown-driven presentations",
-   "draft" : false
+   "categories" : "apps",
+   "title" : "Advanced slideshow maneuvers"
 }
 
 

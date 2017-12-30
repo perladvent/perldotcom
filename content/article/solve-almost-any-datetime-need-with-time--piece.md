@@ -1,13 +1,4 @@
 {
-   "draft" : false,
-   "slug" : "59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece",
-   "authors" : [
-      "david-farrell"
-   ],
-   "image" : "/images/59/EC18EC78-FF2E-11E3-96D4-5C05A68B9E16.png",
-   "title" : "Solve almost any datetime need with Time::Piece",
-   "categories" : "data",
-   "description" : "How to parse, print, format, compare and do math with datetimes in Perl",
    "tags" : [
       "module",
       "date",
@@ -16,7 +7,17 @@
       "strptime",
       "strftime"
    ],
-   "date" : "2014-01-10T04:24:25"
+   "title" : "Solve almost any datetime need with Time::Piece",
+   "authors" : [
+      "david-farrell"
+   ],
+   "date" : "2014-01-10T04:24:25",
+   "draft" : false,
+   "slug" : "59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece",
+   "categories" : "data",
+   "image" : "/images/59/EC18EC78-FF2E-11E3-96D4-5C05A68B9E16.png",
+   "description" : "How to parse, print, format, compare and do math with datetimes in Perl",
+   "thumbnail" : "/images/59/thumb_EC18EC78-FF2E-11E3-96D4-5C05A68B9E16.png"
 }
 
 

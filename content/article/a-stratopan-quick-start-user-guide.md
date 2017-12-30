@@ -1,8 +1,5 @@
 {
-   "slug" : "48/2013/11/15/A-Stratopan-quick-start-user-guide",
    "title" : "A Stratopan quick start user guide",
-   "categories" : "tooling",
-   "draft" : false,
    "tags" : [
       "sysadmin",
       "config",
@@ -10,12 +7,16 @@
       "cloud",
       "saas"
    ],
+   "date" : "2013-11-15T04:23:53",
+   "description" : "Learn how to manage your Perl modules in the cloud with Stratopan",
+   "image" : "/images/48/EBD9AC70-FF2E-11E3-AD4C-5C05A68B9E16.png",
    "authors" : [
       "david-farrell"
    ],
-   "image" : "/images/48/EBD9AC70-FF2E-11E3-AD4C-5C05A68B9E16.png",
-   "date" : "2013-11-15T04:23:53",
-   "description" : "Learn how to manage your Perl modules in the cloud with Stratopan"
+   "slug" : "48/2013/11/15/A-Stratopan-quick-start-user-guide",
+   "categories" : "tooling",
+   "draft" : false,
+   "thumbnail" : "/images/48/thumb_EBD9AC70-FF2E-11E3-AD4C-5C05A68B9E16.png"
 }
 
 

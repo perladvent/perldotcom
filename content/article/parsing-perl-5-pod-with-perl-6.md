@@ -1,21 +1,22 @@
 {
-   "slug" : "170/2015/4/30/Parsing-Perl-5-pod-with-Perl-6",
+   "date" : "2015-04-30T13:14:23",
    "authors" : [
       "david-farrell"
    ],
-   "draft" : false,
-   "description" : "Grammars, action classes, code!",
-   "title" : "Parsing Perl 5 pod with Perl 6",
-   "image" : "/images/170/AA60EE46-EF3A-11E4-98F4-3C044E9B8265.png",
-   "date" : "2015-04-30T13:14:23",
-   "categories" : "perl-6",
    "tags" : [
       "pod",
       "perl-6",
       "grammar",
       "pegex",
       "parser"
-   ]
+   ],
+   "title" : "Parsing Perl 5 pod with Perl 6",
+   "thumbnail" : "/images/170/thumb_AA60EE46-EF3A-11E4-98F4-3C044E9B8265.png",
+   "description" : "Grammars, action classes, code!",
+   "image" : "/images/170/AA60EE46-EF3A-11E4-98F4-3C044E9B8265.png",
+   "categories" : "perl-6",
+   "draft" : false,
+   "slug" : "170/2015/4/30/Parsing-Perl-5-pod-with-Perl-6"
 }
 
 

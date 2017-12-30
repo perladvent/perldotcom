@@ -1,19 +1,20 @@
 {
-   "image" : "/images/79/ECA2D780-FF2E-11E3-9F75-5C05A68B9E16.jpeg",
-   "draft" : false,
-   "title" : "Secure your passwords with KeePass and Perl",
    "authors" : [
       "david-farrell"
    ],
+   "description" : "File::KeePass makes it easy to work with KeePass database files",
+   "slug" : "79/2014/3/24/Secure-your-passwords-with-KeePass-and-Perl",
+   "image" : "/images/79/ECA2D780-FF2E-11E3-9F75-5C05A68B9E16.jpeg",
+   "categories" : "apps",
+   "date" : "2014-03-24T13:00:38",
+   "draft" : false,
    "tags" : [
       "database",
       "module",
       "password_manager"
    ],
-   "date" : "2014-03-24T13:00:38",
-   "categories" : "apps",
-   "slug" : "79/2014/3/24/Secure-your-passwords-with-KeePass-and-Perl",
-   "description" : "File::KeePass makes it easy to work with KeePass database files"
+   "thumbnail" : "/images/79/thumb_ECA2D780-FF2E-11E3-9F75-5C05A68B9E16.jpeg",
+   "title" : "Secure your passwords with KeePass and Perl"
 }
 
 

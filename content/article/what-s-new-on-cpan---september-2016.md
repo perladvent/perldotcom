@@ -1,14 +1,25 @@
 {
-   "tags" : ["drac","oozie","monzo","cassandra","keystone","zstd","dbic","duckduckgo", "json-schema"],
+   "thumbnail" : "/images/196/thumb_FA370A74-683C-11E5-9273-385046321329.png",
+   "title" : "What's new on CPAN - September 2016",
+   "tags" : [
+      "drac",
+      "oozie",
+      "monzo",
+      "cassandra",
+      "keystone",
+      "zstd",
+      "dbic",
+      "duckduckgo",
+      "json-schema"
+   ],
    "draft" : false,
+   "date" : "2016-10-12T08:32:00",
    "categories" : "cpan",
+   "image" : "/images/196/FA370A74-683C-11E5-9273-385046321329.png",
    "authors" : [
       "david-farrell"
    ],
-   "description" : "A curated look at September's new CPAN uploads",
-   "image" : "/images/196/FA370A74-683C-11E5-9273-385046321329.png",
-   "title" : "What's new on CPAN - September 2016",
-   "date" : "2016-10-12T08:32:00"
+   "description" : "A curated look at September's new CPAN uploads"
 }
 
 

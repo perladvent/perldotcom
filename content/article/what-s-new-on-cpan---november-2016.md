@@ -1,14 +1,32 @@
 {
+   "image" : "/images/202/CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
+   "date" : "2016-12-08T08:45:26",
    "authors" : [
       "david-farrell"
    ],
    "description" : "A curated look at November's new CPAN uploads",
-   "tags" : ["azure", "swagger", "lobid", "lumberjack", "acme", "cpan-testers", "gvg", "ajpeg", "xlsx", "mattermost", "stomp", "kingpin", "mojolicious", "catalyst", "mce-hobo", "kayako"],
-   "date" : "2016-12-08T08:45:26",
+   "categories" : "cpan",
    "title" : "What's new on CPAN - November 2016",
+   "thumbnail" : "/images/202/thumb_CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
    "draft" : false,
-   "image" : "/images/202/CD6B9F5C-F4AE-11E4-A230-A2654E9B8265.png",
-   "categories" : "cpan"
+   "tags" : [
+      "azure",
+      "swagger",
+      "lobid",
+      "lumberjack",
+      "acme",
+      "cpan-testers",
+      "gvg",
+      "ajpeg",
+      "xlsx",
+      "mattermost",
+      "stomp",
+      "kingpin",
+      "mojolicious",
+      "catalyst",
+      "mce-hobo",
+      "kayako"
+   ]
 }
 
 Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!

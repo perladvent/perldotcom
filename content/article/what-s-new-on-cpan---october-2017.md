@@ -1,14 +1,26 @@
 {
-   "title" : "What's new on CPAN - October 2017",
    "image" : "/images/199/D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
-   "description" : "A curated look at October's new CPAN uploads",
+   "categories" : "cpan",
+   "date" : "2017-11-09T09:07:44",
    "authors" : [
       "david-farrell"
    ],
-   "tags" : ["bitbucket", "apache", "yandex", "seabass", "dist-zilla", "websocket", "catalyst", "mojolicious", "dancer2", "type-tiny"],
-   "categories" : "cpan",
-   "draft" : false,
-   "date" : "2017-11-09T09:07:44"
+   "description" : "A curated look at October's new CPAN uploads",
+   "tags" : [
+      "bitbucket",
+      "apache",
+      "yandex",
+      "seabass",
+      "dist-zilla",
+      "websocket",
+      "catalyst",
+      "mojolicious",
+      "dancer2",
+      "type-tiny"
+   ],
+   "title" : "What's new on CPAN - October 2017",
+   "thumbnail" : "/images/199/thumb_D54A503A-ADB2-11E4-874A-94B4DA487E9F.png",
+   "draft" : false
 }
 
 

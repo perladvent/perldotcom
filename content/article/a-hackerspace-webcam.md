@@ -1,20 +1,21 @@
 {
-   "draft" : false,
-   "title" : "A Hackerspace Webcam",
-   "image" : "/images/140/D7DE9644-813E-11E4-A6BF-AA5BB3613736.jpeg",
-   "description" : "Using Raspberry Pi and Perl to operate a live camera",
    "date" : "2014-12-15T13:58:21",
-   "categories" : "hardware",
    "authors" : [
       "timm-murray"
    ],
+   "title" : "A Hackerspace Webcam",
    "tags" : [
       "raspberry_pi",
       "hackerspace",
       "hardware",
       "camera"
    ],
-   "slug" : "140/2014/12/15/A-Hackerspace-Webcam"
+   "thumbnail" : "/images/140/thumb_D7DE9644-813E-11E4-A6BF-AA5BB3613736.jpeg",
+   "description" : "Using Raspberry Pi and Perl to operate a live camera",
+   "image" : "/images/140/D7DE9644-813E-11E4-A6BF-AA5BB3613736.jpeg",
+   "categories" : "hardware",
+   "slug" : "140/2014/12/15/A-Hackerspace-Webcam",
+   "draft" : false
 }
 
 

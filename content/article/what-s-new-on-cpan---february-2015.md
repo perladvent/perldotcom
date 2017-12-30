@@ -1,14 +1,9 @@
 {
-   "image" : "/images/156/18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
-   "slug" : "156/2015/3/2/What-s-new-on-CPAN---February-2015",
-   "title" : "What's new on CPAN - February 2015",
-   "categories" : "cpan",
    "date" : "2015-03-02T13:52:10",
-   "draft" : false,
-   "description" : "Our curated guide to last month's CPAN uploads",
    "authors" : [
       "david-farrell"
    ],
+   "title" : "What's new on CPAN - February 2015",
    "tags" : [
       "yaml",
       "git",
@@ -20,7 +15,13 @@
       "surveymonkey",
       "haskell",
       "toml"
-   ]
+   ],
+   "thumbnail" : "/images/156/thumb_18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png",
+   "description" : "Our curated guide to last month's CPAN uploads",
+   "draft" : false,
+   "slug" : "156/2015/3/2/What-s-new-on-CPAN---February-2015",
+   "categories" : "cpan",
+   "image" : "/images/156/18F30D70-C0E3-11E4-AB33-E3A60EA848F6.png"
 }
 
 

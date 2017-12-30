@@ -1,19 +1,20 @@
 {
-   "draft" : false,
+   "date" : "2015-11-28T00:11:17",
+   "authors" : [
+      "david-farrell"
+   ],
+   "title" : "How to install any* Perl module",
    "tags" : [
       "cpan",
       "creative_commons",
       "toolchain"
    ],
-   "image" : "/images/200/3BB0C5B2-9565-11E5-9B7B-6AE8E6E91CBA.png",
-   "title" : "How to install any* Perl module",
-   "date" : "2015-11-28T00:11:17",
-   "categories" : "tooling",
-   "authors" : [
-      "david-farrell"
-   ],
+   "thumbnail" : "/images/200/thumb_3BB0C5B2-9565-11E5-9B7B-6AE8E6E91CBA.png",
    "description" : "4 techniques for fixing failing installations",
-   "slug" : "200/2015/11/28/How-to-install-any--Perl-module"
+   "slug" : "200/2015/11/28/How-to-install-any--Perl-module",
+   "draft" : false,
+   "categories" : "tooling",
+   "image" : "/images/200/3BB0C5B2-9565-11E5-9B7B-6AE8E6E91CBA.png"
 }
 
 

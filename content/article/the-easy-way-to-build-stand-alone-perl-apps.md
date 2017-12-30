@@ -1,17 +1,18 @@
 {
+   "date" : "2014-01-05T23:21:55",
+   "categories" : "apps",
+   "image" : "/images/58/EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
+   "slug" : "58/2014/1/5/The-easy-way-to-build-stand-alone-Perl-apps",
+   "description" : "Making dependency-free Perl applications is simple with App::FatPacker",
+   "authors" : [
+      "david-farrell"
+   ],
+   "thumbnail" : "/images/58/thumb_EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
+   "title" : "The easy way to build stand-alone Perl apps",
    "tags" : [
       "configuration",
       "app"
    ],
-   "title" : "The easy way to build stand-alone Perl apps",
-   "categories" : "apps",
-   "slug" : "58/2014/1/5/The-easy-way-to-build-stand-alone-Perl-apps",
-   "image" : "/images/58/EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
-   "authors" : [
-      "david-farrell"
-   ],
-   "description" : "Making dependency-free Perl applications is simple with App::FatPacker",
-   "date" : "2014-01-05T23:21:55",
    "draft" : false
 }
 

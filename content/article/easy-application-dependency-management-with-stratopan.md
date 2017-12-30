@@ -1,5 +1,13 @@
 {
+   "description" : "Get the right modules and versions everytime",
+   "authors" : [
+      "david-farrell"
+   ],
    "slug" : "71/2014/2/20/Easy-application-dependency-management-with-Stratopan",
+   "image" : "/images/71/EC623B08-FF2E-11E3-92DE-5C05A68B9E16.png",
+   "date" : "2014-02-20T03:55:29",
+   "categories" : "tooling",
+   "draft" : false,
    "tags" : [
       "community",
       "sysadmin",
@@ -7,15 +15,8 @@
       "stratopan",
       "cloud"
    ],
-   "categories" : "tooling",
-   "image" : "/images/71/EC623B08-FF2E-11E3-92DE-5C05A68B9E16.png",
-   "draft" : false,
-   "date" : "2014-02-20T03:55:29",
    "title" : "Easy application dependency management with Stratopan",
-   "description" : "Get the right modules and versions everytime",
-   "authors" : [
-      "david-farrell"
-   ]
+   "thumbnail" : "/images/71/thumb_EC623B08-FF2E-11E3-92DE-5C05A68B9E16.png"
 }
 
 

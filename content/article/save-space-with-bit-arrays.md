@@ -1,14 +1,23 @@
-
-  {
-    "title"  : "Save space with bit arrays",
-    "authors": ["david-farrell"],
-    "date"   : "2016-08-23T08:58:54",
-    "tags"   : ["bit-array","bitwise","binary","boolean", "bigint", "integer"],
-    "draft"  : false,
-    "image"  : "/images/save-space-with-bit-arrays/binary-msg.png",
-    "description" : "An old school data structure that efficiently stores data",
-    "categories": "data"
-  }
+{
+   "draft" : false,
+   "tags" : [
+      "bit-array",
+      "bitwise",
+      "binary",
+      "boolean",
+      "bigint",
+      "integer"
+   ],
+   "thumbnail" : "/images/save-space-with-bit-arrays/thumb_binary-msg.png",
+   "title" : "Save space with bit arrays",
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "An old school data structure that efficiently stores data",
+   "image" : "/images/save-space-with-bit-arrays/binary-msg.png",
+   "categories" : "data",
+   "date" : "2016-08-23T08:58:54"
+}
 
 "Big data" is an overused term, but when you're actually working with big data, every bit can count. Shaving several bits from data structure used billions of times can save a lot of space. A few months ago I was working on a job distribution system; it would send millions of jobs out every day. We wanted to capture every decision made by the system, so that a user could later query the system to understand _why_ a job had or hadn't been sent to a partner.
 

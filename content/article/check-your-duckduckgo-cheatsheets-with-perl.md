@@ -1,19 +1,20 @@
 {
-   "image" : "/images/190/9AD864D4-E6E0-11E4-B559-8B6D1846911D.jpeg",
-   "authors" : [
-      "david-farrell"
-   ],
-   "slug" : "190/2015/8/28/Check-your-DuckDuckGo-cheatsheets-with-Perl",
-   "draft" : false,
    "tags" : [
       "syntax",
       "json",
       "cheatsheet"
    ],
+   "thumbnail" : "/images/190/thumb_9AD864D4-E6E0-11E4-B559-8B6D1846911D.jpeg",
    "title" : "Check your DuckDuckGo cheatsheets with Perl",
-   "description" : "Zero-in on any defects with this Perl script",
+   "draft" : false,
+   "image" : "/images/190/9AD864D4-E6E0-11E4-B559-8B6D1846911D.jpeg",
+   "date" : "2015-08-28T02:10:48",
    "categories" : "testing",
-   "date" : "2015-08-28T02:10:48"
+   "authors" : [
+      "david-farrell"
+   ],
+   "description" : "Zero-in on any defects with this Perl script",
+   "slug" : "190/2015/8/28/Check-your-DuckDuckGo-cheatsheets-with-Perl"
 }
 
 

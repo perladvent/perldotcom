@@ -1,5 +1,8 @@
 {
    "date" : "2014-09-02T12:36:04",
+   "authors" : [
+      "david-farrell"
+   ],
    "title" : "What's new on CPAN August 2014",
    "tags" : [
       "dist_zilla",
@@ -14,14 +17,12 @@
       "raspberry_pi",
       "unicode"
    ],
-   "slug" : "113/2014/9/2/What-s-new-on-CPAN-August-2014",
+   "thumbnail" : "/images/113/thumb_84802C58-3245-11E4-A076-27047BB45C3F.png",
    "description" : "A curated look at August's new CPAN uploads",
-   "authors" : [
-      "david-farrell"
-   ],
+   "categories" : "cpan",
    "image" : "/images/113/84802C58-3245-11E4-A076-27047BB45C3F.png",
    "draft" : false,
-   "categories" : "cpan"
+   "slug" : "113/2014/9/2/What-s-new-on-CPAN-August-2014"
 }
 
 

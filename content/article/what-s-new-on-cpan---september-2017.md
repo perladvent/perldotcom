@@ -1,14 +1,24 @@
 {
-   "date" : "2017-10-06T00:53:52",
-   "image" : "/images/196/FA370A74-683C-11E5-9273-385046321329.png",
-   "description" : "A curated look at September's new CPAN uploads",
    "draft" : false,
+   "title" : "What's new on CPAN - September 2017",
+   "thumbnail" : "/images/196/thumb_FA370A74-683C-11E5-9273-385046321329.png",
+   "tags" : [
+      "sendmail",
+      "slack",
+      "noodlepi",
+      "windows",
+      "data-dumper",
+      "emoji",
+      "cisco",
+      "swagger"
+   ],
+   "description" : "A curated look at September's new CPAN uploads",
    "authors" : [
       "david-farrell"
    ],
-   "title" : "What's new on CPAN - September 2017",
    "categories" : "cpan",
-   "tags" : ["sendmail","slack","noodlepi","windows","data-dumper","emoji","cisco","swagger"]
+   "date" : "2017-10-06T00:53:52",
+   "image" : "/images/196/FA370A74-683C-11E5-9273-385046321329.png"
 }
 
 

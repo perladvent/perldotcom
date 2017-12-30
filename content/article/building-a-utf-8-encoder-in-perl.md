@@ -1,14 +1,24 @@
-
-  {
-    "title"  : "Building a UTF-8 encoder in Perl",
-    "authors": ["david-farrell"],
-    "date"   : "2016-08-02T08:47:57",
-    "tags"   : ["unicode", "utf8", "encode", "decode", "binary", "bitmask", "codepoint"],
-    "draft"  : false,
-    "image"  : "/images/building-a-utf8-encoder-in-perl/bart-simpson-utf8.gif",
-    "description" : "Learn UTF-8 by encoding it yourself",
-    "categories": "data"
-  }
+{
+   "image" : "/images/building-a-utf8-encoder-in-perl/bart-simpson-utf8.png",
+   "description" : "Learn UTF-8 by encoding it yourself",
+   "date" : "2016-08-02T08:47:57",
+   "tags" : [
+      "unicode",
+      "utf8",
+      "encode",
+      "decode",
+      "binary",
+      "bitmask",
+      "codepoint"
+   ],
+   "title" : "Building a UTF-8 encoder in Perl",
+   "thumbnail" : "/images/building-a-utf8-encoder-in-perl/thumb_bart-simpson-utf8.png",
+   "draft" : false,
+   "categories" : "data",
+   "authors" : [
+      "david-farrell"
+   ]
+}
 
 This week I wrote a UTF-8 encoder/decoder. Perl already comes with UTF-8 encoding features built-in, so this wasn't necessary, but sometimes it's nice to understand how things work. The UTF-8 scheme is defined in [RFC 3629](https://tools.ietf.org/html/rfc3629).
 

@@ -1,11 +1,4 @@
 {
-   "date" : "2015-09-03T13:19:15",
-   "draft" : false,
-   "slug" : "192/2015/9/3/What-s-new-on-CPAN---August-2015",
-   "categories" : "cpan",
-   "image" : "/images/192/AF57B300-5234-11E5-B481-F86745487EAA.png",
-   "title" : "What's new on CPAN - August 2015",
-   "description" : "A curated look at August's new CPAN uploads",
    "tags" : [
       "hadoop",
       "webmaster_tools",
@@ -14,9 +7,17 @@
       "hilbert",
       "php"
    ],
+   "title" : "What's new on CPAN - August 2015",
    "authors" : [
       "david-farrell"
-   ]
+   ],
+   "date" : "2015-09-03T13:19:15",
+   "image" : "/images/192/AF57B300-5234-11E5-B481-F86745487EAA.png",
+   "categories" : "cpan",
+   "draft" : false,
+   "slug" : "192/2015/9/3/What-s-new-on-CPAN---August-2015",
+   "description" : "A curated look at August's new CPAN uploads",
+   "thumbnail" : "/images/192/thumb_AF57B300-5234-11E5-B481-F86745487EAA.png"
 }
 
 

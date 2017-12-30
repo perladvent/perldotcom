@@ -1,18 +1,19 @@
 {
-   "date" : "2014-04-07T04:28:21",
-   "title" : "Perl hate",
-   "authors" : [
-      "david-farrell"
-   ],
-   "slug" : "83/2014/4/7/Perl-hate",
-   "draft" : false,
-   "description" : "A collection of anti-Perl quotes, memes and images",
-   "categories" : "community",
    "tags" : [
       "community",
       "other"
    ],
-   "image" : "/images/83/ECB8F812-FF2E-11E3-A6C7-5C05A68B9E16.jpeg"
+   "title" : "Perl hate",
+   "description" : "A collection of anti-Perl quotes, memes and images",
+   "date" : "2014-04-07T04:28:21",
+   "image" : "/images/83/ECB8F812-FF2E-11E3-A6C7-5C05A68B9E16.jpeg",
+   "authors" : [
+      "david-farrell"
+   ],
+   "slug" : "83/2014/4/7/Perl-hate",
+   "categories" : "community",
+   "thumbnail" : "/images/83/thumb_ECB8F812-FF2E-11E3-A6C7-5C05A68B9E16.jpeg",
+   "draft" : false
 }
 
 

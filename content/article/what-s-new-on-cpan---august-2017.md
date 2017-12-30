@@ -1,13 +1,28 @@
 {
-   "title" : "What's new on CPAN - August 2017",
-   "image" : "/images/192/AF57B300-5234-11E5-B481-F86745487EAA.png",
-   "draft" : false,
    "description" : "A curated look at August's new CPAN uploads",
    "date" : "2017-09-08T01:27:15",
-   "tags" : ["adb","drip","anticaptcha","tibia","gio","netflow","rop","patro","libusb","tarantool","openapi","xs-check","openapi"],
+   "title" : "What's new on CPAN - August 2017",
+   "tags" : [
+      "adb",
+      "drip",
+      "anticaptcha",
+      "tibia",
+      "gio",
+      "netflow",
+      "rop",
+      "patro",
+      "libusb",
+      "tarantool",
+      "openapi",
+      "xs-check",
+      "openapi"
+   ],
+   "image" : "/images/192/AF57B300-5234-11E5-B481-F86745487EAA.png",
    "authors" : [
       "david-farrell"
    ],
+   "thumbnail" : "/images/192/thumb_AF57B300-5234-11E5-B481-F86745487EAA.png",
+   "draft" : false,
    "categories" : "cpan"
 }
 

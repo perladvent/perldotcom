@@ -1,10 +1,7 @@
 {
-   "image" : "/images/111/0D9A013A-2F12-11E4-9950-DF3A7BB45C3F.jpeg",
-   "title" : "Facing the music with Perl",
    "draft" : false,
-   "slug" : "111/2014/8/29/Facing-the-music-with-Perl",
-   "description" : "A few Perl modules make it easy",
-   "date" : "2014-08-29T15:03:09",
+   "thumbnail" : "/images/111/thumb_0D9A013A-2F12-11E4-9950-DF3A7BB45C3F.jpeg",
+   "title" : "Facing the music with Perl",
    "tags" : [
       "sysadmin",
       "cd",
@@ -16,10 +13,14 @@
       "file_copy",
       "digest_md5"
    ],
+   "slug" : "111/2014/8/29/Facing-the-music-with-Perl",
    "authors" : [
       "brian-d-foy"
    ],
-   "categories" : "data"
+   "description" : "A few Perl modules make it easy",
+   "date" : "2014-08-29T15:03:09",
+   "categories" : "data",
+   "image" : "/images/111/0D9A013A-2F12-11E4-9950-DF3A7BB45C3F.jpeg"
 }
 
 

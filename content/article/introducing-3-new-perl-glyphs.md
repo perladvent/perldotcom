@@ -1,13 +1,4 @@
 {
-   "categories" : "community",
-   "draft" : false,
-   "description" : "What will you use them for?",
-   "authors" : [
-      "david-farrell"
-   ],
-   "title" : "Introducing 3 new Perl Glyphs",
-   "date" : "2015-01-23T13:55:03",
-   "image" : "/images/146/62C9158A-A2B0-11E4-8BBD-CE8C9EE10EC8.png",
    "tags" : [
       "icomoon",
       "fontforge",
@@ -17,7 +8,17 @@
       "icon",
       "font"
    ],
-   "slug" : "146/2015/1/23/Introducing-3-new-Perl-Glyphs"
+   "title" : "Introducing 3 new Perl Glyphs",
+   "authors" : [
+      "david-farrell"
+   ],
+   "date" : "2015-01-23T13:55:03",
+   "slug" : "146/2015/1/23/Introducing-3-new-Perl-Glyphs",
+   "draft" : false,
+   "image" : "/images/146/62C9158A-A2B0-11E4-8BBD-CE8C9EE10EC8.png",
+   "categories" : "community",
+   "thumbnail" : "/images/146/thumb_62C9158A-A2B0-11E4-8BBD-CE8C9EE10EC8.png",
+   "description" : "What will you use them for?"
 }
 
 

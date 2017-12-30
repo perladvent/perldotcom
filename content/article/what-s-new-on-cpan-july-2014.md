@@ -1,4 +1,5 @@
 {
+   "date" : "2014-08-01T12:38:59",
    "title" : "What's new on CPAN July 2014",
    "tags" : [
       "mojolicious",
@@ -11,14 +12,14 @@
       "docker",
       "duckduckgo"
    ],
-   "slug" : "106/2014/8/1/What-s-new-on-CPAN-July-2014",
    "authors" : [
       "david-farrell"
    ],
-   "image" : "/images/106/BFE732AE-1978-11E4-8AC9-F1C02D77B041.png",
-   "date" : "2014-08-01T12:38:59",
-   "categories" : "cpan",
    "description" : "Our curated guide to July's new CPAN uploads",
+   "thumbnail" : "/images/106/thumb_BFE732AE-1978-11E4-8AC9-F1C02D77B041.png",
+   "image" : "/images/106/BFE732AE-1978-11E4-8AC9-F1C02D77B041.png",
+   "categories" : "cpan",
+   "slug" : "106/2014/8/1/What-s-new-on-CPAN-July-2014",
    "draft" : false
 }
 

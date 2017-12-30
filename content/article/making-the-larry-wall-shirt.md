@@ -1,18 +1,19 @@
 {
-   "title" : "Making the Larry Wall shirt",
-   "description" : "How to create your own pop art images",
-   "draft" : false,
-   "date" : "2015-12-03T12:52:01",
    "slug" : "201/2015/12/3/Making-the-Larry-Wall-shirt",
+   "description" : "How to create your own pop art images",
+   "authors" : [
+      "david-farrell"
+   ],
+   "date" : "2015-12-03T12:52:01",
+   "categories" : "community",
+   "image" : "/images/201/A73A0F48-995A-11E5-A40D-AF14E7E91CBA.png",
+   "draft" : false,
+   "thumbnail" : "/images/201/thumb_A73A0F48-995A-11E5-A40D-AF14E7E91CBA.png",
+   "title" : "Making the Larry Wall shirt",
    "tags" : [
       "gimp",
       "inkscape",
       "stencil"
-   ],
-   "categories" : "community",
-   "image" : "/images/201/A73A0F48-995A-11E5-A40D-AF14E7E91CBA.png",
-   "authors" : [
-      "david-farrell"
    ]
 }
 

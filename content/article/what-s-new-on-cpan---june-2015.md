@@ -1,8 +1,15 @@
 {
+   "draft" : false,
+   "thumbnail" : "/images/181/thumb_88AAA022-2639-11E5-B854-07139DAABC69.png",
    "categories" : "cpan",
-   "image" : "/images/181/88AAA022-2639-11E5-B854-07139DAABC69.png",
    "slug" : "181/2015/7/9/What-s-new-on-CPAN---June-2015",
+   "authors" : [
+      "david-farrell"
+   ],
+   "image" : "/images/181/88AAA022-2639-11E5-B854-07139DAABC69.png",
    "date" : "2015-07-09T13:17:10",
+   "description" : "Our monthly curated guide to CPAN's newest modules",
+   "title" : "What's new on CPAN - June 2015",
    "tags" : [
       "catalyst",
       "dancer",
@@ -15,12 +22,6 @@
       "ditaa",
       "bonusly",
       "zendesk"
-   ],
-   "title" : "What's new on CPAN - June 2015",
-   "description" : "Our monthly curated guide to CPAN's newest modules",
-   "draft" : false,
-   "authors" : [
-      "david-farrell"
    ]
 }
 
