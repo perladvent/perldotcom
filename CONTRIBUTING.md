@@ -5,7 +5,7 @@ Interested in writing an article for Perl.com? Perhaps you want to get the word 
 
 Technology
 ----------
-The website is built with [Hugo](http://gohugo.io) and hosted on GitHub Pages. You can run a local version of the site by following these [instructions](#viewing-your-draft-article).
+The website is built with [Hugo](http://gohugo.io). You can run a local version of the site by following these [instructions](#viewing-your-draft-article).
 
 Style Guide
 ===========
