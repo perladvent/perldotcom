@@ -68,7 +68,7 @@ The front matter contains the article metadata. Here's an example for a recent a
 
 Older articles also have the `slug` attribute, which determines the URL of the article. This isn't necessary anymore (it's used to preserve historic URLs). Instead just name the file the same as the title of the article, but in lowercase and with spaces replaced with hyphens (`-`). In this example case, the filename is `content/article/magical-tied-scalars.md`.
 
-Two other optional attribute are `thumbnail` and `image`. Thumbnail can be used when you have an image you want to be displayed as the article's thumbnail, but not as a larger image at the beginning of the article (thta's what `image is for`). If `thumbnail` is not present, Perl.com tries to use `image` as the thumbnail. If `image` is also not available, Perl.com will use the author's picture. If that's not present, it will fallback on a blank avatar image.
+Two other optional attribute are `thumbnail` and `image`. Thumbnail can be used when you have an image you want to be displayed as the article's thumbnail, but not as a larger image at the beginning of the article (that's what `image is for`). If `thumbnail` is not present, Perl.com tries to use `image` as the thumbnail. If `image` is also not available, Perl.com will use the author's picture. If that's not present, it will fallback on a blank avatar image.
 
 Once `draft` is changed to `false`, the article will be listed on the website at `perl.com/article/magical-tied-scalars`. So when providing a pull request, keep this as `true`. The site editor will switch this to `false` once the article is ready to be published.
 
@@ -76,7 +76,7 @@ Titles-as-filenames has another benefit: no two articles can have the same title
 
 The front matter is provided inline in the markdown file, immediately followed by the article body, in GitHub flavored markdown ([cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)). The two main rules to know here are as follows:
 
-If you want highlighted code syntax, use a fenced code block with the programm language name, e.g:
+If you want highlighted code syntax, use a fenced code block with the program language name, e.g:
 
     ```perl
       code
