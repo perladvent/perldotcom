@@ -4,7 +4,7 @@
     "authors": ["nadim-khemir"],
     "date"   : "2018-01-01T09:28:27",
     "tags"   : ["data-dumper", "data-dump-tree"],
-    "draft"  : true,
+    "draft"  : false,
     "image"  : null,
     "thumbnail": "/images/a-slow-boat-to-data/ddt-columns.png",
     "description" : "Dumping Perl 6 data structures",
