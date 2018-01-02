@@ -16,13 +16,11 @@ A few months ago, as I was familiarizing myself with the old Perl.com source mat
 
 ### Here be Wizards
 
-*Where Wizards Fear to Tread* was a brief, perlguts-focused series started by Simon Cozens. This particular [article]({{< relref "legacy/_pub_2002_05_07_optree.md" >}}) discusses the Perl op tree.
+*Where Wizards Fear to Tread* was a brief, perlguts-focused series started by Simon Cozens. This particular [article]({{< relref "_pub_2002_05_07_optree.md" >}}) discusses the Perl op tree.
 
-For more recent Perl op tree content, Sawyer presented his work on [Ref::Util](https://metacpan.org/pod/Ref::Util) at YAPC:
+For more recent Perl op tree content, Sawyer presented his work on {{< mcpan "Ref::Util" >}} at YAPC:
 
-<div class="centering">
-<iframe  width="560" height="315" src="https://www.youtube.com/embed/gv-DCM9I8v0" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
-</div>
+{{< youtube gv-DCM9I8v0 >}}
 
 His talk contains a good explanation of how custom ops work (enough to get you started on them). I'd love to rekindle this series. If you have a perlguts-type article that you'd like to write, please get in touch with [me](mailto:perl.com-editor@perl.org) or see our contributing [guide](https://github.com/dnmfarrell/perldotcom/blob/master/CONTRIBUTING.md) and send us a pull request with a draft article.
 
