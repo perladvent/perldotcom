@@ -314,26 +314,6 @@ This is Deep Magic. Right now it's an almost impossible trick to pull off in Per
 
 But even if that particular magic wand never appears, Perl 6 is still going to give us new and powerful ways to do things, some of which we'd never even have tried to do before. Internally it's going to be fast and clean, and we're going to get real Garbage Collection at last. If Parrot fulfils its early promise, we may well see Perl users taking advantages of extensions written in Ruby, or Python, or Smalltalk. World peace will ensue! The lion will lay down with the lamb, and the camel shall abide with the serpent! Cats and dogs living together! Ahem.
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td><p>Related Articles</p>
-<p>• <a href="/pub/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
-<br />
-• <a href="/pub/2001/10/03/exegesis3.html">Exegesis 3</a></p></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-
 It's been a long strange trip from perl 1.0 to where we are today. Decisions have been taken that made sense at the time, which today see us lost in a twisty little maze of backward compatibility (or should that be a little twisty maze...). Anyone who looks at the source code for Perl 5 will tell you it's scary, overly complex, and a complete nightmare to maintain. And that's if they understand it.
 
 Perl 6 is our chance to learn from Perl 5, but Perl 6 is also going to be Perl remade. If everything goes to plan (and I see no reason why it won't) we will arrive at Perl 6 with the crud jettisoned and the good stuff improved. We'll be driven by a gleaming, modern engine unfettered by the limitations of the old one. We'll have a shiny new syntax that builds on the best traditions of the old to give us something that is both brand new and comfortingly familiar.

@@ -119,32 +119,6 @@ In Perl 5, it's not uncommon to see people using the `||=` operator to set up de
         $suffix ||= $last_suffix || $default_suffix || '.txt';
         # etc.
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td><p>Related Articles</p>
-<p>• <a href="/pub/2001/04/02/wall.html">Apocalypse 1</a><br />
-<br />
-• <a href="/pub/2001/05/03/wall.html">Apocalypse 2</a><br />
-<br />
-• <a href="/pub/2001/05/08/exegesis2.html">Exegesis 2</a><br />
-<br />
-• <a href="/pub/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
-<br />
-</p></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-
 Of course, unless you're sure of your range of values, this can go horribly wrong -- specifically, if the variable being initialized already has a valid value that Perl happens to consider false (i.e if `$suffix` or `$last_suffix` or `$default_suffix` contained an empty string, or the offset really *was* meant to be zero).
 
 So people have been forced to write default initializers like this:

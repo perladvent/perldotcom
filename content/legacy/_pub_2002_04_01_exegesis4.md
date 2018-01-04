@@ -100,28 +100,6 @@ To create those classes, the `class` keyword is used. For example:
 
         class Err::BadData is Exception {...}
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td><p>Related Articles</p>
-<p><a href="/pub/2002/01/15/apo4.html">Apocalypse 4</a><br />
-<a href="/pub/2001/10/02/apocalypse3.html">Apocalypse 3</a><br />
-<a href="/pub/2001/10/03/exegesis3.html">Exegesis 3</a><br />
-<a href="/pub/2001/05/03/wall.html">Apocalypse 2</a><br />
-<a href="/pub/2001/05/08/exegesis2.html">Exegesis 2</a></p></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-
 After this declaration, `Err::BadData` is a class name (or rather, by analogy to "filehandle," it's a "classname"). Either way, it can then be used as a type specifier wherever Perl 6 expects one. Unlike Perl 5, that classname is not a bareword string: It's a genuine first-class symbol in the program. In object-oriented terms, we could think of a classname as a meta-object -- an object that describes the attributes and behavior of other objects.
 
 Modules and packages are also first class in Perl 6, so we can also refer to their names directly, or take references to them, or look them up in the appropriate symbol table.

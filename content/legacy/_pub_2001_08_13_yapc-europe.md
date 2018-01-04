@@ -17,26 +17,6 @@
 
 Last year Europe had its first Yet Another Perl Conference. Leon Brocard, Jon Peterson and Greg McCarroll did a marvellous job organizing this grassroots conference - themed "The Art of Perl" - from scratch within two months. For the first time Europe had its chance meeting people like Nat Torkington, Tom Christiansen, Kevin Lenzo, brian d foy and Michael Schwern. Even before this conference started, a few people from the Netherlands got together and talked about the possibilities of organizing the next YAPC::Europe in Amsterdam.
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td><p>Related Articles</p>
-<p>• <a href="/pub/2001/07/25/onion.html">The State of the Onion 5</a><br />
-<br />
-• <a href="/pub/2001/06/21/yapcreport.html">Yet Another YAPC Report: Montreal</a></p></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-
 And so they did. Only this time, they had a whole year to organize it and they chose "Security" as the theme for the conference. Hardly any of The Big Names from the USA were coming to the conference this time, but a lot of European speakers were. And that should be considered a Good Thing - since of course there is a lot of Perl Talent in Europe!
 
 The first day was filled with tutorials, whereas the second and third day were filled with one track containing security-related talks and two others with more general Perl talks. Three complete simultaneous tracks, all stuffed with lots of very interesting talks covering many facets of Perl - it was very hard to pick the talk you wanted to attend each time! Apart from the conference itself, there were quite a lot of Birds of a Feather meetings too (like CPANTS, PerlMonks, P5P, Concurrency and a Pub Crawl), which made the evenings also very entertaining.

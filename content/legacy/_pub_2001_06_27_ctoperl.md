@@ -106,26 +106,6 @@ So again, it's not clear that you are going to get any benefit from translating 
 
 ### Possible Future Work
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td></td>
-</tr>
-<tr class="even">
-<td><p>Related Articles</p>
-<p><a href="/pub/2001/05/03/wall.html">Larry Wall Apocalypse 2</a></p>
-<p><a href="/pub/2001/05/08/exegesis2.html">Damian Conway Exegesis 2</a></p>
-<p><a href="http://archive.develooper.com/perl6-internals@perl.org/"><code>perl6-internals</code> mailing list archive</a></p></td>
-</tr>
-<tr class="odd">
-<td></td>
-</tr>
-</tbody>
-</table>
-
 It should now be clear that although it might not be hard to translate Perl to C, programs probably will not be faster as a result.
 
 However, it's possible that a sufficiently clever person could make a Perl-to-C translator that produced faster C code. The programmer would need to give hints to the translator to say how the variables were being used. For example, suppose you have an array `@a`. With such an array, Perl is ready for anything. You might do `$a[1000000] = 'hello';` or `$a[500] .= 'foo';` or `$a[500] /= 17;`. This flexibility is expensive. But suppose you know that this array will only hold integers and there will never be more than 1,000 integers. You might tell the translator that, and then instead of producing C code to manage a slow Perl array, the translator can produce
