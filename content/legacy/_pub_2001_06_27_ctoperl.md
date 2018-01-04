@@ -10,14 +10,12 @@
    "image" : null,
    "title" : "Why Not Translate Perl to C?",
    "slug" : "/pub/2001/06/27/ctoperl.html",
-   "description" : "People often have the idea that automatically translating Perl to C and then compiling the C will make their Perl programs run faster, because \"C is much faster than Perl.\" This article explains why this strategy is unlikely to work....",
+   "description" : "Why translating Perl to C often doesn't create faster programs",
    "authors" : [
       "mark-jason-dominus"
    ],
    "draft" : null
 }
-
-
 
 People often have the idea that automatically translating Perl to C and then compiling the C will make their Perl programs run faster, because "C is much faster than Perl." This article explains why this strategy is unlikely to work.
 
@@ -110,7 +108,9 @@ It should now be clear that although it might not be hard to translate Perl to C
 
 However, it's possible that a sufficiently clever person could make a Perl-to-C translator that produced faster C code. The programmer would need to give hints to the translator to say how the variables were being used. For example, suppose you have an array `@a`. With such an array, Perl is ready for anything. You might do `$a[1000000] = 'hello';` or `$a[500] .= 'foo';` or `$a[500] /= 17;`. This flexibility is expensive. But suppose you know that this array will only hold integers and there will never be more than 1,000 integers. You might tell the translator that, and then instead of producing C code to manage a slow Perl array, the translator can produce
 
-            int a[1000];
+```perl
+int a[1000];
+```
 
 and use a fast C array of machine integers.
 
@@ -118,6 +118,8 @@ To do this, you have to be very clever and you have to think of a way of explain
 
 People are planning these features for Perl 6 right now. For example, Larry Wall, the author of Perl, plans that you will be able to declare a Perl array as
 
-            my int @a is dim(1000);
+```perl
+my int @a is dim(1000);
+```
 
 Then a Perl-to-C translator (or Perl itself) might be able to use a fast C array of machine integers rather than a slow Perl array of SVs. If you are interested, you may want to join the perl6-internals mailing list.

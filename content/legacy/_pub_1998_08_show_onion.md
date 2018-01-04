@@ -14,10 +14,7 @@
 }
 
 
-
-##### [RealAudio Version](/media/_pub_1998_08_show_onion/onion.ram)
-
-Thank you very much. I like you too. Especially when you likeme like you're liking me right now. Thank you for liking me. And thank you for your applause. I confess, I'm human--I like applause. I like attention.
+Thank you very much. I like you too. Especially when you like me like you're liking me right now. Thank you for liking me. And thank you for your applause. I confess, I'm human--I like applause. I like attention.
 
 Speaking of attention, how many of you saw the August 10 issue of Forbes magazine? Wait, my daughter made me something. *&lt;dons orange glasses&gt;*
 
@@ -63,7 +60,7 @@ We all have to deal with reality one way or another. So we simplify. Often we ov
 
 Our ancestors oversimplified. They fooled themselves into thinking that God only created circles and spheres. They thought God would always prefer simplicity over complexity. When they discovered that reality was more complicated than they thought, they just swept the complexity under a carpet of epicycles. That is, they created *unnecessary* complexity. This is an important point. The universe is complex, but it's usefully complex.
 
-Evidence abounds that people continue to oversimplify today. Some people prefer to oversimplify their cosmology. Others prefer to oversimply their theology. Many computer language designers oversimplify their languages, and end up sweeping the universe's complexity under the carpet of the programmer.
+Evidence abounds that people continue to oversimplify today. Some people prefer to oversimplify their cosmology. Others prefer to oversimplify their theology. Many computer language designers oversimplify their languages, and end up sweeping the universe's complexity under the carpet of the programmer.
 
 I would name names, but I might get in trouble with some of my friends. Some of my best friends are language designers.
 
@@ -93,7 +90,7 @@ Now, you may be wondering what all this has to do with Perl. The fact is, your b
 
 This is important, and a little hard to understand. English is useful *because* it's a mess. Since English is a mess, it maps well onto the problem space, which is also a mess, which we call reality. Similarly, Perl was designed to be a mess (though in the nicest of possible ways).
 
-This is counterintuitive, so let me explain. If you've been educated as any kind of an engineer, it has been pounded into your skull that great engineering is simple engineering. We are taught to admire suspension bridges more than railroad trestles. We are taught to value simplicity and beauty. That's nice. I like circles too.
+This is counter-intuitive, so let me explain. If you've been educated as any kind of an engineer, it has been pounded into your skull that great engineering is simple engineering. We are taught to admire suspension bridges more than railroad trestles. We are taught to value simplicity and beauty. That's nice. I like circles too.
 
 However, complexity is not always the enemy. What's important is not simplicity or complexity, but how you bridge the two.
 
@@ -109,7 +106,7 @@ We mentioned that some complexity is useless, and some is useful. Here's another
 
 ![](/images/_pub_1998_08_show_onion/10.gif)
 
-Now, most of you sitting here are probably prejudiced in favor of western writing systems, and so you think an ideographic writing system is needlessly complex. You may even be thinking that this picture is as complicated as the previous one. But again, it's a kind of engineering tradeoff. In this case, the Chinese have traded learnability for portability. Does that sound familiar?
+Now, most of you sitting here are probably prejudiced in favor of western writing systems, and so you think an ideographic writing system is needlessly complex. You may even be thinking that this picture is as complicated as the previous one. But again, it's a kind of engineering trade off. In this case, the Chinese have traded learnability for portability. Does that sound familiar?
 
 Chinese is not, in fact, a single language. It's about five major languages, any of which are mutually unintelligible. And yet, you can write Chinese in one language and read it in another. Now that's what I call a portable language. By choosing a higher level of abstraction, the Chinese writing system optimizes for communication rather than for simplicity. We have a billion people in China who can't all talk to each other, but at least they can pass notes to each other.
 
@@ -133,7 +130,7 @@ Here's the point. Last month I was working on my church's web page. Our church h
 
 If your browser is fairly recent, and if you have a Unicode font loaded, then this is what you see. There's something important I want you to notice here. (Besides the fact that I'm subliminally advertising my church.)
 
-If I'd done this a year ago, this block of Chinese characters would probably have been a GIF image. But there's a problem with images. You can't cut and paste characters from a GIF image. I've tried it often enough to know, and I'm sure you have too. These chararacters can be selected as characters. *&lt;demonstrates&gt;* They can be processed as text. Text processing. You may have heard of text processing...
+If I'd done this a year ago, this block of Chinese characters would probably have been a GIF image. But there's a problem with images. You can't cut and paste characters from a GIF image. I've tried it often enough to know, and I'm sure you have too. These characters can be selected as characters. *&lt;demonstrates&gt;* They can be processed as text. Text processing. You may have heard of text processing...
 
 In fact, what you're looking at here is my very first CGI script. I'll bet you showed off your first CGI script too.
 
@@ -167,13 +164,13 @@ Here's the real title of this talk.
 
 ![](/images/_pub_1998_08_show_onion/16.gif)
 
-Circles figure heavily in our symbology. And in particular, by adding various appertenances to circles, we sometimes represent some rather complicated notions with simple symbols. These symbols are the bridges between simplicity and complexity.
+Circles figure heavily in our symbology. And in particular, by adding various appurtenances to circles, we sometimes represent some rather complicated notions with simple symbols. These symbols are the bridges between simplicity and complexity.
 
 Here's a real Zen diagram.
 
 ![](/images/_pub_1998_08_show_onion/17.gif)
 
-Well, actually, it's not. In actual fact, the yinyang comes from the Tao, or Dao if you can't pronounce an unaspirated 't'. The Tao is an ancient oriental philosophy, and predates Zen by more than a millenium. But hey, what's a thousand years among friends? Now that's what I call a real millenium bug...
+Well, actually, it's not. In actual fact, the yinyang comes from the Tao, or Dao if you can't pronounce an unaspirated 't'. The Tao is an ancient oriental philosophy, and predates Zen by more than a millennium. But hey, what's a thousand years among friends? Now that's what I call a real millennium bug...
 
 Anyway, back to yins and yangs.
 
@@ -193,7 +190,7 @@ Anyway. In short, I wondered whether the yinyang is like a swastika, where which
 
 So I did some research. On the Web, of course. Big mistake...
 
-The fact is, the Web is the perfect example of TMTOWDTI. There's more than one way to do it. In this case, there's every way to do it. You can find the yinyang in every possible orientation. I still don't know whether any of them is righter than the others.
+The fact is, the Web is the perfect example of TIMTOWTDI. There's more than one way to do it. In this case, there's every way to do it. You can find the yinyang in every possible orientation. I still don't know whether any of them is righter than the others.
 
 A TYEDYE WORLD is some folks on the Web who sell tie-dyed tee shirts. I guess they'd be Tao-dyed in this case. They think it looks like this.
 
@@ -203,7 +200,7 @@ I suppose if you want it the other way you just put the shirt on inside-out. Put
 
 ![](/images/_pub_1998_08_show_onion/21.gif)
 
-The folks at the the Unicode consortium think it looks like this. I don't know if they're right, but if they're not, it doesn't matter. They published it this way, and now it's right by definition.
+The folks at the Unicode consortium think it looks like this. I don't know if they're right, but if they're not, it doesn't matter. They published it this way, and now it's right by definition.
 
 Of course, my dictionary has it upside from that...
 
@@ -223,7 +220,7 @@ In Bengali, they squish it the other way, but for similar reasons.
 
 ![](/images/_pub_1998_08_show_onion/25.gif)
 
-I find it interesting that the world has so many different representations for nothing. One could make endless jokes on it: Much ado about nothing, or Nothing can stop an idea whose time has come. But I can't really think of anything profound to say about zero, so let's keep moving. Nothing is holding us back. Nevermind, pretend I said nothing.
+I find it interesting that the world has so many different representations for nothing. One could make endless jokes on it: Much ado about nothing, or Nothing can stop an idea whose time has come. But I can't really think of anything profound to say about zero, so let's keep moving. Nothing is holding us back. Never mind, pretend I said nothing.
 
 Here's something related to nothing.
 
@@ -331,7 +328,7 @@ In similar fashion, the freeware and commercial communities are much closer toge
 
 ![](/images/_pub_1998_08_show_onion/42.gif)
 
-You see how you can fly from one planet to the other, but not walk. It's reminscent of quantum mechanical tunneling, where you can't get from here to there but you do it anyway with a flying leap.
+You see how you can fly from one planet to the other, but not walk. It's reminiscent of quantum mechanical tunneling, where you can't get from here to there but you do it anyway with a flying leap.
 
 What we have flowing between the freeware and commercial communities is a lot of ideas. Together, these two inner lobes define what we're now calling the Open Source movement. What we have here is something brand new: former enemies agreeing on a common good that transcends any particular business model. And that common good is better software sooner. Most of you have probably read the Cathedral and the Bazaar by now. So maybe I'm preaching to the choir here. But I thought you'd like the picture.
 
@@ -357,7 +354,7 @@ But often they're not. Similarly, if you look through the Unicode book, there ar
 
 That is also why the various classes of operators and variables in Perl are visually distinct from each other. It's just sound human engineering, as far as I'm concerned. I don't like the fact that all the operators look the same in Lisp. I don't like the fact that most the street signs look alike in Europe. And I applaud the decision of Germany to make their stop signs look different from all the other signs. Of course, it's also helpful to us ignorant Americans that they made them look like American stop signs. Chalk up another one for cultural imperialism.
 
-However, in repentence for American cultural imperialism, let me tell you about another advantage of the ideographic system of writing. Because ideographs are written into square cells, they can just as easily be written horizontally as vertically. Or vice versa. Our variable-width characters do not have that nice property. Especially in a font like Helvetica, where you have trouble telling i's and l's apart even when they're next to each other. Put one above the other and it'd just look like a dotted line. Chalk one up for the Chinese, the Japanese, and the Koreans.
+However, in repentance for American cultural imperialism, let me tell you about another advantage of the ideographic system of writing. Because ideographs are written into square cells, they can just as easily be written horizontally as vertically. Or vice versa. Our variable-width characters do not have that nice property. Especially in a font like Helvetica, where you have trouble telling i's and l's apart even when they're next to each other. Put one above the other and it'd just look like a dotted line. Chalk one up for the Chinese, the Japanese, and the Koreans.
 
 To wrap up, I'd like to talk about triangles. Here's a sample.
 
@@ -421,13 +418,13 @@ And now we've come full circle, back to the circle. Here is the front door of Bi
 
 ![](/images/_pub_1998_08_show_onion/55.gif)
 
->     The Road goes ever on and on,
->     Down from the door where it began.
->     Now far ahead the Road has gone,
->     And I must follow, if I can,
->     Pursuing it with eager feet,
->     Until it joins some larger way
->     Where many paths and errands meet.
->     And whither then?  I cannot say.
+> The Road goes ever on and on, \
+> Down from the door where it began.\
+> Now far ahead the Road has gone,\
+> And I must follow, if I can,\
+> Pursuing it with eager feet,\
+> Until it joins some larger way\
+> Where many paths and errands meet.\
+> And whither then?  I cannot say.\
 
 Thank you all for sharing the Road with me.
