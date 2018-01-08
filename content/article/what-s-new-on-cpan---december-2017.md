@@ -6,7 +6,7 @@
    "date" : "2018-01-08T09:12:44",
    "title" : "What's new on CPAN - December 2017",
    "description" : "A curated look at December's new CPAN uploads",
-   "draft" : true,
+   "draft" : false,
    "image" : "/images/209/EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
    "thumbnail" : "/images/209/thumb_EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
    "tags" : ["diff","iex","extutils-makemaker","tor","gitlab","base91","libjpeg","u2f","modbus"]
