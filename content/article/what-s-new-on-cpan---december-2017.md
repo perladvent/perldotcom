@@ -18,7 +18,6 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 ### APIs & Apps
 * Get a simple time tracking app with [App::Jiffy](https://metacpan.org/pod/App::Jiffy)
 * [App::sdif](https://metacpan.org/pod/App::sdif) provides a variety of diff tools
-* [Net::Tor](https://metacpan.org/pod/Net::Tor) provides a Tor socket, and can establish new Tor circuits
 * [Finance::Quote::IEX](https://metacpan.org/pod/Finance::Quote::IEX) retrieves stock quotes using the IEX API
 * Get financial market calendar data like holidays, late opens and early closes with [Finance::Calendar](https://metacpan.org/pod/Finance::Calendar)
 * [GitLab::API::v4](https://metacpan.org/pod/GitLab::API::v4) is a complete GitLab API v4 client!
