@@ -9,7 +9,7 @@
    "draft" : false,
    "image" : "/images/209/EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
    "thumbnail" : "/images/209/thumb_EC0FEBBE-FF2E-11E3-8A2A-5C05A68B9E16.png",
-   "tags" : ["diff","iex","extutils-makemaker","tor","gitlab","base91","libjpeg","u2f","modbus"]
+   "tags" : ["diff","iex","extutils-makemaker","gitlab","base91","libjpeg","u2f","modbus"]
 }
 
 
