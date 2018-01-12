@@ -2,9 +2,9 @@
   {
     "title"       : "Writing your own XS functions",
     "authors"     : ["david-farrell"],
-    "date"        : "2018-01-11T21:28:40",
+    "date"        : "2018-01-12T08:28:40",
     "tags"        : ["xs","stdint.h","perlapi"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbanail"  : "",
     "description" : "Write functions that execute at the speed of C",
@@ -13,10 +13,11 @@
 
 
 In [part one]({{< relref "getting-started-with-xs.md" >}}), we learned the basic components of XS, and integrated
-two C functions into Perl which were slower than their Perl builtin equivalents.
-Oh well, we'll strive to do better in future tutorials. This chapter is going to
-show you how to define xsubs that accept multiple parameters, and define your
-own logic, instead of using XS as a Foreign Function Interface to a C library.
+two C functions into Perl. This chapter is going to show you how to define xsubs
+that accept multiple parameters, and define your own logic, instead of using XS
+as a Foreign Function Interface to a C library.
+
+You'll need the files from [part one]({{< relref "getting-started-with-xs.md" >}}) to execute the code in this article.
 
 ### Module Code
 
@@ -150,6 +151,7 @@ I saved that file as `t/two.t`, and run it by building the distribution with
 `make`:
 
     perl Makefile.PL && make && make test
+
 
 Do you know what the return value would be if `add_ints` was called with no
 arguments? Maybe `undef`, since if there are no arguments, the for loop will
