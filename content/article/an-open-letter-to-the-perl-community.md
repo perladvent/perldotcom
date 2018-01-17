@@ -2,9 +2,9 @@
   {
     "title"       : "An Open Letter to the Perl Community",
     "authors"     : ["elizabeth-mattijsen"],
-    "date"        : "2018-01-14T20:42:27",
+    "date"        : "2018-01-17T08:22:27",
     "tags"        : ["perl-5", "p5p", "porting"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbnail" : "/images/170/thumb_AA60EE46-EF3A-11E4-98F4-3C044E9B8265.png",
     "description" : "How to kickstart migration of Perl 5 to Perl 6",
