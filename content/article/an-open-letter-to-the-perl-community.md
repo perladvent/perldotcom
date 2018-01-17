@@ -6,7 +6,7 @@
     "tags"        : ["perl-5", "p5p", "porting"],
     "draft"       : false,
     "image"       : "",
-    "thumbnail" : "/images/170/thumb_AA60EE46-EF3A-11E4-98F4-3C044E9B8265.png",
+    "thumbnail"   : "",
     "description" : "How to kickstart migration of Perl 5 to Perl 6",
     "categories"  : "perl-6"
   }
