@@ -3,10 +3,10 @@
     "title"       : "Free Wildcard TLS with Net::ACME2 and Let’s Encrypt",
     "authors"     : ["felipe-gasper"],
     "date"        : "2018-01-15T08:59:24",
-    "tags"        : ["tls", "ssl", "networking"],
+    "tags"        : ["tls", "ssl", "networking", "net-acme", "net-acme2", "acme"],
     "draft"       : true,
-    "image"       : "/images/lets_encrypt_padlock.svg",
-    "thumbanail"  : "",
+    "image"       : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/lets_encrypt_padlock.svg",
+    "thumbanail"  : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/thumb_lets_encrypt_padlock.svg",
     "description" : "Wildcards for all!",
     "categories"  : "security"
   }
@@ -46,7 +46,7 @@ And so, [Net::ACME2](https://metacpan.org/pod/Net::ACME2) is now available.
 This is a generic client library for any standard ACME implementation,
 though the only known public ACME implementation right now is
 Let’s Encrypt’s. Their API only provides testing certificates for now,
-but once there’s a production endpoint Net::ACME2 will be updated to use it.
+but once there’s a production endpoint I will update Net::ACME2 to use it.
 
 Like Net::ACME, [Net::ACME2](https://metacpan.org/pod/Net::ACME2):
 
