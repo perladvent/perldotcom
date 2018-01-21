@@ -59,4 +59,4 @@ modules. (cf. [Crypt::Perl](https://metacpan.org/pod/Crypt::Perl))
 
 * … has minimal dependencies (no Moose, &c.)
 
-Give it a try!
+I've created some example [scripts](https://github.com/FGasper/p5-Net-ACME2/tree/master/examples) to get you started. Give it a try!
