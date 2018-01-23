@@ -2,7 +2,7 @@
   {
     "title"       : "Free Wildcard TLS with Net::ACME2 and Let’s Encrypt",
     "authors"     : ["felipe-gasper"],
-    "date"        : "2018-01-15T08:59:24",
+    "date"        : "2018-01-23T08:00:24",
     "tags"        : ["tls", "ssl", "networking", "net-acme", "net-acme2", "acme"],
     "draft"       : true,
     "image"       : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/lets_encrypt_padlock.svg",
@@ -59,17 +59,13 @@ modules. (cf. [Crypt::Perl](https://metacpan.org/pod/Crypt::Perl))
 
 * … has minimal dependencies (no Moose, &c.)
 
-I've created some example [scripts](https://github.com/FGasper/p5-Net-ACME2/tree/master/examples) to get you started. After you’ve installed the module, try:
+I've created some example [scripts](https://github.com/FGasper/p5-Net-ACME2/tree/master/examples) to get you started. After you've installed the module, either download the scripts directly from GitHub, or clone the [repo](https://github.com/FGasper/p5-Net-ACME2) and run:
 
-```
-./examples/http-01.pl
-```
+    $ ./http-01.pl
 
 … or:
 
-```
-./examples/dns-01.pl
-```
+    $ ./dns-01.pl
 
 These walk you through the following steps (with Let’s Encrypt):
 
