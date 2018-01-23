@@ -1,15 +1,23 @@
-
-  {
-    "title"       : "Free Wildcard TLS with Net::ACME2 and Let’s Encrypt",
-    "authors"     : ["felipe-gasper"],
-    "date"        : "2018-01-23T08:00:24",
-    "tags"        : ["tls", "ssl", "networking", "net-acme", "net-acme2", "acme"],
-    "draft"       : true,
-    "image"       : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/lets_encrypt_padlock.svg",
-    "thumbnail"   : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/thumb_lets_encrypt_padlock.svg",
-    "description" : "Wildcards for all!",
-    "categories"  : "security"
-  }
+{
+   "date" : "2018-01-23T08:00:24",
+   "authors" : [
+      "felipe-gasper"
+   ],
+   "categories" : "security",
+   "description" : "Wildcards for all!",
+   "image" : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/lets_encrypt_padlock.png",
+   "thumbnail" : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/thumb_lets_encrypt_padlock.png",
+   "tags" : [
+      "tls",
+      "ssl",
+      "networking",
+      "net-acme",
+      "net-acme2",
+      "acme"
+   ],
+   "draft" : false,
+   "title" : "Free Wildcard TLS with Net::ACME2 and Let’s Encrypt"
+}
 
 Much of the credit for the recent improvement in TLS deployment across
 the Internet must go to [Let’s Encrypt](http://letsencrypt.org) (LE),
