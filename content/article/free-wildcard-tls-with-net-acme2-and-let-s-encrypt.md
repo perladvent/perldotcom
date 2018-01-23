@@ -6,7 +6,7 @@
     "tags"        : ["tls", "ssl", "networking", "net-acme", "net-acme2", "acme"],
     "draft"       : true,
     "image"       : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/lets_encrypt_padlock.svg",
-    "thumbanail"  : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/thumb_lets_encrypt_padlock.svg",
+    "thumbnail"   : "/images/free-wildcard-tls-with-net-acme2-and-let-s-encrypt/thumb_lets_encrypt_padlock.svg",
     "description" : "Wildcards for all!",
     "categories"  : "security"
   }

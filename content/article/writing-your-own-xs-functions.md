@@ -6,7 +6,7 @@
     "tags"        : ["xs","stdint.h","perlapi"],
     "draft"       : false,
     "image"       : "",
-    "thumbanail"  : "",
+    "thumbnail"   : "",
     "description" : "Write functions that execute at the speed of C",
     "categories"  : "tutorials"
   }
