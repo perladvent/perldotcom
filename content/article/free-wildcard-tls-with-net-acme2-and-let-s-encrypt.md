@@ -59,13 +59,13 @@ modules. (cf. [Crypt::Perl](https://metacpan.org/pod/Crypt::Perl))
 
 * … has minimal dependencies (no Moose, &c.)
 
-I've created some example [scripts](https://github.com/FGasper/p5-Net-ACME2/tree/master/examples) to get you started. After you've installed the module, either download the scripts directly from GitHub, or clone the [repo](https://github.com/FGasper/p5-Net-ACME2) and run:
+I've created some example [scripts](https://github.com/FGasper/p5-Net-ACME2/tree/master/examples) to get you started. After you've installed the module, clone the [repo](https://github.com/FGasper/p5-Net-ACME2), change into the root project directory and run:
 
-    $ ./http-01.pl
+    $ ./examples/http-01.pl
 
 … or:
 
-    $ ./dns-01.pl
+    $ ./examples/dns-01.pl
 
 These walk you through the following steps (with Let’s Encrypt):
 
