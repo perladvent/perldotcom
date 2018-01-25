@@ -2,9 +2,9 @@
   {
     "title"       : "Why should you join CPAN-PRC?",
     "authors"     : ["kivanc-yazan"],
-    "date"        : "2018-01-22T22:00:00",
+    "date"        : "2018-01-25T09:23:00",
     "tags"        : ["pull-request", "git", "github", "cpan", "perl", "open-source"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbanail"  : "",
     "description" : "The Pull Request Challenge is an excellent opportunity to learn & give back at the same time",
