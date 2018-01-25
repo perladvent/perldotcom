@@ -13,9 +13,9 @@
 
 The CPAN Pull Request Challenge (PRC) aims to improve the quality of code on [CPAN](https://www.cpan.org/), the online archive of Perl modules, by having participants submit pull requests to CPAN module authors.
 
-Every month participants are assigned a new module to improve, and submit [pull requests](https://help.github.com/articles/about-pull-requests/) to the module repo on GitHub. Participants are not competing with each other, rather The "challenge" is to keep up with your monthly assignments.
+Every month participants are assigned a new module to improve, and submit [pull requests](https://help.github.com/articles/about-pull-requests/) to the module repo on GitHub. Participants are not competing with each other, rather the "challenge" is to keep up with your monthly assignments.
 
-### How to signup
+### How to sign up
 
 You can join as an individual or as a team. A team could be your company, you and a few friends, or your local Perl Mongers group.
 
@@ -34,7 +34,7 @@ You can fix a failing test, fix an issue, correct a typo, any kind of improvemen
 * [CPAN Cover](http://cpancover.com) reports on code coverage for tests
 * [CPANTS](https://cpants.cpanauthors.org/) is a "kwalitee" assessment tool
 
-A good place to start is to find your assigned module on [metacpan](https://metacpan.org), a CPAN search engine which links to all of the above services. Scan through the module documentation and related information, to try and find things that need fixing or enhancing.
+A good place to start is [metacpan](https://metacpan.org), a CPAN search engine which links to all of the above services. Scan through the module documentation and related information, to try and find things that need fixing or enhancing.
 
 Once you've identified the changes you'd like to make, fork the module on GitHub, commit your changes and open a pull request with the new changes. Then reply to your assignment email saying "It's done!", and link to your pull requests on GitHub:
 
@@ -46,7 +46,7 @@ Although it's better to do your assignments every month, you may not be willing 
 
 One reason is that this year might be your [last chance!](http://neilb.org/2018/01/01/cpan-prc-2018.html) It may [evolve](http://neilb.org/2018/01/06/what-after-prc.html), but this will most likely be the **last year** you can get a CPAN module assignment.
 
-I joined this challenge [in 2015](https://kyzn.org/2015-01-17-cpan-pr-challenge-012015.html) when I was still at college. It motivated me to read other people's code, even though I had a hard time understanding it. It also taught me a lot about the Open Source ecosystem. I did 4 assignments in 2015, another 4 in 2016, and doubled to 8 in 2017. I am also part of [Team-ZipRecruiter](https://github.com/ziprecruiter), which has been completing assignments since April 2017. It really is fun!
+I joined this challenge [in 2015](https://kyzn.org/2015-01-17-cpan-pr-challenge-012015.html) when I was still at college. It motivated me to read other people's code, even though I had a hard time understanding it. It also taught me a lot about the Open Source ecosystem. I did 4 assignments in 2015, another 4 in 2016, and doubled to 8 in 2017. I am also part of [Team-ZipRecruiter](https://github.com/ziprecruiter), which has been participating since April 2017. It really is fun!
 
 If you are looking for more reasons, here are few:
 
