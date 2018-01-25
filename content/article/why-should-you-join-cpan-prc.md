@@ -23,20 +23,24 @@ Simply email Neil Bowers ("neil at bowers dot com") your GitHub username and PAU
 
 ### How it works
 
-First, you email neil at bowers dot com. You should tell Neil your GitHub username, and your PAUSE ID if you have one. Tell him you want to join the challenge, and you are in!
-
-You can also join PRC as a team: It could be your company, you and a few friends, or your mongers group. A delegate of group should do exactly the same. Email Neil with GitHub username of the organization, and that's it! 
-
-Each month, you will receive an email from Neil noting your assignment module. You can fix a failing test, add a new test, correct a typo, anything. If it's a team assignment, you should set up a meeting for "assignment hack night", and work on the module with your group.
+Once per month, you will receive an email noting your assigned distribution:
 
 ![](/images/why-should-you-join-cpan-prc/pr-assignment.png)
 
-When done, you should reply to Neil saying "It's done!".
+You can fix a failing test, fix an issue, correct a typo, any kind of improvement. If you're not sure where to start, there are services on top of CPAN that can help identify issues:
+
+* [CPAN Testers](http://cpantesters.org/) is a Continuous Integration service that often identifies issues with failing tests and/or platform specific bugs
+* [Request Tracker](https://rt.cpan.org/) is the default bug tracker for CPAN modules (issues may also be listed on GitHub)
+* [CPAN Cover](http://cpancover.com) reports on code coverage for tests
+* [CPANTS](https://cpants.cpanauthors.org/) is a "kwalitee" assessment tool
+
+A good place to start is to find your assigned module on [metacpan](https://metacpan.org), a CPAN search engine which links to all of the above services. Scan through the module documentation and related information, to try and find things that need fixing or enhancing.
+
+Once you've identified the changes you'd like to make, fork the module on GitHub, commit your changes and open a pull request with the new changes. Then reply to your assignment email saying "It's done!", and link to your pull requests on GitHub:
 
 ![](/images/why-should-you-join-cpan-prc/pr-done.png)
 
-Although it's better to do your assignments every month, you may not be willing to commit to it, and that is fine! If something came up, you can skip a month. If you need more time for a module, you can stick to your assignment for longer. There's a solution as long as you want to submit some PRs.
-
+Although it's better to do your assignments every month, you may not be willing to commit to it, and that is fine! If something comes up, you can skip a month. If you need more time for a module, you can stick to your assignment for longer. There's a solution as long as you want to keep participating.
 
 ### Why join
 
