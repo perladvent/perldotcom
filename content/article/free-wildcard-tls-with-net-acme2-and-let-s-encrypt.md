@@ -102,7 +102,7 @@ domain.
 6. Finalize the certificate order. This will tell you if any challenges
 failed or are still pending.
 
-7. If all domains’s challenges succeeded, you’ll get a URL whose content
+7. If all domains’ challenges succeeded, you’ll get a URL whose content
 will be the newly-issued certificate.
 
 Net::ACME2 is, like the ACME standard itself, still subject to
