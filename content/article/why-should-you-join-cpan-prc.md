@@ -11,8 +11,9 @@
     "categories"  : "cpan"
   }
 
-Perl community is full of creative ideas, and CPAN Pull Request Challenge is one of them. You might have seen some blogs, or have heard someone mention it, but it doesn't get the attention it deserves. So here's a quick post that explains what it is, how it works, and why you should join too.
+The CPAN Pull Request Challenge (PRC) aims to improve the quality of code on [CPAN](https://www.cpan.org/), the online archive of Perl modules, by having participants submit pull requests to CPAN module authors.
 
+Every month participants are assigned a new module to improve, and submit [pull requests](https://help.github.com/articles/about-pull-requests/) to the module repo on GitHub. Participants are not competing with each other, rather The "challenge" is to keep up with your monthly assignments.
 
 ### What it is
 
