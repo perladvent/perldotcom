@@ -42,22 +42,19 @@ Once you've identified the changes you'd like to make, fork the module on GitHub
 
 Although it's better to do your assignments every month, you may not be willing to commit to it, and that is fine! If something comes up, you can skip a month. If you need more time for a module, you can stick to your assignment for longer. There's a solution as long as you want to keep participating.
 
-### Why join
+### Why join?
 
-Let me give an interesting reason first. [2018 may be the last year of CPAN-PRC](http://neilb.org/2018/01/01/cpan-prc-2018.html). [It may evolve into issue-based assignments](http://neilb.org/2018/01/06/what-after-prc.html) too. But this will most likely be the **last year** you can get a CPAN module assignment.
+One reason is that this year might be your [last chance!](http://neilb.org/2018/01/01/cpan-prc-2018.html) It may [evolve](http://neilb.org/2018/01/06/what-after-prc.html), but this will most likely be the **last year** you can get a CPAN module assignment.
 
-I joined this challenge [in 2015](https://kyzn.org/2015-01-17-cpan-pr-challenge-012015.html), when I was still at college. It was a great motivation for me to go read other people's code, even though  I had hard time understanding it. It was also a great chance to get used to open source ecosystem. I did 4 assignments in 2015, another 4 in 2016, and doubled to 8 in 2017. I am also part of [Team-ZipRecruiter](https://github.com/ziprecruiter), which is getting group assignments since April 2017. It really is fun!
+I joined this challenge [in 2015](https://kyzn.org/2015-01-17-cpan-pr-challenge-012015.html) when I was still at college. It motivated me to read other people's code, even though I had a hard time understanding it. It also taught me a lot about the Open Source ecosystem. I did 4 assignments in 2015, another 4 in 2016, and doubled to 8 in 2017. I am also part of [Team-ZipRecruiter](https://github.com/ziprecruiter), which has been completing assignments since April 2017. It really is fun!
 
-If you are looking for more reasons, here's a few.
+If you are looking for more reasons, here are few:
 
-- If you are a student, and want to learn more about "production-ready" code, this is the perfect opportunity! Remember, you also get to meet people who wrote that code. 
-- Or you are a senior programmer, but you haven't contributed to open-source much. This is a great way to begin!
-- You do like contributing, but you don't want to spend too much time. This also makes sense! PRC doesn't take too much time, and you can always skip (like I did).
-- You spend a lot of time polishing your own modules, but you want to explore other modules: What else is out there? 
-- You used to write Perl, but that was years ago. You are looking for a reason to come back.
-- You are looking for a programming-related team-building event!
-- You are looking for event ideas for some other language community. How awesome is that!
+- It's a great way to study "production ready" code and communicate with fellow programmers
+- You can contribute to open source code, support Perl and build your resume
+- Assignments introduce you to code on CPAN that you otherwise might have missed
+- If you're part of a group it could be a fun team-building event
 
-Sounds interesting? Then send an email to neil at bowers dot com with your GitHub username!
+Sounds interesting? Then send an email to Neil ("neil at bowers dot com") with your GitHub username!
 
 ![](/images/why-should-you-join-cpan-prc/pr-merged.png)
