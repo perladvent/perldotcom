@@ -7,7 +7,7 @@
     "draft"       : true,
     "image"       : "",
     "thumbanail"  : "",
-    "description" : "It's an excellent opportunity to learn & give back at the same time!",
+    "description" : "The Pull Request Challenge is an excellent opportunity to learn & give back at the same time",
     "categories"  : "cpan"
   }
 
