@@ -15,14 +15,11 @@ The CPAN Pull Request Challenge (PRC) aims to improve the quality of code on [CP
 
 Every month participants are assigned a new module to improve, and submit [pull requests](https://help.github.com/articles/about-pull-requests/) to the module repo on GitHub. Participants are not competing with each other, rather The "challenge" is to keep up with your monthly assignments.
 
-### What it is
+### How to signup
 
-[CPAN](https://www.cpan.org/), to remind, is the famous archive of  Perl modules. It hosts well over 30k modules, all solving different  problems. There are extra programs like [CPAN Testers](http://cpantesters.org/), an intuitive to run tests for all modules. There is [an issue tracker](https://rt.cpan.org/), [a test coverage tracker](http://cpancover.com), [a quality measure](https://cpants.cpanauthors.org/) et cetera. All these will be handy when you are looking for "something to fix".
+You can join as an individual or as a team. A team could be your company, you and a few friends, or your local Perl Mongers group.
 
-[Pull Request](https://www.atlassian.com/git/tutorials/making-a-pull-request), in very simple terms, is how “open source model” works these days. A contributor asks maintainers whether they would like a patch. If yes, they "pull" the patch into original repository.
-
-Don't let the word "challenge" confuse you, you are not competing with others. You will be getting monthly assignments, and that is the challenge.
-
+Simply email Neil Bowers ("neil at bowers dot com") your GitHub username and PAUSE ID if you have one, or if joining as a group, your GitHub organization name. Tell him you want to join the challenge, and you are in!
 
 ### How it works
 
