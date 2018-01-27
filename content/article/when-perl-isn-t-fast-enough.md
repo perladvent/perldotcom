@@ -41,13 +41,15 @@ To satisfy the "joy" factor, we merged our code with another team's entry, based
 
 The requirement to make several requests to other services hurt us though. The kicker was, we had to make the requests concurrently *and* compute concurrently on the responses. This was because the data needed for one request was coming from two separate data stores that could be fetched and processed and rendered concurrently. In other words, we needed threading.
 
-Perl can do asynchronous programming with modules like {{< mcpan "IO::Async" >}} or {{< mcpan "Coro" >}}, but it's single threaded. You *can* compile Perl with [threads](https://perldoc.perl.org/threads.html), which do provide multi-threaded computing. Back in the day, they were developed by Microsoft to enable [mod_perl](https://perl.apache.org/) to run on Windows, in lieu of `fork()`. Perl's threads work by cloning the Perl interpreter's internal data structures, and passing around a thread context variable to tell Perl which thread is requesting what data. These have predictable drawbacks: they require more system resources because of the cloned data, and each thread runs _slower_ than a single threaded Perl because of all the thread context checks.
+Perl can do asynchronous programming with modules like {{< mcpan "IO::Async" >}} or {{< mcpan "Coro" >}}, but it's single threaded. You *can* compile Perl with [threads](https://perldoc.perl.org/threads.html), which provide multi-threaded computing. They were developed back in the day by Microsoft to enable [mod_perl](https://perl.apache.org/) to run on Windows, in lieu of `fork()`. Perl's threads work by cloning the Perl interpreter's internal data structures, and passing around a thread context variable to tell Perl which thread is requesting what data. These have predictable drawbacks: they require more system resources because of the cloned data, and each thread runs _slower_ than a single threaded Perl because of all the thread context checks.
 
 Perl's lack of thread support left us with no viable solution, and really burnt us: the best performing Java and Go entries' throughput  were within 3% of each other, but our solution was 50% slower.
 
 # Conclusion
 
-Perl is such a versatile language: from the terminal, to scripting and application programming, it can excel in many arenas. We were able to develop a lightning-fast application that competed with, and bested several high performance language competitors. Ultimately though, $work decided to use Go as for this solution we needed a highly scalable, performant stack.
+Perl is such a versatile language: from the terminal, to scripting and application programming, it excels in many areas. We were able to develop a lightning-fast application that competed with, and bested several high performance language competitors. Ultimately though, $work decided to use Go as for this solution we needed a highly scalable, performant stack.
+
+Perl 6 might be a viable alternative. The latest 6.c [release](https://perl6.org/downloads/) includes a hybrid (M:N) threading model via a scheduler which comes into play when using [higher level constructs](https://docs.perl6.org/language/concurrency). To bypass the scheduler and get more control, it has a [Thread](https://docs.perl6.org/type/Thread) class, for which each instance maps 1:1 with an OS thread.
 
 \
 Cover image from [psdgraphics.com](http://www.psdgraphics.com/psd/rocket-icon-psd/)
