@@ -1,5 +1,5 @@
 {
-   "draft" : true,
+   "draft" : false,
    "tags" : [
       "go",
       "threads",
@@ -18,14 +18,14 @@
    "authors" : [
       "david-farrell"
    ],
-   "date" : "2018-01-25T19:50:37"
+   "date" : "2018-01-28T21:50:37"
 }
 
 Last year at $work we held a web application "bake off" competition, in order to find a suitable technology stack for serving some important pages on our website, as fast as possible. Our developers were allowed to compete individually or in a team, and they could use any programming language they wanted.
 
-The existing solution was based on Perl's {{< mcpan "Catalyst" >}} framework using {{< mcpan "Template::Toolkit" >}}, and the code had become utterly bloated, to the point at which it took several hundred ms to serve the pages. The issue wasn't with the technology per se: a vanilla Catalyst application can serve responses in under 10ms, the problem was that the application code was shared amongst several different teams, and as each team added various features and functions, performance degraded.
+The existing solution was based on Perl's {{< mcpan "Catalyst" >}} framework using {{< mcpan "Template::Toolkit" >}}, and the code had become utterly bloated, to the point at which it took several hundred ms to serve the pages. The issue wasn't with the technology per se: a vanilla Catalyst application can serve responses in under 10ms, the problem was that the application code was shared among several different teams, and as each team added various features and functions, performance degraded.
 
-The overal aim then, was to see what we could do if we "burned it down" and started again. The bake off generated a lot of buzz: we were given carte blanche to spend as much time as needed working on it, and it was a lot of fun. We had entries in Python, Go, Java, Haskell, Lua, Node, Elixir and of course, Perl.
+The overall aim then, was to see what we could do if we "burned it down" and started again. The bake off generated a lot of buzz: we were given carte blanche to spend as much time as needed working on it, and it was a lot of fun. We had entries in Python, Go, Java, Haskell, Lua, Node, Elixir and of course, Perl.
 
 # Round 1
 
@@ -43,13 +43,13 @@ The requirement to make several requests to other services hurt us though. The k
 
 Perl can do asynchronous programming with modules like {{< mcpan "IO::Async" >}} or {{< mcpan "Coro" >}}, but it's single threaded. You *can* compile Perl with [threads](https://perldoc.perl.org/threads.html), which provide multi-threaded computing. They were developed back in the day by Microsoft to enable [mod_perl](https://perl.apache.org/) to run on Windows, in lieu of `fork()`. Perl's threads work by cloning the Perl interpreter's internal data structures, and passing around a thread context variable to tell Perl which thread is requesting what data. These have predictable drawbacks: they require more system resources because of the cloned data, and each thread runs _slower_ than a single threaded Perl because of all the thread context checks.
 
-Perl's lack of thread support left us with no viable solution, and really burnt us: the best performing Java and Go entries' throughput  were within 3% of each other, but our solution was 50% slower.
+Perl's inability to multi-thread efficiently forced us to stay single-threaded and it really burnt us: the best performing Java and Go entries' throughput were within 3% of each other, but our solution was 50% slower.
 
 # Conclusion
 
 Perl is such a versatile language: from the terminal, to scripting and application programming, it excels in many areas. We were able to develop a lightning-fast application that competed with, and bested several high performance language competitors. Ultimately though, $work decided to use Go as for this solution we needed a highly scalable, performant stack.
 
-Perl 6 might be a viable alternative. The latest 6.c [release](https://perl6.org/downloads/) includes a hybrid (M:N) threading model via a scheduler which comes into play when using [higher level constructs](https://docs.perl6.org/language/concurrency). To bypass the scheduler and get more control, it has a [Thread](https://docs.perl6.org/type/Thread) class, for which each instance maps 1:1 with an OS thread.
+Perl 6 might be a viable alternative soon. The latest 6.c [release](https://perl6.org/downloads/) includes a hybrid (M:N) threading model via a scheduler which comes into play when using [higher level constructs](https://docs.perl6.org/language/concurrency). To bypass the scheduler and get more control, it has a [Thread](https://docs.perl6.org/type/Thread) class, for which each instance maps 1:1 with an OS thread. I suspect it is too slow to compete right now, but I will be watching future Perl 6 benchmarks with interest.
 
 \
 Cover image from [psdgraphics.com](http://www.psdgraphics.com/psd/rocket-icon-psd/)
