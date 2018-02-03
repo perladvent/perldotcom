@@ -13,7 +13,7 @@
 }
 
 
-Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!
+Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads for your reading and programming pleasure. A full list of January's new distributions can be found [here](https://perlancar.wordpress.com/2018/02/01/list-of-new-cpan-distributions-jan-2018/). Enjoy!
 
 ### APIs & Apps
 * [App::NDTools](https://metacpan.org/pod/App::NDTools) provides diff tools for nested structures
