@@ -1,12 +1,12 @@
 {
    "thumbnail" : "/images/how-strong-is-your-password/thumb_password.jpg",
    "title" : "How strong is your password?",
-   "date" : "2018-02-05T21:14:11",
+   "date" : "2018-02-06T08:35:11",
    "authors" : [
       "david-farrell"
    ],
    "description" : "Password strength checking with zxcvbn",
-   "draft" : true,
+   "draft" : false,
    "tags" : ["zxcvbn", "dropbox", "entropy", "data-password-zxcvbn"],
    "categories" : "security",
    "image" : "/images/how-strong-is-your-password/password.jpg"
@@ -16,7 +16,7 @@ In the latest [what-s new on CPAN]({{< relref "what-s-new-on-cpan---january-2018
 
 ### How it works
 
-Dan Wheeler's original blog [post](https://blogs.dropbox.com/tech/2012/04/zxcvbn-realistic-password-strength-estimation/) explains this in detail, but here;s a quick summary. To estimate a password's strength we measure its [entropy](https://en.wikipedia.org/wiki/Password_strength#Entropy_as_a_measure_of_password_strength). The zxcvbn algorithm estimates a password's entropy in three stages:
+Dan Wheeler's original blog [post](https://blogs.dropbox.com/tech/2012/04/zxcvbn-realistic-password-strength-estimation/) explains this in detail, but here's a quick summary. To estimate a password's strength we measure its [entropy](https://en.wikipedia.org/wiki/Password_strength#Entropy_as_a_measure_of_password_strength). The zxcvbn algorithm estimates a password's entropy in three stages:
 
 1. match - matches parts of a password against patterns like: known words, sequences, dates etc
 2. score - for every matched pattern, calculate its entropy
@@ -26,9 +26,11 @@ Imagine the password "baseball2005-59xH}"; zxcvbn will match "baseball" in its p
 
     dictionary_entropy("baseball") + year_entropy("2005") + brute_force_entropy("59xH{")
 
+Once it has calculated the entropy of a password, zxcvbn estimates other statistics like how many guesses it would take to crack the password, and the password cracking time.
+
 ### Installation
 
-Data::Password::zxcvbn is on CPAN, so installation can be done with your favorite CPAN client, like `cpan` or {{< mcpan "App::cpanminus" "cpanm" >}}.
+Data::Password::zxcvbn is on CPAN, so installation can be done with your favorite CPAN client, like {{< mcpan "App::CPAN" "cpan" >}} or {{< mcpan "App::cpanminus" "cpanm" >}}.
 
     $ cpanm Data::Password::zxcvbn
 
@@ -92,6 +94,7 @@ Running the script and including my employer data, you can see the password's st
     $ ./password_strength ziprecruiter.com employer ziprecruiter
     Password strength [0-4]: 2, # guesses needed: 1010000
 
+If you were using Data::Password::zxcvbn in a web application as part of a user registration form (or a password reset feature), you could pass the user's details to `password_strength` to catch these instances of fragile passwords. For users with admin privileges, you might require that their zxcvbn password score is the highest (4). This seems more secure than developing your own password validation function to check a password is of a minimum length, with a certain combinations of characters.
 
 ### References
 
