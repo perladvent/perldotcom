@@ -35,17 +35,17 @@ After having performed this routine more times than I'd like to admit, I finally
 URL="https://metacpan.org/pod/$1"
 
 if [[ "$OSTYPE" == "linux-gnu"  ]]; then
-  xdg-open $URL &>/dev/null
+  xdg-open "$URL" &>/dev/null
 elif [[ "$OSTYPE" == "darwin"*  ]]; then
-  open $URL &>/dev/null
+  open "$URL" &>/dev/null
 elif [[ "$OSTYPE" == "cygwin"   ]]; then
-  cygstart $URL &>/dev/null
+  cygstart "$URL" &>/dev/null
 elif [[ "$OSTYPE" == "msys"     ]]; then
-  start $URL
+  start "$URL"
 elif [[ "$OSTYPE" == "win32"    ]]; then
-  start $URL
+  start "$URL"
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
-  xdg-open $URL &>/dev/null
+  xdg-open "$URL" &>/dev/null
 else
   echo "OS not recognized"
 fi
