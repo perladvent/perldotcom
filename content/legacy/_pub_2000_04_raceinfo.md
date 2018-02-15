@@ -1,7 +1,6 @@
 {
    "thumbnail" : null,
    "tags" : [
-      "briandfoy",
       "perl-conference"
    ],
    "title" : "Program Repair Shop and Red Flags",
