@@ -40,25 +40,25 @@ First I'll show the program, and then I'll show how to make it better. Here's th
          5  $\ = "\n";
          6  $i=0;
          7  open XFERLOG, $xferlog or die "Cant't find file $xferlog";
-         8  
+         8
          9  foreach $line (<XFERLOG>) {
         10        chomp($line);
-        11        if (( $line =~ /$opt_d/i) && ( $line !~ /_ o r/)) 
+        11        if (( $line =~ /$opt_d/i) && ( $line !~ /_ o r/))
         12           {
         13           ($Fld1,$Fld2,$Fld3,$Fld4,$Fld5,$Fld6,$Fld7,$Fld8,
                    $Fld9,$Fld10,$Fld11,$Fld12,$Fld13,$Fld14,$Fld15) = split(' ',$line);
-     
+
         14            $uplist[$i] = join ' ',$Fld6, $Fld8, $Fld9, $Fld14, $Fld15;
-        15            $time[$i]=$Fld6; $size[$i]=$Fld8; $file[$i]=$Fld9; 
+        15            $time[$i]=$Fld6; $size[$i]=$Fld8; $file[$i]=$Fld9;
                    $user[$i]=$Fld14; $group[$i]=$Fld15;
-          
+
         16            $username= join '@', $user[$i], $group[$i];
         17            push @{$table{$username}}, $uplist[$i];
-        18            $i++;     
+        18            $i++;
         19      }
         20  }
         21  close XFERLOG;
-        22  
+        22
         23  undef %saw;
         24  # @newuser = grep(!$saw{$_}++, @user);
         25  $j=0;
@@ -103,7 +103,7 @@ First I'll show the program, and then I'll show how to make it better. Here's th
         64          printf("%.2fK/s", $AvgSpeed);
         65          print " ";
         66  }
-        67          
+        67
 
 Let's start at the top, with the argument and file handling.
 
@@ -114,7 +114,7 @@ Let's start at the top, with the argument and file handling.
          5  $\ = "\n";
          6  $i=0;
          7  open XFERLOG, $xferlog or die "Cant't find file $xferlog";
-         8  
+         8
          9  foreach $line (<XFERLOG>) {
             ...
         20  }
@@ -122,7 +122,7 @@ Let's start at the top, with the argument and file handling.
 
 The name of the input file is hardwired on line 4. Getting the filename from the command line is more flexible. We can leave the old filename in place as a default, retaining compatibility with the original version. I've also added error handling to the `getopt` argument parsing.
 
-     
+
            getopt('dV') or die "Usage: $0 [-d] [-V] [filename]\n";
             @ARGV = ('./xferlog') unless @ARGV;
             while (<>) {
@@ -138,18 +138,18 @@ I replaced the `foreach` loop with a `while` loop. The `foreach` loaded the enti
 
          9  foreach $line (<XFERLOG>) {
         10        chomp($line);
-        11        if (( $line =~ /$opt_d/i) && ( $line !~ /_ o r/)) 
+        11        if (( $line =~ /$opt_d/i) && ( $line !~ /_ o r/))
         12           {
         13           ($Fld1,$Fld2,$Fld3,$Fld4,$Fld5,$Fld6,$Fld7,$Fld8,
                    $Fld9,$Fld10,$Fld11,$Fld12,$Fld13,$Fld14,$Fld15) = split(' ',$line);
-          
+
         14            $uplist[$i] = join ' ',$Fld6, $Fld8, $Fld9, $Fld14, $Fld15;
-        15            $time[$i]=$Fld6; $size[$i]=$Fld8; $file[$i]=$Fld9; 
+        15            $time[$i]=$Fld6; $size[$i]=$Fld8; $file[$i]=$Fld9;
                    $user[$i]=$Fld14; $group[$i]=$Fld15;
-          
+
         16            $username= join '@', $user[$i], $group[$i];
         17            push @{$table{$username}}, $uplist[$i];
-        18            $i++;     
+        18            $i++;
         19      }
         20  }
 
@@ -297,13 +297,13 @@ Finally, the `join` here is committing the same error as the one we eliminated b
                 $totalsize += $item->{size};
               }
 
-              if ($totaltime==0) { $avgtr = '---' } 
+              if ($totaltime==0) { $avgtr = '---' }
               else { $avgtr = ($totalsize/$totaltime)/1024 }
               $gtotal += $totalsize;
 
               push @finale, {size => $totalsize/(1024*1024),
-                             username => $username, 
-                             num_items => scalar @{$table{$username}}, 
+                             username => $username,
+                             num_items => scalar @{$table{$username}},
                              totaltime => $totaltime,
                              avgtr => $avgtr,
                             };
@@ -348,7 +348,7 @@ Now we're into the home stretch:
         64          printf("%.2fK/s", $AvgSpeed);
         65          print " ";
         66  }
-        67          
+        67
 
 Here we have another C-style `for` loop that should be replaced by a simple `foreach` loop; this allows us to eliminate `$p` and `$w`. We can loop over the reversed list if we want, or simply adjust the `sort` line above so that the items are sorted into the right (reversed) order to begin with, which is probably better.
 
@@ -373,8 +373,8 @@ It's probably a little cleaner to merge the many `printf`s into a single print; 
             #print @finale;
             my $position = 1;
             for $user (@realfinal) {
-              printf ("%d. %s %s files %.2fMB %.2f%% %.2fK/s\n" , 
-                $position, $user->{username}, $user->{num_items}        
+              printf ("%d. %s %s files %.2fMB %.2f%% %.2fK/s\n" ,
+                $position, $user->{username}, $user->{num_items}
                 $user->{size}, ($user->{size}/$gtotal)*100, $user->{avgtr}
               );
               ++$position;
