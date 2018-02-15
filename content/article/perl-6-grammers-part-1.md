@@ -1,6 +1,6 @@
 
   {
-    "title"       : "Perl 6 Grammers, Part 1",
+    "title"       : "Perl 6 Grammars, Part 1",
     "authors"     : ["andrew-shitov"],
     "date"        : "2018-02-13T15:22:36",
     "tags"        : ["grammars", "parsing", "lexing"],
