@@ -1,15 +1,22 @@
-
-  {
-    "title"       : "Real World Perl: Measuring Working Set Size",
-    "authors"     : ["david-farrell"],
-    "date"        : "2018-01-18T09:12:57",
-    "tags"        : ["wss","real-world-perl","brendan-gregg","meltdown","kpti"],
-    "draft"       : false,
-    "image"       : "",
-    "thumbnail"   : "/images/real-world-perl/globe.png",
-    "description" : "Using Perl to measure Linux memory use for Meltdown patch analysis",
-    "categories"  : "community"
-  }
+{
+   "image" : "/images/real-world-perl/earth.jpg",
+   "date" : "2018-01-18T09:12:57",
+   "authors" : [
+      "david-farrell"
+   ],
+   "draft" : false,
+   "description" : "Using Perl to measure Linux memory use for Meltdown patch analysis",
+   "thumbnail" : "/images/real-world-perl/thumb_earth.jpg",
+   "title" : "Real World Perl: Measuring Working Set Size",
+   "categories" : "community",
+   "tags" : [
+      "wss",
+      "real-world-perl",
+      "brendan-gregg",
+      "meltdown",
+      "kpti"
+   ]
+}
 
 Welcome to Real World Perl, a new series that aims to showcase uses of Perl out there "in the wild". Each article will highlight something fun or interesting that somebody is doing with Perl. Got a suggestion for a Real World Perl example? [email me](mailto:perl-com-editor@perl.org).
 
@@ -30,3 +37,6 @@ Brendan explained how the script works:
 > 
 
 If you'd like to know more about Working Size Set estimation, Brendan discusses it [here](http://www.brendangregg.com/wss.html).
+
+\
+Cover image from [pixabay](https://pixabay.com/en/planet-earth-cosmos-continents-1457453/)
