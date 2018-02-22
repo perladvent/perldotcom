@@ -3,7 +3,7 @@
     "authors"     : ["kivanc-yazan"],
     "date"        : "2018-02-20T09:00:00",
     "tags"        : ["pull-request", "git", "github", "cpan", "perl", "open-source"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "How to install Perl on your computer, or how to use a Docker image instead",
