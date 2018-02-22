@@ -46,6 +46,6 @@ Fourthly, we could have asked our dedicated testers for help on running addition
 
 Despite not being the best way to learn from a mistake, there was minimal damage. The new syntax and behavior were only available on a single development release, did not reach any production code, and was reverted within that single release.
 
-To address smartmatch again, we will need to reflect upon our mistakes and consider approaching it again by communicating the change better and by receiving additional feedback to both offer a useful feature and pleasing syntax. This will take time, and we are not rushing to do revisit smartmatch at the moment.
+To address smartmatch again, we will need to reflect upon our mistakes and consider approaching it again by communicating the change better and by receiving additional feedback to both offer a useful feature and pleasing syntax. This will take time, and we are not rushing to revisit smartmatch at the moment.
 
 We apologize for the scare and we appreciate the quick responses to resolve this situation. Thank you.
