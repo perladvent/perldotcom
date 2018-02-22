@@ -5,7 +5,7 @@
     "tags"        : ["pull-request", "git", "github", "cpan", "perl", "open-source"],
     "draft"       : true,
     "image"       : "",
-    "thumbanail"  : "",
+    "thumbnail"   : "",
     "description" : "How to install Perl on your computer, or how to use a Docker image instead",
     "categories"  : "cpan"
   }
@@ -42,18 +42,19 @@ Now you need to fork and clone the Github repository you were assigned for the P
 
 #### 4: Run Docker
 
-I have prepared a docker [image](https://github.com/kyzn/perlbrew-prc-dockerimage) which comes with the latest stable version of Perl (5.26.1), {{< mcpan "App::perlbrew" "perlbrew" >}}, {{< mcpan "App::cpanminus" "cpanm" >}} and {{< mcpan "Dist::Zilla" >}}, all pre-installed.
+I have prepared a docker [image](https://github.com/kyzn/perlbrew-prc-dockerimage) which comes with the latest stable version of Perl (5.26.1), {{< mcpan "App::perlbrew" "perlbrew" >}}, {{< mcpan "App::cpanminus" "cpanm" >}} and {{< mcpan "Dist::Zilla" "dzil" >}}, all pre-installed.
 
 Here's how I would run docker on the repo I cloned in step 3:
 
     $ docker run -v ~/Desktop/App-p:/App-p -it kyzn/perlbrew-prc:x86_64
 
-Where
+Where:
+
   - `~/Desktop/App-p` is the local path to the repo
   - `/App-p` is the path of the directory inside the Docker image
   - `x86_64` is the system architecture from step 2
 
-This will launch an Ubuntu image as root user, mounting the repository to `/App-p`. Git is installed, but you need to use your local (non-Docker) terminal to pull/push. The text editors Nano, vim, and emacs are installed in the image as well.
+This will launch an Ubuntu image as root user, mounting the repository to `/App-p`. Git is installed, but you need to use your local (non-Docker) terminal to pull/push. The text editors nano, vim, and emacs are installed in the image as well. You can also use your local text editor.
 
 #### Building a Docker Image
 
@@ -115,13 +116,13 @@ This is a {{< mcpan "App::cpanminus" "script" >}} that will help you install CPA
 
 To be sure you're using the perlbrew installed cpanm, run this command:
 
-    $ cpanm | grep perlbrew
+    $ which cpanm | grep perlbrew
 
 If the terminal displays any matching output, it worked.
 
 #### 4: Install dzil
 
-Many CPAN authors use {{< mcpan "Dist::Zilla" >}} to build and release their modules. The chances of your PRC assignment having a dist.ini file (dzil configuration) are high.
+Many CPAN authors use {{< mcpan "Dist::Zilla" "dzil" >}} to build and release their modules. The chances of your PRC assignment having a dist.ini file (dzil configuration) are high.
 
 First you need to install a non-Perl dependency, openssl. On macOS:
 
