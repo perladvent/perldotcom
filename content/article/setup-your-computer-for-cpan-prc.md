@@ -149,4 +149,4 @@ Now install `reply`:
 
 ---
 
-Whichever route you chose to setup your environment, now you should be ready to work on your assignment, good luck!
+Now you are ready to work on your assignment! Good luck!
