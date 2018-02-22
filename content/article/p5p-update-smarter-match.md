@@ -4,7 +4,7 @@
     "authors"     : ["sawyer-x"],
     "date"        : "2018-02-21T19:54:36",
     "tags"        : ["p5p","smartmatch"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "Explaining the recent smartmatch confusion",
