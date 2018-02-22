@@ -1,7 +1,7 @@
   {
     "title"       : "Setup your computer for CPAN-PRC",
     "authors"     : ["kivanc-yazan"],
-    "date"        : "2018-02-20T09:00:00",
+    "date"        : "2018-02-21T23:00:00",
     "tags"        : ["pull-request", "git", "github", "cpan", "perl", "open-source"],
     "draft"       : false,
     "image"       : "",
