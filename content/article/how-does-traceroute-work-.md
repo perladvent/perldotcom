@@ -13,7 +13,7 @@
 
 Lately I've been reading [Interconnections](https://www.amazon.com/Interconnections-Bridges-Switches-Internetworking-Protocols/dp/0201634481/) by Radia Perlman (great lastname!). It's an old, but still relevant book which describes how low-level networking technologies work, such as ethernet. The book contains many insights and anecdotes. On page 236 I came across this gem:
 
-> The traceoute utility is a clever hack designed to force each router along the path, in turn, to return an error report. It works by setting the TTL first to 1 (causing the first router to send an error report back to the source) and then setting it to 2 (causing the next router to send an error report) and so forth until the packet reaches the destination.
+> The traceroute utility is a clever hack designed to force each router along the path, in turn, to return an error report. It works by setting the TTL first to 1 (causing the first router to send an error report back to the source) and then setting it to 2 (causing the next router to send an error report) and so forth until the packet reaches the destination.
 >
 
 I had never considered how `traceroute` worked before, and by reading that paragraph, I instantly understood. The [Time To Live (TTL)](https://en.wikipedia.org/wiki/Time_to_live) field in an IP header was intended to hold the number of seconds for which the IP packet is valid, after which it can be dropped. In practice, it is used as a decrementing hop count, whereby every router that forwards the packet reduces the TTL value by one. IPv6 packets have the "hop limit" header field which is better named and serves the same purpose.
