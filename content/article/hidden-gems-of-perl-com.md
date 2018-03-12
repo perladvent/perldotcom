@@ -5,7 +5,7 @@
    "authors" : [
       "david-farrell"
    ],
-   "thumbnail" : "/images/hidden-gems-of-perl-com/thumb_treasure-in-cave.png",
+   "thumbnail" : "/images/hidden-gems-of-perl-com/thumb_treasure-in-cave.jpg",
    "date" : "2018-01-04T09:00:06",
    "categories" : "perldotcom",
    "tags" : ["hidden-gems", "state-of-the-onion", "perlguts", "perl-style", "perl-internals", "perl-6"],
