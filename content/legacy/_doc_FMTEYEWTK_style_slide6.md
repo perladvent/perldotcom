@@ -23,7 +23,7 @@
            $Some_Caps_Here  package-wide global/static
            $no_caps_here    function scope my() or local() variables
 
--   Function and method names seem to work best as all lowercase. E.g., `$obj`-&gt;as\_string().
+-   Function and method names seem to work best as all lowercase. E.g., `$obj->as_string()`.
 
 ------------------------------------------------------------------------
 
