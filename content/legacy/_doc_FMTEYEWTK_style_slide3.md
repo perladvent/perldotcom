@@ -16,7 +16,7 @@
 
 -   \`It is very hard to get things both right (coherent and correct) and usable (consistent enough, attractive enough).' --Dennis Ritchie
 -   Strive always to create code that is functional, minimal, flexible, and understandable -- not necessarily in that order.
--   Think first. Then hack. Now throw it out. Repeat. Fred Brooks says, \`Build one to throw away.' Always rewrite your code from scratch, preferably **twice**. just as did it with drafts of papers in grammar school. It improves understanding, gets the creative juices flowing, and produces a far finer end-product.
+-   Think first. Then hack. Now throw it out. Repeat. Fred Brooks says, \`Build one to throw away.' Always rewrite your code from scratch, preferably **twice**. Just as I did it with drafts of papers in grammar school. It improves understanding, gets the creative juices flowing, and produces a far finer end-product.
 -   Sometimes making code shorter improves maintainability; other times it does not.
 
 ------------------------------------------------------------------------
