@@ -28,8 +28,6 @@
             $DEVICE  = 'cua1';
             $RATE    = 115_200;
 
--   See *clip* and *cliprc* file in Tom's Script Archive at http://www.perl.com/CPAN/authors/id/TOMC/scripts/
-
 ------------------------------------------------------------------------
 
 Forward to [Functions as Data](/doc/FMTEYEWTK/style/slide35.html)
