@@ -1,11 +1,11 @@
 {
    "description" : "Classic articles from Perl.com's archive",
    "title" : "Hidden Gems of Perl.com",
-   "image" : "/images/hidden-gems-of-perl-com/treasure-in-cave.png",
+   "image" : "/images/hidden-gems-of-perl-com/treasure-in-cave.jpg",
    "authors" : [
       "david-farrell"
    ],
-   "thumbnail" : "/images/hidden-gems-of-perl-com/thumb_treasure-in-cave.jpg",
+   "thumbnail" : "/images/hidden-gems-of-perl-com/thumb_treasure-in-cave.png",
    "date" : "2018-01-04T09:00:06",
    "categories" : "perldotcom",
    "tags" : ["hidden-gems", "state-of-the-onion", "perlguts", "perl-style", "perl-internals", "perl-6"],
