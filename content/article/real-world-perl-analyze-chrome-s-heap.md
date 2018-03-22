@@ -18,7 +18,7 @@
 
 Welcome to Real World Perl, a series that aims to showcase everyday uses of Perl. Got a suggestion for a Real World Perl example? [email me](mailto:perl-com-editor@perl.org).
 
-When ordinary tools fail, many programmers reach for Perl. Matthew Hodgson ran into trouble analyzing the Chrome Browser's heap dump file: the programs he used kept running of memory for large (> 2GB) files. So he whipped up a "quick and dirty" Perl [script](https://github.com/ara4n/heapanalyser/blob/master/heap-analyser.pl) to do it. Instead of parsing the entire heap dump into memory, it saves resources by processing the data one line at a time.
+When ordinary tools fail, many programmers reach for Perl. Matthew Hodgson ran into trouble analyzing the Chrome Browser's heap dump file: the programs he used kept running out of memory for large (> 2GB) files. So he whipped up a "quick and dirty" Perl [script](https://github.com/ara4n/heapanalyser/blob/master/heap-analyser.pl) to do it. Instead of parsing the entire heap dump into memory, it saves resources by processing the data one line at a time.
 
 To use the script, you first need a Chrome heap dump file. To get one, launch Chrome, go to Developer tools -> Memory -> Take heap snapshot. Save the file locally.
 
