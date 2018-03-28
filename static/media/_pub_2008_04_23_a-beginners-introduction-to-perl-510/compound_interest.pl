@@ -25,7 +25,7 @@ for my $i ( 1 .. $duration )
     print $nest_egg, "\t";
 
     # Try using this instead to see why this line looks so complex:
-    # my $interest = ($apr / 100) * $nest_egg
+    # my $interest = ($apr / 100) * $nest_egg;
     my $interest = int( ( $apr / 100 ) * $nest_egg * 100 ) / 100;
     print $interest, "\t";
 
