@@ -231,7 +231,7 @@ A handy shortcut for defining loop values is the *range* operator `..`, which sp
 
 Of course, again you could write `say @one_to_ten, 15, 20 .. $top_limit;`
 
-The items in your loop list don't have to be numbers; you can use strings just as easily. If the hash `%month`\_has contains names of months and the number of days in each month, you can use the `keys` function to step through them.
+The items in your loop list don't have to be numbers; you can use strings just as easily. If the hash `%month_has` contains names of months and the number of days in each month, you can use the `keys` function to step through them.
 
     use feature ':5.10';
 
