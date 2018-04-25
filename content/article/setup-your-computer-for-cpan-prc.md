@@ -84,7 +84,7 @@ This command changes the owner of the cpanm folder, which usually fixes the issu
 
 You need to install homebrew:
 
-    $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+    $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 #### 1: Install Perlbrew
 
@@ -100,7 +100,7 @@ Now that we have Perlbrew in place, we can go ahead and install a Perl on our ow
 
     $ perlbrew install -j 4 perl-stable
 
-There are two ways to use a Perl version with Perlbrew: `use` and `switch`. `use` is temporary, it goes away once you close the terminal. That's why I recommend `switch`, which will make it permanent.
+There are two ways to use a Perl version with Perlbrew: `use` and `switch`. `use` is temporary, it goes away once you close the terminal. That's why I recommend `switch`, which will make it permanent. Change the version to the one you just installed. You can run `perlbrew list` to see installed versions.
 
     $ perlbrew switch perl-5.26.1
 
