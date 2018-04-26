@@ -289,9 +289,9 @@ you don't have a specific minimum version, you can just use 0:
 ### Cleanup
 
 Building distributions generates a lot of temporary files. ExtUtils::MakeMaker
-provides a clean routine:
+provides a realclean routine:
 
-    $ make clean
+    $ make realclean
 
 This will delete all the build files and reset the working directory to normal.
 
