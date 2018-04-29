@@ -59,32 +59,32 @@ First: did you read the *README* file for your platform?
 
 The most important prerequisites for Bricolage are:
 
-Perl  
+Perl
 What kind of Perl.com article *wouldn't* have this requirement? Bricolage requires Perl 5.6.1 or later, but if you're going to work with *any* kind of non-ASCII characters in your content, I *strongly* recommend Perl 5.8.3 or later for its solid Unicode support. All text content managed by Bricolage is UTF-8, so for sites such as [Radio Free Asia](http://www.rfa.org/ "RFA publishes in ten different
 languages!") the newer versions of Perl are a must.
 
 Experience has also shown that some vendor versions of Perl don't work too well. Red Hat's Perl, in particular, seems to have several problems that just go away once a sys-admin decides to compile her own. *Caveat Perler.*
 
-Apache  
+Apache
 Bricolage doesn't serve content, but it does require a web server to serve its interface. It requires Apache 1.3.12 or later, with a strong recommendation for the latest, 1.3.31. Bricolage does not yet support Apache 2, though the upcoming release of `mod_perl` 2 will lead to a port.
 
-`mod_perl`  
+`mod_perl`
 Speaking of `mod_perl`, Bricolage requires `mod_perl` 1.25 or later, with a strong recommendation to use the latest, 1.29. You can either statically compile `mod_perl` into Apache or, as of the recent release of Bricolage 1.8.2, compile it as a dynamically shared object library (DSO). However, in order to use `mod_perl` as a DSO, you must have compiled with a Perl that was configured with `-Uusemymalloc` *or* `-Ubincompat5005`. See [this `mod_perl` FAQ](http://perl.apache.org/docs/1.0/guide/install.html#When_DSO_can_be_Used "When DSO can be Used in the mod_perl FAQ") for more details. Bricolage's installer will check this configuration against the Perl you use to run the installation and will complain if the installing Perl lacks these attributes. However, this check is only valid if the Perl running the installation is the same as the Perl used by `mod_perl`, so it pays to be aware of this issue.
 
 As I said, Bricolage does not currently support `mod_perl` 2. However, now that `mod_perl` 2 is nearing release, there is greater interest in porting Bricolage to it (and therefore to Apache 2). Some work has begun in this area, and we hope to be able to announce `mod_perl` 2 support by the end of the year.
 
-PostgreSQL  
+PostgreSQL
 Bricolage stores all of its data in a [PostgreSQL](http://www.postgresql.org/ "PostgreSQL website") database. For those not familiar with PostgreSQL, it is an advanced, ACID-compliant, open-source object-relational database management system. I've found the compilation very easy on all platforms I've tried it on (although I have had to install [*libreadline*](http://www.justatheory.com/computers/os/macosx/libreadline.html "Compiling libreadline on Mac OS X") on Mac OS X, first). Bricolage requires PostgreSQL 7.3 or later and recommends version 7.4. Bricolage will support the forthcoming PostgreSQL 8.0 around the time of its release, but to date no one has tested them together.
 
 The one other recommendation I make is that you [specify `--no-locale` or `--locale=C` when you initialize the PostgreSQL database](http://www.justatheory.com/computers/databases/postgresql/always_use_c_locale.html "Always use the C Locale with PostgreSQL"). This is especially important if you will be managing content in more than one language, as it will prevent searches and sort ordering from being specific to one language and possibly incompatible with others. A [Unicode and searching discussion on the pgsql-general mail list](http://archives.postgresql.org/pgsql-general/2004-08/msg01079.php "Subject: UTF-8 and LIKE vs =") provides a broader perspective.
 
-`mod_ssl` or `apache-ssl`  
+`mod_ssl` or `apache-ssl`
 If you want encrypted communications between Bricolage and its clients, install either `mod_ssl` or `apache-ssl`. SSL is optional in Bricolage, but I recommend using it for security purposes. Bricolage can use SSL for all requests or just for authentication and password changing requests. Tune in for the next article in this series, “Bricolage Runtime Configuration”, for information on configuring SSL support.
 
-Expat  
-Bricolage uses the [XML::Parser](http://search.cpan.org/dist/XML-Parser) Perl module, which in turn requires the Expat XML parser library. Most Unix systems have a version of Expat installed already, but if you need it, install it from the [Expat home page](http://expat.sourceforge.net/ "The Expat XML Parser").
+Expat
+Bricolage uses the [XML::Parser](http://search.cpan.org/dist/XML-Parser) Perl module, which in turn requires the Expat XML parser library. Most Unix systems have a version of Expat installed already, but if you need it, install it from the [Expat home page](https://libexpat.github.io "The Expat XML Parser").
 
-CPAN Modules  
+CPAN Modules
 Bricolage uses a very large number of CPAN modules. Most of those required in turn require still more modules. For the most part, we recommend that you let the Bricolage installer install the required modules. It will determine which modules you need and install them using the `CPAN` module. If you want to get ahead of the game, use the `CPAN` module to install them yourself, first. The easiest way to do it is to install [Bundle::Bricolage](http://search.cpan.org/dist/Bundle-Bricolage/). This module bundles up all of the required modules so that `CPAN` will install them for you:
 
     % perl -MCPAN -e 'install Bundle::Bricolage'
@@ -126,7 +126,7 @@ The next step, `make`, will take the most time as the installer pauses to ask se
 
     looking for PostgreSQL with version >= 7.3.0...
     Found PostgreSQL's pg_config at '/usr/local/pgsql/bin/pg_config'.
-    Is this correct? [yes] 
+    Is this correct? [yes]
 
 The first thing the Bricolage installer does is to check for all of its dependencies. Here, it asks for the location of `pg_config`, the PostgreSQL configuration program. The installer will use this application to determine the version number of PostgreSQL, among other things. If you're using a package-installed version of PostgreSQL, make sure that you have the PostgreSQL development tools installed, as well (yes, I'm looking at *you*, Red Hat users!). Bricolage will look in several common locations for `pg_config`; if it doesn't find it, or if it finds the wrong one (because you have more than one installed), type in the location of `pg_config`. Otherwise, simply accept the one it has found.
 
@@ -134,7 +134,7 @@ The first thing the Bricolage installer does is to check for all of its dependen
     Found acceptable version of Postgres: 7.4.3.
     Looking for Apache with version >= 1.3.12...
     Found Apache server binary at '/usr/sbin/httpd'.
-    Is this correct? [yes] 
+    Is this correct? [yes]
 
 Next, the Bricolage installer searches for an instance of Apache 1.3.x. This time it's looking for the `httpd` executable. The same comments that applied to PostgreSQL apply to the Apache Web server; either accept the instance of `httpd` or type in an alternate. On my Mac, I never use Apple's Apache (an old habit because Apple's Apache uses a DSO `mod_perl`, whereas I always compile my own with a static `mod_perl`).
 
@@ -200,43 +200,43 @@ In this example, I've elected to install the [Text::Levenshtein](http://search.c
 
 Of course, if you previously installed Bundle::BricolagePlus from CPAN, you will have all of the optional modules installed. Let me provide a bit of background on each optional module so that you can decide for yourself which you need and which you don't. If you're just starting out with Bricolage, I recommend you don't worry too much about the optional modules; you can always add them if you decide that you need them later.
 
-HTML::Template and HTML::Template::Expr  
+HTML::Template and HTML::Template::Expr
 These two modules are necessary to create HTML::Template templates to format your content in Bricolage. Most Bricolage users use the required HTML::Mason module, but you should elect to install these modules if you're an HTML::Template user.
 
-Template 2.14  
+Template 2.14
 Install the Perl Template Toolkit if you plan to write your content formatting templates in Template Toolkit rather than in Mason or HTML::Template.
 
-Encode  
+Encode
 The Encode module comes with and only works with Perl 5.8.0 and later. Install it you plan to support any character encodings other than UTF-8 in the Bricolage UI.
 
-Pod::Simple and Test::Pod 0.95  
+Pod::Simple and Test::Pod 0.95
 These modules help to test the Bricolage API documentation, but are not otherwise necessary.
 
-Devel::Profiler 0.03  
+Devel::Profiler 0.03
 This module can be useful if you experience performance problems with Bricolage and need to profile it to identify the bottleneck. You can always install it later if you need it.
 
-Apache::SizeLimit  
+Apache::SizeLimit
 This module is useful for busy Bricolage installations. Because Perl does not return memory to the operating system when it has finished with it, the Apache/`mod_perl` processes can sometimes get quite large. This is especially true if you use the SOAP interface to import or publish a lot of documents. Apache::SizeLimit allows you to configure `mod_perl` to kill off its processes when they exceed a certain size, thus returning the memory to the OS. This is the best way to keep the size of Bricolage under control in a busy environment.
 
-Net::FTPServer  
+Net::FTPServer
 This module is necessary to use the Bricolage virtual FTP server. The virtual FTP server makes it easy to edit Bricolage templates via FTP. It's a very nice feature when you're doing a lot of template development work, offering a more integrated interface for your favorite editor than the cut-and-paste approach of the UI. The downside is that FTP is an unencrypted protocol, so it sends passwords used to log in to the Bricolage virtual FTP server sent in the clear. This may not be so important if you're using Bricolage behind a firewall or on a VPN, and is irrelevant if you're not using SSL, because you're already sending passwords in the clear; but don't do that.
 
-Net::SFTP 0.08  
+Net::SFTP 0.08
 This module is necessary if you plan to distribute document files to your delivery server via secure FTP. Bricolage supports file system copying, FTP, secure FTP, and DAV distribution.
 
-HTTP::DAV  
+HTTP::DAV
 Install this module if you plan to distribute document files to your delivery server via DAV.
 
-Text::Levenshtein  
+Text::Levenshtein
 This module is an optional alternative to the required Text::Soundex module. Bricolage uses it to analyze field names and suggest alternatives for misspellings in the “Super Bulk Edit” interface. Either of these modules is fine, although many people consider Text::Levenshtein to have a superior algorithm. I'll show an example of how this works in the Super Bulk Edit interface in a later article.
 
-Crypt::SSLeay  
+Crypt::SSLeay
 Install this module if you plan to use SSL with Bricolage. It allows the SOAP clients to negotiate an encrypted connection to Bricolage.
 
-Imager  
+Imager
 This module is necessary if you plan to enable thumbnail images in Bricolage — why wouldn't you want that? You'll need to make sure that you first have all of the supporting libraries you need installed, such as *libpng*, *libtiff*, and *libgif* (or *giflib*). I'll discuss enabling thumbnail support in the next article.
 
-Text::Aspell, XML::DOM, and CGI  
+Text::Aspell, XML::DOM, and CGI
 These modules are necessary to use the spell-checking available with the optional HTMLArea module. I'll discuss HTMLArea support in the next article.
 
 #### Back to Installation Configuration
@@ -340,7 +340,7 @@ Next, the Bricolage installer asks how you want to install its various parts:
       m - "multi"    an installation that lives next to other installations
                      on the same machine
 
-    Your choice? [s] 
+    Your choice? [s]
 
 There are essentially two ways to install Bricolage: The first, “single”, assumes that you will only ever have a single instance of Bricolage installed on your server. In such a case, it will install all of the Perl modules into the appropriate Perl `@INC` directory like any other Perl module and the executables into the same *bin* directory as your instance of Perl (such as */usr/local/bin*).
 
@@ -401,7 +401,7 @@ Whether you elected to install optional CPAN modules, the Bricolage installer st
 
 Whoops! Don't make the mistake I just made! `make cpan` must run as the root user.
 
-    % sudo make cpan 
+    % sudo make cpan
     /usr/bin/perl inst/cpan.pl
 
 
@@ -434,9 +434,9 @@ I've truncated the output here, but you should have the general idea. The Bricol
 
 The next step in installing Bricolage is optional, but will help identify any pitfalls before going any further. That's running the test suite.
 
-    % make test                                    
+    % make test
     PERL_DL_NONLAZY=1 /usr/bin/perl inst/runtests.pl
-    t/Bric/Test/Runner....ok                                                     
+    t/Bric/Test/Runner....ok
     All tests successful, 7 subtests skipped.
     Files=1, Tests=2510, 21 wallclock secs ( 8.83 cusr +  1.39 csys = 10.22 CPU)
 
@@ -462,7 +462,7 @@ If you happened to select a database name for Bricolage for a database that alre
 
     Becoming postgres...
     Creating database named bric...
-    Database named "bric" already exists.  Drop database? [no] 
+    Database named "bric" already exists.  Drop database? [no]
 
 Now you have a choice. If you elect to dropt the database, the Bricolage installer will drop it and then create a new copy — but it must have “Root” user access to the PostgreSQL server. In other situations you might want to continue with the installed database, as in the case when your ISP has created the database for you ahead of time. You will also receive a prompt if the PostgreSQL user for the Bricolage database already exists. Again, you can either opt to drop and recreate the user or continue with the existing username:
 
@@ -470,7 +470,7 @@ Now you have a choice. If you elect to dropt the database, the Bricolage install
     Create tables in existing database? [yes] [Return]
     Creating user named bric...
     User named "bric" already exists. Continue with this user? [yes] [Return]
-    Loading Bricolage Database (this may take a few minutes). 
+    Loading Bricolage Database (this may take a few minutes).
 
 At this point, the Bricolage installer is creating the Bricolage database. On my Mac, it takes about a minute to create the database, but your mileage may vary. Once that ends, the installer grants the appropriate PostgreSQL permissions and the installation is complete!
 
