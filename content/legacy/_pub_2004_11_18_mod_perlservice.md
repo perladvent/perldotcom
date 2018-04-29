@@ -42,9 +42,9 @@ Mod\_perlservice helps create networked applications that require client-server 
 
 ### How Do I Start?
 
-Let's move on to the fun stuff and set up a working installation. Before we begin, make sure you have everything you need! You need [Apache HTTPD](http://httpd.apache.org/), [Perl](http://www.perl.org/), [Expat](http://expat.sourceforge.net/), [mod\_perlservice](http://www.ivorycity.com/mod_perlservice/), and a mod\_perlservice client library ([Perl Client](http://www.ivorycity.com/mod_perlservice/perl_client.html) | [C Client](http://www.ivorycity.com/mod_perlservice/c_client.html) | [Flash Client](http://www.ivorycity.com/mod_perlservice/flash_client.html)). You must download a client library separately, as the distribution does not include any clients! In your build directory:
+Let's move on to the fun stuff and set up a working installation. Before we begin, make sure you have everything you need! You need [Apache HTTPD](http://httpd.apache.org/), [Perl](http://www.perl.org/), [Expat](https://libexpat.github.io/), [mod\_perlservice](http://www.ivorycity.com/mod_perlservice/), and a mod\_perlservice client library ([Perl Client](http://www.ivorycity.com/mod_perlservice/perl_client.html) | [C Client](http://www.ivorycity.com/mod_perlservice/c_client.html) | [Flash Client](http://www.ivorycity.com/mod_perlservice/flash_client.html)). You must download a client library separately, as the distribution does not include any clients! In your build directory:
 
-    myhost$ tar -xvzf mod_perlservice.tar.gz 
+    myhost$ tar -xvzf mod_perlservice.tar.gz
     myhost$ cd mod_perlservice
     myhost$ ./configure
     myhost$ make
@@ -57,14 +57,14 @@ If everything goes to plan, you'll end up with a fresh *mod\_perlservice.so* in 
 
 Add the following lines to *commonapache.conf*, if you have it and *httpd.conf* if you don't:
 
-    <IfModule mod_perlservice.c>  
+    <IfModule mod_perlservice.c>
     <Location /perlservice>   SetHandler
-    mod_perlservice   
+    mod_perlservice
        Allow From All PerlApp
        myappname /my/app/dir
        #Examples
-       PerlApp stockmarket /home/services/stockmarket   
-       PerlApp temperature /home/services/temperature  
+       PerlApp stockmarket /home/services/stockmarket
+       PerlApp temperature /home/services/temperature
     </Location>
     </IfModule>
 
@@ -165,17 +165,17 @@ The first code smidgen should go in the first root frame of your Flash applicati
     // arg4) package: quotes
     _global.ps = new PerlService("www.ivorycity.com","stockmarket","quotes.pm","quotes");
     // First declare three callback functions to handle return values
-    function onStockPrice(val) { 
+    function onStockPrice(val) {
         output.text = "StockPrice: " + symbolInput.text + " " + val + "\n" + output.text;
     }
 
-    function onAllStockInfo(val) { 
+    function onAllStockInfo(val) {
         output.text = "Stock Info: " + allInfoInput.text + "\n" + "\tPrice: "
                       + val.Price + "\n" + "\tEarnings Per Share: "
                       + val.EarningsPerShare + "\n" + output.text;
     }
 
-    function onLookupSymbol(val) { 
+    function onLookupSymbol(val) {
         output.text = "Lookup Result: " + symbolInput.text + " " + val + "\n"
                       + output.text;
     }
@@ -221,9 +221,9 @@ Not everyone uses Flash, especially in the Free Software community. The great th
     my $hostname = "www.ivorycity.com";
     my $appname  = "stockmarket";
     my $filename = "quotes.pm";
-    my $package  = "quotes";              
+    my $package  = "quotes";
 
-    #Create the client object with following arguments:      
+    #Create the client object with following arguments:
     #1) The host you want to use
     #2) The application on the host
     #3) The perl module file name
@@ -234,7 +234,7 @@ Not everyone uses Flash, especially in the Free Software community. The great th
     # Just call those remote methods and get the return value
     my $price  = $ps->getStockPrice("GE");
     my $info   = $ps->getAllStockInfo("RHAT");
-    my $lookup = $ps->lookupSymbol("Coca Cola");                   
+    my $lookup = $ps->lookupSymbol("Coca Cola");
 
     #Share your exciting new information with standard output
     print "GE Price: " . $price . "\n";
