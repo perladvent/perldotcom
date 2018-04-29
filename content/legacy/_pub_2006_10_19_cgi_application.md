@@ -68,7 +68,7 @@ With the [AutoRunmode plugin](http://search.cpan.org/perldoc?CGI::Application::P
 
         sub my_run_mode : Runmode {
             my $self = shift;
-            # ...    
+            # ...
         }
 
 You can still use `setup()`, but it's no longer necessary.
@@ -124,7 +124,7 @@ To keep the code cleaner and consistent, it's now possible to generate template 
         sub my_run_mode: Runmode {
             my $self = shift;
 
-            # XXX The old way, with redundant file name 
+            # XXX The old way, with redundant file name
             # my $t = $self->load_tmpl('my_run_mode.html');
 
             # Look Ma! No explicit file name needed!
@@ -195,7 +195,7 @@ Lazy loading creates the database connection only if any code needs to use it. T
     sub cgiapp_init  {
        my $self = shift;
 
-       # use the same args as DBI->connect(); 
+       # use the same args as DBI->connect();
        $self->dbh_config($data_source, $username, $auth, \%attr);
 
     }
@@ -228,7 +228,7 @@ A current popular alternative for increasing performance is [FastCGI](http://www
 
 A lot of tedium can be involved in processing web forms. The first plugin, [ValidateRM](http://search.cpan.org/perldoc?CGI::Application::Plugin::ValidateRM), helped with that.
 
-    my $results =  $self->check_rm('display_form', '_form_profile' ) 
+    my $results =  $self->check_rm('display_form', '_form_profile' )
        || return $self->dfv_error_page;
 
 This simple syntax calls a [Data::FormValidator](http://search.cpan.org/perldoc?Data::FormValidator) profile into action. If validation fails, the page with the original form is redisplayed with the previous values intact, and error messages appear next to each field that is missing or invalid.

@@ -42,7 +42,7 @@ Create separate files for header and navbar, then include them in the template f
         </tr>
         <tr>
           <td><TMPL_INCLUDE NAME=navbar.tpf></td>
-          <td> 
+          <td>
             <!-- Body goes here! -->
             ...
           </td>
@@ -79,7 +79,7 @@ For this example, the corresponding subroutine is very simple. It's easy to imag
 
 Demonstrating the principle is straightforward; find the template fragment, set the required parameter, and render the template:
 
-    sub navbar { 
+    sub navbar {
       my ( $login ) = shift;
 
       my $tpl = HTML::Template->new( filename => 'navbar.tpf' );
@@ -98,7 +98,7 @@ The master-page template then includes the navbar string using a `<TMPL_VAR>` ta
         </tr>
         <tr>
           <td><TMPL_VAR NAME=navbar></td>
-          <td> 
+          <td>
             <!-- Body goes here! -->
             ...
           </td>

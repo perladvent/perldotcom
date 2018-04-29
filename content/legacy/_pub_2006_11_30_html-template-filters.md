@@ -30,7 +30,7 @@ Here is a minimal template and the corresponding script:
       <head></head>
       <body>
         <h1><TMPL_VAR NAME=title></h1>
-        
+
         <ul>
           <TMPL_LOOP NAME=rows>
             <li><TMPL_VAR NAME=item>
@@ -92,7 +92,7 @@ This will work. There will be no output for the due date if there is no due date
 
     <ul>
       <TMPL_LOOP NAME=books>
-        <li><TMPL_VAR NAME=title>   
+        <li><TMPL_VAR NAME=title>
             <TMPL_IF NAME=duedate>
               Date due: <TMPL_VAR NAME=duedate>
             </TMPL_IF>
@@ -133,7 +133,7 @@ The code to set the template parameter values does not change, but you now need 
 
 Finally, you need to register this filter, so that the module will call it before tag substitution takes place. Filters are options to the template object, so registration takes place when you construct the template:
 
-    $tpl = HTML::Template->new( filename => 'books.tpl', 
+    $tpl = HTML::Template->new( filename => 'books.tpl',
                                 filter => \&duedate_filter );
 
 That's the basic idea. If you wanted to, you could register a sequential collection of filters (one filter per custom tag?) or you can put all required substitutions into a single routine. I can certainly perceive of the possibility of developing reusable "tag libraries" as Perl modules with filter definitions. Interestingly (and in contrast to JSP), the template files themselves do not need to know about the definitions and behavior of the "custom tags." I think this is exactly right: the templates are plain ("dumb") text files, which define the presentation layer. All the *behavior* is in the Perl code, where it belongs.
