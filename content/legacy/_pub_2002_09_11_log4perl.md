@@ -458,10 +458,10 @@ Scatter plenty of debug statements all over your code -- and put them to sleep v
 
 ### <span id="Infos">Infos</span>
 
-**<span id="item__1_">\[1\]</span>** The `log4perl` project page on SourceForge: <http://log4perl.sourceforge.net>
+**<span id="item__1_">\[1\]</span>** The `log4perl` project page: <http://log4perl.com>
 
-**<span id="item__2_">\[2\]</span>** The `Log::Log4perl` documentation: <http://log4perl.sourceforge.net/releases/Log-Log4perl/docs/html/Log/Log4perl.html>
+**<span id="item__2_">\[2\]</span>** The `Log::Log4perl` documentation: <http://search.cpan.org/dist/Log-Log4perl/lib/Log/Log4perl.pm>
 
-**<span id="item__3_">\[3\]</span>** The `log4j` project page on the Apache site: <http://jakarta.apache.org/log4j>
+**<span id="item__3_">\[3\]</span>** The `log4j` project page on the Apache site: <https://logging.apache.org/log4j/2.x/>
 
-**<span id="item__4_">\[4\]</span>** Documentation to Log::Dispatch modules: <http://search.cpan.org/author/DROLSKY/Log-Dispatch-2.01/Dispatch.pm>
+**<span id="item__4_">\[4\]</span>** Documentation to Log::Dispatch modules: <http://www.metacpan.org/module/Log::Dispatch>
