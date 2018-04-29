@@ -166,7 +166,7 @@ Once again, `$rv` is a hash reference, where the key is the module you tried to 
         for my $name ( keys %$mt ) {
             if ($name =~ /^Acme/) {
                 my $href = $mt->{$name}->modules();
-                
+
                 while ( my ($mod,$obj) = each %$href ) {
                     print $obj->install()
                         ? "$mod installed succesfully\n"
@@ -213,7 +213,7 @@ Reports of bugs should be sent to: <cpanplus-bugs@lists.sourceforge.net> Some of
 
 There are two places where you can obtain CPANPLUS. The first is, of course, to check your local CPAN mirror (or look it up on [search.cpan.org](http://search.cpan.org/)). The latest stable release will always be there.
 
-If you are interested in development versions, then look at [Sourceforge](http://cpanplus.sourceforge.net/downdev.html).
+If you are interested in development versions, then look at [GitHub](http://github.com/jib/cpanplus-devel).
 
 #### More Information
 
