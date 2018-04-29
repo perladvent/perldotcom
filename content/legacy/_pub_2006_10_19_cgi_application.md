@@ -154,13 +154,13 @@ HTML::Template style:
     $template->param('foo' => 'bar');
     $template->output;
 
-A great example of this template abstraction is [CGI::Application::Search](http://search.cpan.org/perldoc?CGI::Application::Search), a reusable application that integrates with the [Swish-E](http://swish-e.org.) search engine. Whether you prefer HTML::Template or Template Toolkit, it's easy to add this as a search solution for a larger project--even if the rest of your website does not use CGI::Application.
+A great example of this template abstraction is [CGI::Application::Search](http://search.cpan.org/dist/CGI-Application-Search), a reusable application that integrates with the [Swish-E](http://swish-e.org.) search engine. Whether you prefer HTML::Template or Template Toolkit, it's easy to add this as a search solution for a larger project--even if the rest of your website does not use CGI::Application.
 
-CGI::Application also offers improved support for other output formats. The [Stream plugin](http://search.cpan.org/perldoc?CGI::Application::Plugin::Stream) makes it a snap to stream a document to the user, such as a PDF or Excel file that is built on the fly. This saves the busy work of remembering the related details for unbuffered output, `binmode`, file chunking, and MIME types. That now takes basically one line of syntax:
+CGI::Application also offers improved support for other output formats. The [Stream plugin](http://search.cpan.org/dist/CGI-Application-Plugin-Stream) makes it a snap to stream a document to the user, such as a PDF or Excel file that is built on the fly. This saves the busy work of remembering the related details for unbuffered output, `binmode`, file chunking, and MIME types. That now takes basically one line of syntax:
 
     $self->stream_file( $file );
 
-The [XSV plugin](http://search.cpan.org/perldoc?CGI::Application::Plugin::Output::XSV) simplifies building CSV files. This tedium is now a single function call for simple cases:
+The [XSV plugin](http://search.cpan.org/dist/CGI-Application-Plugin-Output-XSV) simplifies building CSV files. This tedium is now a single function call for simple cases:
 
       return $self->xsv_report_web({
         fields     => \@headers,

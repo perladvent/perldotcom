@@ -58,16 +58,16 @@ Having isolated the content of the page, you can start breaking its content down
 
 With that out of the way, it's time to pick out the field subelements of the document element. As fields are meaningful blocks of text, this is generally simple to do: they're headlines, paragraphs, subheads, and the like. Figure 2 indeed shows meaningful blocks of text:
 
-Headline  
+Headline
 This is the title of the article. In this case, it's "David Wheeler Interviewed on Online Tonight."
 
-Dateline  
+Dateline
 This is the date for the article, here "2002.12.18."
 
-Paragraph  
+Paragraph
 These blocks of text make up the bulk of the content of the article. The first paragraph starts with "Bricolage maintainer and lead developer David Wheeler appeared on the Online Tonight with David Lawrence radio show."
 
-Header  
+Header
 Section headers break up the content into sections, such as "How it All Started" and "Bricolage vs. Blogging Tools."
 
 #### Identifying Subelements
@@ -126,36 +126,36 @@ Each element in Bricolage has an associated *element type* that defines a few at
 <img src="/images/_pub_2005_11_23_bricolage_analysis/story_et.jpg" alt="Stories Element Type" width="290" height="226" />
 *Figure 7. A segment of an element type profile called "Story"*
 
-Page  
+Page
 Indicates whether an element is a *page*. Sometimes documents need to have multiple pages through which readers can navigate. You may recognize multi-page documents from [Perl.com](/ "Perl.com"), where you navigate from page to page via Next Page and Previous Page links.
 
-Fixed  
+Fixed
 A *fixed* document is typically one that does not have the date as a part of its URI. *Output channels* defined in Bricolage specify two URI formats for the documents published to them. One of those formats is the "fixed URI format." If a story based on an element has the "Fixed" checkbox checked in its element type, the story uses the "fixed URI format." Otherwise, it'll use the non-fixed URI format. (The next article will cover output channels in detail.)
 
-Related Story  
+Related Story
 Elements associated with an element type with the *Related Story* checkbox checked can have an associated story document. This is useful for creating lists of stories related to the current story, for example.
 
-Related Media  
+Related Media
 The *Related Media* checkbox is just like the Related Story checkbox, except that it allows the creation of a relationship to a media document rather than to a story document. The Related Image and Related Audio elements depend on this checkbox being checked.
 
-Media Type  
+Media Type
 This applies only to media element types--that is, elements that define the structure of media documents. This attribute is a pulldown list, featuring the options Image, Video, Audio, or Other. Of these options, only Image has any effect; image elements automatically have fields associated with them for height, width, color depth, and a few others. Bricolage automatically populates these fields when you upload an image file.
 
 Given how element types work, the Article document type requires the following element types:
 
-Audio  
+Audio
 There are some media documents to manage. The first is Audio, required to manage the audio recordings associated with the Related Audio subelement. The Audio element type is a media element type with its media type set to Audio, surprisingly enough.
 
-Image  
+Image
 The Image element type sets attributes for image document types. It is just like the Audio element type, except that it has its media type set to Image instead of Audio. Go figure.
 
-Story  
+Story
 This defines the shared attributes of story elements, of which the Article element is one. It does not use a fixed URL (so that the article's cover date shows up in the URI), and has neither a related story nor related media. The Page attribute is irrelevant to this element type.
 
-Subelement  
+Subelement
 This simple element type defines generic subelements. There are no special attributes of these subelements, so don't check any. The Pull Quote subelement is an example: it's not a page, and it doesn't have an associated media document or story document.
 
-Related Media  
+Related Media
 This subelement element type defines elements that have media files associated with them. It has its Related Media checkbox checked, and will be used to define Related Audio and Related Image elements.
 
 <img src="/images/_pub_2005_11_23_bricolage_analysis/new_element.jpg" alt="Creating the Related Image element" width="344" height="360" />
@@ -167,7 +167,7 @@ Now it's time for the building blocks. You defined several elements in your anal
 
 First create the Related Image element (Figure 8). The Key Name field uniquely identifies the element throughout Bricolage, while the burner determines the kind of templates that will be used to format Related Image elements. Be sure to select the Related Media element type! This is useful for many things, including giving templates the ability to easily get a handle on an element, as well as providing the file name for templates based on this element. It's generally a good idea to make the key name the same as the element name, but lowercased and with spaces replaced with underscores (uppercase letters and spaces are not allowed in key names).
 
-The Burner pulldown list allows selection of the *burner* that will be used to format the element. As mentioned in the [Bricolage introduction article](/pub/2004/08/27/bricolage.html "Content Management with Bricolage"), Bricolage currently supports three templating systems for formatting content: [Mason](http://www.masonhq.com/ "Mason HQ"), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit home"), and [HTML::Template](http://html-template.sourceforge.net/ "HTML::Template home") (but with [PHP](http://www.php.net/ "PHP?") support arriving in the forthcoming Bricolage 1.10, due out in September; stay tuned!). The Bricolage objects that push stories through the templates in a particular output channel are *burners*, ostensibly because they "burn" files to disk (but rumor has it that the name *really* came about when the original developer of the Mason burner wanted to write a `burn_one()` method). I've selected Mason for this example because all of the Bricolage site templates use Mason.
+The Burner pulldown list allows selection of the *burner* that will be used to format the element. As mentioned in the [Bricolage introduction article](/pub/2004/08/27/bricolage.html "Content Management with Bricolage"), Bricolage currently supports three templating systems for formatting content: [Mason](http://www.masonhq.com/ "Mason HQ"), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit home"), and [HTML::Template](https://github.com/mpeters/html-template) (but with [PHP](http://www.php.net/ "PHP?") support arriving in the forthcoming Bricolage 1.10, due out in September; stay tuned!). The Bricolage objects that push stories through the templates in a particular output channel are *burners*, ostensibly because they "burn" files to disk (but rumor has it that the name *really* came about when the original developer of the Mason burner wanted to write a `burn_one()` method). I've selected Mason for this example because all of the Bricolage site templates use Mason.
 
 <img src="/images/_pub_2005_11_23_bricolage_analysis/custom_fields.jpg" alt="Element custom field definition" width="385" height="267" />
 *Figure 9. The fields subelements defined for the Related Image element*
@@ -176,34 +176,34 @@ Click the Next button to create the Related Image element. Now you need to add a
 
 The Add New Field section allows you to define new fields for the element, selecting from several available types (text, textarea, pulldown, date, etc.) and filling in the appropriate fields. Each option features different fields to fill in, but the important ones are:
 
-Key Name  
+Key Name
 This field uniquely identifies the field among all the fields in the container element. While no field in a single element can have the same key name, a field in one element can have the same key name as a field in another element. Like container element key names, they must be lowercase and have no spaces. Again, I tend to use a key name that is the same as the name except for those two rules.
 
-Label  
+Label
 This is the name of the field. A field can have the same name as another field, but that would be silly, now wouldn't it?
 
-Default Value  
+Default Value
 The default value for a field when adding a new one to an element. For example, a URL field might have a default value of "http://" as a sort of reminder to editors as to what belongs in the field. It might also make sense to use the most common value for the default (such as with the Position field, where the default is "left").
 
-Size  
+Size
 The size of the field in the display. Text fields use this value to set the width of the field (in characters), while Select fields use it to set the number of values to be displayed in a scrollable select field. The textarea field has Rows and Columns fields, instead, to indicate the size at which to display the field in the interface.
 
-Maximum Size  
+Maximum Size
 The maximum size of the allowed value. This option limits the length of a text or textarea value to a certain number of letters.
 
-Required  
+Required
 Indicates whether, when adding a new element, the field will be included in the element or the editor needs to add by the editor. The "required" moniker is unfortunate in this case, because it *does not* mean that the field is required to have a value, only that it's required to be present in the user interface.
 
-Repeatable  
+Repeatable
 Indicates whether or not a field is repeatable. For example, a paragraph field would be repeatable, because we want an editor to be able to add more than one paragraph to a story.
 
-Position  
+Position
 Indicates the order in which the field appears in the user interface. This value affects only required fields, and causes all required fields to be displayed in the order indicated. This does not prevent an editor from reordering fields, however.
 
-Options  
+Options
 This field allows you to specify a range of values for a field. It applies only to Radio Button, Pulldown, and Select fields. Each value goes on a single line, with the option first and then an optional label, separated by a comma.
 
-Allow Multiple  
+Allow Multiple
 This checkbox is specific to the Select field. When checked, users can select more than one value.
 
 You may edit each of these fields, with the exception of the key name, by clicking its Edit link.

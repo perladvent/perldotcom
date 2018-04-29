@@ -339,7 +339,7 @@ The TT distribution also includes a script called ttree, which allows for proces
 
 ### <span id="html::template">HTML::Template</span>
 
-<http://search.cpan.org/search?dist=HTML-Template>
+<http://search.cpan.org/dist/HTML-Template>
 
 HTML::Template is a popular module among those looking to use a mini-language rather than in-line Perl. It uses a simple set of tags that allow looping (even on nested data structures) and conditionals in addition to basic value insertion. The tags are intentionally styled to look like HTML tags, which may be useful for some situations.
 
@@ -375,13 +375,13 @@ XPP is an in-line Perl system that compiles to bytecode. Although it is a perfec
 
 ### <span id="eperl">ePerl</span>
 
-<http://search.cpan.org/search?dist=Apache-ePerl>
+<http://search.cpan.org/dist/Apache-ePerl>
 
 Possibly the first module to embed Perl code in a text or HTML file, ePerl is still a viable option in the form of Apache::ePerl. It caches compiled bytecode in memory to achieve solid performance, and some people find it refreshingly simple to use.
 
 ### <span id="cgi::fasttemplate">CGI::FastTemplate</span>
 
-<http://search.cpan.org/search?dist=CGI-FastTemplate>
+<http://search.cpan.org/dist/CGI-FastTemplate>
 
 This module takes a minimalistic approach to templating, which makes it unusually well-suited to use in CGI programs. It parses templates with a single regular expression and does not support anything in templates beyond simple variable interpolation. Loops are handled by including the output of other templates. Unfortunately, this leads to a Perl coding style that is more confusing than most, and a proliferation of template files. However, some people swear by this dirt-simple approach.
 

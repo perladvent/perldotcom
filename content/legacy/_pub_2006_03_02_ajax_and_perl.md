@@ -82,7 +82,7 @@ It starts off like all good Perl code, by using the `strict` and `warnings` modu
     my $cgi  = CGI->new();
     main();
 
-Most of `main()` deals with putting together bits of HTML. For a real-world script, use something like [HTML::Template](http://html-template.sourceforge.net/) or [Template Toolkit](http://www.template-toolkit.org/) instead of putting HTML directly in the script.
+Most of `main()` deals with putting together bits of HTML. For a real-world script, use something like [HTML::Template](https://github.com/mpeters/html-template) or [Template Toolkit](http://www.template-toolkit.org/) instead of putting HTML directly in the script.
 
 The interesting stuff happens in the middle. First it checks for a passed-in `user` parameter. If so, the code checks that it looks good and records that username in our database. If there were any problems, it mentions those as well. At the end, it sends the created HTML to the browser for display.
 
