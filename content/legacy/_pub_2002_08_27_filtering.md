@@ -65,7 +65,7 @@ A popular `Mail::Audit` addition is SpamAssassin (the same codebase as `PerlMx`'
 
 `Mail::Audit` makes it easy to write mail filters that work on a per-user basis, whereas `PerlMx` by default applies to all mail processed on a given mailserver.
 
-If you wanted to install `Mail::Audit` systemwide, then many mail-servers (such as exim) provide a way to configure a custom local delivery agent on flexible criteria. For example, [this article](http://bogmog.sourceforge.net/document_show.php3?doc_id=28) provides some documentation on how to do this with exim.
+If you wanted to install `Mail::Audit` systemwide, then many mail-servers (such as exim) provide a way to configure a custom local delivery agent on flexible criteria. For example, [this article](http://web.archive.org/web/20050323053241/http://bogmog.sourceforge.net/) (<i>archived site</i>) provides some documentation on how to do this with exim.
 
 ### <span id="testing... 1... 2... 3...">Testing ... 1 ... 2 ... 3 ...</span>
 

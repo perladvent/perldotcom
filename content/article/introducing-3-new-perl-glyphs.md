@@ -58,7 +58,7 @@ Finally, click the "download" button to download the fonts archive. Inside the a
 
 When you go to use the fonts on the web, make sure you use the bulletproof @font-face [syntax](http://www.paulirish.com/2009/bulletproof-font-face-implementation-syntax/). Another benefit of using IcoMoon.io's app: the `style.css` file in the archive includes the bulletproof syntax.
 
-If you want lower-level access to font files, check out [FontForge](http://sourceforge.net/projects/fontforge/). Using FontForge you can create or edit font files in a variety of formats. You can set the font metadata (creator, name etc), and specify the alignment of individual glyphs more precisely than with IcoMoon.io's free app.
+If you want lower-level access to font files, check out [FontForge](https://fontforge.github.io/). Using FontForge you can create or edit font files in a variety of formats. You can set the font metadata (creator, name etc), and specify the alignment of individual glyphs more precisely than with IcoMoon.io's free app.
 
 ### Licensing
 

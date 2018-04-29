@@ -22,7 +22,7 @@
 }
 
 
-GNU Screen is a terminal multiplexer, a program that manages terminal windows. It's been around for 28 years, which makes it older than Perl 5. So if you thought Perl had some archaic conventions, you ain't seen nothing yet. But despite it's age Screen is a powerful tool for managing terminals; if you often find yourself using more than one terminal, you owe it to yourself to start using a multiplexer for major productivity gains. Screen is the most widely used multiplexer, another popular option is [tmux](http://tmux.sourceforge.net/), but this article is about Screen.
+GNU Screen is a terminal multiplexer, a program that manages terminal windows. It's been around for 28 years, which makes it older than Perl 5. So if you thought Perl had some archaic conventions, you ain't seen nothing yet. But despite it's age Screen is a powerful tool for managing terminals; if you often find yourself using more than one terminal, you owe it to yourself to start using a multiplexer for major productivity gains. Screen is the most widely used multiplexer, another popular option is [tmux](https://github.com/tmux/tmux), but this article is about Screen.
 
 ### Getting started
 

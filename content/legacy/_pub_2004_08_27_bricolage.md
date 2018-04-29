@@ -118,8 +118,7 @@ Bricolage templates correspond to document categories and elements, so that one 
 #### Perl Templating
 
 The templates in Bricolage output channels can be implemented in one of three templating architectures: [Mason](http://www.masonhq.com/ "Mason HQ"), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit
-    home"), or [HTML::Template](http://html-template.sourceforge.net/ "HTML::Template
-    home").
+    home"), or [HTML::Template](https://github.com/mpeters/html-template).
 
 Yes, that's right, not only do you have three different choices for templating in Bricolage, but they're all Perl-based! In addition to being able to provide a familiar templating environment to tens of thousands of Perl programmers worldwide, the templating solutions can leverage the full power of Perl to generate output for your documents. That power of course includes [CPAN](http://search.cpan.org/ "Search CPAN"), where you'll find modules to ease the generation of [RSS](http://search.cpan.org/dist/XML-RSS/ "XML::RSS on CPAN") feeds, [HTML](http://search.cpan.org/dist/CGI/ "CGI.pm on
     CPAN"), [XML](http://search.cpan.org/dist/XML-Generator/ "XML::Generator on CPAN"), [PDFs](http://search.cpan.org/dist/PDFLib/ "PDFLib on
