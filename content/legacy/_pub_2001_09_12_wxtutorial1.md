@@ -42,15 +42,15 @@ Like every tutorial, this tutorial has its own \`\`Hello World!'' application to
        =1= #!/usr/bin/perl -w
        =2= use strict;
        =3= use Wx;
-       =4= 
+       =4=
        =5= ###########################################################
        =6= #
        =7= # Define our HelloWorld class that extends Wx::App
        =8= #
        =9= package HelloWorld;
-      =10= 
+      =10=
       =11= use base qw(Wx::App);   # Inherit from Wx::App
-      =12= 
+      =12=
       =13= sub OnInit
       =14= # Every application has its own OnInit method that will
       =15= # be called when the constructor is called.
@@ -65,13 +65,13 @@ Like every tutorial, this tutorial has its own \`\`Hello World!'' application to
       =24=   $self->SetTopWindow($frame);    # Define the toplevel window
       =25=   $frame->Show(1);                # Show the frame
       =26= }
-      =27= 
+      =27=
       =28= ###########################################################
       =29= #
       =30= # The main program
       =31= #
       =32= package main;
-      =33= 
+      =33=
       =34= my $wxobj = HelloWorld->new(); # New HelloWorld application
       =35= $wxobj->MainLoop;
 
@@ -102,20 +102,20 @@ That's a lot of (potentially) confusing information. Let's take this example:
        =1= #!/usr/bin/perl -w
        =2= use strict;
        =3= use Wx;
-       =4= 
+       =4=
        =5= ###########################################################
        =6= #
        =7= # Extend the Frame class to our needs
        =8= #
        =9= package MyFrame;
-      =10= 
+      =10=
       =11= use base qw(Wx::Frame); # Inherit from Wx::Frame
-      =12= 
+      =12=
       =13= sub new
       =14= {
       =15=     my $class = shift;
       =16=     my $self = $class->SUPER::new(@_); # call the superclass' constructor
-      =17= 
+      =17=
       =18=     # Then define a Panel to put the button on
       =19=     my $panel = Wx::Panel->new( $self,  # parent
       =20=                                 -1      # id
@@ -132,15 +132,15 @@ That's a lot of (potentially) confusing information. Let's take this example:
       =31=                                        );
       =32=     return $self;
       =33= }
-      =34= 
+      =34=
       =35= ###########################################################
       =36= #
       =37= # Define our ButtonApp class that extends Wx::App
       =38= #
       =39= package ButtonApp;
-      =40= 
+      =40=
       =41= use base qw(Wx::App);   # Inherit from Wx::App
-      =42= 
+      =42=
       =43= sub OnInit
       =44= {
       =45=     my $self = shift;
@@ -153,13 +153,13 @@ That's a lot of (potentially) confusing information. Let's take this example:
       =52=     $self->SetTopWindow($frame);    # Define the toplevel window
       =53=     $frame->Show(1);                # Show the frame
       =54= }
-      =55= 
+      =55=
       =56= ###########################################################
       =57= #
       =58= # The main program
       =59= #
       =60= package main;
-      =61= 
+      =61=
       =62= my $wxobj = ButtonApp->new(); # New ButtonApp application
       =63= $wxobj->MainLoop;
 
@@ -182,65 +182,65 @@ Consider the following code:
        =1= #!/usr/bin/perl -w
        =2= use strict;
        =3= use Wx;
-       =4= 
+       =4=
        =5= ###########################################################
        =6= #
        =7= # Extend the Frame class to our needs
        =8= #
        =9= package MyFrame;
-      =10= 
+      =10=
       =11= use Wx::Event qw( EVT_BUTTON );
-      =12= 
+      =12=
       =13= use base qw/Wx::Frame/; # Inherit from Wx::Frame
-      =14= 
+      =14=
       =15= sub new
       =16= {
       =17=  my $class = shift;
-      =18=  
+      =18=
       =19=  my $self = $class->SUPER::new(@_);  # call the superclass' constructor
-      =20= 
+      =20=
       =21=     # Then define a Panel to put the button on
       =22=  my $panel = Wx::Panel->new( $self,  # parent
       =23=                              -1      # id
       =24=                            );
-      =25= 
+      =25=
       =26=  $self->{txt} = Wx::StaticText->new( $panel,             # parent
       =27=                                      1,                  # id
       =28=                                      "A buttonexample.", # label
       =29=                                      [50, 15]            # position
       =30=                                     );
-      =31=  
+      =31=
       =32=  my $BTNID = 1;  # store the id of the button in $BTNID
-      =33=  
+      =33=
       =34=  $self->{btn} = Wx::Button->new(     $panel,             # parent
       =35=                                      $BTNID,             # ButtonID
       =36=                                      ">>> Press me <<<", # label
       =37=                                      [50,50]             # position
       =38=                                     );
-      =39= 
+      =39=
       =40=  EVT_BUTTON( $self,          # Object to bind to
       =41=              $BTNID,         # ButtonID
       =42=              \&ButtonClicked # Subroutine to execute
       =43=             );
-      =44= 
+      =44=
       =45=  return $self;
       =46= }
-      =47= 
-      =48= sub ButtonClicked 
-      =49= { 
-      =50=  my( $self, $event ) = @_; 
+      =47=
+      =48= sub ButtonClicked
+      =49= {
+      =50=  my( $self, $event ) = @_;
       =51=  # Change the contents of $self->{txt}
-      =52=  $self->{txt}->SetLabel("The button was clicked!"); 
-      =53= } 
-      =54= 
+      =52=  $self->{txt}->SetLabel("The button was clicked!");
+      =53= }
+      =54=
       =55= ###########################################################
       =56= #
       =57= # Define our ButtonApp2 class that extends Wx::App
       =58= #
       =59= package ButtonApp2;
-      =60= 
+      =60=
       =61= use base qw(Wx::App);   # Inherit from Wx::App
-      =62= 
+      =62=
       =63= sub OnInit
       =64= {
       =65=     my $self = shift;
@@ -253,13 +253,13 @@ Consider the following code:
       =72=     $self->SetTopWindow($frame);    # Define the toplevel window
       =73=     $frame->Show(1);                # Show the frame
       =74= }
-      =75= 
+      =75=
       =76= ###########################################################
       =77= #
       =78= # The main program
       =79= #
       =80= package main;
-      =81= 
+      =81=
       =82= my $wxobj = ButtonApp2->new(); # New ButtonApp application
       =83= $wxobj->MainLoop;
 

@@ -38,7 +38,7 @@ The first hassles were setup - I don't normally use sendmail, but `PerlMx` requi
 
 Once you have sendmail setup, and built with milter support (as the default build from Debian Linux I used was), it's easy to add a connection to `PerlMx` with one line in your sendmail.mc file:
 
-    INPUT_MAIL_FILTER(`C<PerlMx>', `S=inet:3366@localhost, F=T, 
+    INPUT_MAIL_FILTER(`C<PerlMx>', `S=inet:3366@localhost, F=T,
          T=S:3m;R:3m;E:8m'')
 
 `PerlMx` essentially works out of the box - it asks a number of simple questions when you install and set it up, and assuming you get these right, no further configuration will be required.
@@ -104,11 +104,11 @@ The SpamAssassin / `Mail::Audit` script I ended up using in the end was:
                                   loglevel => 4, nomime => 1);
 
       my $spamtest = Mail::SpamAssassin->new;
-      
+
       # check mail with SpamAssassin
       my $status = $spamtest->check($mail);
-      
-      # if it was spam, rewrite to indicate what the problem was, and 
+
+      # if it was spam, rewrite to indicate what the problem was, and
       # store in the file ass-spam in our home directory
       if ($status->is_spam) {
               $status->rewrite_mail;
@@ -117,7 +117,7 @@ The SpamAssassin / `Mail::Audit` script I ended up using in the end was:
       } else {
               $mail->accept;
       }
-      
+
       exit 0;
 
 After clearing down all my mail, and losing two days of testing, I started again. It was only the nature of the testing setup that meant the bounce mail went to me and not the original sender. So, at 23:25 on Tuesday, I had another go. This time I knew enough to limit SpamAssassin to receiving messages in batches of five (using fetchmail) - something I could do in testing, but wouldn't be an easy option in most production setups. This meant my test machine could just about cope with delivering mail using SpamAssassin.
