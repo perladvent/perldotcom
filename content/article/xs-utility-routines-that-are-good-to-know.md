@@ -20,7 +20,7 @@
 
 In the previous [tutorial]({{< relref "writing-your-own-xs-functions.md" >}}), we learned how to write our own functions in XS, how to process multiple arguments, and return different values, including `undef`.
 
-In this tutorial I'm going to cover some useful routines for common cases you'll encounter when programming in XS. One that you've already seen is `SvOK` which can tell you if a scalar is defined or not.
+In this tutorial I'm going to cover some useful routines for common cases you'll encounter when programming in XS. One that you've already seen is `SvOK` which can tell you if a scalar is defined or not. Here are the new areas I'll discuss:
 
 - Scheduling XS code to run at startup
 - Handling tied variables
@@ -139,7 +139,7 @@ You could `croak` immediately, throwing an exception. Or you could try to _downg
         PUSHs(sv_2mortal(newSViv(1)));
       }
 
-This function returns true if the scalar contains UTF-8 data _and_ it is downgrade-able to ASCII. It does that by using the `sv_utf8_downgrade` function, which accepts the scalar and a boolean value indicating if it's ok to fail. As the second argument is `TRUE`, the function simply returns false if the scalar is not downgrade-able (otherwise it would `croak`).
+This function returns false if the scalar contains data that is not downgrade-able to ASCII, otherwise it returns true. It does that by using the `sv_utf8_downgrade` function, which accepts the scalar and a boolean value indicating if it's ok to fail. As the second argument is `TRUE`, the function simply returns false if the scalar is not downgrade-able (otherwise it would `croak`).
 
 ### References
 
