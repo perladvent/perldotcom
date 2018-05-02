@@ -122,7 +122,7 @@ Perl scalars have a UTF-8 flag, which is turned on when the scalar contains deco
 This declares an XS function called `is_utf8` which accepts a scalar and returns true if the UTF-8 flag is set, or false if it isn't.
 
 Imagine you have some C code that only works with ASCII text, that is, single byte characters. You can detect incoming scalars that have the UTF-8 flag turned on
-with `SvUTF8`, but what do you do about it ones that have the flag?
+with `SvUTF8`, but what do you do about ones that have the flag?
 
 You could `croak` immediately, throwing an exception. Or you could try to _downgrade_ the scalar to be non UTF-8 as the string may be marked as UTF-8 but only contain ASCII compatible characters (decimal values 0-127).
 
