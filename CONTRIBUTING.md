@@ -122,7 +122,9 @@ Both `bio` and `image` can be `null`.
 
 Viewing Your Draft Article
 --------------------------
-It's all well and good drafting an article in Markdown, but it only comes to life when you can see how it looks in a browser on Perl.com. You can do that by running a local version of the site on your computer. To do that you'll need to install [Hugo](http://gohugo.io) and fork the repo. Now clone your fork: 
+It's all well and good drafting an article in Markdown, but it only comes to life when you can see how it looks in a browser on Perl.com. You can do that by running a local version of the site on your computer. To do that you'll need to install [Hugo](http://gohugo.io). **Warning** package managers' versions of hugo are often very out of date, you're usually better off with a pre-compiled binary. The site is tested against v0.31.1 and higher
+
+Now fork this repo. Clone your fork: 
 
     $ git clone https://github.com/$github_username/perldotcom
     $ cd perldotcom
