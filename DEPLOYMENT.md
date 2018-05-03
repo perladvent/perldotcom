@@ -5,6 +5,6 @@ This document is aimed at any Perl.com editor who wants to update the live site.
 To deploy the site:
 1. Clone this repo
 2. Clone the private TPF perl.com-staging repo
-3. Install [hugo](https://gohugo.io)
+3. Install [hugo](https://gohugo.io). **Warning** package managers versions of hugo are often very out of date, and may not work. You're usually better off with a pre-compiled binary. The site is tested against v0.31.1 and higher
 4. Change into the root perldotcom dir and run `bin/deploy`
 5. The live site will be updated a short while after
