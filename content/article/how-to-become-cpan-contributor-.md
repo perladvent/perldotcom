@@ -1,66 +1,55 @@
 
   {
-    "title"       : "How to become CPAN contributor?",
+    "title"       : "How to become CPAN contributor",
     "authors"     : ["mohammad-anwar"],
     "date"        : "2018-05-12T14:43:28",
-    "tags"        : [],
+    "tags"        : ["cpan","github","kwalitee"],
     "draft"       : true,
     "image"       : "",
     "thumbnail"   : "",
-    "description" : "Tips and tricks to become CPAN contributor",
+    "description" : "Tips and tricks to become a CPAN contributor",
     "categories"  : "community"
   }
 
-I have submitted a talk on the same subject for **The Perl Conference 2018** at *Glasgow*. This would help me to collect my thoughts on the matter.  I have given similar talk at London Perl Workshop 2016 and German Perl Workshop 2018. The topic keeps evolving with time as I experience new things every day.
+To become a CPAN contributor, you don't need to write a new CPAN distribution, you just need to submit a change to an existing distribution that get's accepted by the author.
 
-The target audidence would be some one who have never got their hand dirty. Based on my personal experience, the very first question that comes to your mind "Do I know enough to contribute to other's code?"
-
-Well, in my experience, you don't have to be an expert to become a contributor. There are plenty of stuff out there just suitable for beginners level Perl programmer.
+If you've never gotten your hands dirty editing Perl modules, the first question that may come to mind is: "Do I know enough to contribute to other people's code?". Well in my experience, you don't have to be an expert to become a contributor. There are plenty of opportunities out there suitable for beginner-level Perl programmers.
 
 
 ### How about an example?
 
-Before I answer that question, I would like to point you where to look for stuff to contribute. The best place is to keep an eye on the [Recently uploaded](https://metacpan.org/recent) distributions page on metacpan.org. Once you have done few then you can explore other avenues. I have a suggestion to all beginners to look for relative new distributions. The chances you will find plenty of opportunities to contribute.
+Before I answer that question, I would like to point you to where to look for stuff to contribute. The easiest way is to keep an eye on the metacpan [recently uploaded](https://metacpan.org/recent) distributions page. I recommend this for beginners as new distributions usually offer plenty of opportunities to contribute.
 
-The metacpan.org can even help you in your quest once you have picked the distribution. Check the **Kwalitee** link of the selected distribution, you will find minor issues that any beginners can give it a go.
+As you're clicking through recently uploaded distributions, check the **Kwalitee** link on each distribution's page, and look to see if any issues are listed. Kwalitee issues are often minor that any beginner can help with.
 
-Going back to my earlier question **How about an example?**.
+In terms of example issues that contributors can help with, I've listed the most common ones below:
 
-The most common *issues* are listed below:
-
-  * Missing strict/warning pragma
-  * Missing META file(s)
-  * Pod error
-  * Missing prereqs
-  * Missing build prereqs
+  * Code is missing strict/warnings pragma
+  * Distribution missing META file(s)
+  * Pod syntax error
+  * Makefile.PL/Build.PL missing build prereqs
   * Missing license meta
-  * Mismatch entry in MANIFEST
+  * MANIFEST incomplete/lists files not in distribution
   * Build script is executable
 
-... and many more.
-
-If you are lucky then you might find the distribution source is hosted on GitHub. For first few contributions, I would suggest only pick distributions with GitHub repository.
-
-So, now we have a distribution with scope to contribute. At this point I assume you have setup an account with GitHub. If not then please do that first. It would help you immensely.
-
-Lets get to the repository on GitHub of the selected distribution and fork it. This should give the copy of the distribution source in your own repository. Next step is open a terminal and clone the distribution repository on your local machine.
-
-We are nearly there...
+If you are lucky then you might find the distribution source is hosted on GitHub. For your first few contributions, I would suggest focusing on distributions hosted on GitHub as chances are, you already have a GitHub account. To check if a distribution is on GitHub, look for the "Clone repository" link on the distribution's metacpan page ([example](https://metacpan.org/pod/Term::ProgressBar)).
 
 ### Prepare the ground first
 
-First thing, create new branch for your proposed changes. Give branch a meaningful name. Before you make any changes, make sure the distribution is clean and installable i.e. no test failing. Lets follow the happy path and assume the distribution is clean and all test pass.
+By this point you should have identified a distribution with a Kwalitee issue that is hosted on GitHub. Fork the repository on GitHub so that you have a copy of the distribution source in your own repository. The next step is to open a terminal and clone the forked repository on to your local machine.
+
+Create a new branch for your proposed changes. Give the branch a meaningful name that describes the nature of the contributions you intend to make (e.g. "kwalitee-fixes"). Before you make any changes, try building and installing the module to make sure the code compiles and the tests are passing. Lets follow the happy path and assume the distribution is clean and all test pass.
 
 ### Action now
 
-This is your moment now, you are about to jump on somebody else's domain. So be extra **carefull** and **vigilant**. Please make sure you only touch the bits you intended to. Because sometimes your editor would play with **tab/spaces**. Don't try to change the coding *style* and *format*. This would more likely annoy the distribution's author.
+This is your moment now, you are about to jump into someone else's domain. So be extra **careful** and **vigilant**. Make sure you only change the parts you intend to. Watch out in case your text editor swaps tabs for spaces, or removes EOF newlines from files. If you're changing code, follow the coding style of the author so that your changes fit with their way of doing things. This will make your contributions more likely to be accepted by them.
 
-Once you have made the necessary changes, commit and push the changes to your repository. Now go to GitHub web interface, it would help you to submit your first **Pull Request**. Double check your *commit* and make sure no other changes gone without your knowledge. Once you are happy then submit the Pull Request and give your reasons why you think your Pull Request is important.
+Once you have made the necessary changes, commit and push the changes to your repository. Now go to your forked repository's GitHub web page and create a pull request. Double check your commit and make sure no other changes are included by accident. Submit the pull request describing your changes what improvements they bring.
 
-**Congratulations**, you are now proud *contributor*. But don't stop here and move on to some other distributions while you wait for the response to your first Pull Request. Don't be *disheartened* if you don't get any response in the next few days. In my personal experience, I have received reply at times after 1 year. Sometimes, you get response within **minutes**.
+Hopefully the author will merge your pull request and **congratulations** you are a contributor now! You helped make Open Source better and should be proud. But don't get *disheartened* if you don't see a response within a few days. You may get a response within minutes, but it might take months. One author responded to my pull request **after a year**. In the meantime whilst you're waiting to hear back, there are plenty of new distributions that could use your help!
 
 ### Need help?
 
-If you need helping hand then feel free to contact me and we can arrange **Remote Pair Programming** to get you going. *Good luck* and all the very best.
+If you need a helping hand then feel free to [email me](mailto:mohammad.anwar@yahoo.com) and if necessary, we can remote pair program to get you going. I'll also be speaking about this topic at [The Perl Conference in Glasgow](http://act.perlconference.org/tpc-2018-glasgow/), so come on by and say hi.
 
-I will go through more in details in the next article.
+Good luck and all the very best with your CPAN contributions!
