@@ -30,7 +30,7 @@ In terms of example issues that contributors can help with, I've listed the most
   * Makefile.PL/Build.PL missing build prereqs
   * Missing license meta
   * MANIFEST incomplete/lists files not in distribution
-  * Build script is executable
+  * Build script is not executable
 
 If you are lucky then you might find the distribution source is hosted on GitHub. For your first few contributions, I would suggest focusing on distributions hosted on GitHub as chances are, you already have a GitHub account. To check if a distribution is on GitHub, look for the "Clone repository" link on the distribution's metacpan page ([example](https://metacpan.org/pod/Term::ProgressBar)).
 
