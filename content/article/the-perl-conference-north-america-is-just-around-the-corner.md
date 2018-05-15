@@ -2,11 +2,11 @@
   {
     "title"       : "The Perl Conference North America is Just Around the Corner",
     "authors"     : ["dawn-wallis"],
-    "date"        : "2018-05-14T21:22:29",
+    "date"        : "2018-05-15T08:08:29",
     "tags"        : ["yapc", "tpc", "salt-lake-city", "2018"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
-    "thumbnail"   : "",
+    "thumbnail"   : "/images/the-perl-conference-north-america-is-just-around-the-corner/tpcislc-logo.png",
     "description" : "A reminder of what's going down in Salt Lake City this June",
     "categories"  : "community"
   }
