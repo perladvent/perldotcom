@@ -211,11 +211,11 @@ We started with a program that runs for 10 seconds, and now it runs for 4. Throu
 
 ### <span id="Writing_your_own_profiler">Writing your Own Profiler</span>
 
-At least, that is, if you want to use *dprofpp*; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released [`Devel::DProfPP`](http://search.cpan.org/perldoc?Devel::DProfPP), which provides an event-driven interface to reading *tmon.out* files. I intended to use it to write a new version of *dprofpp* because I find the current profiler intolerably slow; ironically, though, I haven't profiled it yet.
+At least, that is, if you want to use *dprofpp*; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released [`Devel::DProfPP`](https://metacpan.org/pod/Devel::DProfPP), which provides an event-driven interface to reading *tmon.out* files. I intended to use it to write a new version of *dprofpp* because I find the current profiler intolerably slow; ironically, though, I haven't profiled it yet.
 
 Anyway, `Devel::DProfPP` allows you to specify callbacks to be run every time the profiling data shows Perl entering or exiting a subroutine, and provides access to the same timing and call stack information used by *dprofpp*.
 
-So, for instance, I like visualization of complicated data. I'd prefer to see what's calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together `Devel::DProfPP` and the trusty [`Graphviz`](http://search.cpan.org/perldoc?Graphviz) module, and create my own profiler:
+So, for instance, I like visualization of complicated data. I'd prefer to see what's calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together `Devel::DProfPP` and the trusty [`Graphviz`](https://metacpan.org/pod/GraphViz) module, and create my own profiler:
 
      use GraphViz;
      use Devel::DProfPP;

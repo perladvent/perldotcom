@@ -24,7 +24,7 @@ CPAN is a fantastic Perl resource with thousands of modules and new ones being a
 
 ### CPAN.org
 
-The CPAN website's [recent uploads](http://search.cpan.org/recent) page maintains a list of the latest CPAN releases, with links to the module documentation. Additionally it's possible to search the release history using the navigating arrow links at the top of the page.
+The MetaCPAN website's [recent uploads](https://metacpan.org/recent) page maintains a list of the latest CPAN releases, with links to the module documentation. Additionally it's possible to search the release history using the navigating arrow links at the top of the page.
 
 ### CPAN::Recent::Uploads
 

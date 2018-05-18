@@ -30,7 +30,7 @@ CPAN will always try to install the latest stable version of a module, which is 
 cpan SAMV/Set-Object-1.28.tar.gz
 ```
 
-You can find the distribution filename for a module by searching for the module on [CPAN](http://search.cpan.org/).
+You can find the distribution filename for a module by searching for the module on [MetaCPAN](https://metacpan.org/).
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

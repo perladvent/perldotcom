@@ -108,7 +108,7 @@ $sundry_ref->[2]->&*;
 
 Postfix dereferencing syntax is cleaner and easier to follow than circumfix. If you haven't seen it already, check out Perl pumpking, Ricardo Signes [presenting](http://www.youtube.com/watch?v=Sp102BECq8s&t=63m11s) postfix dereferencing at NYC.pm (the rest of the talk is great too).
 
-For more postfix dereferencing examples, take a look at the Perl [source test file](https://github.com/Perl/perl5/blob/blead/t/op/postfixderef.t) and the new [perlref](http://search.cpan.org/~shay/perl-5.19.5/pod/perlref.pod#Postfix_Dereference_Syntax).
+For more postfix dereferencing examples, take a look at the Perl [source test file](https://github.com/Perl/perl5/blob/blead/t/op/postfixderef.t) and the new [perlref](https://metacpan.org/pod/release/SHAY/perl-5.19.5/pod/perlref.pod#Postfix-Dereference-Syntax).
 
 Enjoyed this article? Help us out and [retweet it!](https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F68%2F2014%2F2%2F13%2FCool-new-Perl-feature-postfix-dereferencing&text=Cool%20new%20Perl%20feature%3A%20postfix%20dereferencing&tw_p=tweetbutton&url=http%3A%2F%2Fperltricks.com%2Farticle%2F68%2F2014%2F2%2F13%2FCool-new-Perl-feature-postfix-dereferencing&via=perltricks)
 
