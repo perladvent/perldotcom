@@ -35,7 +35,7 @@ As mentioned above, there are parts of software programs that do exist to commun
 
 ### The Review Itself
 
-[Math::Complex](http://search.cpan.org/perldoc?Math::Complex) is an open source Perl package that is part of the core Perl distribution. It provides methods for complex arithmetic (and overloading of operators).
+[Math::Complex](https://perldoc.perl.org/Math/Complex.html) is an open source Perl package that is part of the core Perl distribution. It provides methods for complex arithmetic (and overloading of operators).
 
 [Raphael Manfredi](http://c2.com/cgi/wiki?RaphaelManfredi) created the module in 1996. Since then, first [Jarkko Hietaniemi](http://www.hut.fi/~jhi/) and, currently, [Daniel S. Lewart](http://www.prairienet.org/~dslewart/) have maintained it (according to its own comments). My comments below relate to version 1.34.
 
@@ -80,7 +80,7 @@ The construction method `make` is, again, flexible and robust. The author has ex
         die "@{[(caller(1))[3]]}: Cannot take $_[0] of $_[1].\n";
     }
 
-In turn, it calls the built-in `caller` function to refer back to the original code (similar to an `assert` in C, or a lightweight version of the `cluck` or `confess` functions in the [Carp](http://search.cpan.org/~nwclark/perl-5.8.5/lib/Carp.pm) package).
+In turn, it calls the built-in `caller` function to refer back to the original code (similar to an `assert` in C, or a lightweight version of the `cluck` or `confess` functions in the [Carp](https://perldoc.perl.org/Carp.html) package).
 
 `make` also calls the the `remake` function, if `make` receives only one argument (for example, a string such as `"1 + 2i"`) and must deduce the real and/or imaginary parts:
 
