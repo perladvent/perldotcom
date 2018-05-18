@@ -55,7 +55,7 @@ You can program Perl in a C or BASIC language style with `if` statements and `fo
 
 # Our Dedicated Community
 
-Perl became famous for the [CPAN](http://search.cpan.org/) and [CGI](https://metacpan.org/pod/CGI) web programming back in the day. But the community has been busy writing better tools since then. We have object oriented frameworks like {{< mcpan "Moose" >}} , which is more capable than any other object system I know of. We use [metacpan](https://metacpan.org/) instead of CPAN, and web frameworks like {{< mcpan "Catalyst" >}}, {{< mcpan "Dancer" >}} and {{< mcpan "Mojolicious" >}} over CGI.
+Perl became famous for the [CPAN](https://metacpan.org/) and [CGI](https://metacpan.org/pod/CGI) web programming back in the day. But the community has been busy writing better tools since then. We have object oriented frameworks like {{< mcpan "Moose" >}} , which is more capable than any other object system I know of. We use [metacpan](https://metacpan.org/) instead of CPAN, and web frameworks like {{< mcpan "Catalyst" >}}, {{< mcpan "Dancer" >}} and {{< mcpan "Mojolicious" >}} over CGI.
 
 The [Perl Foundation](http://www.perlfoundation.org/) promotes and supports ongoing development of Perl, including the Perl 5 Porters, the group which maintains the Perl source and releases a new version every year. Asides from various Perl Monger and Meetup groups, we also organize two major conferences a year in [North America](https://perlconference.us/tpc-2018-slc/) and [Europe](http://act.perlconference.org/tpc-2018-glasgow/).
 
@@ -68,4 +68,3 @@ The demand for certain programming skills ebbs and flows with industry hype. At 
 # Do What You Love
 
 Many novices worry about what the "best" programming language is to learn. The truth is, every language was designed with a purpose in mind, and there is no one best language for all contexts. What is true is if you want to be a great programmer, you're going to be writing a lot of code. So you might as well pick a language with job prospects that's fun to work with and treats you like the boss. So choose a language with personality, choose Perl.
-

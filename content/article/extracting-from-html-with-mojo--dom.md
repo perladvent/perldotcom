@@ -29,7 +29,7 @@ If I'm using [Mojo::UserAgent](http://mojolicio.us/perldoc/Mojo/UserAgent), I ca
 use Mojo::UserAgent;
 my $ua = Mojo::UserAgent->new;
 
-my $dom = $ua->get( 'http://search.cpan.org/~bdfoy/' )
+my $dom = $ua->get( 'https://metacpan.org/author/BDFOY' )
     ->res
     ->dom;
 ```
@@ -38,7 +38,7 @@ The Mojo method-chaining style with one method per line shows its strengths as I
 
 I don't *have* to make a request to get a DOM object. I'm often presented with HTML files to parse with no server to give them to me. Depending on the tractability of the task, I might hand edit it to remove the parts I don't want to think about then use a regex to handle the rest. That way, I don't have to do a lot of work to save state and know where I am in the document. With a DOM, that's not a problem.
 
-In the first example, I fetched `http://search.cpan.org/~bdfoy/'`, my author page at [CPAN Search](http://search.cpan.org/). I'll start with that HTML, assuming I already have it in a string.
+In the first example, I fetched `https://metacpan.org/author/BDFOY'`, my author page at [CPAN Search](https://metacpan.org/). I'll start with that HTML, assuming I already have it in a string.
 
 ```perl
 use Mojo::DOM;
@@ -165,7 +165,7 @@ my @module_list = $dom
     ->find('tr td:first-child a:first-child')
     ->map( attr => 'href' )
     ->map( sub { s|/\z||r } )
-    ->map( sub { 
+    ->map( sub {
         my $d = CPAN::DistnameInfo->new( "$_.tar.gz" );
         [ map { $d->$_() } qw(dist version) ];
          } )
@@ -203,7 +203,7 @@ my @module_list = $dom
     ->find('tr td:first-child a:first-child')
     ->map( attr => 'href' )
     ->map( sub { s|/\z||r } )
-    ->map( sub { 
+    ->map( sub {
         my $d = CPAN::DistnameInfo->new( "$_.tar.gz" );
         [ map { $d->$_() } qw(dist version) ];
          } )

@@ -62,7 +62,7 @@ I originally wrote about modulinos in [How a script becomes a module](http://www
 
 At the time, I was doing quite a bit of work to translate legacy codebases into something more manageable. Instead of rewriting everything, I created paths to better behavior with immediate results. Part of this path is testing the existing codebase so I could recreate it, bugs and rough edges included, in the next part. Moving standalone scripts to libraries or modules is a big part of that; I have to maintain the program behavior, but I want to unit test its innards.
 
-I have quite a bit of fun organizing a messy and (previously) unmanaged codebase. A little work makes a big difference and gives quick gains. From there it's an easy path toward adding tests. It's part of my motivation for [scriptdist](http://search.cpan.org/dist/scriptdist/), which I wrote about in [Automating Distributions with scriptdist](http://www.drdobbs.com/web-development/automating-distributions-with-scriptdist/184416112). Given a stand-alone program, I used that tool to build a distribution around it and include the test files. The program file stays the same, but once wrapped in the distribution goodness, I can start the transformation. Even if this code will never make it to CPAN, I can still use all the CPAN tools by making it look like a CPAN distribution.
+I have quite a bit of fun organizing a messy and (previously) unmanaged codebase. A little work makes a big difference and gives quick gains. From there it's an easy path toward adding tests. It's part of my motivation for [scriptdist](https://metacpan.org/pod/distribution/App-scriptdist/scriptdist), which I wrote about in [Automating Distributions with scriptdist](http://www.drdobbs.com/web-development/automating-distributions-with-scriptdist/184416112). Given a stand-alone program, I used that tool to build a distribution around it and include the test files. The program file stays the same, but once wrapped in the distribution goodness, I can start the transformation. Even if this code will never make it to CPAN, I can still use all the CPAN tools by making it look like a CPAN distribution.
 
 ### Converting a script to a modulino
 
@@ -112,7 +112,7 @@ use Test::More;
 subtest 'load program' => sub {
     require_ok( 'scripts/program.pl' );
     };
-    
+
 subtest 'test innards' => sub {
     ok( defined &run, 'Run subroutine is defined' );
     };
