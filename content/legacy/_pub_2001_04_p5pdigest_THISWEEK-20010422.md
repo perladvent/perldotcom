@@ -82,7 +82,7 @@ Michael Schwern has also been messing about with `B`, and found some mis-documen
 
 Benjamin Franz announced Yet Another Mailing List, a working group to come up with a coherent strategy for coming up with a "named parameters" module. If that appeals to you, send mail with a body of `subscribe argument-shop` to `majordomo@nihongo.org`.
 
-Elaine Ashton put in a couple of patches to the FAQ, as well as adding "mailing list" and "license" sections to the stub documentation produced by `h2xs`. These weren't huge, but I mention them because Elaine's one of those unsung heros, and people tend to forget the work she does for us in terms of behind the scenes things, such as tidying up the FAQ, perl.org stuff, the [CPAN search engine](http://search.cpan.org/) and the wonderful [Perl mailing lists lists](http://lists.perl.org/).
+Elaine Ashton put in a couple of patches to the FAQ, as well as adding "mailing list" and "license" sections to the stub documentation produced by `h2xs`. These weren't huge, but I mention them because Elaine's one of those unsung heros, and people tend to forget the work she does for us in terms of behind the scenes things, such as tidying up the FAQ, perl.org stuff, the [CPAN search engine](http://search.mcpan.org/) and the wonderful [Perl mailing lists lists](http://lists.perl.org/).
 
 Tom Roche came up with a suggestion to change Perl's version searching behaviour to allow different versions of a module to be installed. There were various explanations given for why this wouldn't work, (since Perl must load a module before recognising its version) and two neat alternative solutions: Richard Soderberg suggested a coderef in `@INC` and MJD suggested simply putting the version number in the module's file name. In fact, why not have a directory per module, so you have `use Foo::Bar::1.10`? But I digress...
 
@@ -100,4 +100,3 @@ Until next week I remain, your humble and obedient servant,
 -   [iThreads](#iThreads)
 -   [B Bumblings](#B_Bumblings)
 -   [Various](#Various)
-
