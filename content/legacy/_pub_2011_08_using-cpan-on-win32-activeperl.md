@@ -27,7 +27,7 @@ As wrong as that preconception had been (and a clever hacker could use MSVC or M
 -   Open a command line window ( Start &gt; Run &gt; cmd )
 -   Run `cpan`
 
-That's it. That's only one extra step over running on Linux. For proof, here's the output of my first run of the `cpan` command (edited for brevity) and an installation of [local::lib](http://search.cpan.org/perldoc?local::lib) and [cpanminus](http://search.cpan.org/perldoc?App::cpanminus) (yes, they work too):
+That's it. That's only one extra step over running on Linux. For proof, here's the output of my first run of the `cpan` command (edited for brevity) and an installation of [local::lib](https://metacpan.org/pod/local::lib) and [cpanminus](https://metacpan.org/pod/App::cpanminus) (yes, they work too):
 
     D:\>cpan
 

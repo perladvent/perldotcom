@@ -211,7 +211,7 @@ Reports of bugs should be sent to: <cpanplus-bugs@lists.sourceforge.net> Some of
 
 ### Where to Get CPANPLUS
 
-There are two places where you can obtain CPANPLUS. The first is, of course, to check your local CPAN mirror (or look it up on [search.cpan.org](http://search.cpan.org/)). The latest stable release will always be there.
+There are two places where you can obtain CPANPLUS. The first is, of course, to check your local CPAN mirror (or look it up on [search.mcpan.org](http://search.mcpan.org/)). The latest stable release will always be there.
 
 If you are interested in development versions, then look at [GitHub](http://github.com/jib/cpanplus-devel).
 
