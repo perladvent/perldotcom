@@ -367,10 +367,10 @@ The `Apache::Timeit` package is a part of the *Apache-Perl-contrib* files collec
 -   Apache-Perl-contrib package
     <http://perl.apache.org/dist/contrib/>
 -   `Time::HiRes`
-    <http://search.cpan.org/search?dist=Time-HiRes>
+    <https://metacpan.org/pod/Time::HiRes>
     and `Benchmark` is a part of the Core Perl
 -   `LWP` (libwww-perl)
-    <http://search.cpan.org/search?dist=libwww-perl>
+    <https://metacpan.org/release/libwww-perl>
 
 ------------------------------------------------------------------------
 
