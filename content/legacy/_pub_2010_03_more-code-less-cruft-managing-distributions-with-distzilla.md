@@ -34,7 +34,7 @@ Switching your old code to use Dist::Zilla is easy. You can be conservative and 
 
 #### **Replacing Makefile.PL**
 
-The first thing to do is to replace *Makefile.PL*, the traditional program for building and installing distributions (or *dists*). If you started with a [Module::Build](http://search.cpan.org/perldoc?Module::Build)-based distribution, you'd replace *Build.PL*, instead. Dist::Zilla will build those files for you in the dist you ship so that installing users have them, but you'll never need to think about them again.
+The first thing to do is to replace *Makefile.PL*, the traditional program for building and installing distributions (or *dists*). If you started with a [Module::Build](https://metacpan.org/pod/Module::Build)-based distribution, you'd replace *Build.PL*, instead. Dist::Zilla will build those files for you in the dist you ship so that installing users have them, but you'll never need to think about them again.
 
 I packaged `Number::Nary` with [Module::Install](https://metacpan.org/pod/Module::Install), the library that inspired me to build `Dist::Zilla`. Its *Makefile.PL* looked like:
 
@@ -97,7 +97,7 @@ At this point, you can build a releasable tarball by running `dzil build` (inste
 
 #### **Eliminating Pointless Packaging Files**
 
-The *MANIFEST.SKIP* file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the [ManifestSkip](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::ManifestSkip) plugin), but you can almost always just drop the file and use the [PruneCruft](https://metacpan.org/pod/Dist::Zilla::Plugin::PruneCruft) plugin instead. It prunes all the files people usually put in their skip file.
+The *MANIFEST.SKIP* file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the [ManifestSkip](https://metacpan.org/pod/Dist::Zilla::Plugin::ManifestSkip) plugin), but you can almost always just drop the file and use the [PruneCruft](https://metacpan.org/pod/Dist::Zilla::Plugin::PruneCruft) plugin instead. It prunes all the files people usually put in their skip file.
 
 The CPAN community has a tradition of shipping lots of good documentation written in Pod. Even so, several tools expect you also to provide a plain *README* file. The [Readme](https://metacpan.org/pod/Dist::Zilla::Plugin::Readme) plugin will generate one for you.
 
@@ -195,7 +195,7 @@ You can delete your "License and Copyright" sections. `Pod::Weaver` will generat
 
 #### **Release Automation**
 
-Now you're in the home stretch, ready to understand the "maximum overkill" approach to using Dist::Zilla. First, get rid of the version setting in the *dist.ini* and load the [AutoVersion](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::AutoVersion) plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add [NextRelease](https://metacpan.org/pod/Dist::Zilla::Plugin::NextRelease), which will update the changelog with every new release. In other words, the changelog file now starts with:
+Now you're in the home stretch, ready to understand the "maximum overkill" approach to using Dist::Zilla. First, get rid of the version setting in the *dist.ini* and load the [AutoVersion](https://metacpan.org/pod/Dist::Zilla::Plugin::AutoVersion) plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add [NextRelease](https://metacpan.org/pod/Dist::Zilla::Plugin::NextRelease), which will update the changelog with every new release. In other words, the changelog file now starts with:
 
       {{$NEXT}}
                 updated distribution to use Dist::Zilla
