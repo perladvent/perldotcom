@@ -30,13 +30,13 @@ As you learn Perl 5 in more detail, you will begin to see and understand common 
 
 [Perl 5's object system](http://learnperl.scratchcomputing.com/tutorials/objects/) treats the invocant of a method as a mundane parameter. The invocant of a class method (a string containing the name of the class) is that method's first parameter. The invocant of an object or instance method, the object itself, is that method's first parameter. You are free to use or ignore it as you see fit.
 
-Idiomatic Perl 5 uses `$class` as the name of the class method and `$self` for the name of the object invocant. This is a convention not enforced by the language itself, but it is a convention strong enough that useful extensions such as [MooseX::Method::Signatures](http://search.cpan.org/perldoc?MooseX::Method::Signatures) assume you will use `$self` as the name of the invocant by default.
+Idiomatic Perl 5 uses `$class` as the name of the class method and `$self` for the name of the object invocant. This is a convention not enforced by the language itself, but it is a convention strong enough that useful extensions such as [MooseX::Method::Signatures](https://metacpan.org/pod/MooseX::Method::Signatures) assume you will use `$self` as the name of the invocant by default.
 
 This is true even if you use [Moose](http://moose.perl.org/).
 
 #### **Named Parameters**
 
-Without a module such as [signatures](http://search.cpan.org/perldoc?signatures) or [MooseX::Multimethods](http://search.cpan.org/perldoc?MooseX::Multimethods), Perl 5's argument passing mechanism is simple: all arguments flatten into a single list accessible through `@_` (function\_parameters). While this simplicity is occasionally too simple—named parameters can be very useful at times—it does not preclude the use of idioms to provide named parameters.
+Without a module such as [signatures](https://metacpan.org/pod/signatures) or [MooseX::Multimethods](https://metacpan.org/pod/MooseX::MultiMethods), Perl 5's argument passing mechanism is simple: all arguments flatten into a single list accessible through `@_` (function\_parameters). While this simplicity is occasionally too simple—named parameters can be very useful at times—it does not preclude the use of idioms to provide named parameters.
 
 The list context evaluation and assignment of `@_` allows you to unpack named parameters pairwise. Even though this function call is equivalent to passing a comma-separated or `qw//`-created list, arranging the arguments as if they were true pairs of keys and values makes the caller-side look like the function supports named parameters:
 
