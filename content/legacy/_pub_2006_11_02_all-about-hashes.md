@@ -150,7 +150,7 @@ I mentioned that the underlying database abstraction layer in the tags example m
 
 This checks to see if it has seen the `$id` before; if so have, return the value from the hash. If not, work out what the value should be, then store it in the hash for next time, then return the whole lot.
 
-Of course, for heavy-duty applications like a database abstraction layer, you need to do a little more work, such as pruning the cache to make sure it doesn't get out of date or get so full of data that it eats all your memory. The [Cache::Cache](http://search.cpan.org/perldoc?Cache::Cache) suite of modules from CPAN takes care of all of this for you, and the core [Memoize](http://search.cpan.org/perldoc?Memoize) module adds this kind of caching to a function without you specifically having to write the cache-getting and -setting code.
+Of course, for heavy-duty applications like a database abstraction layer, you need to do a little more work, such as pruning the cache to make sure it doesn't get out of date or get so full of data that it eats all your memory. The [Cache::Cache](https://metacpan.org/pod/Cache::Cache) suite of modules from CPAN takes care of all of this for you, and the core [Memoize](https://metacpan.org/pod/Memoize) module adds this kind of caching to a function without you specifically having to write the cache-getting and -setting code.
 
 ### Searching
 
