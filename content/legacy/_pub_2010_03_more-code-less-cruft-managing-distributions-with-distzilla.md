@@ -24,19 +24,19 @@
 
 Every software distribution is a bunch of files written and maintained by programmers. The files are of three types: code, documentation, and crap—though this distinction is too subtle. Much of the documentation and code is crap, too. It's pointless. It's boring to write and to maintain, but convention dictates that it exist.
 
-Perl's killer feature is the CPAN, and [Dist::Zilla](http://search.cpan.org/perldoc?Dist::Zilla) is a tool for packaging code to release to the CPAN. The central notion of Dzil is that no programmer should ever have to waste his or her precious time on boring things like *README* files, prerequisite accounting, duplicated license statements, or anything else other than solving real problems.
+Perl's killer feature is the CPAN, and [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla) is a tool for packaging code to release to the CPAN. The central notion of Dzil is that no programmer should ever have to waste his or her precious time on boring things like *README* files, prerequisite accounting, duplicated license statements, or anything else other than solving real problems.
 
 It's worth noting, too, that the "CPAN distribution" format is useful even if your code never escapes to the CPAN. Libraries packaged *in any way* are much easier to manage than their unpackaged counterpart, and any libraries package the CPAN way can interact with all the standard CPAN tools. As long are you're going to package up your code, you might as well use the same tools as everyone else in the game.
 
 ### **A Step-by-Step Conversion**
 
-Switching your old code to use Dist::Zilla is easy. You can be conservative and work in small steps, or you can go whole hog. This article demonstrates the process with one of my distributions, [Number::Nary](http://search.cpan.org/perldoc?Number::Nary). To follow along, clone its git repository and start with the commit tagged `pre-dzil`. If you don't want to use `git`, that's fine. You'll still be able to see what's going on.
+Switching your old code to use Dist::Zilla is easy. You can be conservative and work in small steps, or you can go whole hog. This article demonstrates the process with one of my distributions, [Number::Nary](https://metacpan.org/pod/Number::Nary). To follow along, clone its git repository and start with the commit tagged `pre-dzil`. If you don't want to use `git`, that's fine. You'll still be able to see what's going on.
 
 #### **Replacing Makefile.PL**
 
 The first thing to do is to replace *Makefile.PL*, the traditional program for building and installing distributions (or *dists*). If you started with a [Module::Build](http://search.cpan.org/perldoc?Module::Build)-based distribution, you'd replace *Build.PL*, instead. Dist::Zilla will build those files for you in the dist you ship so that installing users have them, but you'll never need to think about them again.
 
-I packaged `Number::Nary` with [Module::Install](http://search.cpan.org/perldoc?Module::Install), the library that inspired me to build `Dist::Zilla`. Its *Makefile.PL* looked like:
+I packaged `Number::Nary` with [Module::Install](https://metacpan.org/pod/Module::Install), the library that inspired me to build `Dist::Zilla`. Its *Makefile.PL* looked like:
 
       use inc::Module::Install;
       all_from('lib/Number/Nary.pm');
@@ -97,11 +97,11 @@ At this point, you can build a releasable tarball by running `dzil build` (inste
 
 #### **Eliminating Pointless Packaging Files**
 
-The *MANIFEST.SKIP* file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the [ManifestSkip](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::ManifestSkip) plugin), but you can almost always just drop the file and use the [PruneCruft](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::PruneCruft) plugin instead. It prunes all the files people usually put in their skip file.
+The *MANIFEST.SKIP* file tells other packaging tools which files to exclude when building a distribution. You can keep using it (with the [ManifestSkip](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::ManifestSkip) plugin), but you can almost always just drop the file and use the [PruneCruft](https://metacpan.org/pod/Dist::Zilla::Plugin::PruneCruft) plugin instead. It prunes all the files people usually put in their skip file.
 
-The CPAN community has a tradition of shipping lots of good documentation written in Pod. Even so, several tools expect you also to provide a plain *README* file. The [Readme](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::Readme) plugin will generate one for you.
+The CPAN community has a tradition of shipping lots of good documentation written in Pod. Even so, several tools expect you also to provide a plain *README* file. The [Readme](https://metacpan.org/pod/Dist::Zilla::Plugin::Readme) plugin will generate one for you.
 
-Downstream distributors (like Linux distributions) like to see really clear license statements, especially in the form of a *LICENSE* file. Because your *dist.ini* knows the details of your license, the [License](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::License) plugin can generate this file for you.
+Downstream distributors (like Linux distributions) like to see really clear license statements, especially in the form of a *LICENSE* file. Because your *dist.ini* knows the details of your license, the [License](https://metacpan.org/pod/Dist::Zilla::Plugin::License) plugin can generate this file for you.
 
 All three of these plugins are part of the `Dist::Zilla` distribution. Thus you can delete three whole files—*MANIFEST.SKIP*, *LICENSE*, and *README*—at the cost of a couple of extra lines in *dist.ini*:
 
@@ -133,7 +133,7 @@ If you've customized your Pod coverage tests to consider certain methods trusted
 
       =for Pod::Coverage some_method some_other_method this_is_covered_too
 
-The [CriticTests](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::CriticTests) plugin, by the way, does not come with `Dist::Zilla`. It's a third party plugin, written by Jerome Quelin. There are a bunch of those on the CPAN, and they're easy to install. `[CriticTests]` tells `Dist::Zilla` to load Dist::Zilla::Plugin::CriticTests. Install it with *cpan* or your package manager and you're ready to use the plugin.
+The [CriticTests](https://metacpan.org/pod/Dist::Zilla::Plugin::CriticTests) plugin, by the way, does not come with `Dist::Zilla`. It's a third party plugin, written by Jerome Quelin. There are a bunch of those on the CPAN, and they're easy to install. `[CriticTests]` tells `Dist::Zilla` to load Dist::Zilla::Plugin::CriticTests. Install it with *cpan* or your package manager and you're ready to use the plugin.
 
 #### **The @Classic Bundle and Cutting Releases**
 
@@ -144,7 +144,7 @@ Because most of the time you want to use the same config everywhere, `Dist::Zill
 
 ...which makes for a nice, small config file.
 
-Classic enables a few other plugins, most of which aren't worth mentioning right now. A notable exception is [UploadToCPAN](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::UploadToCPAN). It enables the command `dzil release`, which will build a tarball and upload it to the CPAN, assuming you have a *~/.dzil/config.ini* which resembles:
+Classic enables a few other plugins, most of which aren't worth mentioning right now. A notable exception is [UploadToCPAN](https://metacpan.org/pod/Dist::Zilla::Plugin::UploadToCPAN). It enables the command `dzil release`, which will build a tarball and upload it to the CPAN, assuming you have a *~/.dzil/config.ini* which resembles:
 
       [!release]
       user     = rjbs
@@ -154,7 +154,7 @@ Classic enables a few other plugins, most of which aren't worth mentioning right
 
 So far, this `Dist::Zilla` configuration builds extra files like tests and packaging files. You can get a lot more out of `Dist::Zilla` if you also let it mess around with your library files.
 
-Add the [PkgVersion](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::PkgVersion) and [PodVersion](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::PodVersion) plugins to let `Dist::Zilla` take care of setting the version in every library file. They find *.pm* files and add a `our $VERSION = ...` declaration and a `=head1 VERSION` section to the Pod—which means you can delete all those lines from the code and not worry about keeping them up to date anymore.
+Add the [PkgVersion](https://metacpan.org/pod/Dist::Zilla::Plugin::PkgVersion) and [PodVersion](https://metacpan.org/pod/Dist::Zilla::Plugin::PodVersion) plugins to let `Dist::Zilla` take care of setting the version in every library file. They find *.pm* files and add a `our $VERSION = ...` declaration and a `=head1 VERSION` section to the Pod—which means you can delete all those lines from the code and not worry about keeping them up to date anymore.
 
 #### **Prereq Detection**
 
@@ -178,13 +178,13 @@ Now the *dist.ini* looks like:
       Sub::Exporter   = 0.90
       UDCode          = 0
 
-Way too much of this file handles prerequisites. [AutoPrereq](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::AutoPrereq) fixes all of that by analyzing the code to determine all of the necessary dependencies and their versions. Install this third-party plugin (also by Jerome Quelin!) and replace `Prereq` with `AutoPrereq`. This plugin requires the use of the `use MODULE VERSION` form for modules which require specific versions. This is actually a *very good* thing, because it means that your code will no longer even *compile* if Perl cannot meet those prerequisites. It also keeps code and installation data in sync. (Make sure that you're requiring the right version in your code. Many dists require one version in the code and one in the prereq listing. Now that you have only one place to list the required version, make sure you get it right.)
+Way too much of this file handles prerequisites. [AutoPrereq](https://metacpan.org/pod/Dist::Zilla::Plugin::AutoPrereq) fixes all of that by analyzing the code to determine all of the necessary dependencies and their versions. Install this third-party plugin (also by Jerome Quelin!) and replace `Prereq` with `AutoPrereq`. This plugin requires the use of the `use MODULE VERSION` form for modules which require specific versions. This is actually a *very good* thing, because it means that your code will no longer even *compile* if Perl cannot meet those prerequisites. It also keeps code and installation data in sync. (Make sure that you're requiring the right version in your code. Many dists require one version in the code and one in the prereq listing. Now that you have only one place to list the required version, make sure you get it right.)
 
 You don't have to modify *all* `use` statements to that form. In this example, it's only necessary for `List::MoreUtils` and `Sub::Exporter`.
 
 #### **Pod Rewriting**
 
-Now it's time to bring out some heavy guns. [Pod::Weaver](http://search.cpan.org/perldoc?Pod::Weaver) is a system for rewriting documentation. It can add sections, rejigger existing sections, or even translate non-Pod syntax into Pod as needed. Its basic built-in configuration can take the place of PodVersion, which allows you to delete gobs of boring boilerplate Pod. For example, you can get rid of all the NAME sections. All you need to do is provide an abstract in a comment. If your library says:
+Now it's time to bring out some heavy guns. [Pod::Weaver](https://metacpan.org/pod/Pod::Weaver) is a system for rewriting documentation. It can add sections, rejigger existing sections, or even translate non-Pod syntax into Pod as needed. Its basic built-in configuration can take the place of PodVersion, which allows you to delete gobs of boring boilerplate Pod. For example, you can get rid of all the NAME sections. All you need to do is provide an abstract in a comment. If your library says:
 
       package Number::Nary;
       # ABSTRACT: encode and decode numbers as n-ary strings
@@ -195,7 +195,7 @@ You can delete your "License and Copyright" sections. `Pod::Weaver` will generat
 
 #### **Release Automation**
 
-Now you're in the home stretch, ready to understand the "maximum overkill" approach to using Dist::Zilla. First, get rid of the version setting in the *dist.ini* and load the [AutoVersion](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::AutoVersion) plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add [NextRelease](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::NextRelease), which will update the changelog with every new release. In other words, the changelog file now starts with:
+Now you're in the home stretch, ready to understand the "maximum overkill" approach to using Dist::Zilla. First, get rid of the version setting in the *dist.ini* and load the [AutoVersion](http://search.cpan.org/perldoc?Dist::Zilla::Plugin::AutoVersion) plugin. It will set a new version per day, or use any other sort of scheme you configure. Then add [NextRelease](https://metacpan.org/pod/Dist::Zilla::Plugin::NextRelease), which will update the changelog with every new release. In other words, the changelog file now starts with:
 
       {{$NEXT}}
                 updated distribution to use Dist::Zilla
@@ -211,7 +211,7 @@ Finally, you can tie the whole thing into your version control system. I use Git
 
 The Git plugin bundle will refuse to cut a release if there are uncommitted changes in the working tree. Once the tree is clean for a release, Dzil will commit the changes to the changelog, tag the release, and push the changes and the new tag to the remote origin.
 
-Like the CriticTests, the [Dzil Git plugins](http://search.cpan.org/perldoc?Dist::Zilla::PluginBundle::Git) aren't bundled with Dist::Zilla (thank Jerome Quelin one more time). The at sign in the plugin name indicates that it's a *bundle* of Dzil plugins, but you can load or install the whole thing at once. To install it, install `Dist::Zilla::PluginBundle::Git`.
+Like the CriticTests, the [Dzil Git plugins](https://metacpan.org/pod/Dist::Zilla::PluginBundle::Git) aren't bundled with Dist::Zilla (thank Jerome Quelin one more time). The at sign in the plugin name indicates that it's a *bundle* of Dzil plugins, but you can load or install the whole thing at once. To install it, install `Dist::Zilla::PluginBundle::Git`.
 
 ### **Total Savings?**
 
