@@ -255,7 +255,7 @@ So you can say:
 
             { .. this code is not .. }
 
-If you want to learn more about source filtering, take a look at the [`Filter::Simple` manpage](http://search.cpan.org/author/DCONWAY/Filter-Simple-0.78/lib/Filter/Simple.pm).
+If you want to learn more about source filtering, take a look at the [`Filter::Simple` manpage](https://metacpan.org/pod/Filter::Simple).
 
 ### Answers to the comment game
 
