@@ -18,7 +18,7 @@
 **℞ 1: Generic Unicode-savvy ﬁlter**
 ------------------------------------
 
-Unicode allows multiple representations of the same characters. Comparing such strings for equivalence (sorting, searching, exact matching) requires care—including a coherent and consistent strategy of normalizing these representations to well-understood forms. Enter [Unicode::Normalize](http://search.cpan.org/perldoc?Unicode::Normalize).
+Unicode allows multiple representations of the same characters. Comparing such strings for equivalence (sorting, searching, exact matching) requires care—including a coherent and consistent strategy of normalizing these representations to well-understood forms. Enter [Unicode::Normalize](https://metacpan.org/pod/Unicode::Normalize).
 
 To handle Unicode effectively, always decompose on the way in, then recompose on the way out.
 
