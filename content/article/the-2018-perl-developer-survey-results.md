@@ -13,7 +13,7 @@
 
 The second edition of the Perl Developer Survey took place from the 5th
 of April until the 7th of May. Over 32 days we received 1024 responses
-from all over the world, an improvement over last year’s 849. There were
+from all over the world, an improvement over last year's 849. There were
 several changes including a few new questions and also a large number of
 respondents from Japan who were almost completely absent in 2017.
 
@@ -36,7 +36,7 @@ Here are some of the highlights:
 \
 **Q1 How long have you been using Perl 5?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image1.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image1.png"/>
 
 | **Experience**    | **2017** | **2018** |
 |-------------------|----------|----------|
@@ -50,7 +50,7 @@ At the experience level there are only slight changes in the *less than 1 year* 
 \
 **Q2 How did you start working in Perl?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image2.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image2.png"/>
 
 This is a new question, we wanted to know how developers got into Perl and what are the most popular ways of learning Perl.
 
@@ -61,16 +61,16 @@ The most popular choice, 51% is *self taught*, followed by *on the job* with 37.
 \
 **Q3 What resources would you recommend to someone new to Perl?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image3.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image3.png"/>
 
-This question follows the same theme as the previous one, regarding resource and sources to learn Perl. Books are the most popular choice with **44.1%**, followed by tutorials with **33.4%** and trainings with **10.2%**.
+This question follows the same theme as the previous one, regarding resource and sources to learn Perl. Books are the most popular choice with **44.1%**, followed by tutorials with **33.4%** and training with **10.2%**.
 
-The other section brought answers like: Gekuni, IRC, mailing lists, Perl Monks, source code, conferences and others.
+The other section brought answers like: Geekuni, IRC, mailing lists, Perl Monks, source code, conferences and others.
 
 \
 **Q4 Have you tried Perl 6 or have any interest in trying it out in the future?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image4.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image4.png"/>
 
 Here we have a slight change from 2017 that does not bode well for Perl 6, at least in this pool of respondents. The *yes* option dropped 9% from last year.
 
@@ -78,19 +78,19 @@ Here we have a slight change from 2017 that does not bode well for Perl 6, at le
 |-------------------------------|----------|----------|
 | Yes                           | 46.1%    | 37.1%    |
 | No                            | 13.7%    | 22.3%    |
-| Maybe I’ll check it out later | 39.6%    | 39.8%    |
-| What’s Perl 6?                | 0.6%     | 0.8%     |
+| Maybe I'll check it out later | 39.6%    | 39.8%    |
+| What's Perl 6?                | 0.6%     | 0.8%     |
 
 \
 **Q5 What Perl 5 version do you use?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image5.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image5.png"/>
 
-The most popular version is 5.24, while the latest version, 5.26, is second to last. The other section had various responses, including older version like 5.8, 5.1. In 2017 there was also an other option with mixed responses.
+The most popular version is 5.24, while the latest version, 5.26, is second to last. The other section had various responses, including older version like 5.8, 5.1. In 2017 there was also an *other* option with mixed responses.
 
 *This was a multiple choice question.*
 
-| **Perl 5 version** | **2017 ** | **2018 **               |
+| **Perl 5 version** | **2017**  | **2018**                |
 |--------------------|-----------|-------------------------|
 | 5.26               | -         | 9% (from other section) |
 | 5.24               | 29%       | 25.2%                   |
@@ -103,16 +103,16 @@ The most popular version is 5.24, while the latest version, 5.26, is second to l
 \
 **Q6 Is Perl 5 your main language?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image6.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image6.png"/>
 
-**76.9%** of respondents use Perl as a main language, while **23.1%** don’t, a 0.1% difference from last year, when 77% chose yes and 23% no.
+**76.9%** of respondents use Perl as a main language, while **23.1%** don't, a 0.1% difference from last year, when 77% chose yes and 23% no.
 
 \
 **Q7 What other languages do you use?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image7.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image7.png"/>
 
-| **Languages** | **2017 statistics ** | **2018 statistics**     |
+| **Languages** | **2017 statistics**  | **2018 statistics**     |
 |---------------|----------------------|-------------------------|
 | Only Perl     | 10.8%                | 1.5%                    |
 | JavaScript    | 22%                  | 21%                     |
@@ -129,34 +129,34 @@ The most popular version is 5.24, while the latest version, 5.26, is second to l
 
 The other section was quite diluted and contained responses like: Scala, Swift, Rust, Erlang, Perl 6, TypeScript, Lua, Fortran and others.
 
-*This was a multiple choice question. *
+*This was a multiple choice question.*
 
 \
 **Q8 What methodologies do you use?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image8.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image8.png"/>
 
-Methodologies correlate with how developers work and build software. That being said, **30.7%** of respondents chose the *none* option. Most of them work in various size companies, but in small perl development teams, which somewhat explains their choice. In the *other* section we received responses like: TDD, continuous delivery, spiral and various hybrid versions.
+Methodologies correlate with how developers work and build software. That being said, **30.7%** of respondents chose the *none* option. Most of them work in various size companies, but in small Perl development teams, which somewhat explains their choice. In the *other* section we received responses like: TDD, continuous delivery, spiral and various hybrid versions.
 
 Agile is the most popular methodologies, followed by Waterfall and Lean.
 
 \
 **Q9 Do you have a formal education in computer science?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image9.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image9.png"/>
 
-Most respondents, **40.2%** don’t have a formal education in the field. Almost a third or **32.1%** have a Bachelor degree, **14.3**% have a Masters degree and **2%** have a PhD.
+Most respondents, **40.2%** don't have a formal education in the field. Almost a third or **32.1%** have a Bachelor degree, **14.3**% have a Masters degree and **2%** have a PhD.
 
 In the other section we have responses like: mathematics, high school, engineering or incomplete degrees.
 
-*This was a multiple choice question. *
+*This was a multiple choice question.*
 
 \
-**Q10 What’s your type of employment?**
+**Q10 What's your type of employment?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image10.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image10.png"/>
 
-| **Type of employment** | **2017 ** | **2018 ** |
+| **Type of employment** | **2017** | **2018** |
 |------------------------|-----------|-----------|
 | Full time              | 73%       | 79.3%     |
 | Freelancer             | 9.4%      | 7.5%      |
@@ -168,12 +168,12 @@ The full time section increased by **6.3%** from last year, while the rest drop 
 
 The *other* section contained responses like: business owner, founder, student, between jobs or retired.
 
-*This was a multiple choice question. *
+*This was a multiple choice question.*
 
 \
-**Q11 What’s the size of the company you work for?**
+**Q11 What's the size of the company you work for?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image11.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image11.png"/>
 
 | **Company size** | **2017 statistics** | **2018 statistics** |
 |------------------|---------------------|---------------------|
@@ -191,7 +191,7 @@ Company size statistics remain quite stable, with minor alterations, a 1.9% drop
 \
 **Q12 How large is the development team in the company?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image12.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image12.png"/>
 
 | **Dev team size** | **Percentage** |
 |-------------------|----------------|
@@ -209,7 +209,7 @@ We wanted to know large is the overall development team. About **60%** of develo
 \
 **Q13 How large is the Perl team in the company?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image13.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image13.png"/>
 
 | **Perl team size** | **Percentage** |
 |--------------------|----------------|
@@ -225,59 +225,34 @@ Not all respondents answered all three questions, hence there are small discrepa
 
 This is the last question in a set. By comparing company size to development team size to Perl team size we wanted to know how significant is Perl in the development process.
 
-**Development team size compared to company size **
+**Development team size compared to company size**
 
-|                   |
-|-------------------|
-| **Company size**  |
-|                   |
-| **Dev team size** |
-|                   |
-|                   |
-|                   |
-|                   |
-|                   |
+![](/images/the-2018-perl-developer-survey-results/table1.png)
 
 The 1000+ size bracket offers the most surprising result, **more than half** have quite large development team, with more than 100 people, but about **34%** also have very small dev teams, with less than 20 people.
 
 **Perl team size compared to company size**
 
-|                    |
-|--------------------|
-| **Company size**   |
-|                    |
-| **Perl team size** |
-|                    |
-|                    |
-|                    |
-|                    |
+![](/images/the-2018-perl-developer-survey-results/table1.png)
 
 Small Perl teams are the most popular choice, no matter of company size. Very large Perl teams, 49+, are found in the 100-1000 and 1000+ company size brackets, with **15.2%** and **16.6%** respectively.
 
 **Perl team size compared to development team size**
 
-|                    |
-|--------------------|
-| **Dev team size**  |
-|                    |
-| **Perl team size** |
-|                    |
-|                    |
-|                    |
-|                    |
+![](/images/the-2018-perl-developer-survey-results/table1.png)
 
 Comparing the Perl team size to the development team size shows how important is Perl as a technology. Most development teams contain small Perl teams, 1-3 and 4-10 Perl teams are the most popular choice. When it comes to large development teams (75-99 and 100+) Perl represents either a very small part, a 1-3 team/4-10 team or a very large part 49+.
 
 For **large Perl development teams**, the **49+** bracket, the most popular countries are: the United States with **47%**, United Kingdom **16.8%**, the Netherlands **8.4%,** and Japan and France **4.2%** respectively.
 
 \
-**Q14 What’s the field of the company?**
+**Q14 What's the field of the company?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image14.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image14.png"/>
 
-Last year this question had a write in option, with a larger variety of answers that didn’t all quantify to anything significant statistically speaking. Hence, this comparison shows some significant differences.
+Last year this question had a write in option, with a larger variety of answers that didn't all quantify to anything significant statistically speaking. Hence, this comparison shows some significant differences.
 
-| **Field**   | **2017 ** | **2018** |
+| **Field**   | **2017** | **2018** |
 |-------------|-----------|----------|
 | Services    | 6.3%      | 27%      |
 | Development | 23%       | 19.6%    |
@@ -289,14 +264,14 @@ Last year this question had a write in option, with a larger variety of answers 
 | Retail      | 1.4%      | 2.6%     |
 | Research    | 1.5%      | 2%       |
 
-*1008 respondents answered this question. This was a multiple choice question. *
+*1008 respondents answered this question. This was a multiple choice question.*
 
 \
 **Q15 Where is the company based?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image15.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image15.png"/>
 
-| **Country** | **2017 ** | **2018 **                 |
+| **Country** | **2017** | **2018**                 |
 |-------------|-----------|---------------------------|
 | US          | 33.9%     | 31.1%                     |
 | UK          | 11.6%     | 10%                       |
@@ -313,7 +288,7 @@ Last year this question had a write in option, with a larger variety of answers 
 | Spain       | 3.4%      | 1.8%                      |
 | Italy       | 1.2%      | 0.9%                      |
 
-4.6% of respondents chose *None* as a location. The US again leads the board, followed by the UK and Germany. Japan makes an appearance as a large group of Perl developers joined this years’ survey, while Brazil increased its percentage. The *other* section had a variety of locations as well.
+4.6% of respondents chose *None* as a location. The US again leads the board, followed by the UK and Germany. Japan makes an appearance as a large group of Perl developers joined this years' survey, while Brazil increased its percentage. The *other* section had a variety of locations as well.
 
 **Most popular cities and states**
 
@@ -326,9 +301,9 @@ We only took into account cities with a significant percentage in each country.
 *1014 respondents answered this question*
 
 \
-**Q16 What’s your age group?**
+**Q16 What's your age group?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image16.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image16.png"/>
 
 | **Age** | **2017 statistics** | **2018 statistics** |
 |---------|---------------------|---------------------|
@@ -340,7 +315,7 @@ We only took into account cities with a significant percentage in each country.
 \
 **Q17 Do you work remotely or on site?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image17.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image17.png"/>
 
 | **Choice** | **2017 statistics** | **2018 statistics** |
 |------------|---------------------|---------------------|
@@ -353,11 +328,11 @@ Compared to last year we have a 5% gain on the working *remotely* option. In the
 *1013 respondents answered this question.*
 
 \
-**Q18 What’s your pay bracket?**
+**Q18 What's your pay bracket?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image18.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image18.png"/>
 
-| **Pay bracket** | **2017 ** | **2018 ** |
+| **Pay bracket** | **2017** | **2018** |
 |-----------------|-----------|-----------|
 | Less than $50k  | 25.9%     | 25.4%     |
 | $50k to $80k    | 27.9%     | 27.8%     |
@@ -379,9 +354,9 @@ Not all countries are presented for each bracket, only those with a significant 
 \
 **Q19 Are you a full stack developer?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image19.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image19.png"/>
 
-| **Answer** | **2017 ** | **2018 ** |
+| **Answer** | **2017** | **2018** |
 |------------|-----------|-----------|
 | Yes        | 56.6%     | 56.3%     |
 | No         | 34.8%     | 40.4%     |
@@ -392,7 +367,7 @@ In the *other* section we received various responses that questioned the nature 
 \
 **Q20 Are you a programmer or a sysadmin?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image20.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image20.png"/>
 
 | **Answer** | **2018** |
 |------------|----------|
@@ -401,12 +376,12 @@ In the *other* section we received various responses that questioned the nature 
 | Both       | 39%      |
 | Other      | 6.8%     |
 
-Most respondents are programmers, and a considerable amount are programmers and sys admins, or have similar skills and responsibilities. In the *other* section we received responses that represent other positions like: architect, engineering or dev ops manager, QA etc.
+Most respondents are programmers, and a considerable amount are programmers and sysadmins, or have similar skills and responsibilities. In the *other* section we received responses that represent other positions like: architect, engineering or dev ops manager, QA etc.
 
 \
 **Q21 What text editor/IDE do you use?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image21.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image21.png"/>
 
 | **Text editor/IDE** | **2017 statistics** | **2018 statistics**        |
 |---------------------|---------------------|----------------------------|
@@ -419,14 +394,14 @@ Most respondents are programmers, and a considerable amount are programmers and 
 | Komodo              | 5.9%                | 3.5%                       |
 | Visual Studio       | 2.1%                | 3.1 % (from other section) |
 
-In the *other* section we received a variety of responses that didn’t quantify to anything significant.
+In the *other* section we received a variety of responses that didn't quantify to anything significant.
 
-*This was a multiple choice question. *
+*This was a multiple choice question.*
 
 \
 **Q22 Have you ever followed a TDD approach to development?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image22.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image22.png"/>
 
 | **Answer**   | **2017 statistics** | **2018 statistics** |
 |--------------|---------------------|---------------------|
@@ -438,7 +413,7 @@ In the *other* section we received a variety of responses that didn’t quantify
 \
 **Q23 What Perl framework do you use?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image23.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image23.png"/>
 
 | **Answer**  | **2017 statistics** | **2018 statistics** |
 |-------------|---------------------|---------------------|
@@ -457,9 +432,9 @@ In 2017 there were more write in responses in the other section that offered a v
 \
 **Q24 What do you use for debugging?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image24.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image24.png"/>
 
-| **Answer**    | **2017** | **2018 **                 |
+| **Answer**    | **2017** | **2018**                 |
 |---------------|----------|---------------------------|
 | Data dumper   | 6%       | 38.6%                     |
 | Print         | 18%      | 34.3%                     |
@@ -473,7 +448,7 @@ In the 2017 the option was *write in* so the answers varied, people using a comb
 \
 **Q25 What do you use for caching?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image25.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image25.png"/>
 
 | **Answer** | **2017 statistics** | **2018 statistics**       |
 |------------|---------------------|---------------------------|
@@ -488,7 +463,7 @@ Last year the most popular choice was *memcached*, this year it was *nothing*. T
 \
 **Q26 What databases do you use?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image26.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image26.png"/>
 
 | **Answer** | **2017** | **2018**                  |
 |------------|----------|---------------------------|
@@ -506,7 +481,7 @@ There were slight changes from last year, a 10% drop for MySQL and a few new and
 \
 **Q27 Do you comment your code?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image27.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image27.png"/>
 
 | **Answer** | **2017** | **2018** |
 |------------|----------|----------|
@@ -514,12 +489,12 @@ There were slight changes from last year, a 10% drop for MySQL and a few new and
 | No         | 2%       | 1.6%     |
 | Sometimes  | 21.8%    | 25.1%    |
 
-In the *other* section respondents said they comment code rarely or only if it’s absolutely necessary.
+In the *other* section respondents said they comment code rarely or only if it's absolutely necessary.
 
 \
 **Q28 Do you work on new features or maintenance?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image28.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image28.png"/>
 
 |              |          |          |
 |--------------|----------|----------|
@@ -532,7 +507,7 @@ In the *other* section respondents said they comment code rarely or only if it�
 \
 **Q29 What kind of apps do you work on?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image29.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image29.png"/>
 
 | **Answer**   | **2017** | **2018** |
 |--------------|----------|----------|
@@ -551,7 +526,7 @@ Web leads the pack once again, followed by desktop and mobile. In the *other* se
 \
 **Q30 Do you attend Perl conferences?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image30.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image30.png"/>
 
 | **Answer** | **2017** | **2018** |
 |------------|----------|----------|
@@ -566,7 +541,7 @@ Respondents that attend Perl conference are from the United States 26.2%, United
 \
 **Q31 Are you part of a Perl Mongers group?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image31.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image31.png"/>
 
 | **Answer** | **2017** | **2018** |
 |------------|----------|----------|
@@ -579,14 +554,14 @@ The *other* section brought answers like: used to, none nearby, mailing list onl
 \
 **Q32 What do you think about the Perl community?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image32.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image32.png"/>
 
-Most respondents have a positive outlook on the Perl community. In the *share some thoughts* section we received quite a few (negative) responses related to the naming of Perl 6, some on improving Perl 5 more, insular behaviour or unwelcoming, issues with CPAN library or neutral or no opinion.
+Most respondents have a positive outlook on the Perl community. In the *share some thoughts* section we received quite a few (negative) responses related to the naming of Perl 6, some on improving Perl 5 more, insular behavior or unwelcoming, issues with CPAN library or neutral or no opinion.
 
 \
 **Q33 Do you contribute to open source?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image33.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image33.png"/>
 
 | **Answer** | **2017** | **2018** |
 |------------|----------|----------|
@@ -594,12 +569,12 @@ Most respondents have a positive outlook on the Perl community. In the *share so
 | No         | 62.2%    | 59.5%    |
 | Other      | 5.8%     | 4.4%     |
 
-The *other* section, just like last year, covers respondents that don’t commit to open source regularly or wish to do it in the future.
+The *other* section, just like last year, covers respondents that don't commit to open source regularly or wish to do it in the future.
 
 \
 **Q34 Do you blog about your projects/experiences?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image34.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image34.png"/>
 
 | **Answer** | **2017** | **2018** |
 |------------|----------|----------|
@@ -607,12 +582,12 @@ The *other* section, just like last year, covers respondents that don’t commit
 | No         | 72.1%    | 73.6%    |
 | Other      | 6.6%     | 2.9%     |
 
-The *other* sections mostly covers people who don’t blog frequently.
+The *other* sections mostly covers people who don't blog frequently.
 
 \
 **Q35 Do you plan to move from Perl to another language in the future?**
 
-<img src="/images/the-2018-perl-developer-survey-results/media/image35.png"/>
+<img src="/images/the-2018-perl-developer-survey-results/image35.png"/>
 
 | **Answer**           | **2017** | **2018** |
 |----------------------|----------|----------|
@@ -633,8 +608,8 @@ The *other* sections mostly covers people who don’t blog frequently.
 
 Some responses also mentioned using these languages together with Perl, for different projects or for work/personal projects.
 
-**79.5% (81.4% last year)** of respondents who consider moving from Perl have more than 5 years of experience, **7.9% (8.9% last year)** between 3 to 5 years of experience, **8.5% (5.4% last year)** between 1 to 3 years and **3.9%** (**same** as last year **last year)** less than one year of experience.
+**79.5% (81.4% last year)** of respondents who consider moving from Perl have more than 5 years of experience, **7.9% (8.9% last year)** between 3 to 5 years of experience, **8.5% (5.4% last year)** between 1 to 3 years and **3.9%** (**same** as last year **last year**) less than one year of experience.
 
 **26.9%** of respondents who consider moving from Perl earn less than $50k, **32.6%** earn between $50k to $80k, **22.4%** are in the $80k to $120k bracket and **17.8%** earn more than $120k .
 
-If you’d like to **give some feedback** on this year’s survey and let us know what type of questions or information you’d like for next year, **please fill [*this form*](https://docs.google.com/forms/d/e/1FAIpQLSelP380-xOh5GIU3QXEi5P6Q2yp91oqAcYgqlnlq95eJS5guQ/viewform?usp=sf_link)**.
+If you'd like to give some feedback on this year's survey and let us know what type of questions or information you'd like for next year, **please fill out this [form](https://docs.google.com/forms/d/e/1FAIpQLSelP380-xOh5GIU3QXEi5P6Q2yp91oqAcYgqlnlq95eJS5guQ/viewform?usp=sf_link)**.
