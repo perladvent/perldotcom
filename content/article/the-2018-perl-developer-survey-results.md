@@ -12,8 +12,8 @@
       "evozon",
       "2018"
    ],
-   "date" : "2018-05-20T18:04:34",
-   "draft" : true
+   "date" : "2018-05-21T21:26:34",
+   "draft" : false
 }
 
 The second edition of the Perl Developer Survey took place from the 5th
