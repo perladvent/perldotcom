@@ -238,13 +238,13 @@ The 1000+ size bracket offers the most surprising result, **more than half** hav
 
 **Perl team size compared to company size**
 
-![](/images/the-2018-perl-developer-survey-results/table1.png)
+![](/images/the-2018-perl-developer-survey-results/table2.png)
 
 Small Perl teams are the most popular choice, no matter of company size. Very large Perl teams, 49+, are found in the 100-1000 and 1000+ company size brackets, with **15.2%** and **16.6%** respectively.
 
 **Perl team size compared to development team size**
 
-![](/images/the-2018-perl-developer-survey-results/table1.png)
+![](/images/the-2018-perl-developer-survey-results/table3.png)
 
 Comparing the Perl team size to the development team size shows how important is Perl as a technology. Most development teams contain small Perl teams, 1-3 and 4-10 Perl teams are the most popular choice. When it comes to large development teams (75-99 and 100+) Perl represents either a very small part, a 1-3 team/4-10 team or a very large part 49+.
 
