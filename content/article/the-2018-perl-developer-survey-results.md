@@ -1,15 +1,20 @@
-
-  {
-    "title"       : "The 2018 Perl Developer Survey Results",
-    "authors"     : ["samuel-andras"],
-    "date"        : "2018-05-20T18:04:34",
-    "tags"        : [],
-    "draft"       : true,
-    "image"       : "",
-    "thumbnail"   : "",
-    "description" : "Find out more about our we're doing",
-    "categories"  : "community"
-  }
+{
+   "categories" : "community",
+   "thumbnail" : "/images/the-2018-perl-developer-survey-results/thumb_cover.png",
+   "description" : "Find out what over 1,000 Perl developers think about their language",
+   "title" : "The 2018 Perl Developer Survey Results",
+   "authors" : [
+      "samuel-andras"
+   ],
+   "image" : "/images/the-2018-perl-developer-survey-results/cover.png",
+   "tags" : [
+      "perl-survey",
+      "evozon",
+      "2018"
+   ],
+   "date" : "2018-05-20T18:04:34",
+   "draft" : true
+}
 
 The second edition of the Perl Developer Survey took place from the 5th
 of April until the 7th of May. Over 32 days we received 1024 responses
@@ -612,4 +617,4 @@ Some responses also mentioned using these languages together with Perl, for diff
 
 **26.9%** of respondents who consider moving from Perl earn less than $50k, **32.6%** earn between $50k to $80k, **22.4%** are in the $80k to $120k bracket and **17.8%** earn more than $120k .
 
-If you'd like to give some feedback on this year's survey and let us know what type of questions or information you'd like for next year, **please fill out this [form](https://docs.google.com/forms/d/e/1FAIpQLSelP380-xOh5GIU3QXEi5P6Q2yp91oqAcYgqlnlq95eJS5guQ/viewform?usp=sf_link)**.
+If you'd like to give some feedback on this year's survey and let us know what type of questions or information you'd like for next year, please fill out this [form](https://docs.google.com/forms/d/e/1FAIpQLSelP380-xOh5GIU3QXEi5P6Q2yp91oqAcYgqlnlq95eJS5guQ/viewform?usp=sf_link).
