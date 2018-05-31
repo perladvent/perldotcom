@@ -35,7 +35,7 @@ To measure the length of a string by counts by grapheme, not by codepoint:
      my $count = 0;
      while ($str =~ /\X/g) { $count++ }
 
-Alternately (or on older versions of Perl), the CPAN module [Unicode::GCString](http://search.cpan.org/perldoc?Unicode::GCString) is useful:
+Alternately (or on older versions of Perl), the CPAN module [Unicode::GCString](https://metacpan.org/pod/Unicode::GCString) is useful:
 
      use Unicode::GCString;
      my $gcs   = Unicode::GCString->new($str);
