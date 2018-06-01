@@ -22,13 +22,13 @@ Sorting—even pure ASCII—seems easy, at least if you know the alphabet song. 
 
 Sorting Unicode data *seems* much more difficult: the rules for each character specify its relationship to other characters. These *collation* rules guide the sorting and comparison of data with respect to case sensitivity, accent marks, character width, and other Unicode properties.
 
-A simple sort of Unicode data—based on codepoint—produces nothing in a sensible alphabetic order. A sensible sorting must respect the [Unicode Collation Algorithm](http://www.unicode.org/reports/tr10/) (UCA) instead. The CPAN module [Unicode::Collate](http://search.cpan.org/perldoc?Unicode::Collate) implements UCA. Its simple use is:
+A simple sort of Unicode data—based on codepoint—produces nothing in a sensible alphabetic order. A sensible sorting must respect the [Unicode Collation Algorithm](http://www.unicode.org/reports/tr10/) (UCA) instead. The CPAN module [Unicode::Collate](https://metacpan.org/pod/Unicode::Collate) implements UCA. Its simple use is:
 
      use Unicode::Collate;
      my $col  = Unicode::Collate->new();
      my @list = $col->sort(@old_list);
 
-See also the *ucsort* program from the [`Unicode::Tussle`](http://search.cpan.org/perldoc?Unicode::Tussle) CPAN module for a convenient command-line interface to this module.
+See also the *ucsort* program from the [`Unicode::Tussle`](https://metacpan.org/pod/Unicode::Tussle) CPAN module for a convenient command-line interface to this module.
 
 In fact, sort aware of UCA sorts ASCII text better than simple ASCII sorts sort ASCII text, because UCA accounts for numbers, punctuation, and other non-alphanumerics.
 
