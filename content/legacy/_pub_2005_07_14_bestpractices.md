@@ -81,7 +81,7 @@ Writing tests always seems like a chore, and an unproductive chore at that: you 
 
 A driver like that is actually harder to write than a test suite, because you have to worry about formatting the output in a way that is easy to read. It's also much harder to use the driver than it would be to use a test suite, because every time you run it you have to wade though that formatted output and verify "by eye" that everything is as it should be. That's also error-prone; eyes are not optimized for picking out small differences in the middle of large amounts of nearly identical text.
 
-Instead of hacking together a driver program, it's easier to write a test program using the standard [Test::Simple](http://search.cpan.org/perldoc?Test::Simple) module. Instead of `print` statements showing what's being tested, you just write calls to the `ok()` subroutine, specifying as its first argument the condition under which things are okay, and as its second argument a description of what you're actually testing:<span id="OLE_LINK429"></span>
+Instead of hacking together a driver program, it's easier to write a test program using the standard [Test::Simple](https://metacpan.org/pod/Test::Simple) module. Instead of `print` statements showing what's being tested, you just write calls to the `ok()` subroutine, specifying as its first argument the condition under which things are okay, and as its second argument a description of what you're actually testing:<span id="OLE_LINK429"></span>
 
     > cat inflections.t
 
@@ -128,7 +128,7 @@ The `Test::Simple` program is slightly more concise and readable than the origin
 
 More importantly, this version requires far less effort to verify the correctness of each test. You just scan down the left margin looking for a `not` and a comment line.
 
-You might prefer to use the [Test::More](http://search.cpan.org/perldoc?Test::More) module instead of `Test::Simple`. Then you can specify the actual and expected values separately, by using the `is()` subroutine, rather than `ok()`:
+You might prefer to use the [Test::More](https://metacpan.org/pod/Test::More) module instead of `Test::Simple`. Then you can specify the actual and expected values separately, by using the `is()` subroutine, rather than `ok()`:
 
     use Lingua::EN::Inflect qw( inflect );
     use Test::More qw( no_plan ); # Now using more advanced testing tools
@@ -173,7 +173,7 @@ Apart from no longer having to type the `eq` yourself, this version also produce
     1..8
     # Looks like you failed 2 tests of 8.
 
-The [Test::Tutorial](http://search.cpan.org/perldoc?Test::Tutorial) documentation that comes with Perl 5.8 provides a gentle introduction to both `Test::Simple` and `Test::More`.
+The [Test::Tutorial](https://metacpan.org/pod/Test::Tutorial) documentation that comes with Perl 5.8 provides a gentle introduction to both `Test::Simple` and `Test::More`.
 
 ### 3. Create Standard POD Templates for Modules and Applications
 
@@ -766,7 +766,7 @@ will be more efficient than two statements:
 
 Unless you are deeply familiar with the internals of the Perl interpreter (in which case you already have far more serious personal issues to deal with), intuitions about the relative performance of two constructs are exactly that: unconscious guesses.
 
-The only way to know for sure which of two--or more--alternatives will perform better is to actually time each of them. The standard [Benchmark](http://search.cpan.org/perldoc?Benchmark) module makes that easy:
+The only way to know for sure which of two--or more--alternatives will perform better is to actually time each of them. The standard [Benchmark](https://metacpan.org/pod/Benchmark) module makes that easy:
 
     # A short list of not-quite-unique values...
     our @data = qw( do re me fa so la ti do );
