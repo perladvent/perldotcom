@@ -20,7 +20,7 @@
 
 Always convert to and from your desired encoding at the edges of your programs. This includes the standard filehandles `STDIN`, `STDOUT`, and `STDERR`. While it may be most common for modern operating systems to [support UTF-8 in filehandle settings](/pub/2012/04/perlunicook-decode-standard-filehandles-as-utf-8.html), you may need to use other encodings.
 
-Perl can respect your current locale settings for its default filehandles. Start by installing the [Encode::Locale](http://search.cpan.org/perldoc?Encode::Locale) module from the CPAN.
+Perl can respect your current locale settings for its default filehandles. Start by installing the [Encode::Locale](https://metacpan.org/pod/Encode::Locale) module from the CPAN.
 
         # cpan -i Encode::Locale
         use Encode;
