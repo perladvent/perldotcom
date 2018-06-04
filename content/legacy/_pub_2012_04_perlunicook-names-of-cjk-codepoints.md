@@ -20,7 +20,7 @@
 
 [CJK](http://www.unicode.org/faq/han_cjk.html) refers to Chinese, Japanese, and Korean. In the context of Unicode, it usually refers to the Han ideographs used in the modern Chinese and Japanese writing systems. As you can expect, pictoral languages such as Chinese make Unicode handling more complex.
 
-Sinograms like "東京" come back with character names of `CJK UNIFIED IDEOGRAPH-6771` and `CJK UNIFIED IDEOGRAPH-4EAC`, because their "names" vary between languages. The CPAN [`Unicode::Unihan`](http://search.cpan.org/perldoc?Unicode::Unihan) module has a large database for decoding these (and a whole lot more), provided you know how to understand its output.
+Sinograms like "東京" come back with character names of `CJK UNIFIED IDEOGRAPH-6771` and `CJK UNIFIED IDEOGRAPH-4EAC`, because their "names" vary between languages. The CPAN [`Unicode::Unihan`](https://metacpan.org/pod/Unicode::Unihan) module has a large database for decoding these (and a whole lot more), provided you know how to understand its output.
 
      # cpan -i Unicode::Unihan
      use Unicode::Unihan;
