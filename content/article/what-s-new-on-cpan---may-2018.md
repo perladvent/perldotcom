@@ -58,4 +58,5 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 * Manage a hierarchy of Data::MuForm classes with [Data::MuFormX::Registry](https://metacpan.org/pod/Data::MuFormX::Registry)
 * [Mojo::SAML](https://metacpan.org/pod/Mojo::SAML) is a SAML2 toolkit using the Mojo stack
 * [Stor](https://metacpan.org/pod/Stor) is file storage retrieval API implemented over HTTP
+* [TaskPipe](https://metacpan.org/pod/TaskPipe) is a YAML-driven framework for managing scrapers
 
