@@ -86,3 +86,6 @@ And the tests will be skipped until the date is reached. Test2 makes writing new
 * For plugins see {{< mcpan "Test2::Plugin" >}}
 * {{< mcpan "Test2::API" >}} is used to get the test context object, see the context [cardinal rules](https://metacpan.org/pod/Test2::API::Context#CRITICAL-DETAILS)
 * {{< mcpan "Test2::Tools::SkipUntil" >}}
+
+\
+Cover image via [pixabay](https://pixabay.com/p-762486/).
