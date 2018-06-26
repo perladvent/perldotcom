@@ -16,7 +16,7 @@ so, you may have noticed that the site is now directing all of its
 traffic to [metacpan.org](https://metacpan.org). Let's talk about what this change
 means.
 
-## Why is this change taking place?
+### Why is this change taking place?
 
 The maintainers behind [search.cpan.org](http://search.cpan.org) have decided
 that it's time to move on. After many, many years of keeping this site up and
@@ -27,18 +27,18 @@ Perl users everywhere, the MetaCPAN team would like to thank all of the crew
 behind [search.cpan.org](http://search.cpan.org) for their many years of
 working behind the scenes to keep this valuable resource up and running.
 
-## How does this change CPAN?
+### How does this change CPAN?
 
 It doesn't. CPAN is the central repository of uploaded Perl modules. Both
 [search.cpan.org](http://search.cpan.org) and
 [metacpan.org](https://metacpan.org) are search interfaces for CPAN data.
 They're layers on top of CPAN. CPAN doesn't know (or care) about them.
 
-## How does this change PAUSE?
+### How does this change PAUSE?
 
 See above. Nothing changes on the PAUSE side of things.
 
-## What's the difference between search.cpan.org and metacpan.org?
+### What's the difference between search.cpan.org and metacpan.org?
 
 [search.cpan.org](http://search.cpan.org) was the original CPAN module search.
 MetaCPAN followed many years later. Unlike,
@@ -63,12 +63,12 @@ touch either at [GitHub](https://github.com/metacpan/metacpan-web) or at
 There's a small team and keeping this site up and running is a big
 job, so the team is grateful for all contributions.
 
-## Do I need to create a MetaCPAN account?
+### Do I need to create a MetaCPAN account?
 
 Only if a) you're an author and you want to modify your profile or b) you want
 to use the "++" buttons to upvote your favorite modules.
 
-## What does this mean moving forward?
+### What does this mean moving forward?
 
 It was nice to have two different interfaces to CPAN, because this provided all
 of us with a fallback for search results as well as some redundancy. If either
