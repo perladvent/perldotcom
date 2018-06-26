@@ -3,7 +3,7 @@
     "title"       : "Saying Goodbye to search.cpan.org",
     "authors"     : ["olaf-alders"],
     "date"        : "2018-06-26T09:50:46",
-    "tags"        : ["CPAN", "MetaCPAN"],
+    "tags"        : ["cpan", "metacpan"],
     "draft"       : true,
     "image"       : "",
     "thumbnail"   : "",
