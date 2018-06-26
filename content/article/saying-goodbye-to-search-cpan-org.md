@@ -12,7 +12,7 @@
   }
 
 If you've visited [search.cpan.org](http://search.cpan.org) in the last day or
-so, you may have noticed that this CPAN search site is now directing all of its
+so, you may have noticed that the site is now directing all of its
 traffic to [metacpan.org](https://metacpan.org). Let's talk about what this change
 means.
 
@@ -51,17 +51,17 @@ you want to make changes to the MetaCPAN API, you can [spin up a Vagrant
 box](https://github.com/metacpan/metacpan-developer).
 
 The MetaCPAN interface has more bells and whistles. This isn't to everyone's
-taste, but there is a planned UI overhaul. If you're interested in helping
-with this, please get in touch either at
-[GitHub](https://github.com/metacpan/metacpan-web) or at #metacpan on
-irc.perl.org
+taste, but there is a planned UI overhaul.
 
-It should be noted that MetaCPAN's search interface may not give you all of the
-same results you're used to if you're coming from
-[search.cpan.org](http://search.cpan.org). As noted above, you can get in
-touch in the same places if you'd like to discuss changes or improvements to
-our search. There's a small team and keeping this site up and running is a big
-job, so the team is grateful for any and all contributions.
+MetaCPAN's search interface does not always return the same results as [search.cpan.or
+](http://search.cpan.org) used to.
+
+If you're interested in helping improve the UI or search results, please get in
+touch either at [GitHub](https://github.com/metacpan/metacpan-web) or at
+`#metacpan` on irc.perl.org.
+
+There's a small team and keeping this site up and running is a big
+job, so the team is grateful for all contributions.
 
 ## Do I need to create a MetaCPAN account?
 
@@ -77,11 +77,11 @@ option. However, the interface which we do have is open source, built on an
 interesting stack and is a place where you can contribute. Don't like
 something?  Please help to fix it.
 
-MetaCPAN is housed in two different data centers (one at
-[Bytemark](https://www.bytemark.co.uk/) in the UK and [Liquid
-Web](https://www.liquidweb.com/) one in the US). The MetaCPAN stack uses
-[Fastly](https://fastly.com) for caching and redundancy. Some other parts of
-includes: Puppet, vagrant, Debian, Plack, Elasticsearch, Catalyst and
+MetaCPAN is housed in two different data centers
+([Bytemark](https://www.bytemark.co.uk/) in the UK and [Liquid
+Web](https://www.liquidweb.com/) in the US). The MetaCPAN stack uses
+[Fastly](https://fastly.com) for caching and redundancy. Other parts
+include: Puppet, vagrant, Debian, Plack, Elasticsearch, Catalyst and
 Bootstrap. If you're interested in learning more about any of these
 technologies, please get involved with the project. The team would love to
 have you on board.
