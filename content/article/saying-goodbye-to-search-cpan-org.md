@@ -24,7 +24,7 @@ running they have decided to pass on the torch (and the traffic) to
 [metacpan.org](https://metacpan.org). Myself and the rest of the MetaCPAN team
 have been working very
 hard to prepare for the influx of new traffic (and new users). On behalf of
-Perl users everywhere, the we'd like to thank all of the crew
+Perl users everywhere, the we'd like to thank [Graham Barr and all of the crew](https://log.perl.org/2018/05/goodbye-search-dot-cpan-dot-org.html)
 behind [search.cpan.org](http://search.cpan.org) for their many years of
 working behind the scenes to keep this valuable resource up and running.
 
