@@ -66,7 +66,7 @@ job, so the team is grateful for any and all contributions.
 ## Do I need to create a MetaCPAN account?
 
 Only if a) you're an author and you want to modify your profile or b) you want
-to use the "++" buttons to upvote your favourite modules.
+to use the "++" buttons to upvote your favorite modules.
 
 ## What does this mean moving forward?
 
@@ -77,7 +77,7 @@ option.  However, the interface which we do have is open source, built on an
 interesting stack and is a place where you can contribute.  Don't like
 something?  Please help to fix it.
 
-MetaCPAN is housed in two different data centres (one at
+MetaCPAN is housed in two different data centers (one at
 [Bytemark](https://www.bytemark.co.uk/) in the UK and [Liquid
 Web](https://www.liquidweb.com/) one in the US).  The MetaCPAN stack
 [Fastly](https://fastly.com) for caching and redundancy.  Some other parts of
