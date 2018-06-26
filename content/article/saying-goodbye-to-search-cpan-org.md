@@ -79,7 +79,7 @@ something?  Please help to fix it.
 
 MetaCPAN is housed in two different data centers (one at
 [Bytemark](https://www.bytemark.co.uk/) in the UK and [Liquid
-Web](https://www.liquidweb.com/) one in the US). The MetaCPAN stack
+Web](https://www.liquidweb.com/) one in the US). The MetaCPAN stack uses
 [Fastly](https://fastly.com) for caching and redundancy. Some other parts of
 includes: Puppet, vagrant, Debian, Plack, Elasticsearch, Catalyst and
 Bootstrap. If you're interested in learning more about any of these
