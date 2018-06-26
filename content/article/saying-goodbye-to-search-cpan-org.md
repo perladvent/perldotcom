@@ -21,9 +21,10 @@ means.
 The maintainers behind [search.cpan.org](http://search.cpan.org) have decided
 that it's time to move on. After many, many years of keeping this site up and
 running they have decided to pass on the torch (and the traffic) to
-[metacpan.org](https://metacpan.org). The MetaCPAN team has been working very
+[metacpan.org](https://metacpan.org). Myself and the rest of the MetaCPAN team
+have been working very
 hard to prepare for the influx of new traffic (and new users). On behalf of
-Perl users everywhere, the MetaCPAN team would like to thank all of the crew
+Perl users everywhere, the we'd like to thank all of the crew
 behind [search.cpan.org](http://search.cpan.org) for their many years of
 working behind the scenes to keep this valuable resource up and running.
 
@@ -41,7 +42,7 @@ See above. Nothing changes on the PAUSE side of things.
 ### What's the difference between search.cpan.org and metacpan.org?
 
 [search.cpan.org](http://search.cpan.org) was the original CPAN module search.
-MetaCPAN followed many years later. Unlike,
+MetaCPAN followed many years later. Unlike
 [search.cpan.org](http://search.cpan.org), the MetaCPAN site is publicly
 available at [GitHub](https://github.com/metacpan). Contributions to the site
 are welcome and encouraged. It's very easy to get up and running. If you want
@@ -53,14 +54,14 @@ box](https://github.com/metacpan/metacpan-developer).
 The MetaCPAN interface has more bells and whistles. This isn't to everyone's
 taste, but there is a planned UI overhaul.
 
-MetaCPAN's search interface does not always return the same results as [search.cpan.or
-](http://search.cpan.org) used to.
+MetaCPAN's search interface does not always return the same results as
+[search.cpan.org](http://search.cpan.org) used to.
 
 If you're interested in helping improve the UI or search results, please get in
 touch either at [GitHub](https://github.com/metacpan/metacpan-web) or at
 `#metacpan` on irc.perl.org.
 
-There's a small team and keeping this site up and running is a big
+We're a small team and keeping this site up and running is a big
 job, so the team is grateful for all contributions.
 
 ### Do I need to create a MetaCPAN account?
@@ -83,5 +84,5 @@ Web](https://www.liquidweb.com/) in the US). The MetaCPAN stack uses
 [Fastly](https://fastly.com) for caching and redundancy. Other parts
 include: Puppet, vagrant, Debian, Plack, Elasticsearch, Catalyst and
 Bootstrap. If you're interested in learning more about any of these
-technologies, please get involved with the project. The team would love to
+technologies, please get involved with the project. We'd love to
 have you on board.
