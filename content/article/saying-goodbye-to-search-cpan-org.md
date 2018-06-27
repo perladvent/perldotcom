@@ -82,7 +82,7 @@ MetaCPAN is housed in two different data centers
 ([Bytemark](https://www.bytemark.co.uk/) in the UK and [Liquid
 Web](https://www.liquidweb.com/) in the US). The MetaCPAN stack uses
 [Fastly](https://fastly.com) for caching and redundancy. Other parts
-include: Puppet, vagrant, Debian, Plack, Elasticsearch, Catalyst and
+include: Puppet, vagrant, Debian, Plack, Elasticsearch, [Minion](https://metacpan.org/pod/Minion), Catalyst and
 Bootstrap. If you're interested in learning more about any of these
 technologies, please get involved with the project. We'd love to
 have you on board.
