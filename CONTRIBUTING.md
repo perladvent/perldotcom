@@ -107,6 +107,12 @@ You can generate an article template with the Perl script `bin/new-article`. It 
     $ bin/new-article --title 'Some New Perl Article' --author 'david-farrell' --desc 'There is more than one way to do it' \
       --category 'development'
 
+If the above command fails due to missing Perl dependencies, you can install
+them via `cpanm`. Run the following command before re-running the command
+above:
+
+    $cpanm --installdeps .
+
 The `author` value is a key used to find the author data in the `data/author` directory. If this is your first article, you'll need to create an author entry too. Here's mine (`data/author/david-farrell.json`):
 
 ``` json
