@@ -3,12 +3,12 @@
     "title"       : "Saying Goodbye to search.cpan.org",
     "authors"     : ["olaf-alders"],
     "date"        : "2018-06-26T17:00:46",
-    "tags"        : ["cpan", "metacpan"],
+    "tags"        : ["metacpan", "plack", "minion", "catalyst"],
     "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "",
-    "categories"  : "development"
+    "categories"  : "cpan"
   }
 
 If you've visited [search.cpan.org](http://search.cpan.org) in the last day or
@@ -22,9 +22,9 @@ The maintainers behind [search.cpan.org](http://search.cpan.org) have decided
 that it's time to move on. After many, many years of keeping this site up and
 running they have decided to pass on the torch (and the traffic) to
 [metacpan.org](https://metacpan.org). Myself and the rest of the MetaCPAN team
-have been working very
-hard to prepare for the influx of new traffic (and new users). On behalf of
-Perl users everywhere, the we'd like to thank [Graham Barr and all of the crew](https://log.perl.org/2018/05/goodbye-search-dot-cpan-dot-org.html)
+have been working very hard to prepare for the influx of new traffic (and new
+users). On behalf of Perl users everywhere, the we'd like to thank
+[Graham Barr and all of the crew](https://log.perl.org/2018/05/goodbye-search-dot-cpan-dot-org.html)
 behind [search.cpan.org](http://search.cpan.org) for their many years of
 working behind the scenes to keep this valuable resource up and running.
 
@@ -82,7 +82,9 @@ MetaCPAN is housed in two different data centers
 ([Bytemark](https://www.bytemark.co.uk/) in the UK and [Liquid
 Web](https://www.liquidweb.com/) in the US). The MetaCPAN stack uses
 [Fastly](https://fastly.com) for caching and redundancy. Other parts
-include: Puppet, vagrant, Debian, Plack, Elasticsearch, [Minion](https://metacpan.org/pod/Minion), Catalyst and
+include: Puppet, vagrant, Debian, [Plack](https://metacpan.org/pod/Plack),
+Elasticsearch, [Minion](https://metacpan.org/pod/Minion),
+[Catalyst](https://metacpan.org/pod/Catalyst) and
 Bootstrap. If you're interested in learning more about any of these
 technologies, please get involved with the project. We'd love to
 have you on board.
