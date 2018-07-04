@@ -2,7 +2,7 @@
   {
     "title"       : "How to become CPAN contributor - part 2",
     "authors"     : ["mohammad-anwar"],
-    "date"        : "2018-05-25T09:58:25",
+    "date"        : "2018-07-04T19:20:00",
     "tags"        : ["cpan","github","kwalitee"],
     "draft"       : true,
     "image"       : "",
@@ -84,5 +84,78 @@ Before I answer this question, I would like to share a memorable moment with you
 Until that point, I didn't know that in some cases, adding *warnings pragma* can affect the *performance*. He is such a genious and humble person. It was my honour that he was in the audience.
 
 So the moral of the story is, be carefull when adding *use warnings;* line. To be honest with you all, I avoid dealing with missing warnings issue unless I know the author personally.
+
+### Missing META.json
+
+Sometimes, you will find the distribution missing META.json. With the recent popularity of [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla), I have noticed many CPAN module authors have adopted Dist::Zilla as distribution builder. I am a big fan of this tool, don't get me wrong. However if the author is moving from traditional distribution builder e.g. ExtUtils::MakeMaker then he/she would most likely going to suffer from this issue. However there is an easy solution to this problem, as you guessed it correctly, there is a plugin readily available for the module author that can generate the META.json file automatically. You just need to add [MetaJSON] to the dist.ini file, as simple as that.
+
+## Is there any catch here?
+
+As always yes, sometimes I have come across few distributions not using Dist::Zilla, and still missing META.json. You would ask why? In my personal experience, if the module is using [Module::Build](https://metacpan.org/pod/Module::Build) or [Module::Install](https://metacpan.org/pod/Module::Install) then you have no luck at all creating META.json. I would love to know if there is any way one can generate META.json using either of the above distribution builders. If you fancy then you can send the patch for the same.
+
+### Missing minimum perl version
+
+I am now going to show you how to add this information depending on what distribution builder is used by the module author.
+
+In case of [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker), it is as simple as adding the key "MIN_PERL_VERSION" as shown below to your Makefile.PL script.
+
+```perl
+   ....
+   use ExtUtils::MakeMaker;
+
+   WriteMakefile(
+       NAME               => 'Map::Tube',
+       AUTHOR             => q{Mohammad S Anwar <mohammad.anwar@yahoo.com>},
+       VERSION_FROM       => 'lib/Map/Tube.pm',
+       ABSTRACT_FROM      => 'lib/Map/Tube.pm',
+       LICENSE            => 'artistic_2',
+       MIN_PERL_VERSION   => 5.006,
+       ....
+       ....
+   );
+
+```
+
+Whereas if distribution builder is [Module::Build](https://metacpan.org/pod/Module::Build) then you can do something like this:
+
+```perl
+   ....
+   use Module::Build;
+
+   my $builder = Module::Builder->new(
+       module_name => 'Map::Tube',
+       ....
+       ....
+       requires => {
+          'perl' => 5.006,
+       },
+   );
+
+   $builder->create_build_script();
+
+```
+
+If it is using Dist::Zilla then you can either explicitly set the minimum perl version in the dist.ini as below:
+
+```perl
+   ....
+   ....
+   ....
+   [Prereqs]
+   perl = 5.006
+   ....
+   ....
+```
+
+or you can use the plugin [MinimumPerlFast] something like below:
+
+```perl
+   ....
+   ....
+   ....
+   [MinimumPerlFast]
+   ....
+   ....
+```
 
 I will go through other issues in detail in the next article till then keep contributing. If you need any help then feel free to *[email me](mailto:mohammad.anwar@yahoo.com)* and if necessary, we can remote pair program to get you going.
