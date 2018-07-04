@@ -18,6 +18,6 @@ David started PerlTricks.com in 2013, originally as "quick tips" Perl site. Over
 
 Looking at the timeline and the type of content available on both, we thought it made sense to just merge the two sites and refresh Perl.com. So that's what we did.
 
-Soon PerlTricks.com will redirect requests to Perl.com and David will become the managing editor of Perl.com. The new Perl.com site has almost 1,000 articles, all Creative Commons licensed - a powerhouse of content with The Perl Foundation as its custodian. This isn't one person's site, it *our* site. And with a new search bar and all articles categorized and tagged, it's easier than ever to dive into the content and learn something new about Perl. The site's source code is on GitHub, and new Perl authors are just a pull-request away.
+Soon PerlTricks.com will redirect requests to Perl.com and David will become the managing editor of Perl.com. The new Perl.com site has almost 1,000 articles, all Creative Commons licensed - a powerhouse of content with The Perl Foundation as its custodian. This isn't one person's site, it's *our* site. And with a new search bar and all articles categorized and tagged, it's easier than ever to dive into the content and learn something new about Perl. The site's source code is on GitHub, and new Perl authors are just a pull-request away.
 
 We've got high hopes for Perl.com, and exciting plans that we'll share over the coming months; but for now we just want to say welcome back, and we hope that you're as excited about this opportunity as we are.

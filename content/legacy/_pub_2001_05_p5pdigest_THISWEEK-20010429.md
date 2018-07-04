@@ -55,7 +55,7 @@ Sean Dague asked if there was a good way to have multiple languages in one's POD
 
 and coaxing the podlators into spitting out the ones you want. Graham Barr said that he'd rather put different languages in different files, but Michael Stevens reminded us that keeping POD and code in the same place is a Good Thing.
 
-I'd be interested to hear from anyone who's tried to use the POD utilities for things like this, and I'm sure Sean would be too. [Raphael](http://simon-cozens.org/writings/whos-who.html#MANFREDI) announced that he had produced a POD pre-processor, [POD::PP](http://search.cpan.org/search?dist=Pod-PP), which may help solving this sort of thing.
+I'd be interested to hear from anyone who's tried to use the POD utilities for things like this, and I'm sure Sean would be too. [Raphael](http://simon-cozens.org/writings/whos-who.html#MANFREDI) announced that he had produced a POD pre-processor, [POD::PP](https://metacpan.org/pod/Pod::PP), which may help solving this sort of thing.
 
 ### <span id="Regex_dumping_again">Regex dumping again</span>
 
@@ -100,4 +100,3 @@ Until next week I remain, your humble and obedient servant,
 -   [M17N and POD](#M17N_and_POD)
 -   [Regex dumping again](#Regex_dumping_again)
 -   [Various](#Various)
-

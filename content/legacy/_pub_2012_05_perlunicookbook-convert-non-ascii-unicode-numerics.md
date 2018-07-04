@@ -22,7 +22,7 @@ Unicode digits encompass far more than the ASCII characters 0 - 9.
 
 Unless you've used `/a` or `/aa`, `\d` matches more than ASCII digits only. That's good! Unfortunately, Perl's implicit string-to-number conversion does not currently recognize Unicode digits. Here's how to convert such strings manually.
 
-As usual, the [Unicode::UCD](http://search.cpan.org/perldoc?Unicode::UCD) module provides access to the Unicode character database. Its `num()` function can numify Unicode digits—and strings of Unicode digits.
+As usual, the [Unicode::UCD](https://metacpan.org/pod/Unicode::UCD) module provides access to the Unicode character database. Its `num()` function can numify Unicode digits—and strings of Unicode digits.
 
      use v5.14;  # needed for num() function
      use Unicode::UCD qw(num);

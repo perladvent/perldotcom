@@ -460,7 +460,7 @@ Scatter plenty of debug statements all over your code -- and put them to sleep v
 
 **<span id="item__1_">\[1\]</span>** The `log4perl` project page: <http://log4perl.com>
 
-**<span id="item__2_">\[2\]</span>** The `Log::Log4perl` documentation: <http://search.cpan.org/dist/Log-Log4perl/lib/Log/Log4perl.pm>
+**<span id="item__2_">\[2\]</span>** The `Log::Log4perl` documentation: <https://metacpan.org/pod/Log::Log4perl>
 
 **<span id="item__3_">\[3\]</span>** The `log4j` project page on the Apache site: <https://logging.apache.org/log4j/2.x/>
 
