@@ -324,5 +324,5 @@ Another approach is to use the `Apache::SizeLimit` or the `Apache::GTopLimit` mo
 =======================================
 
 -   The mod\_perl site's URL: <http://perl.apache.org/>
--   `Apache::GTopLimit` <http://search.cpan.org/search?dist=Apache-GTopLimit>
+-   `Apache::GTopLimit` <https://metacpan.org/pod/Apache::GTopLimit>
 
