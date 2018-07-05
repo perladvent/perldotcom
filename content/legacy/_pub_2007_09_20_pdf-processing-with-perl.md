@@ -20,11 +20,11 @@
 
 
 
-[Adobe](http://www.adobe.com/)'s PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document or adding and adjusting the bookmarks panel for better navigation. Imagine that you want to collect all relevant Perl.com articles in one PDF file with an up-to-date bookmarks panel. You could use a tool like [HTMLDOC](http://www.easysw.com/), but adding article number 51 would require you to fetch articles one through 50 from the Web again. In most cases you would not be satisfied by the resulting bookmarks panel, either. This article shows how to use [PDF::Reuse](http://search.cpan.org/dist/PDF-Reuse/), by Lars Lundberg, for combining different PDF documents and adding bookmarks to them.
+[Adobe](http://www.adobe.com/)'s PDF has become a standard for text documents. Most office products can export their content into PDF. However, this software reaches its limits if you want advanced tasks such as combining different PDF documents into one single document or adding and adjusting the bookmarks panel for better navigation. Imagine that you want to collect all relevant Perl.com articles in one PDF file with an up-to-date bookmarks panel. You could use a tool like [HTMLDOC](http://www.easysw.com/), but adding article number 51 would require you to fetch articles one through 50 from the Web again. In most cases you would not be satisfied by the resulting bookmarks panel, either. This article shows how to use [PDF::Reuse](https://metacpan.org/pod/PDF::Reuse), by Lars Lundberg, for combining different PDF documents and adding bookmarks to them.
 
 ### Example Material
 
-Although its capabilities are limited in this area, you can also use `PDF::Reuse` to create PDF documents. If you want to create more sophisticated documents you should investigate other PDF-packages like [PDF::API2](http://search.cpan.org/dist/PDF-API2/) from Alfred Reibenschuh or [Text::PDF](http://search.cpan.org/dist/Text-PDF) from Martin Hosken. However `PDF::Reuse` is sufficient to create a simple PDF to use in later examples. The following listing should be rather self explanatory.
+Although its capabilities are limited in this area, you can also use `PDF::Reuse` to create PDF documents. If you want to create more sophisticated documents you should investigate other PDF-packages like [PDF::API2](https://metacpan.org/pod/PDF::API2) from Alfred Reibenschuh or [Text::PDF](https://metacpan.org/pod/Text::PDF) from Martin Hosken. However `PDF::Reuse` is sufficient to create a simple PDF to use in later examples. The following listing should be rather self explanatory.
 
      # file: examples/create-pdfs.pl
       use strict;
@@ -226,7 +226,7 @@ A bookmark reference is a hash or a array of hashes that looks like:
 
 ...where `act` is a JavaScript action to trigger when someone clicks on the bookmark. Because those JavaScript actions only work in the Acrobat Reader but not in other PDF viewer applications, I will later show a improvement of `PDF::Reuse` that fixes this issue.
 
-Other examples for using `PDF::Reuse`, including image embedding, are available in the [PDF::Reuse::Tutorial](http://search.cpan.org/perldoc?PDF::Reuse::Tutorial).
+Other examples for using `PDF::Reuse`, including image embedding, are available in the [PDF::Reuse::Tutorial](https://metacpan.org/pod/PDF::Reuse::Tutorial).
 
 ### A Console Application for Combining PDF Documents
 
@@ -240,7 +240,7 @@ To avoid editing the Perl code for combining PDF documents every time you want t
                   /                         \
        create.pdfs                           app-combine-tk-pdfs.pl
 
-The application *app-combine-console-pdfs.pl* does not deal directly with `PDF::Reuse` but parses the command line arguments with [Getopt::Long](http://search.cpan.org/perldoc?Getopt::Long) written by Johan Vromans. This is the standard package for this task. Here it parses the input filenames and the page ranges into two arrays of same length. The user also has to supply a filename for the output and, optionally, a bookmarks file. The main subroutine that parses the command line arguments and executes `CombinePDFs::createPDF` is:
+The application *app-combine-console-pdfs.pl* does not deal directly with `PDF::Reuse` but parses the command line arguments with [Getopt::Long](https://metacpan.org/pod/Getopt::Long) written by Johan Vromans. This is the standard package for this task. Here it parses the input filenames and the page ranges into two arrays of same length. The user also has to supply a filename for the output and, optionally, a bookmarks file. The main subroutine that parses the command line arguments and executes `CombinePDFs::createPDF` is:
 
       sub main {
           GetOptions("infile=s"    => \@infiles,
@@ -266,7 +266,7 @@ The application itself mainly performs error checking. If everything is fine, it
 
 Page ranges can be comma-separated ranges (`1-11,14,17-23`), single pages, or the `all` token. You can include the same page several times in the same document.
 
-The file-checking code looks for read permissions and tests if the file is a PDF document by using the `CombinePDFs::isPDF($filename)` subroutine. Although [PDF](http://search.cpan.org/dist/PDF/), by Antonio Rosella, also provides such a method, this package was not developed with the `use strict` pragma and gives a lot of warnings. Furthermore, the package is not actively maintained, so there seems to be no chance to fix this in the near future. Implementing the `isPDF` subroutine is quite simple; it reads the first line of the PDF file and checks for the magic string `%PDF-1.[0-9]` in the first line of the document.
+The file-checking code looks for read permissions and tests if the file is a PDF document by using the `CombinePDFs::isPDF($filename)` subroutine. Although [PDF](https://metacpan.org/pod/PDF), by Antonio Rosella, also provides such a method, this package was not developed with the `use strict` pragma and gives a lot of warnings. Furthermore, the package is not actively maintained, so there seems to be no chance to fix this in the near future. Implementing the `isPDF` subroutine is quite simple; it reads the first line of the PDF file and checks for the magic string `%PDF-1.[0-9]` in the first line of the document.
 
 Please note that `PDF::Reuse` is not an object oriented package. Therefore the `CombinePDFs` package is not object oriented, either. A user of this package could create several instances, but all instances work on the same PDF file.
 
@@ -315,7 +315,7 @@ Then print the bookmarks to the PDF document as usual with `prBookmark($bookmark
 
 ### Tk Application to Combine PDF Documents
 
-Console applications are fine for experienced users, but you can't expect that all users belong to this category. Therefore it might be worth it to write a GUI for combining PDF documents. The [Perl/Tk toolkit](http://search.cpan.org/dist/Tk/) founded on the old Tix widgets for Tcl/Tk is not very modern, although this might change with the [Tcl/Tk release 8.5](http://www.tcl.tk/software/tcltk/8.5.html) and the Tile widgets—but it is very portable. That's why I used it for the GUI example. Because I put a layer between the `PDF::Reuse` package and the command line application with the `CombinePDFs` package, it was easy to reuse those parts in the Tk-application *app-combine-tk-pdfs.pl*.
+Console applications are fine for experienced users, but you can't expect that all users belong to this category. Therefore it might be worth it to write a GUI for combining PDF documents. The [Perl/Tk toolkit](https://metacpan.org/pod/Tk) founded on the old Tix widgets for Tcl/Tk is not very modern, although this might change with the [Tcl/Tk release 8.5](http://www.tcl.tk/software/tcltk/8.5.html) and the Tile widgets—but it is very portable. That's why I used it for the GUI example. Because I put a layer between the `PDF::Reuse` package and the command line application with the `CombinePDFs` package, it was easy to reuse those parts in the Tk-application *app-combine-tk-pdfs.pl*.
 
 With the Tk application, the user visually selects PDF files, orders the files in a `Tk::Tree` widget, and changes the page ranges and the bookmarks text in `Tk::Entry` fields. Furthermore, the application can store the resulting tree structure inside a session file and restored that later on. It's also possible to copy and paste entries inside the tree, which makes it easy to create a bookmarks panel for single files without using bookmark files. The Tk application can be found in the download at the end of this article.
 
@@ -327,10 +327,10 @@ When loading a bookmarks file, the same extension convention is in place.
 
 I like `PDF::Reuse`, but there are several other options for PDF creation and manipulation on the CPAN.
 
--   [PDF::API2](http://search.cpan.org/dist/PDF-API2/), by Alfred Reibenschuh, is actively maintained. It is the package of choice if creating new PDF documents from scratch.
--   [PDF::API2::Simple](http://search.cpan.org/dist/PDF-API2-Simple/), by Red Tree Systems, is a wrapper over the `PDF::API2` module for users who find the PDF::API2 module to difficult to use.
--   [Text::PDF](http://search.cpan.org/dist/Text-PDF), by Martin Hosken, can work on more than PDF file at the same time and has Truetype font support.
--   [CAM::PDF](http://search.cpan.org/dist/CAM-PDF), by Clotho Advanced Media, is like `PDF::Reuse` more focused on reading and manipulating existing PDF documents. However, it can work on multiple files at the same time. Use it if you need more features than `PDF::Reuse` actually provides.
+-   [PDF::API2](https://metacpan.org/pod/PDF::API2), by Alfred Reibenschuh, is actively maintained. It is the package of choice if creating new PDF documents from scratch.
+-   [PDF::API2::Simple](https://metacpan.org/pod/PDF::API2::Simple), by Red Tree Systems, is a wrapper over the `PDF::API2` module for users who find the PDF::API2 module to difficult to use.
+-   [Text::PDF](https://metacpan.org/pod/Text::PDF), by Martin Hosken, can work on more than PDF file at the same time and has Truetype font support.
+-   [CAM::PDF](https://metacpan.org/pod/CAM::PDF), by Clotho Advanced Media, is like `PDF::Reuse` more focused on reading and manipulating existing PDF documents. However, it can work on multiple files at the same time. Use it if you need more features than `PDF::Reuse` actually provides.
 
 ### Conclusions
 
