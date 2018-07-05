@@ -38,7 +38,7 @@ Besides this, I also maintain the RPM of perl itself and of a load of CPAN modul
 
 **ORN:** Could you give a specific example of where Perl has made a noticeable difference in shortening development time?
 
-**Rafael:** I think that using a scripting language in general shortens the development time, notably due to the shorter write code / compile / test / debug cycle. However perl is particularly useful due to the high number of development modules available on CPAN. For example running the OS installer under [Devel::Trace](http://search.cpan.org/perldoc?Devel::Trace) produces lots of logs, but is tremendously helpful to trace obscure bugs. You can't do this in C without adding `printf`s everywhere and recompiling the whole stuff.
+**Rafael:** I think that using a scripting language in general shortens the development time, notably due to the shorter write code / compile / test / debug cycle. However perl is particularly useful due to the high number of development modules available on CPAN. For example running the OS installer under [Devel::Trace](https://metacpan.org/pod/Devel::Trace) produces lots of logs, but is tremendously helpful to trace obscure bugs. You can't do this in C without adding `printf`s everywhere and recompiling the whole stuff.
 
 **ORN:** What tools does Mandrakelinux use for automated testing of graphical Perl applications?
 
@@ -82,4 +82,4 @@ In fact, it appears that the speed bottlenecks of the MDK tools are, like in oth
 
 **ORN:** Do you have a favorite Perl module that more people should know about?
 
-**Rafael:** I don't really know, I learn new modules mostly by hanging around in places where the cool kids discover them before me -- mailing lists, mongers, [use.perl](http://use.perl.org/). I use [B::Concise](http://search.cpan.org/perldoc?B::Concise) all the time, but I suspect it's not useful for people who are not familiar with the internals of perl. Also, recently, I found [encoding::warnings](http://search.cpan.org/perldoc?encoding::warnings) useful for debugging Unicode-related bugs.
+**Rafael:** I don't really know, I learn new modules mostly by hanging around in places where the cool kids discover them before me -- mailing lists, mongers, [use.perl](http://use.perl.org/). I use [B::Concise](https://metacpan.org/pod/B::Concise) all the time, but I suspect it's not useful for people who are not familiar with the internals of perl. Also, recently, I found [encoding::warnings](https://metacpan.org/pod/encoding::warnings) useful for debugging Unicode-related bugs.
