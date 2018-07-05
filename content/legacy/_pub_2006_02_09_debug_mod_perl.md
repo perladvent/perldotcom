@@ -93,7 +93,7 @@ If you read through this, you see that `compute_sales_tax()` is indeed being cal
 
 ### When to Use `Apache::DB`
 
-Using `print`, `die`, and `warn` statements in your code will help you find and fix 99 percent of the bugs you may run across when building `mod_perl` applications. Too bad there is still that pesky remaining 1 percent that will make you tear your hair out in clumps and wish you had gone into selling insurance instead of programming. Luckily there is [Apache::DB](http://search.cpan.org/perldoc?Apache::DB) to help keep the glare off our collective heads at next year's Perl conference to a minimum.
+Using `print`, `die`, and `warn` statements in your code will help you find and fix 99 percent of the bugs you may run across when building `mod_perl` applications. Too bad there is still that pesky remaining 1 percent that will make you tear your hair out in clumps and wish you had gone into selling insurance instead of programming. Luckily there is [Apache::DB](https://metacpan.org/pod/Apache::DB) to help keep the glare off our collective heads at next year's Perl conference to a minimum.
 
 Sometime, despite all of your attempts to see what is going wrong, you will find yourself in a situation where:
 
@@ -144,9 +144,9 @@ It might be useful to read through [`man perldebtut`](http://perldoc.perl.org/pe
 
 ### Code Profiling with `Apache::DProf`
 
-[`Apache::DProf`](http://search.cpan.org/perldoc?Apache::DProf) provides the necessary hooks for you to get some coarse profiling information about your code. By coarse, I mean only information on a subroutine level. It will show you the number of times a subroutine is called along with duration information.
+[`Apache::DProf`](https://metacpan.org/pod/Apache::DProf) provides the necessary hooks for you to get some coarse profiling information about your code. By coarse, I mean only information on a subroutine level. It will show you the number of times a subroutine is called along with duration information.
 
-Essentially, `Apache::DProf` wraps [`Devel::DProf`](http://search.cpan.org/perldoc?Devel::DProf) for you, making your life much easier. It is *possible* to use `Devel::DProf` by itself, but it assumes that you are running a normal Perl program from the command line and not in a persistent `mod_perl` environment. This isn't optimal, because while you can shoehorn `Devel::DProf` into working, you'll end up profiling all of the code used at server startup when you really only care about the runtime code.
+Essentially, `Apache::DProf` wraps [`Devel::DProf`](https://metacpan.org/pod/Devel::DProf) for you, making your life much easier. It is *possible* to use `Devel::DProf` by itself, but it assumes that you are running a normal Perl program from the command line and not in a persistent `mod_perl` environment. This isn't optimal, because while you can shoehorn `Devel::DProf` into working, you'll end up profiling all of the code used at server startup when you really only care about the runtime code.
 
 Using `Apache::DProf` is relatively straightforward. All you need to do is include `PerlModule Apache::DProf` in your *httpd.conf* and restart your server.
 
@@ -211,7 +211,7 @@ As expected, `cleanup_request()` shows the most time used per call. The report a
 
 ### Code Profiling with `Apache::SmallProf`
 
-While `Apache::DProf` will show you which subroutines use the most system resources, sometimes that is not enough information. [`Apache::SmallProf`](http://search.cpan.org/perldoc?Apache::SmallProf) gives you fine-grained details in a line-by-line profile of your code.
+While `Apache::DProf` will show you which subroutines use the most system resources, sometimes that is not enough information. [`Apache::SmallProf`](https://metacpan.org/pod/Apache::SmallProf) gives you fine-grained details in a line-by-line profile of your code.
 
 Setup is similar to both of two previous modules. Add into a `<Perl>` section or your *startup.pl* file the code:
 

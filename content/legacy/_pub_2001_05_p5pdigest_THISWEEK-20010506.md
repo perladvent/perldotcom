@@ -44,7 +44,7 @@ This naturally took us on to using reentrant versions of C library calls: unfort
 
 Dan said that serializing calls to a non-thread-safe library will work most of the time, but Alan said that only works if they have no stored state. Artur asked why we couldn't use thread local storage - the answer, of course, being that external libraries are black boxes; we don't know what state they're storing or where they're storing it.
 
-Alan pointed at some bits of Java that had locking wrong, even though Java has a well-defined thread support model, and mentioned that we would be better off putting a proper event loop in Perl. Artur mentioned [POE](http://search.cpan.org/search?dist=POE), and that he was writing the threads module to make POE multithreaded.
+Alan pointed at some bits of Java that had locking wrong, even though Java has a well-defined thread support model, and mentioned that we would be better off putting a proper event loop in Perl. Artur mentioned [POE](https://metacpan.org/pod/POE), and that he was writing the threads module to make POE multithreaded.
 
 Alan then began his impression of Eeyore:
 
