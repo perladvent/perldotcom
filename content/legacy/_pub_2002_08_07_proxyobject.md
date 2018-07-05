@@ -19,7 +19,7 @@
 
 In your time as a Perl programmer, it becomes almost inevitable that at some point you will have to manage in-memory tree structures of some sort. When you do this, it becomes important to be aware of how Perl manages memory, and when you might come up against a situation where Perl will not free its memory -- a situation that can happen easily ... as we'll see below.
 
-In writing the [`XML::XPath`](http://search.cpan.org/search?dist=XML-XPath) module, (a library that implements some of the XML Document Object Model, or DOM) I came across a particular problem with Perl's memory-management mechanism. In this article, I will detail the problem and demonstrate a technique for building data structures that do not exhibit this problem.
+In writing the [`XML::XPath`](https://metacpan.org/pod/XML::XPath) module, (a library that implements some of the XML Document Object Model, or DOM) I came across a particular problem with Perl's memory-management mechanism. In this article, I will detail the problem and demonstrate a technique for building data structures that do not exhibit this problem.
 
 The problem is circular references.
 
@@ -145,7 +145,7 @@ A common way to "fix" this problem is to use a manual destructor -- a method or 
 
 ### <span id="Fixing Circular References - with Perl 5.6+">Fixing Circular References - with Perl 5.6+</span>
 
-Perl 5.6.0 introduced a new feature to "fix" all of the problems with circular references. This feature is called *weakrefs*. The basic idea is to flag a reference as *weakened*, so as to not include it in the reference counting. In order to use weakrefs, you need to install the [Scalar::Util](http://search.cpan.org/doc/GBARR/Scalar-List-Utils-1.0701/lib/Scalar/Util.pm) module (which is included with Perl 5.8.0). It is simple to use. Let's see what happens with our example above:
+Perl 5.6.0 introduced a new feature to "fix" all of the problems with circular references. This feature is called *weakrefs*. The basic idea is to flag a reference as *weakened*, so as to not include it in the reference counting. In order to use weakrefs, you need to install the [Scalar::Util](https://metacpan.org/pod/release/GBARR/Scalar-List-Utils-1.0701/lib/Scalar/Util.pm) module (which is included with Perl 5.8.0). It is simple to use. Let's see what happens with our example above:
 
     package CircObj;
       use Scalar::Util qw(weaken);
