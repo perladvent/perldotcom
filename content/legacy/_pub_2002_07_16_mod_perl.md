@@ -403,24 +403,24 @@ Note that you shouldn't use `Apache::Status` module on production server as it a
 -   The mod\_perl site's URL: <http://perl.apache.org>
 -   `Devel::DProf`
 
-    <http://search.cpan.org/search?dist=DProf>
+    <https://metacpan.org/pod/Devel::DProf>
 
 -   `Apache::DProf`
 
-    <http://search.cpan.org/search?dist=Apache-DB>
+    <https://metacpan.org/pod/Apache::DProf>
 
 -   `Apache::VMonitor`
 
-    <http://search.cpan.org/search?dist=Apache-VMonitor>
+    <https://metacpan.org/pod/Apache::VMonitor>
 
 -   `GTop`
 
-    <http://search.cpan.org/search?dist=GTop>
+    <https://metacpan.org/pod/GTop>
 
     The home of the C library: <http://www.home-of-linux.org/gnome/libgtop/>
 
 -   `BSD::Resource`
 
-    <http://search.cpan.org/search?dist=BSD-Resource>
+    <https://metacpan.org/pod/BSD::Resource>
 
 
