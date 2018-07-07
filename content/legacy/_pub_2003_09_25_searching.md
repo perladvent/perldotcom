@@ -923,7 +923,7 @@ There are many ways of getting extra value from your results. You can group resu
 
 By checking the status or type of each item in the result list, you can present it in a different way or provide additional information. Items in a catalogue that have been recalled or replaced can include a link to the replacement or recall notice -- again, this is one of the benefits of keeping such information in a metadata table.
 
-You can check for spelling mistakes and alternative words using CPAN modules such as [`Lingua::Spelling::Alternative`](http://search.cpan.org/author/DPAVLIN/Lingua-Spelling-Alternative-0.01/Alternative.pm). You can also provide related links for items or keyword-based advertising.
+You can check for spelling mistakes and alternative words using CPAN modules such as [`Lingua::Spelling::Alternative`](https://metacpan.org/pod/Lingua::Spelling::Alternative). You can also provide related links for items or keyword-based advertising.
 
 <span id="tuning"></span>
 ### Tuning and Customizing
