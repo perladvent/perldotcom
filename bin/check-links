@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+use v5.10;
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+check-links - find the HTTP status of the links in a Markdown doc
+
+=head1 SYNOPSIS
+
+	% perl bin/check-links content/legacy/*.md
+
+	% find content -name "*.md" -print0 | xargs -0 perl bin/check-links
+
+=head1 DESCRIPTION
+
+Go through all of the files from the command line and extract the
+Markdown links. Try to fetch each link and report the HTTP code. If the
+host is unreachable the code is 999.
+
+The program prints results as it encounters them. At the end of the
+run, report the links collated by HTTP code. The final report excludes
+the 200 code:
+
+	% perl-latest ../../bin/check-links *design1.md
+	_pub_2003_06_13_design1.md -----------------------
+	http://www.tml.hut.fi/~pnr/GoF-models/html/ ...  999
+	http://www.perldoc.com/perl5.8.0/pod/perltoot.html ...  999
+	http://www.manning.com/Conway/index.html ...  301 https://www.manning.com/Conway/index.html
+	http://www.oreilly.com/catalog/cookbook ...  301 https://www.oreilly.com/catalog/cookbook
+	https://metacpan.org/pod/XML::DOM ...  200
+	http://www.perldoc.com/perl5.8.0/pod/perltie.html ...  999
+	https://metacpan.org/pod/Tie::StdHandle ...  200
+	https://metacpan.org/pod/Memoize ...  200
+	https://metacpan.org/pod/Cache::FastMemoryCache ...  200
+	=== Report ===
+	301 http://www.oreilly.com/catalog/cookbook https://www.oreilly.com/catalog/cookbook
+	301 http://www.manning.com/Conway/index.html https://www.manning.com/Conway/index.html
+	999 http://www.perldoc.com/perl5.8.0/pod/perltie.html
+	999 http://www.tml.hut.fi/~pnr/GoF-models/html/
+	999 http://www.perldoc.com/perl5.8.0/pod/perltoot.html
+
+=head1 COPYRIGHT
+
+Copyright 2018 brian d foy C<< <bdfoy@cpan.org> >>.
+
+=head1 LICENSE
+
+You can use this under the terms of the Artistic License 2.0.
+
+=cut
+
+use Mojo::UserAgent;
+my $ua = Mojo::UserAgent->new();
+$|++;
+
+my %Seen;
+while( <> ) {
+	state $old_ARGV = '';
+	say "$ARGV -----------------------" if $ARGV ne $old_ARGV;
+	my @links = m{\[.+?\]\((http.+?)\)}gi;
+	foreach my $link ( reverse @links ) {
+		print "$link ... ";
+		unless( exists $Seen{$link} ) {
+			my $code = eval {
+				my $tx = $ua->get( $link );
+				if( $tx->result->is_redirect ) {
+					my $location = $tx->result->headers->header( 'Location' );
+					$Seen{$link}{location} = $location;
+					}
+
+				$tx->result->code;
+				};
+			$Seen{$link}{code} = $code // 999;
+			}
+		print " $Seen{$link}{code}";
+		print " $Seen{$link}{location}" if defined $Seen{$link}{location};
+		print "\n";
+		}
+
+	$old_ARGV = $ARGV;
+	}
+
+say "=== Report ===";
+foreach my $url ( sort { $Seen{$a}{code} <=> $Seen{$b}{code} } keys %Seen ) {
+	next if $Seen{$url}{code} == 200;
+	printf "%3d %s %s\n", $Seen{$url}{code}, $url, $Seen{$url}{location} // '';
+	}
