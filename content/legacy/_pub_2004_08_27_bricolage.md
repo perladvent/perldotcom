@@ -24,7 +24,7 @@ If you've ever had to manage a web site with tens of thousands of pages of conte
 
 Well, you're in luck.
 
-This article is the first in a series on Perl.com introducing Bricolage, a Perl-powered, open-source, enterprise-class CMS currently in production for some of the most actively updated sites on the Internet today, including [MacCentral](http://www.maccentral.com/ "Visit MacCentral"), [ETonline](http://et.yahoo.com/ "Visit ETonline"), and the [World Health Organization](http://www.who.int/ "Visit the WHO site"). I start with a high-level overview (think *executive summary*) of the concept of content management, the nature of the content management ecosystem, and how Bricolage competes with other solutions in that ecosystem. Future articles will cover installation, document modeling, templating, and the Bricolage SOAP interface, among other topics. But first, the basics.
+This article is the first in a series on Perl.com introducing Bricolage, a Perl-powered, open-source, enterprise-class CMS currently in production for some of the most actively updated sites on the Internet today, including [MacCentral](http://www.maccentral.com/), [ETonline](http://et.yahoo.com/), and the [World Health Organization](http://www.who.int/). I start with a high-level overview (think *executive summary*) of the concept of content management, the nature of the content management ecosystem, and how Bricolage competes with other solutions in that ecosystem. Future articles will cover installation, document modeling, templating, and the Bricolage SOAP interface, among other topics. But first, the basics.
 
 ### What is Content Management?
 
@@ -32,17 +32,17 @@ So much is made of the importance of web content management these days that the 
 
 #### Content Management vs. Community Building
 
-First, there is the difference between content management systems and what I call community-building solutions, such as [Slash](http://www.slashcode.com/ "Visit Slashcode.com") and the [various](http://phpnuke.org/ "PHP-Nuke") [Nuke](http://www.postnuke.com/ "PostNuke") [engines](http://cpgnuke.com/ "CPG Nuke"). These applications are ideal for setting up community-building and discussion sites, such as [Slashdot](http://www.slashdot.org/ "Slashdot"), [MacRumors.com](http://www.macrumors.com/ "MacRumors.com"), or (my favorite) [use Perl](http://use.perl.org/ "use Perl"). The idea behind these solutions is to allow site users to register with the site and post comments about articles, content on other sites, or each other's comments.
+First, there is the difference between content management systems and what I call community-building solutions, such as [Slash](http://www.slashcode.com/) and the [various](http://phpnuke.org/ "PHP-Nuke") [Nuke](http://www.postnuke.com/ "PostNuke") [engines](http://cpgnuke.com/ "CPG Nuke"). These applications are ideal for setting up community-building and discussion sites, such as [Slashdot](http://www.slashdot.org/), [MacRumors.com](http://www.macrumors.com/), or (my favorite) [use Perl](http://use.perl.org/ "use Perl"). The idea behind these solutions is to allow site users to register with the site and post comments about articles, content on other sites, or each other's comments.
 
-True content management systems, on the other hand, are primarily designed to allow organizations to centrally manage and deliver content, such as articles, white papers, marketing materials, or what have you. The emphasis is not on discussion (and indeed, most content management systems -- including Bricolage -- don't offer discussion interfaces), but on assuring the consistency of content structure and formatting. Good examples of such systems include [Bricolage](http://www.bricolage.cc/ "Visit the Bricolage site"), [Plone](http://www.plone.org/ "Visit the Plone site"), [Vignette](http://www.vignette.com/ "Vignette"), and [Interwoven TeamSite](http://www.interwoven.com/ "Interwoven").
+True content management systems, on the other hand, are primarily designed to allow organizations to centrally manage and deliver content, such as articles, white papers, marketing materials, or what have you. The emphasis is not on discussion (and indeed, most content management systems -- including Bricolage -- don't offer discussion interfaces), but on assuring the consistency of content structure and formatting. Good examples of such systems include [Bricolage](http://www.bricolage.cc/), [Plone](http://www.plone.org/), [Vignette](http://www.vignette.com/), and [Interwoven TeamSite](http://www.interwoven.com/).
 
 #### Application Framework vs. Turnkey Application
 
 Next, there's the distinction between application frameworks and turnkey applications. Frameworks are not actual solutions, but provide the tools for you to create your own solutions. Anyone who has programmed in Java understands what a framework is; a content-management framework provides an array of tools and libraries that you can use (or pay high-priced consultants to use on your behalf) to create an application to meet your needs.
 
-Many organizations have bought such frameworks, and in large, heterogeneous environments with six- and seven-figure budgets and years to implement a solution, it can make a lot of sense. Good examples of such frameworks are Vignette, TeamSite, and the Python-based [Zope](http://www.zope.com/ "Zope Corporation").
+Many organizations have bought such frameworks, and in large, heterogeneous environments with six- and seven-figure budgets and years to implement a solution, it can make a lot of sense. Good examples of such frameworks are Vignette, TeamSite, and the Python-based [Zope](http://www.zope.com/).
 
-A turnkey application, on the other hand, is a complete application out of the box. It will still likely require a good deal of customization to implement a turnkey application-based solution in a complex environment, but we're typically talking weeks or, at the most, a few months. The downside to such a solution is that you're limited to the features that the developers of the application anticipated would be needed; only with open-source solutions do you have the possibility of adding your own. Fortunately, this category of content management is well represented in the open-source space, including such stalwarts as Bricolage, Plone (built on the Zope framework), and [TYPO3](http://typo3.org/ "The Typo3 site").
+A turnkey application, on the other hand, is a complete application out of the box. It will still likely require a good deal of customization to implement a turnkey application-based solution in a complex environment, but we're typically talking weeks or, at the most, a few months. The downside to such a solution is that you're limited to the features that the developers of the application anticipated would be needed; only with open-source solutions do you have the possibility of adding your own. Fortunately, this category of content management is well represented in the open-source space, including such stalwarts as Bricolage, Plone (built on the Zope framework), and [TYPO3](http://typo3.org/).
 
 #### Application Server vs. Document Management and Publishing
 
@@ -62,8 +62,7 @@ Now that you have a feel for where Bricolage fits into the content-management un
 
 #### Browser-based Editing and Administration
 
-Bricolage provides a complete browser-based interface. Designed to work with any standards-compliant graphical browser, you can handle nearly all configuration and administration tasks via the browser. All document editing can be carried out in the browser, as well. Content authors can create and edit content using up to four different interfaces, including separate fields for each block-level piece of content (paragraphs, headers, blockquotes, etc.), bulk editing of multiple fields at once, or WYSIWYG-style editing with [htmlArea](http://www.interactivetools.com/products/htmlarea/ "The
-      htmlArea site") in Internet Explorer and Gecko-based browsers such as Mozilla and Firefox.
+Bricolage provides a complete browser-based interface. Designed to work with any standards-compliant graphical browser, you can handle nearly all configuration and administration tasks via the browser. All document editing can be carried out in the browser, as well. Content authors can create and edit content using up to four different interfaces, including separate fields for each block-level piece of content (paragraphs, headers, blockquotes, etc.), bulk editing of multiple fields at once, or WYSIWYG-style editing with [htmlArea](http://www.interactivetools.com/products/htmlarea/) in Internet Explorer and Gecko-based browsers such as Mozilla and Firefox.
 
 #### Document Modeling
 
@@ -117,14 +116,14 @@ Bricolage templates correspond to document categories and elements, so that one 
 
 #### Perl Templating
 
-The templates in Bricolage output channels can be implemented in one of three templating architectures: [Mason](http://www.masonhq.com/ "Mason HQ"), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit
+The templates in Bricolage output channels can be implemented in one of three templating architectures: [Mason](http://www.masonhq.com/), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit
     home"), or [HTML::Template](https://github.com/mpeters/html-template).
 
-Yes, that's right, not only do you have three different choices for templating in Bricolage, but they're all Perl-based! In addition to being able to provide a familiar templating environment to tens of thousands of Perl programmers worldwide, the templating solutions can leverage the full power of Perl to generate output for your documents. That power of course includes [CPAN](https://metacpan.org/ "Search CPAN"), where you'll find modules to ease the generation of [RSS](https://metacpan.org/pod/XML::RSS/ "XML::RSS on CPAN") feeds, [HTML](https://metacpan.org/pod/CGI "CGI.pm on
+Yes, that's right, not only do you have three different choices for templating in Bricolage, but they're all Perl-based! In addition to being able to provide a familiar templating environment to tens of thousands of Perl programmers worldwide, the templating solutions can leverage the full power of Perl to generate output for your documents. That power of course includes [CPAN](https://metacpan.org/), where you'll find modules to ease the generation of [RSS](https://metacpan.org/pod/XML::RSS/ "XML::RSS on CPAN") feeds, [HTML](https://metacpan.org/pod/CGI "CGI.pm on
     CPAN"), [XML](https://metacpan.org/pod/XML::Generator "XML::Generator on CPAN"), [PDFs](https://metacpan.org/pod/PDFLib "PDFLib on
     CPAN"), or even [Excel files](https://metacpan.org/pod/Spreadsheet::WriteExcel/ "Spreadsheet::WriteExcel on CPAN")!
 
-Furthermore, Bricolage has a sub-classable templating architecture, which means that, with a little bit of work, you can add your own templating architecture. Anyone care to add support for [Embperl](http://perl.apache.org/embperl/ "Embperl home"), [Apache::ASP](http://www.apache-asp.org/ "Apache::ASP
+Furthermore, Bricolage has a sub-classable templating architecture, which means that, with a little bit of work, you can add your own templating architecture. Anyone care to add support for [Embperl](http://perl.apache.org/embperl/), [Apache::ASP](http://www.apache-asp.org/ "Apache::ASP
     home"), or [XSLT](https://metacpan.org/pod/XML::LibXSLT "XML::LibXSLT on CPAN")?
 
 For more on Bricolage templating, watch for the fourth article in this series, "Mason Templating in Bricolage."
