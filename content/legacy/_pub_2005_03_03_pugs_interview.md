@@ -25,11 +25,11 @@
 
 
 
-*[Autrijus Tang](http://www.autrijus.org/) is a talented Perl hacker, a [dedicated CPAN contributor](http://search.cpan.org/~autrijus/), and a truly smart man. His announcement of [starting an implementation of Perl 6 in Haskell](http://use.perl.org/~autrijus/journal/22965) on February 1, 2005 might have seemed like a joke from almost anyone else. A month later, his little experiment runs more code and has attracted a community larger than anyone could have predicted. Perl.com recently caught up with Autrijus on \#Perl6 to discuss his new project: [Pugs](http://www.pugscode.org/).*
+*[Autrijus Tang](http://www.autrijus.org/) is a talented Perl hacker, a [dedicated CPAN contributor](https://metacpan.org/author/AUTRIJUS), and a truly smart man. His announcement of [starting an implementation of Perl 6 in Haskell](http://use.perl.org/~autrijus/journal/22965) on February 1, 2005 might have seemed like a joke from almost anyone else. A month later, his little experiment runs more code and has attracted a community larger than anyone could have predicted. Perl.com recently caught up with Autrijus on \#Perl6 to discuss his new project: [Pugs](http://www.pugscode.org/).*
 
 **chromatic:** I've followed your journal from the beginning, but it didn't start from the start. Where did you come up with this crazy idea?
 
-**Autrijus:** Ok. The story is that I hacked [SVK](http://svk.elixus.org/) for many months with [clkao](http://search.cpan.org/~clkao/). SVK worked, except it is not very flexible. There is a VCS named [darcs](http://abridgegame.org/darcs/), which is much more flexible, but is specced using quantum physics language and written in a scary language called [Haskell](http://www.haskell.org/). So, I spent one month doing nothing but learning Haskell, so I could understand darcs. Which worked well; I convinced a crazy client (who paid me to develop [Parse::AFP](https://metacpan.org/pod/Parse::AFP)) that Perl 5 is doomed because it has no COW (which, surprisingly, it now has), and to fund me to develop an alternate library using Haskell.
+**Autrijus:** Ok. The story is that I hacked [SVK](http://svk.elixus.org/) for many months with [clkao](https://metacpan.org/author/CLKAO). SVK worked, except it is not very flexible. There is a VCS named [darcs](http://abridgegame.org/darcs/), which is much more flexible, but is specced using quantum physics language and written in a scary language called [Haskell](https://www.haskell.org/). So, I spent one month doing nothing but learning Haskell, so I could understand darcs. Which worked well; I convinced a crazy client (who paid me to develop [Parse::AFP](https://metacpan.org/pod/Parse::AFP)) that Perl 5 is doomed because it has no COW (which, surprisingly, it now has), and to fund me to develop an alternate library using Haskell.
 
 (I mean "Perl 5 is doomed for that task", not "Perl 5 is doomed in general".)
 
@@ -39,7 +39,7 @@
 
 **chromatic:** So that's a "sort-of has".
 
-**Autrijus:** Yeah. As in, [sky](http://search.cpan.org/~abergman/) suddenly worked on it and claims it mostly works. Haven't checked the code, though.
+**Autrijus:** Yeah. As in, [sky](https://metacpan.org/author/ABERGMAN) suddenly worked on it and claims it mostly works. Haven't checked the code, though.
 
 **chromatic:** It's been in the works for years. Or "doesn't works" perhaps.
 
@@ -107,13 +107,13 @@ Oh. p6 land.
 
 **Autrijus:** No, in Perl 6.
 
-**chromatic:** Can [GHC](http://www.haskell.org/ghc/) retarget a different AST then?
+**chromatic:** Can [GHC](https://www.haskell.org/ghc/) retarget a different AST then?
 
 **Autrijus:** It can, but that's not the easier plan.
 
 **chromatic:** It's easy for me. I don't plan to do it.
 
-**Autrijus:** The easier plan is simply for Pugs to have a *Compile.hs* that emits Parrot AST. Which, I'm happy to discover yesterday, is painless to write. ([Ingy](http://search.cpan.org/~ingy/) and I did a KwidAST-&gt;HtmlAST compiler in an hour, together with parser and AST.)
+**Autrijus:** The easier plan is simply for Pugs to have a *Compile.hs* that emits Parrot AST. Which, I'm happy to discover yesterday, is painless to write. ([Ingy](https://metacpan.org/author/INGY) and I did a KwidAST-&gt;HtmlAST compiler in an hour, together with parser and AST.)
 
 **chromatic:** Kwid and HTML, the markup languages?
 
@@ -133,7 +133,7 @@ Ok. So back to p6. P5's limit is apparent and not easily fixable
 
 **Autrijus:** 5.x.
 
-**chromatic:** Ahh, perhaps it was [ICU](http://icu.sourceforge.net/).
+**chromatic:** Ahh, perhaps it was [ICU](http://www.icu-project.org/).
 
 **Autrijus:** Two out of three times is. I think.
 
@@ -145,7 +145,7 @@ Ok. So back to p6. P5's limit is apparent and not easily fixable
 
 **Autrijus:** Right. Now it all works just fine, except *libsvn\_wc*, but we have svk now, and I learned that Sky has been addicted to svk.
 
-But anyway. And the beginning stage of Ponie is XS hackery which is by far not my forte. I've read [Lathos' book](http://www.manning.com/jenness/), so I can do XS hackery when forced to but not on a volunteer basis. Oh no.
+But anyway. And the beginning stage of Ponie is XS hackery which is by far not my forte. I've read [Lathos' book](https://www.manning.com/jenness/), so I can do XS hackery when forced to but not on a volunteer basis. Oh no.
 
 **chromatic:** That's a special kind of pain. It's like doing magic tricks, blindfolded, when you have to say, "Watch me push and pop a rabbit out of this stack. By the way, don't make a reference to him yet...."
 
@@ -153,7 +153,7 @@ But anyway. And the beginning stage of Ponie is XS hackery which is by far not m
 
 **chromatic:** There's a fuzzy connection in the back of my head about Haskell's inferencing and pattern matching being somewhat similar.
 
-**Autrijus:** Sure. Haskell has very robust inferencing, pattern matching, and sexy types. Which I'm trying to inflict on [luqui](http://www.luqui.org/) to improve Perl 6's design.
+**Autrijus:** Sure. Haskell has very robust inferencing, pattern matching, and sexy types. Which I'm trying to inflict on [luqui](https://www.luqui.org/) to improve Perl 6's design.
 
 **chromatic:** As long as they do the right thing with regard to roles, go ahead.
 
@@ -173,11 +173,11 @@ But anyway. And the beginning stage of Ponie is XS hackery which is by far not m
 
 **chromatic:** What makes it easier?
 
-**Autrijus:** [Parsec](http://www.cs.uu.nl/~daan/parsec.html) and [ContT](http://www.nomaware.com/monads/html/contmonad.html). Parsec is like Perl 6 rules.
+**Autrijus:** [Parsec](http://www.cs.uu.nl/daan/parsec.html) and [ContT](http://hackage.haskell.org/package/mtl-2.2.2/docs/Control-Monad-Cont.html#g:3). Parsec is like Perl 6 rules.
 
 **chromatic:** Parsec's the most popular Haskell parsing library, right?
 
-**Autrijus:** Well, Parsec and [Happy](http://www.haskell.org/happy/). Happy is more traditional; you write in a yacc-like grammar thing and it generates a parser in Haskell for you. Parsec is pure Haskell. You just write Haskell code that defines a parser. The term is "parser combinator".
+**Autrijus:** Well, Parsec and [Happy](https://www.haskell.org/happy/). Happy is more traditional; you write in a yacc-like grammar thing and it generates a parser in Haskell for you. Parsec is pure Haskell. You just write Haskell code that defines a parser. The term is "parser combinator".
 
 **chromatic:** Haskell is its own mini-language there.
 
@@ -253,7 +253,7 @@ But anyway. And the beginning stage of Ponie is XS hackery which is by far not m
 
 **chromatic:** If not Haskell, certainly something from the ML family.
 
-**Autrijus:** Right. So, I've been pointing people to [YAHT](http://www.isi.edu/~hdaume/htut/) and \#Haskell.
+**Autrijus:** Right. So, I've been pointing people to [YAHT](https://www.isi.edu/~hdaume/htut/) and \#Haskell.
 
 **chromatic:** It sounds like you're attracting people from both sides of the fence then.
 
