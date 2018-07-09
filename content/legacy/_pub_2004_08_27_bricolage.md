@@ -120,13 +120,12 @@ Bricolage templates correspond to document categories and elements, so that one 
 The templates in Bricolage output channels can be implemented in one of three templating architectures: [Mason](http://www.masonhq.com/ "Mason HQ"), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit
     home"), or [HTML::Template](https://github.com/mpeters/html-template).
 
-Yes, that's right, not only do you have three different choices for templating in Bricolage, but they're all Perl-based! In addition to being able to provide a familiar templating environment to tens of thousands of Perl programmers worldwide, the templating solutions can leverage the full power of Perl to generate output for your documents. That power of course includes [CPAN](http://search.cpan.org/ "Search CPAN"), where you'll find modules to ease the generation of [RSS](http://search.cpan.org/dist/XML-RSS/ "XML::RSS on CPAN") feeds, [HTML](http://search.cpan.org/dist/CGI/ "CGI.pm on
-    CPAN"), [XML](http://search.cpan.org/dist/XML-Generator/ "XML::Generator on CPAN"), [PDFs](http://search.cpan.org/dist/PDFLib/ "PDFLib on
-    CPAN"), or even [Excel files](http://search.cpan.org/dist/Spreadsheet-WriteExcel/ "Spreadsheet::WriteExcel on CPAN")!
+Yes, that's right, not only do you have three different choices for templating in Bricolage, but they're all Perl-based! In addition to being able to provide a familiar templating environment to tens of thousands of Perl programmers worldwide, the templating solutions can leverage the full power of Perl to generate output for your documents. That power of course includes [CPAN](https://metacpan.org/ "Search CPAN"), where you'll find modules to ease the generation of [RSS](https://metacpan.org/pod/XML::RSS/ "XML::RSS on CPAN") feeds, [HTML](https://metacpan.org/pod/CGI "CGI.pm on
+    CPAN"), [XML](https://metacpan.org/pod/XML::Generator "XML::Generator on CPAN"), [PDFs](https://metacpan.org/pod/PDFLib "PDFLib on
+    CPAN"), or even [Excel files](https://metacpan.org/pod/Spreadsheet::WriteExcel/ "Spreadsheet::WriteExcel on CPAN")!
 
 Furthermore, Bricolage has a sub-classable templating architecture, which means that, with a little bit of work, you can add your own templating architecture. Anyone care to add support for [Embperl](http://perl.apache.org/embperl/ "Embperl home"), [Apache::ASP](http://www.apache-asp.org/ "Apache::ASP
-    home"), or [XSLT](http://search.cpan.org/dist/XML-LibXSLT/ "XML::LibXSLT on
-    CPAN")?
+    home"), or [XSLT](https://metacpan.org/pod/XML::LibXSLT "XML::LibXSLT on CPAN")?
 
 For more on Bricolage templating, watch for the fourth article in this series, "Mason Templating in Bricolage."
 
