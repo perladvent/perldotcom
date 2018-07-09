@@ -54,7 +54,7 @@ Here's a typical site scraping script structure:
          use Template::Extract;
 
          my $mech = WWW::Mechanize->new();
-         $mech->get( "http://search.cpan.org" );
+         $mech->get( "http://metacpan.org" );
 
          my $ext = Template::Extract->new;
 
@@ -114,7 +114,7 @@ Then I created `FEAR::API`.
 It might be best to introduce `FEAR::API` by rewriting the previous example:
 
        1    use FEAR::API -base;
-       2    url("search.cpan.org");
+       2    url("metacpan.org");
        3    fetch >> [
        4      qr(foo) => _feedback,
        5      qr(bar) => \my @link,
@@ -166,20 +166,20 @@ One of the goals of `FEAR::API` is to weed out redundancies and minimize code si
 If you use `LWP::Simple`:
 
        use LWP::Simple;
-       get("http://search.cpan.org");
-       getprint("http://search.cpan.org");
-       getstore("http://search.cpan.org", 'cpan.html');
+       get("http://metacpan.org");
+       getprint("http://metacpan.org");
+       getstore("http://metacpan.org", 'cpan.html');
 
 With `FEAR::API`:
 
        use FEAR::API;
-       get("http://search.cpan.org");
-       getprint("http://search.cpan.org");
-       getstore("http://search.cpan.org", 'cpan.html');
+       get("http://metacpan.org");
+       getprint("http://metacpan.org");
+       getstore("http://metacpan.org", 'cpan.html');
 
 If you are familiar with `curl`, you may use:
 
-       $ curl  http://site.{one,two,three}.com 
+       $ curl  http://site.{one,two,three}.com
        # and
        $ curl ftp://ftp.numericals.com/file[1-100].txt
 
@@ -201,7 +201,7 @@ In `FEAR::API`, use `Template-Toolkit`:
 
 Submitting a query is easy:
 
-       fetch("http://search.cpan.org");
+       fetch("http://metacpan.org");
        submit_form(
                    form_name => 'f',
                    fields => {
@@ -212,11 +212,11 @@ Submitting a query is easy:
 
 Dumping links is also easy:
 
-       print Dumper fetch("http://search.cpan.org/")->links;
+       print Dumper fetch("http://metacpan.org/")->links;
 
 So is following links:
 
-       fetch("http://search.cpan.org/")->follow_link(n => 3);
+       fetch("http://metacpan.org/")->follow_link(n => 3);
 
 #### Cleaning Up Content
 
@@ -227,13 +227,13 @@ You may process documents now with code resembling:
        use LWP::Simple;
        use HTML::Strip;
 
-       my $content = get("http://search.cpan.org");
+       my $content = get("http://metacpan.org");
        my $hs = HTML::Strip->new();
        print $hs->parse( $content );
 
 Things are easier in `FEAR::API`:
 
-       fetch("search.cpan.org");
+       fetch("metacpan.org");
        preproc(use => 'html_to_null');
        print document->as_string;
 
@@ -243,7 +243,7 @@ If you don't use `FEAR::API` for postprocessing, your code might be:
        use LWP::Simple;
        use Template::Extract;
        my $extor = Template::Extract->new;
-       my $content = get("http://search.cpan.org");
+       my $content = get("http://metacpan.org");
        my $result = $extor->extract($template, $content);
        foreach my $r (@$result){
           foreach (values %$r){
@@ -254,7 +254,7 @@ If you don't use `FEAR::API` for postprocessing, your code might be:
 
 `FEAR::API` is simpler:
 
-       fetch("search.cpan.org");
+       fetch("metacpan.org");
        extract($template);
        postproc('s/(?:<[^>]*>)+/ /g;');
        print extresult;
@@ -277,30 +277,30 @@ is equivalent to:
 
        print Dumper \@$_;
 
-       url("search.cpan.org")->();
+       url("metacpan.org")->();
 
 is equivalent to:
 
-       url("search.cpan.org");
+       url("metacpan.org");
        fetch;
 
-       my $cont = fetch("search.cpan.org")->document->as_string;
+       my $cont = fetch("metacpan.org")->document->as_string;
 
 is equivalent to:
 
-       fetch("search.cpan.org") > $cont;
+       fetch("metacpan.org") > $cont;
 
-       push my @cont, fetch("search.cpan.org")->document->as_string;
+       push my @cont, fetch("metacpan.org")->document->as_string;
 
 is equivalent to:
 
-       fetch("search.cpan.org") > \my @cont;
+       fetch("metacpan.org") > \my @cont;
 
 #### Filtering Syntax
 
 `FEAR::API` creates something like shell piping. You can continually pass data through a series of filters to get what you need.
 
-       url("search.cpan.org")->()
+       url("metacpan.org")->()
          | _preproc(use => 'html_to_null')
          | _template($template)
          | _postproc('tr/a-z/A-Z/')
@@ -308,7 +308,7 @@ is equivalent to:
 
 This is equivalent to:
 
-       url("search.cpan.org")->();
+       url("metacpan.org")->();
        preproc(use => 'html_to_null');
        template($template);
        extract;
@@ -358,7 +358,7 @@ The next part is the CPAN scraper:
        use FEAR::API -base;
        use CPAN::DBI;
 
-       url("http://search.cpan.org/")->();
+       url("http://metacpan.org/")->();
        submit_form(form_name => 'f',
                    fields => {
                       query => 'perl',
