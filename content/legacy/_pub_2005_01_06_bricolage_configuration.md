@@ -24,14 +24,13 @@
 
 
 
-In my previous article, I provided [a guided tour of the Bricolage installation process](/pub/2004/10/28/bricolage_installation.html "Installing Bricolage"). If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as [Mr. Popeil](http://www.com-www.com/weirdal/mrpopeil.html "Mr. Popeil") used to say, *"But wait, there's more!"*
+In my previous article, I provided [a guided tour of the Bricolage installation process](/pub/2004/10/28/bricolage_installation.html). If you followed along, you should now have a nice, functioning installation of Bricolage 1.8 all ready to go. But as [Mr. Popeil](http://www.com-www.com/weirdal/mrpopeil.html) used to say, *"But wait, there's more!"*
 
 Like many other applications, Bricolage comes with a runtime configuration file. This file, named *bricolage.conf*, lives in the *conf* subdirectory of your Bricolage root. It contains a list of settings that tell Bricolage how to find things, how to connect to the database, which optional features to include, and other good stuff. This article provides a guided tour of all of the configuration settings in *bricolage.conf* to enable you to configure things exactly the way you need them, so that you can manage your sites more effectively with Bricolage.
 
 ### <span id="configurationformat">Configuration Format</span>
 
-The format of *bricolage.conf*, derived from the [“Perl Cookbook”](http://www.oreilly.com/catalog/cookbook/ "Perl Cookbook in the
-O'Reilly Catalog"), is quite simple. A directive appears on a single line, followed by a space, an equal sign, and then the value. Anything after a pound sign (“\#”) is a comment. Typical entries look like this:
+The format of *bricolage.conf*, derived from the [“Perl Cookbook”](https://www.oreilly.com/catalog/cookbook/), is quite simple. A directive appears on a single line, followed by a space, an equal sign, and then the value. Anything after a pound sign (“\#”) is a comment. Typical entries look like this:
 
     APACHE_BIN   = /usr/local/apache/bin/httpd
     APACHE_CONF  = /usr/local/bricolage/conf/httpd.conf
@@ -51,8 +50,8 @@ This directive tells Bricolage where to find your Apache *httpd* executable, whi
 <span id="apachecon">`APACHE_CON`</span>
 This directive points to the *httpd.conf* file. This, of course, is the famous Apache configuration file. It, too, needs configuration to run Bricolage (the Bricolage installer configures the default *httpd.conf* in the *conf* subdirectory of your Bricolage root directory), and Bricolage, in turn, uses this directive to tell *httpd* where to find the configuration file when it starts up.
 
-<span id="listenport">`LISTEN_PORT`</span>  
-This is the TCP/IP port on which Bricolage will listen for requests. It uses the HTTP standard port 80 by default, but you can [change Bricolage to use another port](http://www.bricolage.cc/docs/howtos/2004/04/19/virtual_host_config/ "How to run Bricolage on a Virtual Host and on Non-Standard Ports") if you already have another server listening on port 80.
+<span id="listenport">`LISTEN_PORT`</span>
+This is the TCP/IP port on which Bricolage will listen for requests. It uses the HTTP standard port 80 by default, but you can [change Bricolage to use another port](http://bricolagecms.org/docs/howtos/2004/04/19/virtual_host_config/) if you already have another server listening on port 80.
 
 <span id="sslport">`SSL_PORT`</span>
 This is the TCP/IP port on which Bricolage will listen for secure sockets layer (SSL) requests. It defaults to the standard HTTP SSL port 443, but again, you can change it to another port if something else is already using port 443. SSL is disabled by default, however, so read on for details on how to turn it on.
@@ -101,8 +100,8 @@ The name of the database that stores Bricolage's data. The installer will set th
 <span id="dbuser">`DB_USER`</span>
 The username that Bricolage will use when connecting to the database. Again, you are unlikely to need to change this directive, especially because, when Bricolage creates the database, it specifically assigns permissions for this user to access the appropriate tables, sequences, and such. Note that, for security reasons, you should *never* use the PostgreSQL superuser for this directive.
 
-<span id="dbpass">`DB_PASS`</span>  
-The password for the `DB_USER` to use to connect to the PostgreSQL database. You'll need to change this directive if the password ever changes in the database. Depending on your PostgreSQL server's security model, it might not matter what the password is. For example, if the PostgreSQL is on the same host as your Bricolage server and trusts local users (the default configuration), it will ignore the password. Consult your PostgreSQL [authentication settings](http://www.postgresql.org/docs/current/static/client-authentication.html "Documentation for PostgreSQL Client Authentication") (in the server's *pg\_hba.conf* file) or check with your PostgreSQL DBA if you have questions.
+<span id="dbpass">`DB_PASS`</span>
+The password for the `DB_USER` to use to connect to the PostgreSQL database. You'll need to change this directive if the password ever changes in the database. Depending on your PostgreSQL server's security model, it might not matter what the password is. For example, if the PostgreSQL is on the same host as your Bricolage server and trusts local users (the default configuration), it will ignore the password. Consult your PostgreSQL [authentication settings](https://www.postgresql.org/docs/current/static/client-authentication.html) (in the server's *pg\_hba.conf* file) or check with your PostgreSQL DBA if you have questions.
 
 <span id="dbhost">`DB_HOST`</span>
 This is the host name of your PostgreSQL server. If it's on the same host as your Bricolage server, it will likely be commented out, thereby letting Bricolage default to “localhost”. Otherwise, it will be a different host name or IP address. Change this setting if ever your PostgreSQL server moves to a different host or has its host name or IP address changed.
@@ -117,9 +116,8 @@ Bricolage stores a lot of files on your server's file system, generally in well-
 <span id="tempdir">`TEMP_DIR`</span>
 Bricolage creates several temporary files as it runs, for its cache, user sessions, and the like. If you selected the “multi” option when installing Bricolage, this directive will point to a directory named *tmp* under your Bricolage root. Otherwise, it will point to your system's global *tmp* directory.
 
-<span id="masoncomproot">`MASON_COMP_ROOT`</span>  
-The Bricolage UI uses [HTML::Mason](http://www.masonhq.com/ "Mason
-HQ"). All of the components to power the UI live in this directory, generally a subdirectory of your Bricolage root named *comp*. However, media files uploaded to Bricolage also go in this directory, which means that it can become quite large if you manage a lot of media documents. It might be useful, therefore, to move this directory to a separate partition.
+<span id="masoncomproot">`MASON_COMP_ROOT`</span>
+The Bricolage UI uses [HTML::Mason](http://www.masonhq.com/). All of the components to power the UI live in this directory, generally a subdirectory of your Bricolage root named *comp*. However, media files uploaded to Bricolage also go in this directory, which means that it can become quite large if you manage a lot of media documents. It might be useful, therefore, to move this directory to a separate partition.
 
 <span id="masondataroot">`MASON_DATA_ROOT`</span>
 Mason compiles the Bricolage UI components into object files and stores them in this directory. For the most part you don't need to worry about where these files live (the default is the *data* directory under the Bricolage root directory), although Bricolage will read from it quite a lot as it loads the object files into memory, so disk I/O is important. It's unlikely to grow too except...
@@ -129,15 +127,13 @@ This directive tells Bricolage where to store formatting templates, object files
 
 ### <span id="xml::writerconfiguration">XML::Writer Configuration</span>
 
-The Bricolage Mason burner is responsible for pushing documents through Mason formatting templates. If you're writing templates that output XML (and I'll demonstrate writing templates in a later article, so hang in there!), you might want to simplify things by using an [XML::Writer](http://search.cpan.org/dist/XML-Writer/ "XML::Writer on
-CPAN") object to generate the XML. Bricolage simplifies things by providing these directives to create a globally available XML::Writer object for use in all Mason templates.
+The Bricolage Mason burner is responsible for pushing documents through Mason formatting templates. If you're writing templates that output XML (and I'll demonstrate writing templates in a later article, so hang in there!), you might want to simplify things by using an [XML::Writer](https://metacpan.org/pod/XML::Writer) object to generate the XML. Bricolage simplifies things by providing these directives to create a globally available XML::Writer object for use in all Mason templates.
 
 <span id="includexmlwriter">`INCLUDE_XML_WRITER`</span>
 Enable this Boolean directive to tell Bricolage to create an XML::Writer object that's globally available as `$writer` to all Mason templates. Bricolage is smart enough to configure the XML::Writer object to output XML to Mason's buffer, so that you can even mix standard Mason output in your templates with XML::Writer output.
 
-<span id="xmlwriterargs">`XML_WRITER_ARGS`</span>  
-Use this directive to specify a list of options to pass to the XML::Writer constructor when `INCLUDE_XML_WRITER` is enabled. This directive is a string containing a Perl expression to pass to XML::Writer. The [XML::Writer documentation](http://search.cpan.org/dist/XML-Writer/Writer.pm#Writing_XML "Read
-the XML::Writer documentation on CPAN") has the full list of possible parameters. Common parameters include `NEWLINES` to trigger the output of new lines between XML elements, and `DATA_INDENT` to indent nested XML elements by a certain number of characters.
+<span id="xmlwriterargs">`XML_WRITER_ARGS`</span>
+Use this directive to specify a list of options to pass to the XML::Writer constructor when `INCLUDE_XML_WRITER` is enabled. This directive is a string containing a Perl expression to pass to XML::Writer. The [XML::Writer documentation](https://metacpan.org/pod/XML::Writer) has the full list of possible parameters. Common parameters include `NEWLINES` to trigger the output of new lines between XML elements, and `DATA_INDENT` to indent nested XML elements by a certain number of characters.
 
 ### <span id="authenticationconfiguration">Authentication Configuration</span>
 
@@ -177,18 +173,17 @@ This string directive identifies the default media type (also called a “MIME t
 <span id="enablesftpmover">`ENABLE_SFTP_MOVER`</span>
 By default, Bricolage does not support distribution via secure FTP (SFTP). If you need it, install the required Net::SFTP module, enable this directive, and restart Bricolage.
 
-<span id="sftphome">`SFTP_HOME`</span>  
-If you've enabled SFTP distribution, use this directive specify a home directory for SFTP to use, especially if you want to use public and private SSH keys. Consult the [Net::SFTP](http://search.cpan.org/dist/net-SFTP/ "Net::SFTP on CPAN") documentation for details.
+<span id="sftphome">`SFTP_HOME`</span>
+If you've enabled SFTP distribution, use this directive specify a home directory for SFTP to use, especially if you want to use public and private SSH keys. Consult the [Net::SFTP](https://metacpan.org/pod/Net::SFTP) documentation for details.
 
 <span id="enablesftpv2">`ENABLE_SFTP_V2`</span>
 Enable this directive to prefer SSH2 support for SFTP distribution. You'll also need to install more Perl modules from CPAN. Consult the Net::SFTP documentation for details.
 
-<span id="sftpmovercipher">`SFTP_MOVER_CIPHER`</span>  
-Net::SFTP uses the [Net::SSH::Perl](http://search.cpan.org/dist/Net-SSH-Perl/ "Net::SSH::Perl on CPAN") module to handle the SSH side of things. This module supports multiple encryption ciphers. If you prefer one, specify it via this directive.
+<span id="sftpmovercipher">`SFTP_MOVER_CIPHER`</span>
+Net::SFTP uses the [Net::SSH::Perl](https://metacpan.org/pod/Net::SSH::Perl) module to handle the SSH side of things. This module supports multiple encryption ciphers. If you prefer one, specify it via this directive.
 
-<span id="enablewebdavmover">`ENABLE_WEBDAV_MOVER`</span>  
-Bricolage also supports distribution via [WebDAV](http://www.webdav.org/ "WebDav Resources"), a standard for distributing documents via the HTTP protocol. DAV, as it is also known, has support in multiple web servers including Microsoft's IIS and Apache 2. If you'd like to distribute document files to your production server or servers via DAV, install the [HTTP::DAV](http://search.cpan.org/dist/HTTP-DAV/ "HTTP::DAV on
-CPAN") module, enable this Boolean directive and restart Bricolage.
+<span id="enablewebdavmover">`ENABLE_WEBDAV_MOVER`</span>
+Bricolage also supports distribution via [WebDAV](https://web.archive.org/web/20120626092812/http://webdav.org/), a standard for distributing documents via the HTTP protocol. DAV, as it is also known, has support in multiple web servers including Microsoft's IIS and Apache 2. If you'd like to distribute document files to your production server or servers via DAV, install the [HTTP::DAV](https://metacpan.org/pod/HTTP::DAV) module, enable this Boolean directive and restart Bricolage.
 
 <span id="queuepublishjobs">`QUEUE_PUBLISH_JOBS`</span>
 By default, when a user schedules a document to publish immediately, the Bricolage server will immediately execute the distribution. If users publish a lot of documents or you're bulk publishing large sections of your site at once, this can really slow down the Bricolage UI for other users. This is even true even if you've scheduled a bulk of documents to publish at a future date and time, because the way the default *bric\_dist\_mon* script works is to tickle the Bricolage server to distribute documents.
@@ -249,9 +244,8 @@ These directives relate to how Bricolage manages documents.
 <span id="publishrelatedassets">`PUBLISH_RELATED_ASSETS`</span>
 Bricolage allows you to create relationships between documents. These can point to “related stories” or add images to a document, among other things. By default, when you publish a document, Bricolage will also try to publish any related documents. This will help to prevent 404s or broken image problems. In some cases, you might not want this behavior, so set the `PUBLISH_RELATED_ASSETS` Boolean directive to a false value.
 
-<span id="storyuriwithfilename">`STORY_URI_WITH_FILENAME`</span>  
-Story documents in Bricolage must have unique URIs. URIs consist of a story's category and optionally other parts of the story, such as its cover date and its slug (a one-word description of a story). They do not, however, consist of the file name. This is in keeping with W3C [suggestions](http://www.w3.org/Provider/Style/URI.html "“Cool URIs don't
-change“, by Tim Berners-Lee"). The idea is that the story has a directory URI, and there may be several forms of the story with different file names in that directory, such as “index.html” for HTML, “rdf.xml” for RDF, and “index.pdf” for PDFs.
+<span id="storyuriwithfilename">`STORY_URI_WITH_FILENAME`</span>
+Story documents in Bricolage must have unique URIs. URIs consist of a story's category and optionally other parts of the story, such as its cover date and its slug (a one-word description of a story). They do not, however, consist of the file name. This is in keeping with W3C's [“Cool URIs don't change“, by Tim Berners-Lee](http://www.w3.org/Provider/Style/URI.html). The idea is that the story has a directory URI, and there may be several forms of the story with different file names in that directory, such as “index.html” for HTML, “rdf.xml” for RDF, and “index.pdf” for PDFs.
 
 However, some organizations have Website policies that demand the inclusion of file names in the URI. This is so that different documents can be in the same directory. A common example might be a “About Us” directory with separate “/about/index.html”, “/about/contact.html”, and “/about/copyright.html” documents. Such URIs are not possible by default in Bricolage, which requires that all stories have unique URIs, because each of these stories would have the same URI, namely “/about”. To get around this issue, set the `STORY_URI_WITH_FILENAME` Boolean directive to a true value. From then on, all stories will include their file names in their URIs. Be careful, though! Existing stories will not have their URIs changed. Decide how you want to set this directive when you start using Bricolage, and never change it.
 
@@ -265,7 +259,7 @@ This Boolean directive complements the `ALLOW_SLUGLESS_NONFIXED` directive. If y
 
 Bricolage is a large application that includes many CPAN modules as well as its own 120,000+ lines of code. When you start it up, its processes can take up 30MB of memory or more. In general this isn't a problem, because Apache shares that memory between child processes. As each process handles requests, however, its size can swell independent of other processes. If you're performing resource intensive activities, such as publishing a lot of documents at once, the process that handles the request can become quite large. Because Perl (and, by extension, `mod_perl`) does not return memory to the system, this can give the appearance that you have a memory leak.
 
-The solution to this problem is to use the [Apache::SizeLimit](http://search.cpan.org/dist/mod_perl-1.29/lib/Apache/SizeLimit.pm "Apache::SizeLimit on CPAN") module distributed with `mod_perl` to check your `mod_perl` processes periodically and kill them when they exceed a certain size. Bricolage has integrated support for Apache::SizeLimit that these directives can quickly enable and configure.
+The solution to this problem is to use the [Apache::SizeLimit](https://metacpan.org/pod/Apache::SizeLimit) module distributed with `mod_perl` to check your `mod_perl` processes periodically and kill them when they exceed a certain size. Bricolage has integrated support for Apache::SizeLimit that these directives can quickly enable and configure.
 
 <span id="checkprocesssize">`CHECK_PROCESS_SIZE`</span>
 This Boolean directive turns on the Apache::SizeLimit support. After you set it to a true value and restart Bricolage, it will use the settings in the following directives to decide how often to check your processes and to kill them when they get to be too big.
@@ -286,9 +280,8 @@ This directive sets a limit on the amount of unshared memory a process may consu
 
 Bricolage pushes story documents through formatting templates to generate output when you preview or publish them. Formatting templates can use Mason, Template Toolkit, or HTML::Template. If you have a lot of different types of story documents, or just elements of story documents, you'll likely end up with a lot of templates to manage. Editing templates in the browser interface's `textarea` fields can be a pain. A better approach is to use the Bricolage virtual FTP server, which provides access to all Bricolage templates via FTP. If the security of your password isn't a serious consideration (because FTP sends passwords in the clear, and maybe you work behind a firewall or over a virtual private network), enable the virtual FTP server and edit Bricolage templates from within your favorite FTP-enabled editor (Emacs, Vim, HomeSite, etc.). Here's how.
 
-<span id="enableftpserver">`ENABLE_FTP_SERVER`</span>  
-This boolean directive enables the virtual FTP server. Set it to a true value, tune the other FTP directives, reboot Bricolage, fire up the [*bric\_ftpd*](http://www.bricolage.cc/docs/current/api/bric_ftpd.html "bric_ftpd
-man page") application, and get to work! Just connect to your Bricolage FTP server on the port specified by the `FTP_PORT` directive, login with your Bricolage username and password, and you can browse templates by site, output channel, and category.
+<span id="enableftpserver">`ENABLE_FTP_SERVER`</span>
+This boolean directive enables the virtual FTP server. Set it to a true value, tune the other FTP directives, reboot Bricolage, fire up the [*bric\_ftpd*](http://bricolagecms.org/docs/current/api/bric_ftpd.html) application, and get to work! Just connect to your Bricolage FTP server on the port specified by the `FTP_PORT` directive, login with your Bricolage username and password, and you can browse templates by site, output channel, and category.
 
 <span id="ftpport">`FTP_PORT`</span>
 This directive specifies a TCP/IP port on which the Bricolage virtual FTP server will listen for connections. The default is “2121”.
@@ -316,9 +309,8 @@ Because Bricolage runs on Apache 1.3, the parent process loads all of its code a
 
 When loading a lot of code, children never overwrite much of it. It's highly advantageous to load as much code as you think you'll need into the parent process at startup time, to prevent each of the children from loading it themselves and taking up that much more memory. These directives help you to do just that.
 
-<span id="perlloader">`PERL_LOADER`</span>  
-This string directive can be any Perl code you like, as long as it's all on one line in the *bricolage.conf* file. Bricolage will execute this code at startup time, in the namespace used by the Mason burner. This is very useful for loading Perl modules that your templates use, so that you're not loading them in each child process. The default value loads [Apache::Util](http://search.cpan.org/dist/mod_perl-1.29/Util/Util.pm "Apache::Util on CPAN"), which has many useful HTML output utility functions, and [Bric::Util::Burner](http://www.bricolage.cc/docs/current/api/Bric::Util::Burner "Bric::Util::Burner documentation"), which exports several constants that you can use in templates to tell what type of burn is being executed (preview or publish). Other common modules you might want to load here include [CGI.pm](http://search.cpan.org/dist/CGI.pm/ "CGI on
-CPAN") or [XML::RSS](http://search.cpan.org/dist/XML-RSS/ "XML::RSS on CPAN") to assist with HTML and RSS output, respectively. You can load anything here, really.
+<span id="perlloader">`PERL_LOADER`</span>
+This string directive can be any Perl code you like, as long as it's all on one line in the *bricolage.conf* file. Bricolage will execute this code at startup time, in the namespace used by the Mason burner. This is very useful for loading Perl modules that your templates use, so that you're not loading them in each child process. The default value loads [Apache::Util](https://metacpan.org/pod/Apache::Util), which has many useful HTML output utility functions, and [Bric::Util::Burner](http://www.bricolage.cc/docs/current/api/Bric::Util::Burner), which exports several constants that you can use in templates to tell what type of burn is being executed (preview or publish). Other common modules you might want to load here include [CGI.pm](https://metacpan.org/pod/CGI) or [XML::RSS](https://metacpan.org/pod/XML::RSS) to assist with HTML and RSS output, respectively. You can load anything here, really.
 
 <span id="loadlanguages">`LOAD_LANGUAGES`</span>
 Bricolage has localizations for multiple languages, including German, Portuguese, Italian, Cantonese, Mandarin, and Russian. The localization libraries are Perl modules loaded at server startup time. For the most efficient use of memory, load the languages you expect to use most often by specifying the appropriate language codes (such as “en” for English, “pt\_pt” for Portuguese, “de\_de” for German, etc.) in a space-delimited list via the `LOAD_LANGUAGES` directive.
@@ -328,8 +320,7 @@ This directive functions just like the `LOAD_LANGUAGES` directive, except that i
 
 ### <span id="thumbnailconfiguration">Thumbnail Configuration</span>
 
-As of Bricolage 1.8.0, Bricolage can generate thumbnail versions of image files uploaded for media documents. All you need to do is install the [Imager](http://search.cpan.org/dist/Imager/ "Imager on CPAN") module from CPAN (along with the necessary libraries for the image formats you use—see the [Imager README](http://search.cpan.org/src/TONYC/Imager-0.44/README "Imager
-README") file for details) and configure thumbnail support via these directives.
+As of Bricolage 1.8.0, Bricolage can generate thumbnail versions of image files uploaded for media documents. All you need to do is install the [Imager](https://metacpan.org/pod/Imager) module from CPAN (along with the necessary libraries for the image formats you use—see the [Imager README](https://metacpan.org/pod/Imager) file for details) and configure thumbnail support via these directives.
 
 <span id="usethumbnails">`USE_THUMBNAILS`</span>
 Set this Boolean directive to a true value and restart Bricolage to have thumbnails generated for all image files in Bricolage. You must have Imager installed, of course. You might also want to consider installing media type icons specific to particular types of non-image files. See the *README* file and script in *contrib/copy\_gnome\_icons* in the Bricolage sources for information on which icon files to use and how to install them using the *copy\_gnome\_icons* script.
@@ -339,8 +330,7 @@ Set this directive to the maximum dimension of thumbnail images, in pixels. Bric
 
 ### <span id="htmlareaconfiguration">htmlArea Configuration</span>
 
-Bricolage 1.8.0 added support for WYSIWYG (what you see is what you get) editing via the [htmlArea](http://www.htmlarea.com/ "htmlArea
-Website") JavaScript editor, though it has this feature disabled by default. To enable it, download and install htmlArea 3.0 (in beta release as of this writing) in the *comp/media/htmlarea* directory under your Bricolage root. Then configure it via these directives and restart Bricolage. You will then be able to specify a “WYSIWYG” field type in document element definitions, and content editors can take advantage of htmlArea's WYSIWYG features when editing content in those fields.
+Bricolage 1.8.0 added support for WYSIWYG (what you see is what you get) editing via the [htmlArea](http://www.htmlarea.com/) JavaScript editor, though it has this feature disabled by default. To enable it, download and install htmlArea 3.0 (in beta release as of this writing) in the *comp/media/htmlarea* directory under your Bricolage root. Then configure it via these directives and restart Bricolage. You will then be able to specify a “WYSIWYG” field type in document element definitions, and content editors can take advantage of htmlArea's WYSIWYG features when editing content in those fields.
 
 <span id="enablehtmlarea">`ENABLE_HTMLAREA`</span>
 Set this Boolean directive to a true value to enable Bricolage's htmlArea support. You must have htmlArea installed in the *comp/media/htmlarea* directory under your Bricolage root.
