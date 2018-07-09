@@ -42,7 +42,7 @@ Consider an application that logs copious trace data when in debugging mode. In 
 
         use constant DEBUG => 1;
 
-        sub do_something { 
+        sub do_something {
             log_message("I'm doing something") if DEBUG;
 
             # do something here
@@ -209,7 +209,7 @@ If you add more checks to a test file, then you have to remember to update the p
 
 Enter [Test::Count](https://metacpan.org/pod/Test::Count). Test::Count originated from a [Vim](http://www.vim.org/) script I wrote to keep track of the number of tests by using meta-comments such as `# TEST` (for one test) or `# TEST*3*5` (for 15 tests). However, there was a limit to what I could do with Vim's scripting language, as I wanted a richer syntax for specifying the tests as well as variables.
 
-Thus, I wrote the Test::Count module and placed it on CPAN. [Test::Count::Filter](http://search.cpan.org/dist/Test-Count/lib/Test/Count/Filter.pm) acts as a filter, counts the tests, and updates them. Here's an example, taken from a code I wrote for a Perl Quiz of the Week:
+Thus, I wrote the Test::Count module and placed it on CPAN. [Test::Count::Filter](https://metacpan.org/pod/Test::Countlib) acts as a filter, counts the tests, and updates them. Here's an example, taken from a code I wrote for a Perl Quiz of the Week:
 
     #!/usr/bin/perl -w
 

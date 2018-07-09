@@ -21,7 +21,7 @@
 
 
 
-Navigation menus are a group of links given at one side of the page that allows users to navigate to different places of a website. Navigation menus allow site visitors to explore other pages of the site and to find what they want more easily. For example, [Paul Graham's home page](http://www.paulgraham.com/) contains a simple navigation menu made out of images. It doesn't change as the site visitor move to different pages of the site. The [KDE desktop environment](http://www.kde.org/) home page contains a more sophisticated menu. Click on [the link to the screenshots](http://www.kde.org/screenshots/) to see a submenu for links to screenshots from multiple versions of KDE. Other menu items have similar expansions.
+Navigation menus are a group of links given at one side of the page that allows users to navigate to different places of a website. Navigation menus allow site visitors to explore other pages of the site and to find what they want more easily. For example, [Paul Graham's home page](http://www.paulgraham.com/) contains a simple navigation menu made out of images. It doesn't change as the site visitor move to different pages of the site. The [KDE desktop environment](https://www.kde.org/) home page contains a more sophisticated menu. Click on [the link to the screenshots](https://www.kde.org/screenshots/) to see a submenu for links to screenshots from multiple versions of KDE. Other menu items have similar expansions.
 
 ### Common Patterns in Navigation Menus and Site Flow
 
@@ -39,7 +39,7 @@ HTML can represent these links by using `<head>` tag and `<link rel="next" href=
 
 #### Site Maps and Breadcrumb Trails
 
-Other navigation aids provided by sites include a *site map* (like [the one on Eric S. Raymond's home page](http://www.catb.org/~esr/sitemap.html)) and a *breadcrumb trail*. A breadcrumb trail is a path of the components of the navigation menu that leads to the current page. The [documentation for Module::Build::Cookbook](http://search.cpan.org/dist/Module-Build/lib/Module/Build/Cookbook.pm) on [search.cpan.org](http://search.cpan.org/) provides an example ("Ken Williams &gt; Module-Build &gt; Module::Build::Cookbook," in this case).
+Other navigation aids provided by sites include a *site map* (like [the one on Eric S. Raymond's home page](http://www.catb.org/~esr/sitemap.html)) and a *breadcrumb trail*. A breadcrumb trail is a path of the components of the navigation menu that leads to the current page. The [documentation for Module::Build::Cookbook](https://metacpan.org/pod/Module::Build::Cookbook) provides an example ("Ken Williams &gt; Module-Build &gt; Module::Build::Cookbook," in this case).
 
 #### Hidden Pages and Skipped Pages
 
@@ -47,7 +47,7 @@ Hidden pages are part of the site flow (the next/previous scheme) but don't appe
 
 ### Introducing HTML::Widgets::NavMenu
 
-How do you create menus? [HTML::Widgets::NavMenu](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/) is a [CPAN](http://www.cpan.org/) module for maintaining navigation menus and site flow in general. It supports all of the above-mentioned patterns and some others, has a comprehensive test suite, and is under active maintenance. I have successfully used this module to maintain the site flow logic for such sites as [my personal home page](http://www.shlomifish.org/) and [the Perl Beginners' Site](http://perl-begin.berlios.de/). Other people use it for their own sites.
+How do you create menus? [HTML::Widgets::NavMenu](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/) is a [CPAN](https://www.cpan.org/) module for maintaining navigation menus and site flow in general. It supports all of the above-mentioned patterns and some others, has a comprehensive test suite, and is under active maintenance. I have successfully used this module to maintain the site flow logic for such sites as [my personal home page](http://www.shlomifish.org/) and [the Perl Beginners' Site](http://perl-begin.berlios.de/). Other people use it for their own sites.
 
 This makes it easy to generate and maintain such navigation menus in Perl. It is generic enough so that it can generate static HTML or dynamic HTML on the fly for use within server-side scripts (CGI, *mod\_perl*, etc.).
 
@@ -161,7 +161,7 @@ The purpose of this array is to enumerate the pages, giving each one the `<title
 
         my $nav_menu_results = $nav_menu->render();
         my $nav_menu_text    = join("\n", @{$nav_menu_results->{'html'}});
-        
+
         my $file_path = $path;
         if (($file_path =~ m{/$}) || ($file_path eq ""))
         {
@@ -175,7 +175,7 @@ The purpose of this array is to enumerate the pages, giving each one the `<title
         mkpath($1, 0, 0755);
         open my $out, ">", $full_path or
             die "Could not open \"$full_path\" for writing: $!\n";
-        
+
         print {$out} <<"EOF";
     <?xml version="1.0" encoding="iso-8859-1"?>
     <!DOCTYPE html
@@ -254,7 +254,7 @@ The [final example](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/arti
 
 ### A CGI Script
 
-Until now, the examples have demonstrated generating a set of static HTML pages. The code can also run dynamically on a server. One approach is to use the ubiquitous [CGI.pm](http://search.cpan.org/dist/CGI.pm/), which comes bundled with Perl.
+Until now, the examples have demonstrated generating a set of static HTML pages. The code can also run dynamically on a server. One approach is to use the ubiquitous [CGI.pm](https://metacpan.org/pod/CGI), which comes bundled with Perl.
 
 Converting to [the CGI script](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/article/examples/cgi-script/H-W-NM-serve.pl.html) required [few changes](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/article/examples/fine-grained-2-cgi.diff.html). Inside of the page loop, the code checks if the page matches the CGI path info (the path appended after the CGI script name). If so, the code calls the `render_page()` function.
 

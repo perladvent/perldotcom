@@ -25,12 +25,12 @@ I started a new job recently to refocus my career from systems administration to
 
 ### Bringing the JCR to Perl
 
-The key to using JCR from Perl is `Inline::Java`. This library allows a Perl program to call Java methods with very little effort. For an introduction to Inline::Java, I suggest starting where I did, Phil Crow's 2003 [Bringing Java into Perl](/pub/2003/11/07/java.html) article on [Perl.com](http://Perl.com) about Inline::Java. I also relied heavily upon the documentation for [Inline::Java](http://search.cpan.org/dist/Inline-Java/Java.pod), which is very complete, if not exhaustive.
+The key to using JCR from Perl is `Inline::Java`. This library allows a Perl program to call Java methods with very little effort. For an introduction to Inline::Java, I suggest starting where I did, Phil Crow's 2003 [Bringing Java into Perl](/pub/2003/11/07/java.html) article on [Perl.com](http://Perl.com) about Inline::Java. I also relied heavily upon the documentation for [Inline::Java](https://metacpan.org/pod/Inline::Java), which is very complete, if not exhaustive.
 
 To get started on using the JCR, I used the reference implementation, [Jackrabbit](http://jackrabbit.apache.org/). I downloaded the Jackrabbit JAR file, along with all the prerequisites, which I found on the Jackrabbit website under [First Hops](http://jackrabbit.apache.org/doc/firststeps.html). Then, I wrote a small script using `Inline::Java` to load the Java classes from Jackrabbit, create a repository, and then quit. I was able to take the First Hop with Jackrabbit in Perl as fast or faster than in Java:
 
     #!/usr/bin/perl
-    use strict; 
+    use strict;
     use warnings;
     use Inline
         Java => 'STUDY',
@@ -168,7 +168,7 @@ The `/(\p{IsLu}+)/` matches any uppercase letter or string of uppercase letters.
             }
         }
 
-        return @args; 
+        return @args;
     }
 
 The wrapper then executes the wrapped method on the generated stub by passing it the unwrapped arguments (as if the wrappers weren't there).
