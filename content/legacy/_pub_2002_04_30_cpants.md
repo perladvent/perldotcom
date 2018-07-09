@@ -103,7 +103,7 @@ Such a system already exists; it's called *CPAN Testers*.
 
 When most people run `make test`, it's immediately followed by a `make install`; that is, people only test modules that they are going to use. But they may not have the time or inclination to report the outcome, for various reasons listed above.
 
-*CPAN Testers* (<http://testers.cpan.org/>) is an effort to set up a *Quality Assurance* (*QA*) team for CPAN modules. As its homepage states:
+*CPAN Testers* (<www.cpantesters.org>) is an effort to set up a *Quality Assurance* (*QA*) team for CPAN modules. As its homepage states:
 
      The objective of the group is to test as many of the
      distributions on CPAN as possible, on as many platforms
@@ -124,9 +124,9 @@ The argument (`pass`/`fail`) after the **-g** option is called the *grade* -- th
 
 All recent CPAN uploads, as well as all test results, are forwarded to the `cpan-testers` mailing list's subscribers -- CPAN testers. After a distribution's release on CPAN, one or more testers will pick it up, test it, then feed the result back to the author and to the list. The testers don't have to know what the module is about; all they do is to ensure it's working as advertised.
 
-Test reports on the mailing list are automatically recorded in a ever-growing database. [http://testers.cpan.org/search](http://testers.cpan.org/search?request=search) is its search interface, where you can query by distribution name, version, or the testing platform.
+Test reports on the mailing list are automatically recorded in a ever-growing database. [http://www.cpantesters.org/](http://www.cpantesters.org/) is its search interface, where you can query by distribution name, version, or the testing platform.
 
-Theoretically, you can query that database before installing any CPAN module, to see whether it works on your platform, and check for associated bug reports. The same information is also present at each module's page in <http://search.cpan.org/>, and maybe <http://rt.cpan.org/> in the near future.
+Theoretically, you can query that database before installing any CPAN module, to see whether it works on your platform, and check for associated bug reports. The same information is also present at each module's page in <https://metacpan.org/>, and maybe <http://rt.cpan.org/> in the near future.
 
 Alas, while this system certainly works, it is far from perfect. Here are some of its shortcomings:
 
@@ -232,7 +232,7 @@ However, normally you won't be using it directly, as **CPANPLUS** offers the *cp
      % cpansmoke Mail-Audit-2.1 Mail-SpamAssassin-2.20   # by distname
      % cpansmoke /S/SI/SIMON/Mail-Audit-2.1.tar.gz       # or full name
 
-Due to the need of testing new distributions as they are uploaded, *cpansmoke* will use <http://www.cpan.org/> as its primary host, instead of the local mirror configured in your **CPANPLUS** settings. This behavior may be overridden with the **-l** flag.
+Due to the need of testing new distributions as they are uploaded, *cpansmoke* will use <https://www.cpan.org/> as its primary host, instead of the local mirror configured in your **CPANPLUS** settings. This behavior may be overridden with the **-l** flag.
 
 Since *cpansmoke* will stop right after `make test` rather than installing any modules, it can test modules with different versions than the ones installed on the system. However, since it won't resolve prerequisites by default, you'll need to specify the **-p** flag to test and report them.
 
@@ -303,7 +303,7 @@ To test all **Acme::\*** modules, but install all needed prerequisites:
      $cp->install(
          modules => [ map $_->{package}, values(
              %{ $cp->search(type => 'module', list => ['^Acme::\b']) }
-         ) ], 
+         ) ],
          target        => 'test',
          prereq_target => 'install',
      );

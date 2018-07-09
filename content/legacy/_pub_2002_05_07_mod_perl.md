@@ -161,7 +161,7 @@ Let's look at this code:
         my $x = shift;
 
         sub power_of_2 {
-          return $x ** 2; 
+          return $x ** 2;
         }
 
         my $result = power_of_2();
@@ -312,7 +312,7 @@ then prior to running it, the daemon will change the code to be:
       package cache::tmp::hello_2epl;
 
       sub run{
-        #!/usr/bin/perl 
+        #!/usr/bin/perl
         print "Hello\n";
       }
 
@@ -335,7 +335,7 @@ Now you understand that there are cases where your normal subroutines can become
 
       simple.pl
       ---------
-      #!/usr/bin/perl 
+      #!/usr/bin/perl
       sub hello { print "Hello" }
       hello();
 
@@ -346,7 +346,7 @@ Wrapped into a `run()` subroutine it becomes:
       package cache::simple_2epl;
 
       sub run{
-        #!/usr/bin/perl 
+        #!/usr/bin/perl
         sub hello { print "Hello" }
         hello();
       }
@@ -641,7 +641,7 @@ For more information, please refer to perlref and perlsub manpages.
 
 It's a known fact that one cannot become a Perl hacker and especially mod\_perl hacker without knowing how to read Perl documentation and search through it. Books are good, but an easily accessible and searchable Perl reference at your fingertips is a great time saver. It always has the up-to-date information for the version of perl you're using.
 
-Of course, you can use online Perl documentation at the Web. I prefer [http://theoryx5.uwinnipeg.ca/CPAN/perl](http://theoryx5.uwinnipeg.ca/CPAN/perl/) to the official URL: [perldoc](https://perldoc.perl.org) is very slow :( . The `perldoc` utility provides you with access to the documentation installed on your system. To find out what Perl manpages are available execute:
+Of course, you can use online Perl documentation at the Web: [perldoc](https://perldoc.perl.org). The `perldoc` utility provides you with access to the documentation installed on your system. To find out what Perl manpages are available execute:
 
       % perldoc perl
 
@@ -667,7 +667,7 @@ To read the *perldoc* manpage you would execute:
 
 ### <span id="references">References</span>
 
--   Online documentation: [http://theoryx5.uwinnipeg.ca/CPAN/perl](http://theoryx5.uwinnipeg.ca/CPAN/perl/) [perldoc](https://perldoc.perl.org)
+-   Online documentation: [perldoc](https://perldoc.perl.org)
 
 -   The book \`\`*Programming Perl*'' 3rd edition by L.Wall, T. Christiansen and J.Orwant (also known as the \`\`*Camel*'' book, named after the camel picture on the cover of the book). You want to refer to Chapter 8 that talks about nested subroutines among other things.
 
