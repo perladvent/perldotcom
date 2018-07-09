@@ -125,8 +125,7 @@ Yes, that's right, not only do you have three different choices for templating i
     CPAN"), or even [Excel files](https://metacpan.org/pod/Spreadsheet::WriteExcel/ "Spreadsheet::WriteExcel on CPAN")!
 
 Furthermore, Bricolage has a sub-classable templating architecture, which means that, with a little bit of work, you can add your own templating architecture. Anyone care to add support for [Embperl](http://perl.apache.org/embperl/ "Embperl home"), [Apache::ASP](http://www.apache-asp.org/ "Apache::ASP
-    home"), or [XSLT](https://metacpan.org/pod/XML::LibXSLT "XML::LibXSLT on
-    CPAN")?
+    home"), or [XSLT](https://metacpan.org/pod/XML::LibXSLT "XML::LibXSLT on CPAN")?
 
 For more on Bricolage templating, watch for the fourth article in this series, "Mason Templating in Bricolage."
 
