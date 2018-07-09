@@ -21,9 +21,9 @@
 
 Creating a photo gallery is usually considered a daunting task. Lots of people have tried it, not many have succeeded. One of the reasons for so many similar projects is that they don't often integrate well into an existing web site. In this article we're going to build a photo gallery using two important components, Mason and Imager. Writing our gallery in Mason will make it much easier to integrate into an existing web site.
 
-Mason, also known as [`HTML::Mason`](http://search.cpan.org/perldoc?HTML::Mason), is a web application framework written in Perl. Mason can run in any environment, but is tuned to work best with mod\_perl. We will be using a number of Mason features in this article. If you're not familiar with Mason I suggest you [get the book](http://www.oreilly.com/catalog/perlhtmlmason/) or [browse](http://masonbook.com) before you buy. This article is not meant to be an introduction to Mason, so some experience will definitely help when reading this. Mason idioms will be briefly reviewed when they come up.
+Mason, also known as [`HTML::Mason`](https://metacpan.org/pod/HTML::Mason), is a web application framework written in Perl. Mason can run in any environment, but is tuned to work best with mod\_perl. We will be using a number of Mason features in this article. If you're not familiar with Mason I suggest you [get the book](http://www.oreilly.com/catalog/perlhtmlmason/) or [browse](http://masonbook.com) before you buy. This article is not meant to be an introduction to Mason, so some experience will definitely help when reading this. Mason idioms will be briefly reviewed when they come up.
 
-[`Imager`](http://search.cpan.org/perldoc?Imager) is a Perl module for dealing with images. It has mechanisms to manipulate an image, and read and write various formats. It's rather lightweight and has a clean interface in comparison to the alternative, [`Image::Magick`](http://search.cpan.org/perldoc?Image::Magick).
+[`Imager`](https://metacpan.org/pod/Imager) is a Perl module for dealing with images. It has mechanisms to manipulate an image, and read and write various formats. It's rather lightweight and has a clean interface in comparison to the alternative, [`Image::Magick`](https://metacpan.org/pod/Image::Magick).
 
 Combining these two Perl modules, and adding a few others, allows us to write a feature-full photo gallery in just 200 lines. Let's get started.
 
@@ -124,7 +124,7 @@ Next, the `<%shared>` block is executed. It does a lot, so we'll look at it in g
         use HTML::Table;
         use File::Spec::Functions qw[:ALL];
 
-The first step is to load the Perl modules this component will be using. [`List::Group`](http://search.cpan.org/perldoc?List::Group) turns a flat list into a List-of-Lists (LoL) based on specific grouping options, [`HTML::Table`](http://search.cpan.org/perldoc?HTML::Table) turns such an LoL into an HTML table structure, and [`File::Spec::Functions`](http://search.cpan.org/perldoc?File::Spec::Functions) provides a number of portable file and directory operations.
+The first step is to load the Perl modules this component will be using. [`List::Group`](https://metacpan.org/pod/List::Group) turns a flat list into a List-of-Lists (LoL) based on specific grouping options, [`HTML::Table`](https://metacpan.org/pod/HTML::Table) turns such an LoL into an HTML table structure, and [`File::Spec::Functions`](https://metacpan.org/pod/File::Spec::Functions) provides a number of portable file and directory operations.
 
         my $GALLERY_ROOT = $r->document_root . "/gallery/pictures";
 

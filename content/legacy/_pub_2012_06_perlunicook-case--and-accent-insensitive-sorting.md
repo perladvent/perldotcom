@@ -20,7 +20,7 @@
 
 The [Unicode Collation Algorithm](http://www.unicode.org/reports/tr10/) defines several levels of collation strength by which you can specify certain character properties as relevant or irrelevant to the collation ordering. In simple terms, you can use collation strength to tell a UCA-aware sort to ignore case or diacritics.
 
-In Perl, use the [Unicode::Collate](http://search.cpan.org/perldoc?Unicode::Collate) module to perform your sorting. To sort Unicode strings while ignoring case and diacritics—to examine only the basic characters— use a collation strength of level 1:
+In Perl, use the [Unicode::Collate](https://metacpan.org/pod/Unicode::Collate) module to perform your sorting. To sort Unicode strings while ignoring case and diacritics—to examine only the basic characters— use a collation strength of level 1:
 
      use Unicode::Collate;
      my $col = Unicode::Collate->new(level => 1);

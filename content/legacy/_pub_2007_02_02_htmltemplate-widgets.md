@@ -186,7 +186,7 @@ There remains the question of when all of this is useful and suitable. To me, th
 
 Filters and "widgets" as described in this series are easy ways to add some convenience features that are missing from `HTML::Template`. By bundling some repetitive code segments into a custom tag or a widget, you can keep both the code and template cleaner and simpler while at the same time continuing to enjoy the low overhead of `HTML::Template`.
 
-However, there is only so much lipstick you can put on a pig. When you find ourselves building extensive libraries of custom tags or specific widgets, maybe you want to look more deeply into one of the existing frameworks for Perl web development, such as [the Template Toolkit](http://search.cpan.org/perldoc?Perl::Mason%3C/a%3E%3Ccode%3EPerl::Mason%3C/code%3E%20or%3Ca%20href=).
+However, there is only so much lipstick you can put on a pig. When you find ourselves building extensive libraries of custom tags or specific widgets, maybe you want to look more deeply into one of the existing frameworks for Perl web development, such as [the Template Toolkit](https://metacpan.org/pod/Perl::Mason%3C/a%3E%3Ccode%3EPerl::Mason%3C/code%3E%20or%3Ca%20href=).
 
 Of course, as long as you are happy with `HTML::Template` and it works for you, there is no reason to change. It works for me--and very well indeed.
 

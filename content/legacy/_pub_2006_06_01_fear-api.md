@@ -142,7 +142,7 @@ Line 9 specifies the extraction method. The default method is `Template::Extract
 
 Line 10 extracts data according to `$template`.
 
-Line 11 dumps the extracted results to `STDOUT`. `FEAR::API` even exports `Dumper()` for you. For [YAML](http://search.cpan.org/perldoc?YAML) fans, there is also `Dump()`.
+Line 11 dumps the extracted results to `STDOUT`. `FEAR::API` even exports `Dumper()` for you. For [YAML](https://metacpan.org/pod/YAML) fans, there is also `Dump()`.
 
 Line 12 accesses the fetched content through the object returned from `document`. You need to invoke `as_string()` to stringify the data. By the way, each fetched document is converted to UTF-8 automatically for you. It is very useful while processing multilingual texts.
 

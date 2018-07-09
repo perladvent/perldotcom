@@ -20,7 +20,7 @@
 
 While Perl 5 has long been very careful about handling Unicode correctly inside the world of Perl itself, every time you leave the Perl internals, you cross a boundary at which *something* may need to handle decoding and encoding. This happens when performing IO across a network or to files, when speaking to a database, or even when using XS to use a shared library from Perl.
 
-For example, consider the core module [DB\_File](http://search.cpan.org/perldoc?DB_File), which allows you to use Berkeley DB files from Perl—persistent storage for key/value pairs.
+For example, consider the core module [DB\_File](https://metacpan.org/pod/DB_File), which allows you to use Berkeley DB files from Perl—persistent storage for key/value pairs.
 
 Using a regular Perl string as a key or value for a DBM hash will trigger a wide character exception if any codepoints won't ﬁt into a byte. Here's how to manually manage the translation:
         use DB_File;

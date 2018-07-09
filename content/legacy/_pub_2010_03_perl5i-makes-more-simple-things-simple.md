@@ -49,7 +49,7 @@ The actions are:
 
 Try explaining that to a non-Perl guru.
 
-Now consider the [perl5i](http://search.cpan.org/perldoc?perl5i) (specifically perl5i::2) way:
+Now consider the [perl5i](https://metacpan.org/pod/perl5i) (specifically perl5i::2) way:
 
     $class->require
           ->can($func)
@@ -57,7 +57,7 @@ Now consider the [perl5i](http://search.cpan.org/perldoc?perl5i) (specifically p
 
 Release the breath you've been holding in for the last 15 years of Perl 5.
 
-Through the magic of [autoboxing](http://search.cpan.org/perldoc?autobox), perl5i lets you call methods on unblessed scalars, hashes, arrays, regexes, references... anything. It also implements some handy methods. Some, like `require()`, are core functions redone as methods. Others, like `alias()`, should be core functions never made it in for whatever reason. autoboxing gives perl5i the freedom to add handy features without polluting the global function/method namespace with new keywords.
+Through the magic of [autoboxing](https://metacpan.org/pod/autobox), perl5i lets you call methods on unblessed scalars, hashes, arrays, regexes, references... anything. It also implements some handy methods. Some, like `require()`, are core functions redone as methods. Others, like `alias()`, should be core functions never made it in for whatever reason. autoboxing gives perl5i the freedom to add handy features without polluting the global function/method namespace with new keywords.
 
 Recall the goals:
 

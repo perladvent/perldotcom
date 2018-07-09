@@ -45,7 +45,7 @@ I'm actually very happy with this chapter. The only thing I left out of the firs
 
 On the other hand, although it's not particularly advanced, one of the things I wish I'd written about in the book was best practices for creating object-oriented modules. My fellow O'Reilly author Damian Conway has already written two books about these topics, so, again, I didn't get too stressed out about having to leave those sections out. That said, the two modules I would recommend for building OO classes don't appear to get a mention in *Perl Best Practices*.
 
-First, we all know it's a brilliant idea to create accessors for our data members in a class; however, it's also a pain in the neck to create them yourself. There seem to be hundreds of CPAN modules that automate the process for you, but the easiest is the [`Class::Accessor`](http://search.cpan.org/perldoc?Class::Accessor) module. With this module, you declare which accessors you want, and it will automatically create them. As a useful bonus, it creates a default `new()` method for you if you don't want to write one of those, either.
+First, we all know it's a brilliant idea to create accessors for our data members in a class; however, it's also a pain in the neck to create them yourself. There seem to be hundreds of CPAN modules that automate the process for you, but the easiest is the [`Class::Accessor`](https://metacpan.org/pod/Class::Accessor) module. With this module, you declare which accessors you want, and it will automatically create them. As a useful bonus, it creates a default `new()` method for you if you don't want to write one of those, either.
 
 Instead of:
 
@@ -72,9 +72,9 @@ you can now say:
 
     MyClass->mk_accessors(qw( name address ));
 
-`Class::Accessor` also contains methods for making read-only accessors and for creating separate read and write accessors, and everything is nicely overrideable. Additionally, there are subclasses that extend `Class::Accessor` in various ways: [`Class::Accessor::Fast`](http://search.cpan.org/perldoc?Class::Accessor::Fast) trades off a bit of the extensibility for an extra speed boost, [`Class::Accessor::Chained`](http://search.cpan.org/perldoc?Class::Accessor::Chained) returns the object when called with parameters, and [`Class::Accessor::Assert`](http://search.cpan.org/perldoc?Class::Accessor::Assert) does rudimentary type checking on the parameter values. There are many, many modules on the CPAN that do this sort of thing, but this one is, in my opinion, the most flexible and simple.
+`Class::Accessor` also contains methods for making read-only accessors and for creating separate read and write accessors, and everything is nicely overrideable. Additionally, there are subclasses that extend `Class::Accessor` in various ways: [`Class::Accessor::Fast`](https://metacpan.org/pod/Class::Accessor::Fast) trades off a bit of the extensibility for an extra speed boost, [`Class::Accessor::Chained`](https://metacpan.org/pod/Class::Accessor::Chained) returns the object when called with parameters, and [`Class::Accessor::Assert`](https://metacpan.org/pod/Class::Accessor::Assert) does rudimentary type checking on the parameter values. There are many, many modules on the CPAN that do this sort of thing, but this one is, in my opinion, the most flexible and simple.
 
-Speaking of flexibility, one way to encourage flexibility in your modules and applications is to make them pluggable--that is, to allow other pieces of code to respond to actions that you define. [`Module::Pluggable`](http://search.cpan.org/perldoc?Module::Pluggable) is a simple but powerful little module that searches for installed modules in a given namespace. Here's an example of its use in [`Email::FolderType`](http://search.cpan.org/perldoc?Email::FolderType):
+Speaking of flexibility, one way to encourage flexibility in your modules and applications is to make them pluggable--that is, to allow other pieces of code to respond to actions that you define. [`Module::Pluggable`](https://metacpan.org/pod/Module::Pluggable) is a simple but powerful little module that searches for installed modules in a given namespace. Here's an example of its use in [`Email::FolderType`](https://metacpan.org/pod/Email::FolderType):
 
     use Module::Pluggable 
         search_path => "Email::FolderType", 
@@ -94,7 +94,7 @@ This means you don't need to know, when you're writing the code, what folder typ
 
 ### Parsing
 
-Perhaps the biggest change of heart I had between writing a chapter and its publication was in the parsing chapter. That chapter had very little about parsing HTML, and what it did have was not very friendly. Since then, Gisle Aas and Sean Burke's [`HTML::TreeBuilder`](http://search.cpan.org/perldoc?HTML::TreeBuilder) and the corresponding [`XML::TreeBuilder`](http://search.cpan.org/perldoc?XML::TreeBuilder) have established themselves as much simpler and more flexible ways to navigate HTML and XML documents.
+Perhaps the biggest change of heart I had between writing a chapter and its publication was in the parsing chapter. That chapter had very little about parsing HTML, and what it did have was not very friendly. Since then, Gisle Aas and Sean Burke's [`HTML::TreeBuilder`](https://metacpan.org/pod/HTML::TreeBuilder) and the corresponding [`XML::TreeBuilder`](https://metacpan.org/pod/XML::TreeBuilder) have established themselves as much simpler and more flexible ways to navigate HTML and XML documents.
 
 The basic concept in `HTML::TreeBuilder` is the HTML element, represented as an object of the `HTML::Element` class:
 
@@ -139,11 +139,11 @@ Although the real workhorse of this module is the `look_down()` method, which he
 
 This finds all `<meta>` tags and puts their attributes as name-value pairs in a hash; then it puts all the text inside of `<title>` tags together into another hash element. Similarly, you can look for tags by attribute value, spit out sub-trees as HTML or as text, and much more, besides. For reaching into HTML text and pulling out just the bits you need, I haven't found anything better.
 
-On the XML side of things, [`XML::Twig`](http://search.cpan.org/perldoc?XML::Twig) has emerged as the usual "middle layer," when [`XML::Simple`](http://search.cpan.org/perldoc?XML::Simple) is too simple and [`XML::Parser`](http://search.cpan.org/perldoc?XML::Parser) is, well, too much like hard work.
+On the XML side of things, [`XML::Twig`](https://metacpan.org/pod/XML::Twig) has emerged as the usual "middle layer," when [`XML::Simple`](https://metacpan.org/pod/XML::Simple) is too simple and [`XML::Parser`](https://metacpan.org/pod/XML::Parser) is, well, too much like hard work.
 
 ### Templating
 
-There's not much to say about templating, although in retrospect, I would have spent more of the paper expended on [`HTML::Mason`](http://search.cpan.org/perldoc?HTML::Mason) talking about the [Template Toolkit](http://www.template-toolkit.org/) instead. Not that there's anything wrong with `HTML::Mason`, but the world seems to be moving away from templates that include code in a specific language (say, Perl's) towards separate templating little languages, like [TAL](http://search.cpan.org/perldoc?Template::TAL) and Template Toolkit.
+There's not much to say about templating, although in retrospect, I would have spent more of the paper expended on [`HTML::Mason`](https://metacpan.org/pod/HTML::Mason) talking about the [Template Toolkit](http://www.template-toolkit.org/) instead. Not that there's anything wrong with `HTML::Mason`, but the world seems to be moving away from templates that include code in a specific language (say, Perl's) towards separate templating little languages, like [TAL](https://metacpan.org/pod/Template::TAL) and Template Toolkit.
 
 The only thing to report is that Template Toolkit finally received a bit of attention from its maintainer a couple of months ago, but the long-awaited Template Toolkit 3 is looking as far away as, well, Perl 6.
 
@@ -151,7 +151,7 @@ The only thing to report is that Template Toolkit finally received a bit of atte
 
 Who would have thought that the big news of 2005 would be that Yahoo is relevant again? Not only are they coming up with interesting new search technologies such as Y!Q, but they're releasing a lot of the guts behind what they're doing as public APIs. One of those that is particularly relevant for NLP is the [Term Extraction web service](http://developer.yahoo.net/search/content/V1/termExtraction.html).
 
-This takes a chunk of text and pulls out the distinctive terms and phrases. Think of this as a step beyond something like [`Lingua::EN::Keywords`](http://search.cpan.org/perldoc?Lingua::EN::Keywords), with the firepower of Yahoo behind it. To access the API, simply send a HTTP `POST` request to a given URL:
+This takes a chunk of text and pulls out the distinctive terms and phrases. Think of this as a step beyond something like [`Lingua::EN::Keywords`](https://metacpan.org/pod/Lingua::EN::Keywords), with the firepower of Yahoo behind it. To access the API, simply send a HTTP `POST` request to a given URL:
 
     use LWP::UserAgent;
     use XML::Twig;
@@ -184,7 +184,7 @@ This produces:
     dunbartonshire
     alexandria
 
-Once I had informed the London Perl Mongers of this amazing discovery, Simon Wistow immediately bundled it up into a Perl module called [`Lingua::EN::Keywords::Yahoo`](http://search.cpan.org/perldoc?Lingua::EN::Keywords::Yahoo), coming soon to a CPAN mirror near you.
+Once I had informed the London Perl Mongers of this amazing discovery, Simon Wistow immediately bundled it up into a Perl module called [`Lingua::EN::Keywords::Yahoo`](https://metacpan.org/pod/Lingua::EN::Keywords::Yahoo), coming soon to a CPAN mirror near you.
 
 ### Unicode
 
@@ -196,7 +196,7 @@ If you don't see or hear anything about Unicode, that's a good thing: it means i
 
 The chapter on POE was a great introduction to how POE works and some of the things that you can do with it, but it focused on using POE for networking applications and for daemons. This is only half the story. Recently a lot of interest has centered on using POE for graphical and command-line applications: Randal Schwartz takes over from the RSS aggregator at the end of the chapter by integrating it with a graphical interface in "[Graphical interaction with POE and Tk](http://www.stonehenge.com/merlyn/PerlJournal/col11.html)." Here, I want to consider command-line applications.
 
-The [`Term::Visual`](http://search.cpan.org/perldoc?Term::Visual) module is a POE component for creating applications with a split-screen interface; at the bottom of the interface, you type your input, and the output appears above a status line. The module handles all of the history, status bar updates, and everything else for you. Here's an application that uses [`Chatbot::Eliza`](http://search.cpan.org/perldoc?Chatbot::Eliza) to provide therapeutic session with everyone's favorite digital psychiatrist.
+The [`Term::Visual`](https://metacpan.org/pod/Term::Visual) module is a POE component for creating applications with a split-screen interface; at the bottom of the interface, you type your input, and the output appears above a status line. The module handles all of the history, status bar updates, and everything else for you. Here's an application that uses [`Chatbot::Eliza`](https://metacpan.org/pod/Chatbot::Eliza) to provide therapeutic session with everyone's favorite digital psychiatrist.
 
 First, set up the chatbot and create a new `Term::Visual` object:
 
@@ -215,7 +215,7 @@ Now create the window, which will have space on its status bar for a clock:
        Title => "Eliza" 
     );
 
-You also need a [`POE::Session`](http://search.cpan.org/perldoc?POE::Session), which will do all the work. It will have three states; the first is the `_start` state, to tell `Term::Visual` what to do with any input it gets from the keyboard and to update the clock:
+You also need a [`POE::Session`](https://metacpan.org/pod/POE::Session), which will do all the work. It will have three states; the first is the `_start` state, to tell `Term::Visual` what to do with any input it gets from the keyboard and to update the clock:
 
     POE::Session->create
     (inline_states =>
@@ -257,7 +257,7 @@ In just a few lines of code you have a familiar interface, similar to many IRC o
 
 ### Testing
 
-*Advanced Perl Programming* showed how to write tests so that we all can be more sure that our code is doing what it should. How do you know your tests are doing enough? Enter Paul Johnson's [`Devel::Cover`](http://search.cpan.org/perldoc?Devel::Cover)!
+*Advanced Perl Programming* showed how to write tests so that we all can be more sure that our code is doing what it should. How do you know your tests are doing enough? Enter Paul Johnson's [`Devel::Cover`](https://metacpan.org/pod/Devel::Cover)!
 
 `Devel::Cover` makes a record of each time a Perl operation or statement is executed, and then compares this against the statements in your code. So when you're running your tests, you can see which of the code paths in your module get exercised and which don't; if you have big branches of code that never get tested, maybe you should write more tests for them!
 
@@ -271,7 +271,7 @@ This will give you a textual summary of code coverage; `cover -report html` prod
 
 This ensures that your code works--or at least, that it does what your tests specify. The next step is to ensure that your code is actually of relatively decent quality. Because "quality" is a subjective metric when it comes to the art of programming, Perl folk have introduced the objective of "Kwalitee" instead, which may or may not have any bearing on quality.
 
-All modules on CPAN have their Kwalitee measured as part of the [CPANTS](http://cpants.dev.zsi.at/) (CPAN Testing Service) website. One way to test for and increase your Kwalitee is to use the [`Module::Build::Kwalitee`](http://search.cpan.org/perldoc?Module::Build::Kwalitee) module; this copies some boilerplate tests into your distribution that ensure that you have adequate and syntactically correct documentation, that you `use strict` and `warnings`, and so on.
+All modules on CPAN have their Kwalitee measured as part of the [CPANTS](http://cpants.dev.zsi.at/) (CPAN Testing Service) website. One way to test for and increase your Kwalitee is to use the [`Module::Build::Kwalitee`](https://metacpan.org/pod/Module::Build::Kwalitee) module; this copies some boilerplate tests into your distribution that ensure that you have adequate and syntactically correct documentation, that you `use strict` and `warnings`, and so on.
 
 All of this ought to go a fair way to improving the Kwalitee of your code, if not its actual quality!
 

@@ -35,9 +35,9 @@ These plans are subject to change, but the monthly releases have gone well, and 
 **Improved Package Version Syntax**
 -----------------------------------
 
-In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable `$VERSION`. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as <a href="http://search.cpan.org/perldoc?ExtUtils%3A%3AMakeMaker" class="podlinkpod">ExtUtils::MakeMaker</a> and <a href="http://search.cpan.org/perldoc?Module%3A%3ABuild" class="podlinkpod">Module::Build</a> have to perform several contortions to parse them with any degree of accuracy. David Golden's [Version Numbers Should Be Boring](http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/) gives copious detail on how to do version numbers right, if you can't use 5.12.
+In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable `$VERSION`. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as <a href="https://metacpan.org/pod/ExtUtils%3A%3AMakeMaker" class="podlinkpod">ExtUtils::MakeMaker</a> and <a href="https://metacpan.org/pod/Module%3A%3ABuild" class="podlinkpod">Module::Build</a> have to perform several contortions to parse them with any degree of accuracy. David Golden's [Version Numbers Should Be Boring](http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/) gives copious detail on how to do version numbers right, if you can't use 5.12.
 
-An addition to the core <a href="http://search.cpan.org/perldoc?version" class="podlinkpod">version</a> module enables a feature called "strict version numbers", where these numbers conform to a few guidelines. The most important rule is that version numbers must be standard numbers with one decimal point (`1.23`) *or* version strings (`v1.234.5`).
+An addition to the core <a href="https://metacpan.org/pod/version" class="podlinkpod">version</a> module enables a feature called "strict version numbers", where these numbers conform to a few guidelines. The most important rule is that version numbers must be standard numbers with one decimal point (`1.23`) *or* version strings (`v1.234.5`).
 
 You may only use strict version numbers with the new package version syntax:
 
@@ -51,14 +51,14 @@ Internally, Perl will parse these the same way as it does:
 
         use Perl::Improved v1.23.45;
 
-... which is a benefit for consistency. As well, toolchain utilities can find and parse these version numbers with little effort, thanks in no small part to a canonical set of version number parsing regular expressions now found in <a href="http://search.cpan.org/perldoc?version" class="podlinkpod">version</a>.
+... which is a benefit for consistency. As well, toolchain utilities can find and parse these version numbers with little effort, thanks in no small part to a canonical set of version number parsing regular expressions now found in <a href="https://metacpan.org/pod/version" class="podlinkpod">version</a>.
 
 Sadly, there's currently no mechanism by which to add this syntax to 5.10, but in a couple of years this may be the preferred way of specifying version numbers in Perl 5.
 
 **Strictures by Default**
 -------------------------
 
-Several CPAN modules enable features such as <a href="http://search.cpan.org/perldoc?strict" class="podlinkpod">strict</a> when you use them, including <a href="http://search.cpan.org/perldoc?Moose" class="podlinkpod">Moose</a>, <a href="http://search.cpan.org/perldoc?perl5i" class="podlinkpod">perl5i</a>, <a href="http://search.cpan.org/perldoc?Modern%3A%3APerl" class="podlinkpod">Modern::Perl</a>, <a href="http://search.cpan.org/perldoc?Dancer" class="podlinkpod">Dancer</a>, and <a href="http://search.cpan.org/perldoc?Mojo" class="podlinkpod">Mojo</a>. Perl 5.12 also enables strictures when it encounters `use 5.012;`, along with other new language syntax features such as the `say` and `given`/`when` keywords.
+Several CPAN modules enable features such as <a href="https://metacpan.org/pod/strict" class="podlinkpod">strict</a> when you use them, including <a href="https://metacpan.org/pod/Moose" class="podlinkpod">Moose</a>, <a href="https://metacpan.org/pod/perl5i" class="podlinkpod">perl5i</a>, <a href="https://metacpan.org/pod/Modern%3A%3APerl" class="podlinkpod">Modern::Perl</a>, <a href="https://metacpan.org/pod/Dancer" class="podlinkpod">Dancer</a>, and <a href="https://metacpan.org/pod/Mojo" class="podlinkpod">Mojo</a>. Perl 5.12 also enables strictures when it encounters `use 5.012;`, along with other new language syntax features such as the `say` and `given`/`when` keywords.
 
 `use 5.012` does *not* enable warnings.
 
@@ -71,12 +71,12 @@ The `-M5.012` flag *does* enable strictures and new language features.
 
 While Perl itself did not have a Y2K problem, many programs written in Perl made assumptions that produced apparent Y2K problems. Unfortunately, Perl's time handling relies on system libraries, and many of those systems exhaust their available capabilities when dealing with dates and times in the year 2038. (Developers who think they have decades to solve this problem should consider financial instruments such as 30-year mortgages.)
 
-Perl 5.12 extends support for time and date handling in the core `localtime` and `gmtime` functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as <a href="http://search.cpan.org/perldoc?Time%3A%3Ay2038" class="podlinkpod">Time::y2038</a>.
+Perl 5.12 extends support for time and date handling in the core `localtime` and `gmtime` functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as <a href="https://metacpan.org/pod/Time%3A%3Ay2038" class="podlinkpod">Time::y2038</a>.
 
 **Core Support for Language Mutation Extensions**
 -------------------------------------------------
 
-<a href="http://search.cpan.org/perldoc?Devel%3A%3ADeclare" class="podlinkpod">Devel::Declare</a> is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. <a href="http://search.cpan.org/perldoc?signatures" class="podlinkpod">signatures</a> and <a href="http://search.cpan.org/perldoc?MooseX%3A%3ADeclare" class="podlinkpod">MooseX::Declare</a> are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
+<a href="https://metacpan.org/pod/Devel%3A%3ADeclare" class="podlinkpod">Devel::Declare</a> is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. <a href="https://metacpan.org/pod/signatures" class="podlinkpod">signatures</a> and <a href="https://metacpan.org/pod/MooseX%3A%3ADeclare" class="podlinkpod">MooseX::Declare</a> are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
 
 Unlike source filters, they compose together well and don't interfere with external code.
 
@@ -91,7 +91,7 @@ Perl 5 development makes a priority of supporting syntactic constructs found in 
 
 You may still disable deprecated warnings with `no warnings 'deprecated';`--they're still lexical warnings--but now these deprecations will be more obvious to developers who upgrade to and test their existing code against new releases of Perl 5.
 
-Deprecations do not necessarily imply any timeframe for removal of the deprecated feature, except as otherwise expressed explicitly in the appropriate release delta. See <a href="http://search.cpan.org/perldoc?perl5120delta" class="podlinkpod">perl5120delta</a> for more details about specific deprecations in this release.
+Deprecations do not necessarily imply any timeframe for removal of the deprecated feature, except as otherwise expressed explicitly in the appropriate release delta. See <a href="https://metacpan.org/pod/perl5120delta" class="podlinkpod">perl5120delta</a> for more details about specific deprecations in this release.
 
 **@INC Reorganized**
 --------------------
@@ -103,9 +103,9 @@ A reorganization of the order of these directories in the default `@INC` in Perl
 **Deprecations**
 ----------------
 
-A handful of core modules are now deprecated: <a href="http://search.cpan.org/perldoc?Class%3A%3AISA" class="podlinkpod">Class::ISA</a>, <a href="http://search.cpan.org/perldoc?Pod%3A%3APlainer" class="podlinkpod">Pod::Plainer</a>, <a href="http://search.cpan.org/perldoc?Switch" class="podlinkpod">Switch</a>, and <a href="http://search.cpan.org/perldoc?Shell" class="podlinkpod">Shell</a>. They remain available from the CPAN, though consider using `given`/`when` (introduced in Perl 5.10.0) instead of `Switch`. There's no deprecation category quite strong enough to describe the recommendation against it.
+A handful of core modules are now deprecated: <a href="https://metacpan.org/pod/Class%3A%3AISA" class="podlinkpod">Class::ISA</a>, <a href="https://metacpan.org/pod/Pod%3A%3APlainer" class="podlinkpod">Pod::Plainer</a>, <a href="https://metacpan.org/pod/Switch" class="podlinkpod">Switch</a>, and <a href="https://metacpan.org/pod/Shell" class="podlinkpod">Shell</a>. They remain available from the CPAN, though consider using `given`/`when` (introduced in Perl 5.10.0) instead of `Switch`. There's no deprecation category quite strong enough to describe the recommendation against it.
 
-The core has also included several libraries written in the Perl 4 era. They are now available from the CPAN in the <a href="http://search.cpan.org/perldoc?Perl4%3A%3ACoreLibs" class="podlinkpod">Perl4::CoreLibs</a> distribution. Though they are not *quite* deprecated yet, they will be in Perl 5.14. In almost every case, Perl 5 era replacements exist under active maintenance.
+The core has also included several libraries written in the Perl 4 era. They are now available from the CPAN in the <a href="https://metacpan.org/pod/Perl4%3A%3ACoreLibs" class="podlinkpod">Perl4::CoreLibs</a> distribution. Though they are not *quite* deprecated yet, they will be in Perl 5.14. In almost every case, Perl 5 era replacements exist under active maintenance.
 
 **Unicode Improvements**
 ------------------------
@@ -115,7 +115,7 @@ As the Unicode standards change, so must Perl 5's Unicode handling. The biggest 
 **Miscellaneous**
 -----------------
 
-Many bugs have been fixed. Several performance improvements are present. More tests are available. Dual-lived modules have been updated. More documentation is available (including <a href="http://search.cpan.org/perldoc?perlperf" class="podlinkpod">perlperf</a>, a detailed discussion of profiling and optimizing Perl 5 programs). Some 200 people have changed 750,000 lines in more than 3,000 files.
+Many bugs have been fixed. Several performance improvements are present. More tests are available. Dual-lived modules have been updated. More documentation is available (including <a href="https://metacpan.org/pod/perlperf" class="podlinkpod">perlperf</a>, a detailed discussion of profiling and optimizing Perl 5 programs). Some 200 people have changed 750,000 lines in more than 3,000 files.
 
 Even with all of those changes, Perl 5 remains a vibrant, powerful programming language. Programs written a decade ago will still run with few, if any, necessary changes, and almost all of the CPAN is ready to run on it.
 

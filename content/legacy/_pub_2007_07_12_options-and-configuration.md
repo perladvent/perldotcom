@@ -26,7 +26,7 @@ When you first fire up your editor and start writing a program, it's tempting to
 
 A search on CPAN reveals almost 200 different modules dedicated to option processing and handling configuration files. By anyone's standards that's quite a lot, certainly too many to evaluate each one.
 
-Luckily, you already have a great module right in front of you for handling options given on the command line: [`Getopt::Long`](http://search.cpan.org/perldoc?Getopt::Long), which is a core module included as standard with Perl. This lets you use the standard double-dash style of option names:
+Luckily, you already have a great module right in front of you for handling options given on the command line: [`Getopt::Long`](https://metacpan.org/pod/Getopt::Long), which is a core module included as standard with Perl. This lets you use the standard double-dash style of option names:
 
     myscript --source-directory "/var/log/httpd" --verbose \ --username=JJ
 

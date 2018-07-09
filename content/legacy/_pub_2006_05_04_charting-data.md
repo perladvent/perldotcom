@@ -35,7 +35,7 @@ Alas, while fairly nice to use, Tk is a bit fiddly and not exactly my cup of tea
 
 Before you can see what the weather is doing (beyond looking out of the window), you need to get at the raw numbers somehow. Ours are provided by state-of-the-art scientific instruments in state-of-the-art data formats; that is to say, partly as lines of ASCII data in columns, and partly as fixed-length records in a binary file. No matter, though. Perl and some friends from CPAN make fast work of building meaning from tumbled piles of data.
 
-Before doing anything, I set up a couple of objects to hold some data values. Each set of observations has a class corresponding to the experiment that generated it. The classes also contain `read_file` factory methods that read a file and produce a list of observations. To make things as quick (to write) as possible, I used [`Class::Accessor`](http://search.cpan.org/perldoc?Class::Accessor) to autogenerate `get` and `set` methods for my objects:
+Before doing anything, I set up a couple of objects to hold some data values. Each set of observations has a class corresponding to the experiment that generated it. The classes also contain `read_file` factory methods that read a file and produce a list of observations. To make things as quick (to write) as possible, I used [`Class::Accessor`](https://metacpan.org/pod/Class::Accessor) to autogenerate `get` and `set` methods for my objects:
 
      # Current weather data
      package Z::Weather;
@@ -95,7 +95,7 @@ I expect to call this as:
 
      my @weather_records = Z::Weather->fromfile("weather.data");
 
-Using the [`IO::All`](http://search.cpan.org/perldoc?IO::All) module to access the files both makes it very easy to read the file and also allows *calling* code to instead supply an `IO::All` object of its own, or to call this method with a filehandle already opened to the data source. This will make it easy to obtain data from some other source; for instance, if the experiment changes to provide a socket from which to read the current values.
+Using the [`IO::All`](https://metacpan.org/pod/IO::All) module to access the files both makes it very easy to read the file and also allows *calling* code to instead supply an `IO::All` object of its own, or to call this method with a filehandle already opened to the data source. This will make it easy to obtain data from some other source; for instance, if the experiment changes to provide a socket from which to read the current values.
 
 Parsing the data is the responsibility of another method, `_line()`, which expects lines like:
 
@@ -120,7 +120,7 @@ Parsing the data is the responsibility of another method, `_line()`, which expec
                              dir      => $vals[8],  });
      }
 
-`split` and Perl's magic make sense of the data points, and the [`DateTime`](http://search.cpan.org/perldoc?DateTime) module take cares of the details of when the record was produced. I find it much easier to turn any time-related value into a `DateTime` object at the soonest possible moment, so that the rest of my code can expect `DateTime` objects. It becomes easier to reuse in other projects. If you find yourself writing code to handle leap years every other day, then make using `DateTime` your number one new habit.
+`split` and Perl's magic make sense of the data points, and the [`DateTime`](https://metacpan.org/pod/DateTime) module take cares of the details of when the record was produced. I find it much easier to turn any time-related value into a `DateTime` object at the soonest possible moment, so that the rest of my code can expect `DateTime` objects. It becomes easier to reuse in other projects. If you find yourself writing code to handle leap years every other day, then make using `DateTime` your number one new habit.
 
 I deal with the mast data in a similar way, except that the other format is fixed-length binary records. The time of the recording is stored in the first four bytes as the number of seconds into an arbitrary epoch. I correct this into Unix time when creating its `DateTime` object. Values are stored as two-byte, network-endian unsigned shorts stored as hundredths of the recorded values. `unpack()` comes to my aid here.
 
@@ -217,7 +217,7 @@ Producing the charts is, again, a simple business (by now, the theme of this art
 
      my @mast_values = Z::Mast->from_file('mast.data.dat');
 
-Because old weather is old news, I throw away any values older than three hours, using `DateTime` and [`DateTime::Duration`](http://search.cpan.org/perldoc?DateTime::Duration) methods in a `grep`:
+Because old weather is old news, I throw away any values older than three hours, using `DateTime` and [`DateTime::Duration`](https://metacpan.org/pod/DateTime::Duration) methods in a `grep`:
 
      use DateTime;
      use DateTime::Duration;
@@ -227,7 +227,7 @@ Because old weather is old news, I throw away any values older than three hours,
      
      @mast_values = grep { $_->time + $age > $now } @mast_values;
 
-This is so, so much easier than fiddling around with epochs and `3*3600` all over the place. If you find yourself writing 3600 anywhere in your code, you should be using `DateTime::Duration` instead. Next, I feed the data points into the [`Chart::Lines`](http://search.cpan.org/perldoc?Chart::Lines) module, a part of the [`Chart`](http://search.cpan.org/search?query=Chart) distribution. I use this in three phases. First, I create a new `Chart` and specify how large the resulting graphic should be:
+This is so, so much easier than fiddling around with epochs and `3*3600` all over the place. If you find yourself writing 3600 anywhere in your code, you should be using `DateTime::Duration` instead. Next, I feed the data points into the [`Chart::Lines`](https://metacpan.org/pod/Chart::Lines) module, a part of the [`Chart`](http://search.cpan.org/search?query=Chart) distribution. I use this in three phases. First, I create a new `Chart` and specify how large the resulting graphic should be:
 
      use Chart::Lines;
      my $chart = Chart::Lines->new($x_size, $y_size);

@@ -80,7 +80,7 @@ To create the abstraction I desired, it quickly became apparent that I needed a 
 
 I first needed to discover the classes, methods, and fields to wrap. There are more than 50 classes, interfaces, and exceptions in the JCR specification--I'm too lazy to type all that. Furthermore, the JCR is currently under revision via [JSR 283](http://jcp.org/en/jsr/detail?id=283), I don't want to update the class list again later. Finally, I want my wrappers to handle each method specifically because the use of `AUTOLOAD()` is evil (sometimes useful, but still evil).
 
-I wrote a Java program to find all the classes in the JCR JAR file and write those class names out with additional information about methods, constructors, and fields. I used a [YAML](http://www.yaml.org/)-formatted file to store the information. I made heavy use of the [Java Reflection API](http://java.sun.com/docs/books/tutorial/reflect/index.html) to make this happen. You can see the [full source of JCR package generator](http://search.cpan.org/src/HANENKAMP/Java-JCR-0.07/inc/JCRPackageGenerator.java) in the [Java::JCR](http://search.cpan.org/perldoc?Java::JCR) distribution. Here's one entry in the [YAML JCR package output file](http://search.cpan.org/src/HANENKAMP/Java-JCR-0.07/inc/packages.yml):
+I wrote a Java program to find all the classes in the JCR JAR file and write those class names out with additional information about methods, constructors, and fields. I used a [YAML](http://www.yaml.org/)-formatted file to store the information. I made heavy use of the [Java Reflection API](http://java.sun.com/docs/books/tutorial/reflect/index.html) to make this happen. You can see the [full source of JCR package generator](http://search.cpan.org/src/HANENKAMP/Java-JCR-0.07/inc/JCRPackageGenerator.java) in the [Java::JCR](https://metacpan.org/pod/Java::JCR) distribution. Here's one entry in the [YAML JCR package output file](http://search.cpan.org/src/HANENKAMP/Java-JCR-0.07/inc/packages.yml):
 
     javax.jcr.SimpleCredentials:
       isa:
@@ -359,7 +359,7 @@ The implementation is now, more or less, complete. You can use `Java::JCR` to co
 
     % cpan Java::JCR
 
-I needed a way to build this library. My preferred build tool is Ken Williams' [Module::Build](http://search.cpan.org/perldoc?Module::Build). It's in common use, compatible with the CPAN installer, and cooperates well with *g-cpan.pl*, which is a packaging tool for my favorite Linux distribution, [Gentoo](http://www.gentoo.org/). Finally, it's easy to extend.
+I needed a way to build this library. My preferred build tool is Ken Williams' [Module::Build](https://metacpan.org/pod/Module::Build). It's in common use, compatible with the CPAN installer, and cooperates well with *g-cpan.pl*, which is a packaging tool for my favorite Linux distribution, [Gentoo](http://www.gentoo.org/). Finally, it's easy to extend.
 
 When customizing `Module::Build`, I prefer to create a custom build module rather than by placing the extension directly inline with the *Build.PL* file. In this case, I've called the module [Java::JCR::Build](http://search.cpan.org/src/HANENKAMP/Java-JCR-0.07/inc/Java/JCR/Build.pm). I placed it inside a directory named *inc/* with the rest of the tools I built for generating the package.
 
@@ -403,7 +403,7 @@ After creating the basic module that extends `Module::Build`, I added a custom a
         $self->SUPER::ACTION_code;
     }
 
-I use Gisle Aas's [LWP::UserAgent](http://search.cpan.org/perldoc?LWP::UserAgent) to fetch the JAR files from the public Maven repositories and drop them into the build library folder, *blib*. `Module::Build` will take care of the rest by copying those JAR files to the appropriate location during the install process.
+I use Gisle Aas's [LWP::UserAgent](https://metacpan.org/pod/LWP::UserAgent) to fetch the JAR files from the public Maven repositories and drop them into the build library folder, *blib*. `Module::Build` will take care of the rest by copying those JAR files to the appropriate location during the install process.
 
 I also needed some code in `Java::JCR` to set the `CLASSPATH` correctly ahead of time:
 

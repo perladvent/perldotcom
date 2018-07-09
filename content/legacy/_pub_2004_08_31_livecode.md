@@ -47,15 +47,15 @@ Let's sidetrack to talk a little about how you might build an environment to mak
 
 Sadly Perl isn't quite fast enough to be useful for synthesizing sounds directly. Instead we have to use Perl to trigger sounds by talking to other bits of software or hardware.
 
-There are a fair few music related Perl modules to be found on CPAN, perhaps the best known being the MIDI-Perl package by Sean Burke. MIDI-Perl concerns itself only with the reading and writing of MIDI files, which are a kind of musical score - this article is concerned with making live music, not writing scores. However, if you do want to create or manipulate MIDI files, the [`MIDI::Simple`](http://search.cpan.org/perldoc?MIDI::Simple) module in the MIDI-Perl package is a great place to start.
+There are a fair few music related Perl modules to be found on CPAN, perhaps the best known being the MIDI-Perl package by Sean Burke. MIDI-Perl concerns itself only with the reading and writing of MIDI files, which are a kind of musical score - this article is concerned with making live music, not writing scores. However, if you do want to create or manipulate MIDI files, the [`MIDI::Simple`](https://metacpan.org/pod/MIDI::Simple) module in the MIDI-Perl package is a great place to start.
 
-As well as a file format for storing musical scores, MIDI also provides a real time protocol for triggering sounds on synthesizers and samplers in real time. If you have a MIDI compatible synthesizer or sampler then there are CPAN modules to help you take advantage of them; [`MIDI::Music`](http://search.cpan.org/perldoc?MIDI::Music) for UNIX and [`Win32API::MIDI`](http://search.cpan.org/perldoc?Win32API::MIDI) for Windows.
+As well as a file format for storing musical scores, MIDI also provides a real time protocol for triggering sounds on synthesizers and samplers in real time. If you have a MIDI compatible synthesizer or sampler then there are CPAN modules to help you take advantage of them; [`MIDI::Music`](https://metacpan.org/pod/MIDI::Music) for UNIX and [`Win32API::MIDI`](https://metacpan.org/pod/Win32API::MIDI) for Windows.
 
 Software synthesizers are now commonplace and reliable, thanks to the increasing speed of computers and improving latency times of operating systems including the Linux kernel. Most music software is still controllable by MIDI, but for a faster and more modern alternative, have a look at Open Sound Control (OSC).
 
 OSC is an open network protocol for music, and is well supported by the best free software music applications including pure-data, SuperCollider and CSound. It's most commonly carried over UDP, so you can use your existing TCP/IP network and Internet connection for OSC.
 
-For sending and receiving OSC messages with Perl, install the [`Audio::OSC`](http://search.cpan.org/perldoc?Audio::OSC) package from CPAN. Here's an example of its use:
+For sending and receiving OSC messages with Perl, install the [`Audio::OSC`](https://metacpan.org/pod/Audio::OSC) package from CPAN. Here's an example of its use:
 
       my $osc = 
           Audio::OSC::Client->new(Host => 'localhost', Port => 57120);
@@ -64,11 +64,11 @@ For sending and receiving OSC messages with Perl, install the [`Audio::OSC`](htt
 
 This example sends a message to port 57120 telling it to play number 60 in a quarter of a second's time. The OSC protocol doesn't define the meaning of such commands, it's up to you to make sure that the receiving application understands what the sending application is asking of it. Later I'll show the use of `Audio::OSC` to talk to an application called SuperCollider.
 
-Ecasound is an excellent piece of software useful for live routing and recording of audio. It supports LADSPA plug-ins, allowing you full programmatic control over a wide range of effects such as noise filters, reverb, chorus and so on. For full real time control over ecasound, install the [`Audio::Ecasound`](http://search.cpan.org/perldoc?Audio::Ecasound) module.
+Ecasound is an excellent piece of software useful for live routing and recording of audio. It supports LADSPA plug-ins, allowing you full programmatic control over a wide range of effects such as noise filters, reverb, chorus and so on. For full real time control over ecasound, install the [`Audio::Ecasound`](https://metacpan.org/pod/Audio::Ecasound) module.
 
-While not likely to have a place in a professional studio, [`Audio::Beep`](http://search.cpan.org/perldoc?Audio::Beep) is a fun way of making primitive, monophonic music. I'll use this in an example later.
+While not likely to have a place in a professional studio, [`Audio::Beep`](https://metacpan.org/pod/Audio::Beep) is a fun way of making primitive, monophonic music. I'll use this in an example later.
 
-Finally, perhaps the most essential CPAN module for live music is [`Time::HiRes`](http://search.cpan.org/perldoc?Time::HiRes). Unless your music is very intense, at some point you'll want your script to pause before triggering the next sound. Normally Perl only lets you sleep for whole seconds at a time, but `Time::HiRes` offers a great deal more accuracy. Time is such an important issue in music, that I've dedicated the whole of the next section to it.
+Finally, perhaps the most essential CPAN module for live music is [`Time::HiRes`](https://metacpan.org/pod/Time::HiRes). Unless your music is very intense, at some point you'll want your script to pause before triggering the next sound. Normally Perl only lets you sleep for whole seconds at a time, but `Time::HiRes` offers a great deal more accuracy. Time is such an important issue in music, that I've dedicated the whole of the next section to it.
 
 ### Time
 
@@ -86,7 +86,7 @@ Now as I tried to explain earlier, I like to write code live while practicing an
 
 I wrote my own little text editor for live coding. The editor is only intended for writing Perl code, but doesn't have a save function. In that case, you might wonder how I execute the code.
 
-Well if you're using feedback.pl, the code you're writing is running all the time, in the background. In fact feedback.pl has two "threads" - one thread is the text editor and another runs the code that is being edited. The running code in the second thread re-parses itself whenever you press ctrl-x, leaving all variables intact. mod\_perl programmers will be familiar with this concept -- the [`Apache::StatINC`](http://search.cpan.org/perldoc?Apache::StatINC) and [`Apache::Reload`](http://search.cpan.org/perldoc?Apache::Reload) modules do something very similar.
+Well if you're using feedback.pl, the code you're writing is running all the time, in the background. In fact feedback.pl has two "threads" - one thread is the text editor and another runs the code that is being edited. The running code in the second thread re-parses itself whenever you press ctrl-x, leaving all variables intact. mod\_perl programmers will be familiar with this concept -- the [`Apache::StatINC`](https://metacpan.org/pod/Apache::StatINC) and [`Apache::Reload`](https://metacpan.org/pod/Apache::Reload) modules do something very similar.
 
 It gets weirder -- the running code can edit its own source code. This is really useful for user feedback. I quite often write code that puts comments in its source that tells me what the running code is up to. So, the human interface to the running code is its source code. You edit the code to modify the process; the process edits the code in response. That's why it's called `feedback.pl`.
 
@@ -174,13 +174,13 @@ To have multiple scripts running at the same time, you can use my "tm.pl" script
 
 <http://cpan.org/authors/id/Y/YA/YAXU/perl-music-article/examples/tm-0.1.pl>
 
-It requires a spread communication daemon (<http://spread.org/>) to be running and the [`Spread::Session`](http://search.cpan.org/perldoc?Spread::Session) Perl module to be installed. Start the tm.pl script, set the environment variable SPREAD to 1, and then multiple invocations of feedback.pl will stay in synch. You can change the bpm (bangs per minute, similar to beats per minute) at any time, for example $self-&gt;set\_bpm(800) will set the bpm to 800, which is suitable for fast gabba techno.
+It requires a spread communication daemon (<http://spread.org/>) to be running and the [`Spread::Session`](https://metacpan.org/pod/Spread::Session) Perl module to be installed. Start the tm.pl script, set the environment variable SPREAD to 1, and then multiple invocations of feedback.pl will stay in synch. You can change the bpm (bangs per minute, similar to beats per minute) at any time, for example $self-&gt;set\_bpm(800) will set the bpm to 800, which is suitable for fast gabba techno.
 
 ### Further Experiments
 
 I haven't gone into detail about how to generate the music itself - that's really up to you and your imagination. However, here are a few pointers toward some interesting areas of research.
 
-Markov chains are a way of probabilistically analyzing a one-dimensional structure and then generating new structures based on the original. It's used often for producing amusingly garbled text, but can also be used for making amusingly garbled music. Check Richard Clamp's [`Algorithm::MarkovChain`](http://search.cpan.org/perldoc?Algorithm::MarkovChain) module on CPAN for more details.
+Markov chains are a way of probabilistically analyzing a one-dimensional structure and then generating new structures based on the original. It's used often for producing amusingly garbled text, but can also be used for making amusingly garbled music. Check Richard Clamp's [`Algorithm::MarkovChain`](https://metacpan.org/pod/Algorithm::MarkovChain) module on CPAN for more details.
 
 Regular expressions are of course excellent for manipulating chunks of text, but why not instead use them to manipulate sequences of notes while they are playing? Being able to hear as well as see the effect of a regex is rather pleasing.
 

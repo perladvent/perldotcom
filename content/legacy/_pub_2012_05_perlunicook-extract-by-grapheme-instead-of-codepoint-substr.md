@@ -18,7 +18,7 @@
 ℞ 31: Extract by grapheme instead of by codepoint (substr)
 ----------------------------------------------------------
 
-The [Unicode Standard Annex \#29](http://www.unicode.org/reports/tr29/) discusses the boundaries between grapheme clusters—what users might perceive as "characters". The CPAN module [Unicode::GCString](http://search.cpan.org/perldoc?Unicode::GCString) allows you to treat a Unicode string as a sequence of these grapheme clusters.
+The [Unicode Standard Annex \#29](http://www.unicode.org/reports/tr29/) discusses the boundaries between grapheme clusters—what users might perceive as "characters". The CPAN module [Unicode::GCString](https://metacpan.org/pod/Unicode::GCString) allows you to treat a Unicode string as a sequence of these grapheme clusters.
 
 While you may [use `\X` to extract graphemes within a regex](/pub/2012/05/perlunicookbook-extract-by-grapheme-instead-of-codepoint-regex.html), `Unicode::GCString` provides a `substr()` method to extract a series of grapheme clusters:
 

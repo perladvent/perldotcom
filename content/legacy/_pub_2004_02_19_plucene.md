@@ -19,7 +19,7 @@
 
 For the past few months, my [former employers](http://www.kasei.com) and I have been working on a port of the Java [Lucene](http://jakarta.apache.org/lucene/) search engine toolkit.
 
-On the February 3rd, [Plucene](http://search.cpan.org/perldoc?Plucene) was released to the world, implementing almost all of the functionality of the Java equivalent. Satisfied with a job done, I parted company with Kasei to pursue some projects of my own -- about which I'm sure you'll be hearing more later.
+On the February 3rd, [Plucene](https://metacpan.org/pod/Plucene) was released to the world, implementing almost all of the functionality of the Java equivalent. Satisfied with a job done, I parted company with Kasei to pursue some projects of my own -- about which I'm sure you'll be hearing more later.
 
 Very soon after, the phone rang, and it turned out that someone actually wanted to use this Plucene thing; they needed to add a search engine to a web-based book that they had produced, and had some pretty complex requirements that meant that the usual tools -- HTDig, Glimpse and friends -- couldn't quite do the job. Could I come around and write a Plucene-based search engine for them?
 
@@ -62,7 +62,7 @@ The HTML files I had to deal with looked a bit like this:
         <div id="navigation">...</div>
         <div id="content">...</div>
 
-I wanted to extract what was in the `meta` tags, the `title`, and everything in the `content` div. One of the nicest ways to do this in Perl is with the [`HTML::TreeBuilder`](http://search.cpan.org/perldoc?HTML::TreeBuilder), which allows us to "dig down" for the elements that we want to find:
+I wanted to extract what was in the `meta` tags, the `title`, and everything in the `content` div. One of the nicest ways to do this in Perl is with the [`HTML::TreeBuilder`](https://metacpan.org/pod/HTML::TreeBuilder), which allows us to "dig down" for the elements that we want to find:
 
         use HTML::TreeBuilder;
         my $tree = HTML::TreeBuilder->new->parse_file("chapter1.html");
@@ -84,7 +84,7 @@ Now we have the salient parts of the chapter extracted as a hash reference, and 
 
         $index->add( "chapter1.html" => $document );
 
-To do this for a whole directory tree of files, we can use the wonderful [`File::Find::Rule`](http://search.cpan.org/perldoc?File::Find::Rule) module:
+To do this for a whole directory tree of files, we can use the wonderful [`File::Find::Rule`](https://metacpan.org/pod/File::Find::Rule) module:
 
         for my $filename (File::Find::Rule->file
                           ->name( qr/^(?!index).*\.html/ )->in(".")) {
@@ -144,7 +144,7 @@ We can't easily solve the first problem with `Plucene::Simple`, so we'll come ba
 
 ### <span id="Contextualising_results">Contextualizing Results</span>
 
-The [`Text::Context`](http://search.cpan.org/perldoc?Text::Context) module was written to solve a similar contextualizing problem; it takes a bunch of keywords and a source document, and produces a paragraph-sized chunk of text highlighting where the keywords occur.
+The [`Text::Context`](https://metacpan.org/pod/Text::Context) module was written to solve a similar contextualizing problem; it takes a bunch of keywords and a source document, and produces a paragraph-sized chunk of text highlighting where the keywords occur.
 
 Since it works by trying to subdivide the text into paragraphs, it's helpful to have a text-only version of the document available. If we don't, we can use `HTML::TreeBuilder` again to produce them:
 
@@ -175,7 +175,7 @@ One of the things that makes a good search engine into a great search engine is 
 
 There are two ways to deal with this; the way HTDig chooses is to replace the "looking" with "(look OR looked OR looks OR looking)," but this isn't particularly efficient or comprehensive.
 
-A second way is to index the words a little differently; filtering them through a stemmer which takes off the suffixes, so that all of the above collapse to "look." [`Lingua::Stem::En::stem`](http://search.cpan.org/perldoc?Lingua::Stem::En::stem) does this, but we can't plug it into `Plucene::Simple` directly. To do this, we need to slip under the covers of `Plucene::Simple` and meddle with the Plucene API itself.
+A second way is to index the words a little differently; filtering them through a stemmer which takes off the suffixes, so that all of the above collapse to "look." [`Lingua::Stem::En::stem`](https://metacpan.org/pod/Lingua::Stem::En::stem) does this, but we can't plug it into `Plucene::Simple` directly. To do this, we need to slip under the covers of `Plucene::Simple` and meddle with the Plucene API itself.
 
 Before we see how to do this, let's look at the various components of Plucene.
 
@@ -300,7 +300,7 @@ In *We are introduced*
 
 Which looks quite nice and professional. Except for one slight matter.
 
-Suppose we had looked for `bear builds`. We'd still match the same bit of text, thanks to stemming. However, the exact words that we're looking for aren't in that bit of text, so the contextualizer won't do the right thing. What we need, then, is a version of `Text::Context` that knows about Porter stemming. Thankfully, [`Text::Context::Stemmer`](http://search.cpan.org/perldoc?Text::Context::Stemmer) steps into the breach.
+Suppose we had looked for `bear builds`. We'd still match the same bit of text, thanks to stemming. However, the exact words that we're looking for aren't in that bit of text, so the contextualizer won't do the right thing. What we need, then, is a version of `Text::Context` that knows about Porter stemming. Thankfully, [`Text::Context::Stemmer`](https://metacpan.org/pod/Text::Context::Stemmer) steps into the breach.
 
 We have a web search engine that understands Porter stemming. The first part of my job is done.
 

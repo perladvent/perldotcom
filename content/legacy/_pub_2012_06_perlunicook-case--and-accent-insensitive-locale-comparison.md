@@ -18,7 +18,7 @@
 ℞ 40: Case- *and* accent-insensitive locale comparisons
 -------------------------------------------------------
 
-You now know how to [compare Unicode strings while ignoring case and accent differences](/pub/2012/06/perlunicook-case--and-accent-insensitive-comparison.html). This approach uses the standard Unicode collation algorithm. To perform a similar comparison while respecting a speciﬁc locale's rules, use [Unicode::Collate::Locale](http://search.cpan.org/perldoc?Unicode::Collate::Locale):
+You now know how to [compare Unicode strings while ignoring case and accent differences](/pub/2012/06/perlunicook-case--and-accent-insensitive-comparison.html). This approach uses the standard Unicode collation algorithm. To perform a similar comparison while respecting a speciﬁc locale's rules, use [Unicode::Collate::Locale](https://metacpan.org/pod/Unicode::Collate::Locale):
 
      my $de = Unicode::Collate::Locale->new(
                 locale => "de__phonebook",

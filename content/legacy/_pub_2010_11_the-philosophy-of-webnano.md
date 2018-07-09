@@ -20,7 +20,7 @@ Why WebNano
 
 Many web applications have common components: a login page, a comment box, an email confirmation mechanism, a generic CRUD page. All of these are well-defined components. It's easy to believe that it should not be difficult to abstract them away into libraries. Yet every time you start a web application you need to write that boring comment box again and again.
 
-Why are there so few such libraries? Why is writing them so hard? There are more and less important reasons, but there are many reasons. Most projects to make components eventually die the death of a thousand cuts. Some of those problems can be solved and I believe that solving them would make a difference. [WebNano](http://search.cpan.org/perldoc?WebNano) is my attempt at doing that.
+Why are there so few such libraries? Why is writing them so hard? There are more and less important reasons, but there are many reasons. Most projects to make components eventually die the death of a thousand cuts. Some of those problems can be solved and I believe that solving them would make a difference. [WebNano](https://metacpan.org/pod/WebNano) is my attempt at doing that.
 
 Probably the most popular Perl web framework is [Catalyst](http://catalystframework.org/). It is also the web framework I know the best—this is why I chose it as the point of reference for my analysis.
 
@@ -78,7 +78,7 @@ In the most common case a web application serving a request needs to fetch data,
 
 Even so, there might be rare cases where the application needs to serve, for example, small JSON data chunks from a memory cache. Even when this is a small and simple part of the application, if it generates enough volume then the speed of the framework suddenly becomes important. Would you code that part in PHP?
 
-I was very tempted to use Moose in WebNano. Moose generates some significant startup overhead, though for web applications running in persistent environments this does not matter much because that overhead amortizes over many requests. If you run your application as CGI, this startup time becomes important. Even if CGI is perceived as passé now, it is still the easiest way to deploy web applications and (especially with the most widespread support from hosting companies). Fortunately, using [MooseX::NonMoose](http://search.cpan.org/perldoc?MooseX::NonMoose) it is very easy to treat any hash based object classes as base classes for Moose based code, so using WebNano does not mean that you need to stick to the simplistic Object Oriented Framework it uses.
+I was very tempted to use Moose in WebNano. Moose generates some significant startup overhead, though for web applications running in persistent environments this does not matter much because that overhead amortizes over many requests. If you run your application as CGI, this startup time becomes important. Even if CGI is perceived as passé now, it is still the easiest way to deploy web applications and (especially with the most widespread support from hosting companies). Fortunately, using [MooseX::NonMoose](https://metacpan.org/pod/MooseX::NonMoose) it is very easy to treat any hash based object classes as base classes for Moose based code, so using WebNano does not mean that you need to stick to the simplistic Object Oriented Framework it uses.
 
 The plan is to make WebNano small but universal, then make extensions that will be more powerful and more restricted. I think it is important that the base platform can be used in all kinds of circumstances.
 

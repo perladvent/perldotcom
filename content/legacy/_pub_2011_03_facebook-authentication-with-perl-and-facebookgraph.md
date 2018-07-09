@@ -21,7 +21,7 @@
 
 
 
-Basic integration of software and web sites with Facebook, Twitter, and other social networking systems has become a litmus test for business these days. Depending on the software or site you might need to fetch some data, make a post, create events, upload photos, or use one or more of the social networking sites as a single sign-on system. This series will show you how to do exactly those things on Facebook using [Facebook::Graph](http://search.cpan.org/perldoc?Facebook::Graph).
+Basic integration of software and web sites with Facebook, Twitter, and other social networking systems has become a litmus test for business these days. Depending on the software or site you might need to fetch some data, make a post, create events, upload photos, or use one or more of the social networking sites as a single sign-on system. This series will show you how to do exactly those things on Facebook using [Facebook::Graph](https://metacpan.org/pod/Facebook::Graph).
 
 This first article starts small by using Facebook as an authentication mechanism. There are certainly simpler things to do, but this is one of the more popular things people want to be able to do. Before you can do anything, you need to have a Facebook account. Then [register your new application](http://apps.facebook.com/developer) (Figure 1).
 

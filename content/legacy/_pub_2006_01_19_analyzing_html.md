@@ -55,12 +55,12 @@ I felt a little regret on the flexibility in the requirement. If I had fixed the
 
 ### Processing HTML with Perl
 
-Perl's regular expressions have excellent text processing capability and there are handy modules for parsing web pages. The module [`HTML::TreeBuilder`](http://search.cpan.org/perldoc?HTML::TreeBuilder) provides a HTML parser that builds a tree structure of the elements in a web page. It is easy to create a tree and build its content from a HTML file:
+Perl's regular expressions have excellent text processing capability and there are handy modules for parsing web pages. The module [`HTML::TreeBuilder`](https://metacpan.org/pod/HTML::TreeBuilder) provides a HTML parser that builds a tree structure of the elements in a web page. It is easy to create a tree and build its content from a HTML file:
 
     $tree = HTML::TreeBuilder->new;
     $tree->parse_file($file_name);
 
-Nodes in the tree are [`HTML::Element`](http://search.cpan.org/perldoc?HTML::Element) objects. There are plenty of methods with which to access and manipulate elements in the tree. When you finish using the tree, destroy it and free the memory it occupied:
+Nodes in the tree are [`HTML::Element`](https://metacpan.org/pod/HTML::Element) objects. There are plenty of methods with which to access and manipulate elements in the tree. When you finish using the tree, destroy it and free the memory it occupied:
 
     $tree->delete;
 
@@ -237,4 +237,4 @@ I can simply run the program in the directory containing the HTML files, or spec
 
 I did not evaluate the time saved by the program against its developing effort. Anyway, the program makes the grading process more accurate and less prone to error, and it is more fun to spend time writing a Perl program and getting familiar with useful modules.
 
-In fact, there are many other modules that could have been used in the program to provide even more automation. Had I read Wasserman's article "[Automating Windows Applications with Win32::OLE](/pub/2005/04/21/win32ole.html)," the program would record the final score to an Excel file automatically. In addition, networking modules such as [`Mail::Internet`](http://search.cpan.org/perldoc?Mail::Internet), [`Mail::Mailer`](http://search.cpan.org/perldoc?Mail::Mailer), and [`Mail::Folder`](http://search.cpan.org/perldoc?Mail::Folder) could retrieve the assignment files from emails and send the feedback files to the students directly from the program.
+In fact, there are many other modules that could have been used in the program to provide even more automation. Had I read Wasserman's article "[Automating Windows Applications with Win32::OLE](/pub/2005/04/21/win32ole.html)," the program would record the final score to an Excel file automatically. In addition, networking modules such as [`Mail::Internet`](https://metacpan.org/pod/Mail::Internet), [`Mail::Mailer`](https://metacpan.org/pod/Mail::Mailer), and [`Mail::Folder`](https://metacpan.org/pod/Mail::Folder) could retrieve the assignment files from emails and send the feedback files to the students directly from the program.

@@ -29,11 +29,11 @@ Consider this image:
 
 ![](http://savage.net.au/Ron/html/graphviz2.marpa/teamwork.svg)
 
-It's actually a copy of the image of a manual page for [Graph::Easy](http://search.cpan.org/perldoc?Graph::Easy). Note: My module [Graph::Easy::Marpa](http://search.cpan.org/perldoc?Graph::Easy::Marpa) is a complete re-write of `Graph::Easy`. After I offered to take over maintenance of the latter, I found the code so complex I literally couldn't understand any of it.
+It's actually a copy of the image of a manual page for [Graph::Easy](https://metacpan.org/pod/Graph::Easy). Note: My module [Graph::Easy::Marpa](https://metacpan.org/pod/Graph::Easy::Marpa) is a complete re-write of `Graph::Easy`. After I offered to take over maintenance of the latter, I found the code so complex I literally couldn't understand any of it.
 
 There are three ways (of interest to us) to specify the contents of this image:
 
--   As a Perl program using the [GraphViz2](http://search.cpan.org/perldoc?GraphViz2) module
+-   As a Perl program using the [GraphViz2](https://metacpan.org/pod/GraphViz2) module
 -   As a Graphviz DOT file written in a little language
 -   As a DOT file
 
@@ -43,7 +43,7 @@ Of course the Graphviz package itself provides a set of programs which parse DOT
 
 Alternately you might provide add-on services to the Graphviz package. For instance, some users might want to find all clusters of nodes, where a cluster is a set of nodes connected to each other, but not connected to any nodes outside the cluster. Yet other uses might want to find all paths of a given length emanating from a given node.
 
-I myself have written algorithms which provide these last two features. See the module [GraphViz2::Marpa::PathUtils](http://search.cpan.org/perldoc?GraphViz2::Marpa::PathUtils) and the [PathUtils demo page](http://savage.net.au/Perl-modules/html/graphviz2.pathutils/index.html).
+I myself have written algorithms which provide these last two features. See the module [GraphViz2::Marpa::PathUtils](https://metacpan.org/pod/GraphViz2::Marpa::PathUtils) and the [PathUtils demo page](http://savage.net.au/Perl-modules/html/graphviz2.pathutils/index.html).
 
 But back to using `Marpa::R2` from within `GraphViz2::Marpa`.
 
@@ -69,7 +69,7 @@ Normal users will use *g2m.pl* exclusively. The other scripts help developers wi
 
 ### Some Modules
 
-[GraphViz2::Marpa::Lexer::DFA](http://search.cpan.org/perldoc?GraphViz2:Marpa::Lexer::DFA) is a wrapper around [Set::FA::Element](http://search.cpan.org/perldoc?Set::FA::Element). It has various tasks to do:
+[GraphViz2::Marpa::Lexer::DFA](https://metacpan.org/pod/GraphViz2:Marpa::Lexer::DFA) is a wrapper around [Set::FA::Element](https://metacpan.org/pod/Set::FA::Element). It has various tasks to do:
 
 -   Process the State Transition Table (STT)
 -   Transform the STT from the input form (spreadsheet/CSV file) into what Set::FA::Element expects
@@ -480,7 +480,7 @@ All of this should reinforce the point that the design of the lexer is intimatel
 Where to go from here
 ---------------------
 
-The recently released Perl module [MarpaX::Simple::Rules](http://search.cpan.org/perldoc?MarpaX::Simple::Rules) takes a BNF and generates the corresponding grammar in the format expected by `Marpa::R2`.
+The recently released Perl module [MarpaX::Simple::Rules](https://metacpan.org/pod/MarpaX::Simple::Rules) takes a BNF and generates the corresponding grammar in the format expected by `Marpa::R2`.
 
 Jeffrey Kegler (author of Marpa) [has blogged about MarpaX::Simple::Rules](http://jeffreykegler.github.com/Ocean-of-Awareness-blog/individual/2012/06/the-useful-the-playful-the-easy-the-hard-and-the-beautiful.html%3E).
 
@@ -498,7 +498,7 @@ For more details, consult [my July 2011 article on Marpa::R2](http://savage.net.
 The Lexer and the State Transition Table - Revisited
 ----------------------------------------------------
 
-The complexity of the STT in `GraphViz2::Marpa` justifies the decision to split the lexer and the parser into separate modules. Clearly that will not always be the case. Given a sufficiently simple grammar, the lexer phase may be redundant. Consider this test data file, *data/sample.1.ged*, from [Genealogy::Gedcom](http://search.cpan.org/perldoc?Genealogy::Gedcom):
+The complexity of the STT in `GraphViz2::Marpa` justifies the decision to split the lexer and the parser into separate modules. Clearly that will not always be the case. Given a sufficiently simple grammar, the lexer phase may be redundant. Consider this test data file, *data/sample.1.ged*, from [Genealogy::Gedcom](https://metacpan.org/pod/Genealogy::Gedcom):
 
         0 HEAD
         1 SOUR Genealogy::Gedcom

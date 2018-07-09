@@ -38,7 +38,7 @@ There's nothing worse than setting off a long-running Perl program and then not 
             Email::Store::Mail->store(scalar read_file($_));
         }
 
-It's an innocent little program -- it looks for all the files in the *perl6-language* directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with `File::Slurp::read_file`, and then uses [`Email::Store`](http://search.cpan.org/perldoc?Email::Store) to put them into a database. You start it running, and come back a few hours later and it's done.
+It's an innocent little program -- it looks for all the files in the *perl6-language* directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with `File::Slurp::read_file`, and then uses [`Email::Store`](https://metacpan.org/pod/Email::Store) to put them into a database. You start it running, and come back a few hours later and it's done.
 
 All through, though, you have this nervous suspicion that it's not doing the right thing; or at least, not doing it very quickly. Sure there's a lot of mail, but should it really be taking this long? What's it actually spending its time doing? We can add some `print` statements to help us feel more at ease:
 
@@ -58,7 +58,7 @@ Now we can at least see more progress, but we still don't know if this program i
 
 ### <span id="Simple_Profiling">Simple Profiling</span>
 
-The granddaddy of Perl profiling tools is [`Devel::DProf`](http://search.cpan.org/perldoc?Devel::DProf). To profile a code run, add the `-d:DProf` argument to your Perl command line and let it go:
+The granddaddy of Perl profiling tools is [`Devel::DProf`](https://metacpan.org/pod/Devel::DProf). To profile a code run, add the `-d:DProf` argument to your Perl command line and let it go:
 
         % perl -d:DProf store_archive
 
@@ -67,7 +67,7 @@ The run will now take slightly longer than normal as Perl collects and writes ou
 A couple of notes about this:
 
 -   It's important to control the length of the run; in this case, I'd probably ensure that the mail archive contained about ten or fifteen mails to store. (I used seven in this example.) If your run goes on too long, you will end up processing a vast amount of profiling data, and not only will it take a lot time to read back in, it'll take far too long for you to wade through all the statistics. On the other hand, if the run's too short, the main body of the processing will be obscured by startup and other "fixed costs."
--   The other problem you might face is that `Devel::DProf`, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the [`Devel::Profiler`](http://search.cpan.org/perldoc?Devel::Profiler) module from CPAN, which is a pure-Perl replacement for it.
+-   The other problem you might face is that `Devel::DProf`, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the [`Devel::Profiler`](https://metacpan.org/pod/Devel::Profiler) module from CPAN, which is a pure-Perl replacement for it.
 
 The next step is to run the preprocessor for the profiler output, `dprofpp`. This will produce a table of where our time has been spent:
 

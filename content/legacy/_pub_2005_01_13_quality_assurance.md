@@ -64,7 +64,7 @@ This particular error can lead to embarrassing code such as the following:
     END
     }
 
-Now, anyone who wants to sleep easy at night will want to avoid shameful code like this, because slowly but surely, users are becoming less tolerant of buggy code. If you haven't done so already, you will want to read through Michael G. Schwern's [Test::Tutorial](http://search.cpan.org/perldoc?Test::Tutorial) and get started. Test-based development, combined with quality assurance, can enable a company to offer its customers a rare and valuable commodity: reliable software. In the future, the world of software may very well be divided between the companies that incorporate testing into their development cycle and those that used to be in business.
+Now, anyone who wants to sleep easy at night will want to avoid shameful code like this, because slowly but surely, users are becoming less tolerant of buggy code. If you haven't done so already, you will want to read through Michael G. Schwern's [Test::Tutorial](https://metacpan.org/pod/Test::Tutorial) and get started. Test-based development, combined with quality assurance, can enable a company to offer its customers a rare and valuable commodity: reliable software. In the future, the world of software may very well be divided between the companies that incorporate testing into their development cycle and those that used to be in business.
 
 ### Parts of a Test
 
