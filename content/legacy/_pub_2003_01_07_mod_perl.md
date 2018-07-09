@@ -63,7 +63,7 @@ In the child code, you must also close all pipes to the connection socket that w
 
 Under `mod_perl`, the spawned process also inherits a file descriptor that's tied to the socket through which all communication between the server and the client occur. Therefore, we need to free this stream in the forked process. If we don't do that, then the server cannot be restarted while the spawned process is still running. If an attempt is made to restart the server, then you will get the following error:
 
-      [Mon Dec 11 19:04:13 2000] [crit] 
+      [Mon Dec 11 19:04:13 2000] [crit]
       (98)Address already in use: make_sock:
         could not bind to address 127.0.0.1 port 8000
 
@@ -82,9 +82,9 @@ So the simplest way to free the parent process is to close all three `STD*` stre
           close STDIN;
           close STDOUT;
           close STDERR;
-      
+
         # some code comes here
-      
+
           CORE::exit(0);
       }
       # possibly more code here usually run by the parent
@@ -96,7 +96,7 @@ Of course, between the freeing-parent code and child-process termination, the re
 Now what happens if the forked process is running and we decide that we need to restart the Web server? This forked process will be aborted, since when the parent process dies during the restart, it'll kill its child processes as well. In order to avoid this, we need to detach the process from its parent session by opening a new session. We do this with help of `setsid()` system call, provided by the `POSIX` module:
 
       use POSIX 'setsid';
-      
+
       defined (my $kid = fork) or die "Cannot fork: $!\n";
       if ($kid) {
         # Parent runs this block
@@ -122,7 +122,7 @@ So the proper way to do a fork is:
 
       my $r = shift;
       $r->send_http_header('text/plain');
-      
+
       defined (my $kid = fork) or die "Cannot fork: $!";
       if ($kid) {
         waitpid($kid,0);
@@ -146,9 +146,9 @@ So now the code would look like this:
 
       my $r = shift;
       $r->send_http_header('text/plain');
-      
+
       $SIG{CHLD} = 'IGNORE';
-      
+
       defined (my $kid = fork) or die "Cannot fork: $!\n";
       if ($kid) {
         print "Parent has finished\n";
@@ -163,7 +163,7 @@ Another, more portable but slightly more expensive solution, is to use a double 
 
       my $r = shift;
       $r->send_http_header('text/plain');
-      
+
       defined (my $kid = fork) or die "Cannot fork: $!\n";
       if ($kid) {
         waitpid($kid,0);
@@ -202,10 +202,10 @@ Now let's put all the bits of code together and show a well-written fork code th
       use strict;
       use POSIX 'setsid';
       use Apache::SubProcess;
-      
+
       my $r = shift;
       $r->send_http_header("text/plain");
-      
+
       $SIG{CHLD} = 'IGNORE';
       defined (my $kid = fork) or die "Cannot fork: $!\n";
       if ($kid) {
@@ -218,14 +218,14 @@ Now let's put all the bits of code together and show a well-written fork code th
               or die "Can't write to /dev/null: $!";
           open STDERR, '>/tmp/log' or die "Can't write to /tmp/log: $!";
           setsid or die "Can't start a new session: $!";
-      
+
           select STDERR;
           local $| = 1;
           warn "started\n";
           # do something time-consuming
           sleep 1, warn "$_\n" for 1..20;
           warn "completed\n";
-      
+
           CORE::exit(0); # terminate the process
       }
 
@@ -282,12 +282,12 @@ First, we move the core program into the *external.pl* file, add the shebang fir
       external.pl
       -----------
       #!/usr/bin/perl -Tw
-      
+
       open STDIN, '/dev/null'  or die "Can't read /dev/null: $!";
       open STDOUT, '>/dev/null'
           or die "Can't write to /dev/null: $!";
       open STDERR, '>/tmp/log' or die "Can't write to /tmp/log: $!";
-      
+
       select STDERR;
       local $|=1;
       warn "started\n";
@@ -302,15 +302,15 @@ Now we replace the code that moved into the external program with `exec()` to ca
       use strict;
       use POSIX 'setsid';
       use Apache::SubProcess;
-      
+
       $ENV{'PATH'} = '/bin:/usr/bin';
       delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
-      
+
       my $r = shift;
       $r->send_http_header("text/html");
-      
+
       $SIG{CHLD} = 'IGNORE';
-      
+
       defined (my $kid = fork) or die "Cannot fork: $!\n";
       if ($kid) {
         print "Parent has finished, kid's PID: $kid\n";
@@ -322,7 +322,7 @@ Now we replace the code that moved into the external program with `exec()` to ca
               or die "Can't write to /dev/null: $!";
           open STDERR, '>&STDOUT'  or die "Can't dup stdout: $!";
           setsid or die "Can't start a new session: $!";
-      
+
           exec "/home/httpd/perl/external.pl" or die "Cannot execute exec: $!";
       }
 
@@ -389,6 +389,6 @@ will the operating system actually `exec()` a copy of `/bin/sh` to parse your co
 ### <span id="references">References</span>
 
 -   The `mod_perl` site's URL: <http://perl.apache.org/>
--   `Apache-SubProcess` <http://search.cpan.org/search?dist=Apache-SubProcess>
--   `Storable` <http://search.cpan.org/search?dist=Storable>
+-   `Apache-SubProcess` <https://metacpan.org/pod/Apache::SubProcess>
+-   `Storable` <https://metacpan.org/pod/Storable>
 

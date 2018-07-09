@@ -289,7 +289,7 @@ One thing to note about the session and state management in this system is that 
 
 ### <span id="text::template">Text::Template</span>
 
-<http://search.cpan.org/search?dist=Text-Template>
+<https://metacpan.org/pod/Text::Template>
 
 This module has become the de facto standard general purpose templating module on CPAN. It has an easy interface and thorough documentation. The examples in the docs show a pipeline execution style, but it's easy to write a mod\_perl handler that directly invokes templates, allowing a callback style. The module uses in-line Perl. It has the ability to run the in-line code in a Safe compartment, in case you are concerned about mistakes in the code crashing your server.
 

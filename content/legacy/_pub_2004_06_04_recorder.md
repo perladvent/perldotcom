@@ -20,7 +20,7 @@
 
 
 
-`HTTP::Recorder` is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces `WWW::Mechanize` scripts by default (see [`WWW::Mechanize`](http://search.cpan.org/search?query=www%3A%3Amechanize&mode=all) by Andy Lester), but provides functionality to use your own custom logger.
+`HTTP::Recorder` is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces `WWW::Mechanize` scripts by default (see [`WWW::Mechanize`](https://metacpan.org/pod/WWW::Mechanize) by Andy Lester), but provides functionality to use your own custom logger.
 
 ### Why Use `HTTP::Recorder`?
 
@@ -44,7 +44,7 @@ When you think about web automation, the first thing you think of may be automat
 
 #### Use It with a Web Proxy
 
-One way to use `HTTP::Recorder` (as recommended in the POD) is to set it as the user agent of a web proxy (see [`HTTP::Proxy`](http://search.cpan.org/search?query=http%3A%3Aproxy&mode=all) by Phillipe "BooK" Bruhat). Start the proxy running like this:
+One way to use `HTTP::Recorder` (as recommended in the POD) is to set it as the user agent of a web proxy (see [`HTTP::Proxy`](https://metacpan.org/pod/HTTP::Proxy) by Phillipe "BooK" Bruhat). Start the proxy running like this:
 
         #!/usr/bin/perl
 
@@ -250,10 +250,10 @@ But on this page, there's no need to record setting the values of fields (XField
              !exists ($fields{'ValueOf' . $1})) {
             next;
             }
-            $self->SetField(name => $field, 
+            $self->SetField(name => $field,
                     value => $args{fields}->{$field});
         }
-        $self->Submit(name => $args{name}, 
+        $self->Submit(name => $args{name},
                   number => $args{number},
                   button_name => $args{button_name},
                   button_value => $args{button_value},
@@ -333,7 +333,7 @@ Some ideas for the future include:
 
 ### Where to Get `HTTP::Recorder`
 
-The latest released version of `HTTP::Recorder` is available at [CPAN](http://search.cpan.org/search?query=http%3A%3Arecorder&mode=all).
+The latest released version of `HTTP::Recorder` is available at [CPAN](https://metacpan.org/pod/HTTP::Recorder).
 
 ### Contributions, Requests, and Bugs
 
@@ -345,6 +345,6 @@ The mailing list archives can be found at <http://lists.fsck.com/piper-mail/http
 
 ### See Also
 
-[`WWW::Mechanize`](http://search.cpan.org/search?query=www%3A%3Amechanize&mode=all) by Andy Lester.
+[`WWW::Mechanize`](https://metacpan.org/pod/WWW::Mechanize) by Andy Lester.
 
-[`HTTP::Proxy`](http://search.cpan.org/search?query=http%3A%3Aproxy&mode=all) by Phillipe "BooK" Bruhat.
+[`HTTP::Proxy`](https://metacpan.org/pod/HTTP::Proxy) by Phillipe "BooK" Bruhat.

@@ -145,15 +145,15 @@ Notice that we have got the value of the environment variable *TEST*.
 If you watch the system calls that your server makes (using *truss* or *strace*) while processing a request, then you will notice that a few `stat()` calls are made. For example, when I fetch http://localhost/perl-status and I have my DocRoot set to */home/httpd/docs* I see:
 
       [snip]
-      stat("/home/httpd/docs/perl-status", 0xbffff8cc) = -1 
+      stat("/home/httpd/docs/perl-status", 0xbffff8cc) = -1
                           ENOENT (No such file or directory)
-      stat("/home/httpd/docs", {st_mode=S_IFDIR|0755, 
+      stat("/home/httpd/docs", {st_mode=S_IFDIR|0755,
                                      st_size=1024, ...}) = 0
       [snip]
 
 If you have some dynamic content and your virtual relative URI is something like */news/perl/mod\_perl/summary* (i.e., there is no such directory on the web server, the path components are only used for requesting a specific report), then this will generate `five(!)` `stat()` calls, before the `DocumentRoot` is found. You will see something like this:
 
-      stat("/home/httpd/docs/news/perl/mod_perl/summary", 0xbffff744) = -1 
+      stat("/home/httpd/docs/news/perl/mod_perl/summary", 0xbffff744) = -1
                           ENOENT (No such file or directory)
       stat("/home/httpd/docs/news/perl/mod_perl",         0xbffff744) = -1
                           ENOENT (No such file or directory)
@@ -161,7 +161,7 @@ If you have some dynamic content and your virtual relative URI is something like
                           ENOENT (No such file or directory)
       stat("/home/httpd/docs/news",                       0xbffff744) = -1
                           ENOENT (No such file or directory)
-      stat("/home/httpd/docs", 
+      stat("/home/httpd/docs",
                           {st_mode=S_IFDIR|0755, st_size=1024, ...})  =  0
 
 How expensive are those calls? Let's use the `Time::HiRes` module to find out.
@@ -170,15 +170,15 @@ How expensive are those calls? Let's use the `Time::HiRes` module to find out.
       -------------------
       use Time::HiRes qw(gettimeofday tv_interval);
       my $calls = 1_000_000;
-      
+
       my $start_time = [ gettimeofday ];
-      
+
       stat "/app" for 1..$calls;
-      
+
       my $end_time = [ gettimeofday ];
-      
+
       my $elapsed = tv_interval($start_time,$end_time) / $calls;
-      
+
       print "The average execution time: $elapsed seconds\n";
 
 This script takes a time sample at the beginning, then does 1,000,000 `stat()` calls to a nonexisting file, samples the time at the end and prints the average time it took to make a single `stat()` call. I'm sampling a million stats, so I'd get a correct average result.
@@ -241,23 +241,23 @@ The above configuration allows us to make a request to */app/test* and the Perl 
 
 This is a typical generated trace.
 
-      stat("/home/httpd/docs/app/test", 0xbffff8fc) = -1 ENOENT 
+      stat("/home/httpd/docs/app/test", 0xbffff8fc) = -1 ENOENT
             (No such file or directory)
-      stat("/home/httpd/docs/app",      0xbffff8fc) = -1 ENOENT 
+      stat("/home/httpd/docs/app",      0xbffff8fc) = -1 ENOENT
             (No such file or directory)
-      stat("/home/httpd/docs", 
+      stat("/home/httpd/docs",
             {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
-      open("/.htaccess", O_RDONLY)                 = -1 ENOENT 
+      open("/.htaccess", O_RDONLY)                 = -1 ENOENT
             (No such file or directory)
-      open("/home/.htaccess", O_RDONLY)            = -1 ENOENT 
+      open("/home/.htaccess", O_RDONLY)            = -1 ENOENT
             (No such file or directory)
-      open("/home/httpd/.htaccess", O_RDONLY)      = -1 ENOENT 
+      open("/home/httpd/.htaccess", O_RDONLY)      = -1 ENOENT
             (No such file or directory)
-      open("/home/httpd/docs/.htaccess", O_RDONLY) = -1 ENOENT 
+      open("/home/httpd/docs/.htaccess", O_RDONLY) = -1 ENOENT
             (No such file or directory)
-      stat("/home/httpd/docs/test", 0xbffff774)    = -1 ENOENT 
+      stat("/home/httpd/docs/test", 0xbffff774)    = -1 ENOENT
             (No such file or directory)
-      stat("/home/httpd/docs", 
+      stat("/home/httpd/docs",
             {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
 
 Now we modify the `<Directory>` entry and add AllowOverride None, which among other things disables *.htaccess* files and will not try to open them.
@@ -268,15 +268,15 @@ Now we modify the `<Directory>` entry and add AllowOverride None, which among o
 
 We see that the four `open()` calls for *.htaccess* have gone:
 
-      stat("/home/httpd/docs/app/test", 0xbffff8fc) = -1 ENOENT 
+      stat("/home/httpd/docs/app/test", 0xbffff8fc) = -1 ENOENT
             (No such file or directory)
-      stat("/home/httpd/docs/app",      0xbffff8fc) = -1 ENOENT 
+      stat("/home/httpd/docs/app",      0xbffff8fc) = -1 ENOENT
             (No such file or directory)
-      stat("/home/httpd/docs", 
+      stat("/home/httpd/docs",
             {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
-      stat("/home/httpd/docs/test", 0xbffff774)    = -1 ENOENT 
+      stat("/home/httpd/docs/test", 0xbffff774)    = -1 ENOENT
             (No such file or directory)
-      stat("/home/httpd/docs", 
+      stat("/home/httpd/docs",
             {st_mode=S_IFDIR|0755, st_size=1024, ...}) = 0
 
 Let's try to shortcut the *app* location with:
@@ -302,7 +302,7 @@ For example, this *PerlTransHandler* will not lookup the file on the filesystem 
 
 Let's see the same configuration using the `<Perl>` section and a dedicated package:
 
-      <Perl>  
+      <Perl>
         package My::Trans;
         use Apache::Constants qw(:common);
         sub handler{
@@ -311,7 +311,7 @@ Let's see the same configuration using the `<Perl>` section and a dedicated pack
            return DECLINED;
         }
 
-        package Apache::ReadConfig;  
+        package Apache::ReadConfig;
         $PerlTransHandler = "My::Trans";
       </Perl>
 
@@ -329,5 +329,5 @@ in the normal way (no `<Perl>` section required).
 =======================================
 
 -   The mod\_perl site's URL: <http://perl.apache.org/>
--   `Time::HiRes`: <http://search.cpan.org/search?dist=Time-HiRes>
+-   `Time::HiRes`: <https://metacpan.org/pod/Time::HiRes>
 

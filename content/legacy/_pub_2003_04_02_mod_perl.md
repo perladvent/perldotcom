@@ -104,7 +104,7 @@ The first mode is the one that is mainly used, since it allows you to monitor al
 This mode comes with the following features.
 
 **<span id="item_automatic_refreshing_mode">Automatic Refreshing Mode</span>**
-  
+
 You can tell the application to refresh the report every few seconds. You can preset this value at the server startup. For example, to set the refresh to 60 seconds you should add the following configuration setting:
 
       $Apache::VMonitor::Config{REFRESH} = 60;
@@ -114,7 +114,7 @@ A 0 (zero) value turns automatic refreshing off.
 When the server is started you can always adjust the refresh rate using the application user interface.
 
 **<span id="item_top">`top(1)` Emulation: System Health Report</span>**
-  
+
 Just like top(1), it shows current date/time, machine up-time, average load, all the system CPU and memory usage: CPU load, real memory and swap partition usage.
 
 The [`top(1)`](#item_top) section includes a swap space usage visual alert capability. As we know swapping is undesirable on production systems. The system is said to be swapping when it has used all of its RAM and starts to page out unused memory pages to the slow swap partition, which slows down the whole system and may eventually lead to the machine crash.
@@ -140,7 +140,7 @@ If you don't want the system section to be displayed set:
 The default is to display this section.
 
 **`top(1)` Emulation: Apache/mod\_perl Processes Status**
-  
+
 Then just like in real [`top(1)`](#item_top) there is a report of the processes, but it shows all the relevant information about mod\_perl processes only!
 
 The report includes the status of the process (*Starting*, *Reading*, *Sending*, *Waiting*, etc.), process' ID, time since current request was started, last request processing time, size, shared, virtual and resident size. It shows the last client's IP and Request URI (only 64 chars, as this is the maximum length stored by underlying Apache core library).
@@ -165,7 +165,7 @@ If you don't want the mod\_perl processes section to be displayed set:
 The default is to display this section.
 
 **`top(1)` Emulation: Any Processes**
-  
+
 This section, just like the mod\_perl processes section, displays the information in a [`top(1)`](#item_top) fashion. To enable this section you have to set:
 
       $Apache::VMonitor::Config{PROCS} = 1;
@@ -196,7 +196,7 @@ The following snapshot visualizes the sections that have been discussed so far.
 As you can see the swap memory is heavily used and therefore the swap memory report is colored in red.
 
 **<span id="item_mount">`mount(1)` Emulation</span>**
-  
+
 This section reports about mounted filesystems, the same way as if you have called [`mount(1)`](#item_mount) with no parameters.
 
 If you want the [`mount(1)`](#item_mount) section to be displayed set:
@@ -206,7 +206,7 @@ If you want the [`mount(1)`](#item_mount) section to be displayed set:
 The default is NOT to display this section.
 
 **<span id="item_df">`df(1)` Emulation</span>**
-  
+
 This section completely reproduces the [`df(1)`](#item_df) utility. For each mounted filesystem, it reports the number of total and available blocks (for both superuser and user), and usage in percents.
 
 In addition it reports about available and used file inodes in numbers and percents.
@@ -241,7 +241,7 @@ The following snapshot presents an example of the report consisting of the last 
 You can see that */mnt/cdrom* and */usr* filesystems are utilized for more than 90 percent and therefore colored in red. (It's normal for */mnt/cdrom*, which is a mounted cdrom, but critical for the */usr* filesystem which should be cleaned up or enlarged).
 
 **<span id="item_abbreviations_and_hints">abbreviations and hints</span>**
-  
+
 The report uses many abbreviations, which might be knew for you. If you enable the VERBOSE mode with:
 
       $Apache::VMonitor::Config{VERBOSE} = 1;
@@ -325,15 +325,15 @@ The following snapshots show an example of the report about one mod\_perl proces
 
 -   `Time::HiRes`
 
-    <http://search.cpan.org/search?dist=Time-HiRes>
+    <https://metacpan.org/pod/Time::HiRes>
 
 -   `Apache::Scoreboard`
 
-    <http://search.cpan.org/search?dist=Apache-Scoreboard>
+    <https://metacpan.org/pod/Apache::Scoreboard>
 
 -   `GTop`
 
-    <http://search.cpan.org/search?dist=GTop>
+    <https://metacpan.org/pod/GTop>
 
     `GTop` relies in turn on libgtop library not available for all platforms
 

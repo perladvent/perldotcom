@@ -54,7 +54,7 @@ It also generates `get` and `set` accessors for each field:
 
      # set
      $weather->temp(30);
-     
+
      # get
      my $temp = $weather->temp();
 
@@ -64,9 +64,9 @@ From our mast, we have a number of observations taken at different heights, so I
 
      package Z::Mast;
      use base qw(Class::Accessor);
-     
+
      Z::Mast->mk_accessors(qw(time values));
-     
+
      package Z::Mast::Level;
      use base qw(Class::Accessor);
      Z::Mast::Level->mk_accessors(qw(wind dir level));
@@ -78,12 +78,12 @@ Now that I know what the data will look like in Perl, I can wrench it from the c
 First, I decided to deal with the plain ASCII file. This contains single lines, with the time of observation first, then white-space-separated values for temperature, pressure, wind speed, direction, and a few others that I don't care about. `Z::Weather` needs to use a couple of modules and add a couple of methods:
 
      use IO::All;
-     
+
      sub from_file {
          my $class = shift;
          my $io    = io(shift);
          my @recs  = ();
-         
+
          while (my $line = $io->readline()) {
              chomp($line);
              push @recs, $class->_line($line);
@@ -109,9 +109,9 @@ Parsing the data is the responsibility of another method, `_line()`, which expec
          # extract time fields and turn into DateTime object
          my($y, $m, $d, $h, $min)
             = $line =~ /^(\d{4}) (\d\d) (\d\d) (\d\d) (\d\d)/;
-     
+
          my $t = DateTime->new(year=>$y,month=>$m,day=>$d,hour=>$h,minute=>$min);
-     
+
          # return a new Z::Weather record, using the magic new() method
          return $class->new({time => $t,
                              temp     => $vals[5],
@@ -128,7 +128,7 @@ I deal with the mast data in a similar way, except that the other format is fixe
        my $class = shift;
        my $io    = io(shift);
        my ($rec, @recs);
-     
+
        while ($io->read($rec, 62) == 62) {
          push @recs, $class->_record($rec);
        }
@@ -138,7 +138,7 @@ I deal with the mast data in a similar way, except that the other format is fixe
      # map height of reading to offsets in binary record
      our %heights = qw(1 24  2 28 4 32  8 36  15 40  30 44);
      use constant MAST_EPOCH => 2082844800;
-     
+
      sub _record {
        my ($class, $rec) = @_;
 
@@ -175,7 +175,7 @@ Then it needs to produce the web page:
      my $template = Template->new();
 
      print "Content-type: text/html\n\n";
-     
+
      $template->process(\*DATA, {
                            now => $weather_records[-1],
                            records => \@weather_records,
@@ -188,12 +188,12 @@ This isn't really all that interesting. In fact, it looks almost like this does 
      <html><head><title>Weather</title></head>
      <body>
      <h2>Latest weather data at [% now.time %]<a name="/h2">
-     
+
      <P>T: [% now.temp %] &deg;C
         P: [% now.pressure %] kPa
         W: [% now.wind %] kts
         D: [% now.dir %] &deg;</p>
-     
+
      <P><img src="/weather_chart.png"><br>
         <img src="/mast_chart.png"</p>
 
@@ -221,13 +221,13 @@ Because old weather is old news, I throw away any values older than three hours,
 
      use DateTime;
      use DateTime::Duration;
-     
+
      my $now = DateTime->now();
      my $age = DateTime::Duration->new(hours => 3);
-     
+
      @mast_values = grep { $_->time + $age > $now } @mast_values;
 
-This is so, so much easier than fiddling around with epochs and `3*3600` all over the place. If you find yourself writing 3600 anywhere in your code, you should be using `DateTime::Duration` instead. Next, I feed the data points into the [`Chart::Lines`](https://metacpan.org/pod/Chart::Lines) module, a part of the [`Chart`](http://search.cpan.org/search?query=Chart) distribution. I use this in three phases. First, I create a new `Chart` and specify how large the resulting graphic should be:
+This is so, so much easier than fiddling around with epochs and `3*3600` all over the place. If you find yourself writing 3600 anywhere in your code, you should be using `DateTime::Duration` instead. Next, I feed the data points into the [`Chart::Lines`](https://metacpan.org/pod/Chart::Lines) module, a part of the [`Chart`](https://metacpan.org/pod/Chart) distribution. I use this in three phases. First, I create a new `Chart` and specify how large the resulting graphic should be:
 
      use Chart::Lines;
      my $chart = Chart::Lines->new($x_size, $y_size);

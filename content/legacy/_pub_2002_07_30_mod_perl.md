@@ -44,7 +44,7 @@ How much shared memory do you have? You can see it by either using the memory ut
       use GTop ();
       print "Shared memory of the current process: ",
         GTop->new->proc_mem($$)->share,"\n";
-      
+
       print "Total shared memory: ",
         GTop->new->mem->share,"\n";
 
@@ -112,9 +112,9 @@ The `Apache::Peek` module comes to rescue. Let's write a module called *MyShared
       ---------
       package MyShared;
       use Apache::Peek;
-      
+
       my $readonly = "Chris";
-      
+
       sub match    { $readonly =~ /\w/g;               }
       sub print_pos{ print "pos: ",pos($readonly),"\n";}
       sub dump     { Dump($readonly);                  }
@@ -191,9 +191,9 @@ So this is the resulting code:
       ---------
       package MyShared2;
       use Devel::Peek;
-      
+
       my $readonly = "Chris";
-      
+
       sub match    { $readonly =~ /\w/g;               }
       sub print_pos{ print "pos: ",pos($readonly),"\n";}
       sub dump{
@@ -238,13 +238,13 @@ Surely another way of ensuring that a scalar is readonly and therefore sharable 
       -------------
       package MyConstant;
       use constant readonly => "Chris";
-      
+
       sub match    { readonly =~ /\w/g;               }
       sub print_pos{ print "pos: ",pos(readonly),"\n";}
       1;
-      
+
       % perl -c MyConstant.pm
-      
+
       Can't modify constant item in match position at MyConstant.pm line
       5, near "readonly)"
       MyConstant.pm had compilation errors.
@@ -255,7 +255,7 @@ However this code is just right:
       -------------
       package MyConstant1;
       use constant readonly => "Chris";
-      
+
       sub match { readonly =~ /\w/g; }
       1;
 
@@ -370,7 +370,7 @@ Also it's obvious that in your case it's possible that the process size will be 
 -   The mod\_perl site's URL: <http://perl.apache.org/>
 -   `GTop`
 
-    <http://search.cpan.org/search?dist=GTop>
+    <https://metacpan.org/pod/GTop>
 
     `GTop` relies in turn on libgtop library not available for all platforms
 
@@ -378,10 +378,10 @@ Also it's obvious that in your case it's possible that the process size will be 
 
 -   `Apache::Peek`
 
-    <http://search.cpan.org/search?dist=Apache-Peek>
+    <https://metacpan.org/pod/Apache::Peek>
 
 -   `Devel::Peek`
 
-    <http://search.cpan.org/search?dist=Devel-Peek>
+    <https://metacpan.org/pod/Devel::Peek>
 
 
