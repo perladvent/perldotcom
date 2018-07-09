@@ -103,7 +103,7 @@ by Shlomi Fish
 
 Often, programmers find a need to use print statements to output information to the screen, in order to help them analyze what went wrong in running the script. However, including these statements verbatim in the script is not such a good idea. If not promptly removed, these statements can have all kinds of side-effects: slowing down the script, destroying the correct format of its output (possibly ruining test-cases), littering the code, and confusing the user. It would be a better idea not to place them within the code in the first place. How, though, can you debug without debugging?
 
-Enter [Devel::LineTrace](http://search.cpan.org/dist/Devel-LineTrace/), a Perl module that can assign portions of code to execute at arbitrary lines within the code. That way, the programmer can add print statements in relevant places in the code without harming the program's integrity.
+Enter [Devel::LineTrace](https://metacpan.org/pod/Devel::LineTrace), a Perl module that can assign portions of code to execute at arbitrary lines within the code. That way, the programmer can add print statements in relevant places in the code without harming the program's integrity.
 
 #### Verifying That `use lib` Has Taken Effect
 

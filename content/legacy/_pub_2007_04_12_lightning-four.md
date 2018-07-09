@@ -207,7 +207,7 @@ A typical [Test::More](https://metacpan.org/pod/Test::More) test script contains
 
 If you add more checks to a test file, then you have to remember to update the plan. However, how do you keep track of how many tests *should* run? I've already encountered a case where [a DBI related module](http://dbi.perl.org/) had a different number of tests with an older version of DBI than with a more recent one.
 
-Enter [Test::Count](http://search.cpan.org/dist/Test-Count/). Test::Count originated from a [Vim](http://www.vim.org/) script I wrote to keep track of the number of tests by using meta-comments such as `# TEST` (for one test) or `# TEST*3*5` (for 15 tests). However, there was a limit to what I could do with Vim's scripting language, as I wanted a richer syntax for specifying the tests as well as variables.
+Enter [Test::Count](https://metacpan.org/pod/Test::Count). Test::Count originated from a [Vim](http://www.vim.org/) script I wrote to keep track of the number of tests by using meta-comments such as `# TEST` (for one test) or `# TEST*3*5` (for 15 tests). However, there was a limit to what I could do with Vim's scripting language, as I wanted a richer syntax for specifying the tests as well as variables.
 
 Thus, I wrote the Test::Count module and placed it on CPAN. [Test::Count::Filter](http://search.cpan.org/dist/Test-Count/lib/Test/Count/Filter.pm) acts as a filter, counts the tests, and updates them. Here's an example, taken from a code I wrote for a Perl Quiz of the Week:
 

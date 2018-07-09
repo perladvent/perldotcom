@@ -106,7 +106,7 @@ In the case of these TXT records, I used `dnscmd` to retrieve them, not `nslooku
 
 If your IPs reside in a segmented network, which is likely to be the case for most sites, make sure that your hosts have addresses for the segments to which they attach. For this script I have chosen a poor man's approach to represent the segments just by the list of their respective C nets in the script itself (see the hash `%netsegs` in the "Config section"). There might be a more clever way to do this. If you are going to run the script in your environment, edit this hash to reflect your network topology.
 
-The `dns_lookup` sub looks up the current DNS entries. It runs the extern command `nslookup` and parses its output. If you need more sophisticated DNS lookups (and `nslookup`'s options just won't do), you might want to resort to `dig` (which has a Windows version) or [Net::DNS](http://search.cpan.org/dist/Net-DNS) (which runs on Windows in any case). This simple way of doing it was just enough for my needs.
+The `dns_lookup` sub looks up the current DNS entries. It runs the extern command `nslookup` and parses its output. If you need more sophisticated DNS lookups (and `nslookup`'s options just won't do), you might want to resort to `dig` (which has a Windows version) or [Net::DNS](https://metacpan.org/pod/Net::DNS) (which runs on Windows in any case). This simple way of doing it was just enough for my needs.
 
 #### Footnotes
 
