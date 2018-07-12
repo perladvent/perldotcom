@@ -128,7 +128,7 @@ And this is how you use it:
         ... C++ style!
     */
 
-It's as simple as that. Now, to just do one language seemed a waste of this idea. Many languages have nice multiline comments or even single line comments. So, we decided to support a few more languages - in fact, [44 in total right now](http://search.cpan.org/author/KANE/Acme-Comment/)
+It's as simple as that. Now, to just do one language seemed a waste of this idea. Many languages have nice multiline comments or even single line comments. So, we decided to support a few more languages - in fact, [44 in total right now](https://metacpan.org/pod/Acme::Comment)
 
 Below are 5 styles of doing multi- or single-line comments in a language that `Acme::Comment` supports. So let's play a game of 'Name That Language'! (answers at the bottom)
 
@@ -178,10 +178,10 @@ Now, source filtering is not something that's terribly complicated and is one of
 
 As an example, here are two other (famous) uses of source filters in Perl:
 
- [Lingua::Romana::Perligata](http://search.cpan.org/author/DCONWAY/Lingua-Romana-Perligata-0.50/lib/Lingua/Romana/Perligata.pm)   
+ {{<mcpan Lingua::Romana::Perligata>}}
 Which allows you to program in latin
 
- [Switch](http://search.cpan.org/author/DCONWAY/Switch-2.09/Switch.pm)   
+ {{<mcpan Switch>}}
 An extension to the Perl language, allowing you to use switch statements
 
 Now, `Acme::Comment` has a spiffy import routine that determines what it needs to do with the options you passed it, and one big subroutine that parses out comments (the largest part of the code is spent on determining nested comments).
