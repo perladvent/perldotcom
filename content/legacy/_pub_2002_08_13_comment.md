@@ -178,10 +178,10 @@ Now, source filtering is not something that's terribly complicated and is one of
 
 As an example, here are two other (famous) uses of source filters in Perl:
 
- {{<mcpan Lingua::Romana::Perligata>}}
+ [Lingua::Romana::Perligata]({{<mcpan "Lingua::Romana::Perligata" >}})
 Which allows you to program in latin
 
- {{<mcpan Switch>}}
+ [Switch]({{<mcpan "Switch" >}})
 An extension to the Perl language, allowing you to use switch statements
 
 Now, `Acme::Comment` has a spiffy import routine that determines what it needs to do with the options you passed it, and one big subroutine that parses out comments (the largest part of the code is spent on determining nested comments).

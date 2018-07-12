@@ -137,6 +137,6 @@ The best candidates for SOAP applications are lightweight network applications w
 -   [SOAP::Lite](http://www.soaplite.com/)
 -   [Xerces/C++](http://xml.apache.org/xerces-c/)
 -   [XML Schema](http://www.w3.org/XML/Schema)
--   [XML::Validator::Schema](http://search.cpan.org/~samtregar/XML-Validator-Schema/)
+-   [XML::Validator::Schema]({{<mcpan "XML::Validator::Schema" >}})
 -   [Programming Web Services with Perl](http://www.oreilly.com/catalog/pwebserperl/) by Randy J. Ray and Pavel Kulchenko
 

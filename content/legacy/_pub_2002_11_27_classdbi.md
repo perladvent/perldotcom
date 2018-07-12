@@ -23,7 +23,7 @@ Several articles on Perl.com, including the recent [Phrasebook Design Pattern](/
 
 The easiest way to see `Class::DBI` in action is to build a simple application with it. In this article, I'll build a tool for performing analysis on my telephone bill.
 
-[Data::BT::PhoneBill](http://search.cpan.org/author/TMTM/Data-BT-PhoneBill-0.94/) (available from CPAN), provides a simple interface to a phone bill downloaded from the BT Web site. So, armed with this module, and a few recent phonebills, let's store these details in a database, and see how to extract useful information from them.
+[Data::BT::PhoneBill]({{<mcpan "Data::BT::PhoneBill" >}}) (available from CPAN), provides a simple interface to a phone bill downloaded from the BT Web site. So, armed with this module, and a few recent phonebills, let's store these details in a database, and see how to extract useful information from them.
 
 `Class::DBI` works on the basis that each table in your database has a corresponding class. Although each class could set up its own connection information, it's a better idea to encapsulate that connection in one class, and have all the others inherit from that. So, we set up our database, and create the base class for our application:
 

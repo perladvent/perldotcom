@@ -40,7 +40,7 @@ Earle was enthusiastic and made it so. We both got very excited and started fill
 
 It didn't take long before we started bumping our heads against the limitations of the `usemod` software. Even leaving aside its tendency to clamp down on its (custom-format) flat-file database and refuse anyone edit access, I found myself writing umpteen screenscrapers to do simple things like find a nice pub in Soho. I hate screenscraping, but I love my beer.
 
-We tried to patch and amend `usemod`. We tried very hard. Ivor Williams, in particular, spent a lot of time in its guts. I decided in the end that writing software should only hurt some of the time, and after several beers one night, made a pact with Chris Ball that grubstreet's software would be rewritten in Real Perl. Chris held me to it, and a CPAN-friendly wiki toolkit — [CGI::Wiki](http://search.cpan.org/~kake/CGI-Wiki/) — resulted. Once we had that to build on, we started on the CGI script that eventually turned into [the OpenGuides distribution](http://search.cpan.org/~kake/OpenGuides/).
+We tried to patch and amend `usemod`. We tried very hard. Ivor Williams, in particular, spent a lot of time in its guts. I decided in the end that writing software should only hurt some of the time, and after several beers one night, made a pact with Chris Ball that grubstreet's software would be rewritten in Real Perl. Chris held me to it, and a CPAN-friendly wiki toolkit — [CGI::Wiki]({{<mcpan "CGI::Wiki" >}}) — resulted. Once we had that to build on, we started on the CGI script that eventually turned into [OpenGuides]({{<mcpan "OpenGuides" >}}).
 
 ### What It Says on the Tin
 

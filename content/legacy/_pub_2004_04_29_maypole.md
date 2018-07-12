@@ -190,7 +190,7 @@ Once again, the HTML isn't great, but it gives us something we can pass to the d
 
 ### <span id="Check_out">Check Out</span>
 
-The hardest part about building an e-commerce application is interacting with the payment and credit-card fulfillment service. We'll use the [`Business::OnlinePayment`](https://metacpan.org/pod/Business::OnlinePayment) module to handle that side of things, and handle the order fulfillment by simply sending an email.
+The hardest part about building an e-commerce application is interacting with the payment and credit-card fulfillment service. We'll use the [Business::OnlinePayment]({{<mcpan "Business::OnlinePayment" >}}) module to handle that side of things, and handle the order fulfillment by simply sending an email.
 
 The actual check-out page needs to collect credit card and delivery information, and so it doesn't actually need any objects; the only object we actually need is the `ISellIt::User`, and that was stashed away in the request object by the authentication routine. However, we do want to display the total cost. So to make things easier we'll add an action and compute this in Perl. We make the total cost a method on the user, so we can use this later:
 
@@ -295,7 +295,7 @@ Done! We've taken a user from logging in, adding goods to the cart, credit card 
 
 ### <span id="Registering_a_User">Registering a User</span>
 
-We have to find a way to sign a user up. This is actually not that hard, particularly since we can use the example of [Flox](http://search.cpan.org/~simon/Maypole/doc/Flox.pod) in the Maypole manual. First, we'll add a "register" link to our login template:
+We have to find a way to sign a user up. This is actually not that hard, particularly since we can use the example of [Flox](https://metacpan.org/pod/release/SIMON/Maypole-1.7/doc/Flox.pod) in the Maypole manual. First, we'll add a "register" link to our login template:
 
       <P>New user? <A HREF="/user/register">Sign up!</A></P>
 
@@ -316,7 +316,7 @@ This page doesn't require any objects to be loaded up, since it's just going to 
         <input type="submit" name="Register" value="Register">
       </FORM>
 
-As before, we need to explain to [`Class::DBI::FromCGI`](https://metacpan.org/pod/Class::DBI::FromCGI) how these fields are to be edited:
+As before, we need to explain to [Class::DBI::FromCGI]({{<mcpan "Class::DBI::FromCGI" >}}) how these fields are to be edited:
 
       ISellIt::User->untaint_columns(
         printable => [qw/first_name last_name password/],

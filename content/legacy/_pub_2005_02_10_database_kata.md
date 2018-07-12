@@ -31,7 +31,7 @@ What is a module author to do?
 
 ### DBD::Mock Testing Kata
 
-This code kata introduces an alternate approach to testing database code, that of using mock-objects, and specifically of using the [DBD::Mock](https://metacpan.org/pod/DBD::Mock) mock DBI driver. Before showing off any code, I want to explain the basic philosophy of Mock Objects as well as where DBD::Mock fits in.
+This code kata introduces an alternate approach to testing database code, that of using mock-objects, and specifically of using the [DBD::Mock]({{<mcpan "DBD::Mock" >}}) mock DBI driver. Before showing off any code, I want to explain the basic philosophy of Mock Objects as well as where DBD::Mock fits in.
 
 #### What are Mock Objects?
 

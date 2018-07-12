@@ -40,11 +40,11 @@ One of the first things I noticed when analyzing the problem was that documentat
 
 The decision of attaching the notes to specific paragraphs opened another can of worms: if someone adds a note to paragraph 42 of My::Module version 0.10, where should that note go (if at all) in the documentation for My::Module version 0.20?
 
-To prepare the AnnoCPAN site, first I had to create a full CPAN mirror. That wasn't hard, but it requires quite a bit of space (2.5GB). Then I pre-parsed it using a module derived from [Pod::Parser](https://metacpan.org/pod/Pod::Parser) (discussed later) and loaded each paragraph into a database. The database schema underwent several revisions, due to the difficulties in modeling CPAN.
+To prepare the AnnoCPAN site, first I had to create a full CPAN mirror. That wasn't hard, but it requires quite a bit of space (2.5GB). Then I pre-parsed it using a module derived from [Pod::Parser]({{<mcpan "Pod::Parser" >}}) (discussed later) and loaded each paragraph into a database. The database schema underwent several revisions, due to the difficulties in modeling CPAN.
 
 ### CPAN is a Wild Jungle!
 
-Something that anyone who tries to parse anything out of the full CPAN archive quickly finds out is that it is a maze of exceptions and corner cases. While most distributions, prepared with [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker) or something similar, share certain structural and naming conventions, some authors deviate from the convention and package their distribution in strange ways. The first hurdle is how to figure out the distribution name and version number from the distribution filename. Luckily, Graham Barr (from *search.cpan.org*) has already worked on that, so I just used his module [CPAN::DistnameInfo](https://metacpan.org/pod/CPAN::DistnameInfo).
+Something that anyone who tries to parse anything out of the full CPAN archive quickly finds out is that it is a maze of exceptions and corner cases. While most distributions, prepared with [ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}) or something similar, share certain structural and naming conventions, some authors deviate from the convention and package their distribution in strange ways. The first hurdle is how to figure out the distribution name and version number from the distribution filename. Luckily, Graham Barr (from *search.cpan.org*) has already worked on that, so I just used his module [CPAN::DistnameInfo]({{<mcpan "CPAN::DistnameInfo" >}}).
 
 The next hurdle is the structure of the package itself. Most packages are .tar.gz files that unwrap to a directory with the same name as the distribution filename (sans the .tar.gz extension). Some packages are .zip files, and a few are .ppm files, or something else. Even for the .tar files there are inconsistencies, depending on the version of the program used to create them. I couldn't even open some of them correctly! Then there are files that don't unwrap to a single directory. I decided to deal only with reasonably clean .tar.gz and .zip packages and ignore everything else.
 
@@ -62,7 +62,7 @@ The problem becomes more complicated for modules, because unfortunately, there a
 
 ### Loading the Database
 
-Because I wanted to have paragraph granularity for attaching notes to modules, I loaded all of the CPAN documentation into my database, one row per paragraph. To parse the POD, I created a very simple subclass of [Pod::Parser](https://metacpan.org/pod/Pod::Parser) (which comes with `perl`). The subclass only overrides the paragraph-level methods and uses them to store the POD in the database without any further processing.
+Because I wanted to have paragraph granularity for attaching notes to modules, I loaded all of the CPAN documentation into my database, one row per paragraph. To parse the POD, I created a very simple subclass of [Pod::Parser]({{<mcpan "Pod::Parser" >}}) (which comes with `perl`). The subclass only overrides the paragraph-level methods and uses them to store the POD in the database without any further processing.
 
     package AnnoCPAN::PodParser;
 
@@ -85,14 +85,14 @@ Because I wanted to have paragraph granularity for attaching notes to modules, I
 
     sub store_section {
         my ($self, $type, $content) = @_;
-        # ... 
-        # load $content into database 
+        # ...
+        # load $content into database
         # ...
     }
 
 Here again I encountered problems with some of the modules that exist in the wild. Pod::Parser generally works very well, but it becomes extremely slow when a document has a very long paragraph (with thousands of lines). Most modules don't have paragraphs with more than a hundred lines, so the problem had likely never surfaced before, but I found a few modules that appear to contain lots of machine-generated data. They took about ten minutes each to parse. I went into the code of Pod::Parser and found that by deleting one line (an apparently unnecessary line!), the scaling problem goes away and parsing takes under a second.
 
-For the database access itself, I used [Class::DBI](https://metacpan.org/pod/Class::DBI), which simplifies things enormously. For example, this is the code for creating a section (i.e., a paragraph):
+For the database access itself, I used [Class::DBI]({{<mcpan "Class::DBI" >}}), which simplifies things enormously. For example, this is the code for creating a section (i.e., a paragraph):
 
     $section = AnnoCPAN::DBI::Section->create({
         podver  => $podver,
@@ -103,7 +103,7 @@ For the database access itself, I used [Class::DBI](https://metacpan.org/pod/Cla
 
 ### Translating the Notes
 
-By translating, I mean "figuring out where the note goes in a different version of the same document," not "translating into a different language." Suppose that someone adds a note next to some paragraph of My::Module 0.10. To figure out where to put the note in the POD for My::Module 0.20, I decided to place it next to the paragraph in 0.20 that is most "similar" to the reference paragraph in 0.10. To decide which paragraph is most similar, I used the [String::Similarity](https://metacpan.org/pod/String::Similarity) module by Marc Lehmann. The essential code is something like:
+By translating, I mean "figuring out where the note goes in a different version of the same document," not "translating into a different language." Suppose that someone adds a note next to some paragraph of My::Module 0.10. To figure out where to put the note in the POD for My::Module 0.20, I decided to place it next to the paragraph in 0.20 that is most "similar" to the reference paragraph in 0.10. To decide which paragraph is most similar, I used the [String::Similarity]({{<mcpan "String::Similarity" >}}) module by Marc Lehmann. The essential code is something like:
 
     package AnnoCPAN::DBI::Note;
     use String::Similarity 'similarity';
@@ -120,7 +120,7 @@ By translating, I mean "figuring out where the note goes in a different version 
         for my $sect ($podver->raw_sections) {
             # don't attach notes to commands
             next if $sect->{type} & COMMAND;
-            my $sim = similarity($orig_cont, 
+            my $sim = similarity($orig_cont,
                 $sect->{content}, $max_sim);
             if ($sim > $max_sim) {
                 $max_sim   = $sim;
@@ -128,8 +128,8 @@ By translating, I mean "figuring out where the note goes in a different version 
             }
         }
         if ($best_sect) {
-            AnnoCPAN::DBI::NotePos->create({ note => $self, 
-                section => $best_sect->{id}, 
+            AnnoCPAN::DBI::NotePos->create({ note => $self,
+                section => $best_sect->{id},
                 score => int($max_sim * SCALE),
                 status => CALCULATED });
         }
@@ -137,7 +137,7 @@ By translating, I mean "figuring out where the note goes in a different version 
 
 ### Adding a Web Interface
 
-The web interface combines the strengths of Class::DBI and the [Template Toolkit](http://www.template-toolkit.org/), using the methods discussed in "[How to Avoid Writing Code--Using Template Toolkit and Class::DBI](/pub/2003/07/15/nocode.html)," by Kake Pugh. The only thing remaining, besides writing the templates, was to provide a controller module (called as a part of the [Model-View-Controller](http://c2.com/cgi-bin/wiki?ModelViewController) (MVC) design pattern. The controller module has to parse the CGI parameters and cookies, decide what to do with them, authenticate the user if necessary, fetch something from the database, choose the template to use, and pass all of the required information to the Template Toolkit rendering engine. Some people advocate using modules such as [CGI::Application](https://metacpan.org/pod/CGI::Application) as a base class for the controller module, but I found that writing it by hand was simple enough for my purposes.
+The web interface combines the strengths of Class::DBI and the [Template Toolkit](http://www.template-toolkit.org/), using the methods discussed in "[How to Avoid Writing Code--Using Template Toolkit and Class::DBI](/pub/2003/07/15/nocode.html)," by Kake Pugh. The only thing remaining, besides writing the templates, was to provide a controller module (called as a part of the [Model-View-Controller](http://c2.com/cgi-bin/wiki?ModelViewController) (MVC) design pattern. The controller module has to parse the CGI parameters and cookies, decide what to do with them, authenticate the user if necessary, fetch something from the database, choose the template to use, and pass all of the required information to the Template Toolkit rendering engine. Some people advocate using modules such as [CGI::Application]({{<mcpan "CGI::Application" >}}) as a base class for the controller module, but I found that writing it by hand was simple enough for my purposes.
 
 ### Conclusion
 

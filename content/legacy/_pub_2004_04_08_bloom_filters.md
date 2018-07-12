@@ -285,8 +285,8 @@ There are sure to be other neat Bloom filter tricks with potential applications 
 -   **<span id="item_http_3a_2f_2fwww_2eeecs_2eharvard_2eedu_2f_7emicha"></span>[Bloom Filter Survey](http://www.eecs.harvard.edu/~michaelm/NEWWORK/postscripts/BloomFilterSurvey.pdf)**. A handy survey article on Bloom filter network applications.
 -   **<span id="item_loaf"></span>[LOAF](http://loaf.cantbedone.org)**. Our own system for incorporating social networks onto email using Bloom filters.
 -   **[Compressed Bloom Filters](http://www.eecs.harvard.edu/~michaelm/NEWWORK/postscripts/cbf2.pdf)**. If you are passing filters around a network, you will want to optimize them for minimum size; this paper gives a good overview of compressed Bloom filters.
--   **<span id="item_bloom16"></span>[`Bloom16`](http://search.cpan.org/~iwoodhead/Bloom16-0.01/Bloom16.pm).** A CPAN module implementing a counting Bloom filter.
--   **<span id="item_bloom"></span>[`Text::Bloom`](http://search.cpan.org/~aspinelli/Text-Document-1.07/Bloom.pod)**. CPAN module for using Bloom filters with text collections.
+-   **<span id="item_bloom16"></span>[Bloom16]({{<mcpan "Bloom16" >}}).** A CPAN module implementing a counting Bloom filter.
+-   **<span id="item_bloom"></span>[Text::Bloom]({{<mcpan "Text::Bloom" >}})**. CPAN module for using Bloom filters with text collections.
 -   **<span id="item_http_3a_2f_2fwww_2eresearch_2eatt_2ecom_2f_7esmb_2"></span>[Privacy-Enhanced Searches Using Encryted Bloom Filters](http://www.research.att.com/~smb/papers/bloom-encrypt.pdf)**. This paper discusses how to use encryption and Bloom filters to set up a query system that prevents the search engine from knowing the query you are running.
 -   **[Bloom Filters as Summaries](http://www.cs.wisc.edu/~cao/papers/summary-cache/node9.html)**. Some performance data on actually using Bloom filters as cache summaries.
 -   **[Using Bloom Filters for Authenticated Yes/No Answers in the DNS](http://www.research.att.com/~smb/papers/draft-bellovin-dnsext-bloomfilt-00.txt)**. Internet draft for using Bloom filters to implement Secure DNS
