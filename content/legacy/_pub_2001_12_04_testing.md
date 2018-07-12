@@ -245,7 +245,7 @@ They produce their own test names:
             ok 3 - My::Module->can(boo)
             ok 4 - object->isa('My::Module')
 
-Other functions and features are documented in the Test::More documentation. As well, [the Test::Tutorial manpage](http://search.cpan.org/doc/MSCHWERN/Test-Simple-0.36/lib/Test/Tutorial.pod) explains similar things with a different wit.
+Other functions and features are documented in the Test::More documentation. As well, {{<mcpan Test::Tutorial>}} explains similar things with a different wit.
 
 Finally, do not forget good programming practices. Test functions are simply standard subroutines. Tests are just Perl code. Use loops, variables, helper subs, `map()`, and anything else, when they make things easier. For example, basic inherited interface testing can be made easier with:
 
@@ -262,7 +262,7 @@ That beats writing several individual `can_ok()` tests. Interpolating things int
 
 Testing is unfortunately often neglected, especially among free software projects. Think of it as getting plenty of sleep, eating vegetables, and working out regularly. It may cramp your style at first, but will improve things immensely if you do it consistently. (Results may vary if you're adding tests to a huge system that doesn't have them, like, say, Perl itself.)
 
-One goal of Perl is to make your life easier. Perl 5.8 will include [Test::More](http://search.cpan.org/doc/MSCHWERN/Test-Simple-0.36/lib/Test/More.pm) and its hearty brethren, [the Test::Simple manpage](http://search.cpan.org/doc/MSCHWERN/Test-Simple-0.36/lib/Test/Simple.pm) and [the Test::Builder manpage](http://search.cpan.org/doc/MSCHWERN/Test-Simple-0.36/lib/Test/Builder.pm). They exist to make writing tests less of a hassle, and even more pleasant. Consider them.
+One goal of Perl is to make your life easier. Perl 5.8 will include {{<mcpan Test::More>}} and its hearty brethren, {{<mcpan Test::Simple>}} and {{<mcpan Test::Builder>}}. They exist to make writing tests less of a hassle, and even more pleasant. Consider them.
 
 The easier it is to write and maintain tests, the more likely people will do it. More and better tests improve software portability, maintainability, and reliability. You may currently compare testing to broccoli, brussel sprouts, and wind sprints. Try Test::More or another framework, and you may grow to see them as oranges, sweet potatoes with marshmallows, and a trip to the sauna. It really is good for you.
 
