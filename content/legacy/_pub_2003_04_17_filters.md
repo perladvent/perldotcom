@@ -37,7 +37,7 @@ Let's take a moment to look at `HTML::Clean` before delving into `Apache::Clean`
 
 Here is a simple example of `HTML::Clean` in action.
 
-      
+
     use HTML::Clean ();
 
     use strict;
@@ -49,13 +49,13 @@ Here is a simple example of `HTML::Clean` in action.
     $h->strip({ shortertags => 1, entities => 1 });
 
     print ${$h->data};
-      
+
 
 As you can see, the interface for `HTML::Clean` is object-oriented and fairly straightforward. Things begin by calling the `new()` constructor to create an `HTML::Clean` object. `new()` accepts either a filename to clean or a reference to a string containing some HTML. Deciding exactly which aspects of the HTML to tidy is determined in one of two ways: either using the `level()` method to set an optimization level, or by passing the `strip()` method any number of options from a rich set. In either case, `strip()` is used to actually clean the HTML. After that, calling the `data()` method returns a reference to a string containing the HTML, polished to a Perly white. In our sample code, the original HTML has been changed to
 
-      
+
     <b>"helm's alee"</b>
-      
+
 
 which is half the size of our original string yet displayed the same way by browsers.
 
@@ -69,7 +69,7 @@ One way to handle dynamic HTML would be to add `HTML::Clean` routines to each dy
 
 Here is a look at a possible configuration for Apache 2.0, one that takes output of a CGI script, post-processes it for SSI tags, then cleans it with our `Apache::Clean` output filter.
 
-      
+
     Alias /cgi-bin /usr/local/apache2/cgi-bin
     <Location /cgi-bin>
       SetHandler cgi-script
@@ -82,7 +82,7 @@ Here is a look at a possible configuration for Apache 2.0, one that takes output
 
       Options +ExecCGI +Includes
     </Location>
-      
+
 
 As with Apache 1.3, mod\_cgi is still enabled the same way - in our case via the `SetHandler cgi-script` directive, although this is not the only way and the familiar `ScriptAlias` directive is still supported. What is different in this `httpd.conf` snippet is the configuration of the SSI engine, mod\_include. As already mentioned, mod\_include was implemented as an output filter in Apache 2.0, and output filters bring with them a new directive. The `SetOutputFilter` directive activates the SSI engine - the `INCLUDES` filter - within our container. This means that requests to `cgi-bin/`, no matter who handles the actual generation of content, will be parsed by mod\_include. See the [mod\_include documentation](http://httpd.apache.org/docs-2.0/mod/mod_include.html) for other possible SSI configurations and options.
 
@@ -94,7 +94,7 @@ In the interests of safety, one thing that you should note about our sample conf
 
 mod\_perl actually offers two different APIs for coding the Perl output filter. We are going to be using the simpler, streaming API, which hides the raw Apache API a bit. Of course, if you are feeling bold and want to manipulate the Apache bucket brigades directly, you are more than welcome, but it is a more complex process so we are not going to talk about it here. Instead, here is our new `Apache::Clean` handler, ported to mod\_perl 2.0 using the streaming filter API.
 
-      
+
     package Apache::Clean;
 
     use 5.008;
@@ -189,25 +189,25 @@ mod\_perl actually offers two different APIs for coding the Perl output filter. 
     }
 
     1;
-      
+
 
 If you can dismiss the mod\_perl specific bits for a moment, you will see the `HTML::Clean` logic embedded in the middle of the handler, which is not very different from the isolated code we used to illustrate `HTML::Clean` by itself. One of the things we need to do differently, however, is determine which options to pass to the `level()` and `options()` methods of `HTML::Clean`. Here, we use `$r->dir_config()` to gather whatever `httpd.conf` options we specified through our `PerlSetVar` and `PerlAddVar` configurations.
 
-      
+
     my $level = $r->dir_config->get('CleanLevel') || 1;
 
     my %options = map { $_ => 1 } $r->dir_config->get('CleanOption');
-      
+
 
 This use of `dir_config()` is in fact no different than how we would have coded it in mod\_perl 1.0. Similarly, later methods like `r->content_type()`, `$r->server->log->info()`, and `$r->uri()` also behave the same as they did in mod\_perl 1.0, which should offer some degree of comfort. For instance, the block
 
-      
+
     unless ($r->content_type =~ m!text/html!i) {
       $log->info('skipping request to ', $r->uri, ' (not an HTML document)');
 
       return Apache::DECLINED;
     }
-      
+
 
 looks almost exactly the same as it would have been in mod\_perl 1.0, save the use of `Apache::DECLINED`. The new `Apache::Const` class provides access to all constants you will need in your handlers, albeit through a slightly different interface than before - when using the `-compile` option, constants are imported into the `Apache::` namespace. If you want the constants in your own namespace, mimicking the `OK` of yore, you can just `use Apache::Const` by itself without the without the `-compile` option.
 
@@ -235,27 +235,27 @@ Once we have taken care of one-time-only processing, we can move on to the heart
 
 The idea behind `HTML::Clean` is that it can, in part, make HTML more compact. However, since HTML is tag based, and those tags often come in pairs, we need to take special steps to make sure that our tags remain balanced after `Apache::Clean` has run. Because we are reading and processing data in chunks, there is the possibility that a tag might be stranded between chunks. For instance, if the HTML looked like
 
-      
+
     [1019 bytes of stuff] <strong>Bold!</strong> [more stuff]
-      
+
 
 the first chunk of data that `Apache::Clean` would see is
 
-      
+
     [1019 bytes of stuff] <str
-      
+
 
 Because `<str` is not a valid HTML tag, `HTML::Clean` leaves it unaltered. When the next chunk of data is read from the filter, it comes across as
 
-      
+
     ong>Bold!</strong> [more stuff]
-      
+
 
 and `HTML::Clean` again leaves the unrecognized `ong>` unprocessed. However, it does catch the closing `</strong>` tag. The end result, as you can probably see now, would be
 
-      
+
     [1020 bytes of stuff] <strong>Bold!</b> [more stuff]
-      
+
 
 which is definitely undesirable. Our matching regex and `extra` manipulations make certain that any dangling tags are prepended to the front of the next buffer, safeguarding against this particular problem. Of course, this kind of logic is not required of all filters. Just remember to keep in mind the complexity that operating on data in pieces adds when you implement your own filter.
 
@@ -265,9 +265,9 @@ Once we are finished processing all the data from the current filter invocation 
 
 So there you have it, output filtering made easy with mod\_perl 2.0. All in all, it is a bit different than what you might be used to with mod\_perl 1.0, but it's not that difficult once you get your head around it. And it does allow for some pretty amazing things. For instance, not only can we now use Perl to code interesting handlers like `Apache::Clean`, but the overall filter mechanism makes it possible to use Perl to manipulate *any and all* content originating from the server - just a simple line like
 
-      
+
     PerlOutputFilterHandler My::Cool::Stuff
-      
+
 
 on the server level of your `httpd.conf` (such as next to the `DocumentRoot` directive) will allow you to post-process *every* request. Cool.
 

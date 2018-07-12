@@ -131,7 +131,7 @@ You'll notice another free variable here: `k`, the number of hash functions. It'
         my $best_k = 1;
 
         foreach my $k ( 1..100 ) {
-            my $m = (-1 * $k * $num_keys) / 
+            my $m = (-1 * $k * $num_keys) /
                 ( log( 1 - ($error_rate ** (1/$k))));
 
             if ( !defined $lowest_m or ($m < $lowest_m) ) {
@@ -183,13 +183,13 @@ Here's a subroutine that takes a key, runs it through a list of hash functions, 
         my ( $key ) = @_;
         my $mask    = pack( "b*", '0' x $FILTER_LENGTH);
 
-        foreach my $hash_function ( @functions ){ 
+        foreach my $hash_function ( @functions ){
 
             my $hash       = $hash_function->($key);
             my $chopped    = unpack("N", $hash );
             my $bit_offset = $result % $FILTER_LENGTH;
 
-            vec( $mask, $bit_offset, 1 ) = 1;       
+            vec( $mask, $bit_offset, 1 ) = 1;
         }
         return $mask;
     }
@@ -258,7 +258,7 @@ If any one of the filters is intercepted, it will register the full 50% false-po
 Here's a Perl function that checks a key against a set of noisy filters:
 
     use Bloom::Filter;
-            
+
     sub check_noisy_filters {
         my ( $key, @filters ) = @_;
         foreach my $filter ( @filters ) {

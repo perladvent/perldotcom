@@ -49,7 +49,7 @@ hand your designer a simple template to pretty up:
           [% FOREACH book = books %]
             <li>[% book.title %] ([% book.author.name %])
                 [% FOREACH review = book.reviews %]
-                  (<a href="review.cgi?review=[% review.uid %]">Read review 
+                  (<a href="review.cgi?review=[% review.uid %]">Read review
                   by [% review.reviewer.name %]</a>)
                 [% END %]
             </li>
@@ -179,7 +179,7 @@ First a base class, as with all `Class::DBI` applications, to set the database d
       package Bookworms::DBI;
       use base "Class::DBI::mysql";
 
-      __PACKAGE__->set_db( "Main", "dbi:mysql:bookworms", 
+      __PACKAGE__->set_db( "Main", "dbi:mysql:bookworms",
         "username", "password" );
 
       1;
@@ -258,11 +258,11 @@ We'll write a couple of tests before we move on to code. Here are some that chec
 
       my $author = Bookworms::Author->create({ name => "Isaac Asimov" });
       my @matches = Bookworms::Author->fuzzy_match( name => "asemov" );
-      is_deeply( \@matches, [ $author ], 
+      is_deeply( \@matches, [ $author ],
         "fuzzy matching catches wrong vowels" );
-      @matches = Bookworms::Author->fuzzy_match( 
+      @matches = Bookworms::Author->fuzzy_match(
         name => "assimov" );
-      is_deeply( \@matches, [ $author ], 
+      is_deeply( \@matches, [ $author ],
         "fuzzy matching catches repeated letters" );
 
 We should also write some other tests to run our algorithms over various misspellings that we've captured from actual users, to give an idea of whether "what we told our class to do" is the right thing.
@@ -303,7 +303,7 @@ Here's the first addition to the `Bookworms::Author` class, to store the indexed
           return "" unless $word;
           $word = lc($word);
           $word =~ s/[aeiou]//g;    # remove vowels
-          $word =~ s/(\w)\1+/$1/eg; # collapse doubled 
+          $word =~ s/(\w)\1+/$1/eg; # collapse doubled
                                     # (or tripled, etc) letters
           return $word;
       }

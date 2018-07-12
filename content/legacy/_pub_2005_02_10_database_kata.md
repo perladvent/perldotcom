@@ -61,7 +61,7 @@ In the tradition of past Perl Code katas here is some simplified code to write y
       );
       # if we find one, then ...
       if ($user_id) {
-          # log the event and return success      
+          # log the event and return success
           $dbh->do(
               "INSERT INTO event_log (event) VALUES('User $user_id logged in')"
           );
@@ -75,15 +75,15 @@ In the tradition of past Perl Code katas here is some simplified code to write y
           );
           # if we do have a username, and the password doesnt match then
           if ($user_id) {
-              # if we have not reached the max allowable login failures then 
+              # if we have not reached the max allowable login failures then
               if ($login_failures < $MAX_LOGIN_FAILURES) {
                   # update the login failures
                   $dbh->do(qq{
-                      UPDATE users 
+                      UPDATE users
                       SET login_failures = (login_failures + 1)
                       WHERE user_id = $user_id
                   });
-                  return 'BAD PASSWORD';                  
+                  return 'BAD PASSWORD';
               }
               # otherwise ...
               else {
@@ -91,7 +91,7 @@ In the tradition of past Perl Code katas here is some simplified code to write y
                   $dbh->do(
                       "UPDATE users SET login_failures = (login_failures + 1), " .
                       "locked = 1 WHERE user_id = $user_id"
-                  );                                                              
+                  );
                   return 'USER ACCOUNT LOCKED';
               }
           }
@@ -145,7 +145,7 @@ DBD::Mock version 0.18 introduced the DBD::Mock::Session object, which allows th
       {
       statement => "DELETE FROM session_table WHERE active = 0",
       results  => [[ 'rows' ], [], [], []]
-      }  
+      }
     ));
 
 The hash reference given for each statement block in the session should look very similar to the values added with `mock_add_resultset`, with the only difference in the substitution of the word `statement` for the word `sql`. DBD::Mock will assure that the first statement run matches the first statement in the session, raising an error (in the manner specified by `PrintError` or `RaiseError`) if not. DBD::Mock will then continue through the session until it reaches the last statement, verifying that each statement run matches in the order specified. You can also use regular expression references and code references in the `statement` slots of DBD::Mock::Session for even more sophisticated comparisons. See the documentation for more details of how those features work.
@@ -175,23 +175,23 @@ The first example is the `LOGIN SUCCESSFUL` path. The code uses the array versio
     use MyApp::Login;
 
     my $dbh = DBI->connect('dbi:Mock:', '', '');
-     
+
     $dbh->{mock_add_resultset} = [[ 'user_id' ], [ 1 ]];
     $dbh->{mock_add_resultset} = [[ 'rows' ], []];
 
-    is(MyApp::Login::login($dbh, 'user', '****'), 
-       'LOGIN SUCCESSFUL', 
+    is(MyApp::Login::login($dbh, 'user', '****'),
+       'LOGIN SUCCESSFUL',
        '... logged in successfully');
-     
+
     my $history = $dbh->{mock_all_history};
 
     cmp_ok(@{$history}, '==', 2, '... we ran 2 statements');
 
-    is($history->[0]->statement(), 
+    is($history->[0]->statement(),
        "SELECT user_id FROM users WHERE username = 'user' AND password =
         '****'", '... the first statement is correct');
 
-    is($history->[1]->statement(), 
+    is($history->[1]->statement(),
        "INSERT INTO event_log (event) VALUES('User 1 logged in')",
        '... the second statement is correct');
 
@@ -206,27 +206,27 @@ The next example is the `USERNAME NOT FOUND` path. The test code uses the hash v
     my $dbh = DBI->connect('dbi:Mock:', '', '');
 
     $dbh->{mock_add_resultset} = {
-      sql => "SELECT user_id FROM users WHERE username = 'user' 
-           AND password = '****'", results => [[ 'user_id' ], 
+      sql => "SELECT user_id FROM users WHERE username = 'user'
+           AND password = '****'", results => [[ 'user_id' ],
            [ undef ]]
     };
     $dbh->{mock_add_resultset} = {
-      sql => "SELECT user_id, login_failures FROM users WHERE 
-           username = 'user'", results => [[ 'user_id', 
+      sql => "SELECT user_id, login_failures FROM users WHERE
+           username = 'user'", results => [[ 'user_id',
            'login_failures' ], [ undef, undef ]]
     };
 
-    is(MyApp::Login::login($dbh, 'user', '****'), 
-      'USERNAME NOT FOUND', 
+    is(MyApp::Login::login($dbh, 'user', '****'),
+      'USERNAME NOT FOUND',
       '... username is not found');
 
     my $history_iterator = $dbh->{mock_all_history_iterator};
 
-    is($history_iterator->next()->statement(), 
+    is($history_iterator->next()->statement(),
        "SELECT user_id FROM users WHERE username = 'user' AND password = '****'",
        '... the first statement is correct');
 
-    is($history_iterator->next()->statement(), 
+    is($history_iterator->next()->statement(),
        "SELECT user_id, login_failures FROM users WHERE username = 'user'",
        '... the second statement is correct');
 
@@ -245,16 +245,16 @@ The next example is the `USER ACCOUNT LOCKED` path. The test code uses the DBD::
 
     my $lock_user_account = DBD::Mock::Session->new('lock_user_account' => (
       {
-          statement => "SELECT user_id FROM users WHERE username = 'user' AND 
+          statement => "SELECT user_id FROM users WHERE username = 'user' AND
                password = '****'", results   => [[ 'user_id' ], [ undef]]
       },
       {
-          statement => "SELECT user_id, login_failures FROM users WHERE 
-               username = 'user'", results   => [[ 'user_id', 'login_failures' ], 
+          statement => "SELECT user_id, login_failures FROM users WHERE
+               username = 'user'", results   => [[ 'user_id', 'login_failures' ],
                [ 1, 4 ]]
       },
       {
-          statement => "UPDATE users SET login_failures = (login_failures + 1), 
+          statement => "UPDATE users SET login_failures = (login_failures + 1),
           locked = 1 WHERE user_id = 1", results   => [[ 'rows' ], []]
       }
     ));
@@ -264,9 +264,9 @@ The next example is the `USER ACCOUNT LOCKED` path. The test code uses the DBD::
     lives_ok {
         $result = MyApp::Login::login($dbh, 'user', '****')
     } '... our session ran smoothly';
-    is($result, 
-      'USER ACCOUNT LOCKED', 
-      '... username is found, but the password is wrong, 
+    is($result,
+      'USER ACCOUNT LOCKED',
+      '... username is found, but the password is wrong,
            so we lock the the user account');
 
 The DBD::Mock::Session approach has several benefits. First, the SQL statements are associated with specific result sets (as with the hash version of `mock_add_resultset`). Second, there is an explicit ordering of statements (like the array version of `mock_add_resultset`). DBD::Mock::Session will verify that the session has been followed properly, and raise an error if it is not. The one drawback of this example is the use of static strings to compare the SQL with. However, DBD::Mock::Session can use other things, as illustrated in the next and final example.
@@ -285,26 +285,26 @@ The next and final example is the `BAD PASSWORD` path. The test code demonstrate
 
     my $bad_password = DBD::Mock::Session->new('bad_password' => (
     {
-      statement => qr/SELECT user_id FROM users WHERE username = \'.*?\' AND 
+      statement => qr/SELECT user_id FROM users WHERE username = \'.*?\' AND
            password = \'.*?\'/, results   => [[ 'user_id' ], [ undef]]
     },
     {
-      statement => qr/SELECT user_id, login_failures FROM users WHERE username = 
+      statement => qr/SELECT user_id, login_failures FROM users WHERE username =
       \'.*?\'/, results   => [[ 'user_id', 'login_failures' ], [ 1, 0 ]]
     },
     {
-      statement => sub { 
+      statement => sub {
           my $parser1 = SQL::Parser->new('ANSI');
-          $parser1->parse(shift(@_)); 
-          my $parsed_statement1 = $parser1->structure(); 
+          $parser1->parse(shift(@_));
+          my $parsed_statement1 = $parser1->structure();
           delete $parsed_statement1->{original_string};
-          
+
           my $parser2 = SQL::Parser->new('ANSI');
-          $parser2->parse("UPDATE users SET login_failures = 
+          $parser2->parse("UPDATE users SET login_failures =
                (login_failures + 1) WHERE user_id = 1");
-          my $parsed_statement2 = $parser2->structure(); 
-          delete $parsed_statement2->{original_string};      
-          
+          my $parsed_statement2 = $parser2->structure();
+          delete $parsed_statement2->{original_string};
+
           return Dumper($parsed_statement2) eq Dumper($parsed_statement1);
       },
       results   => [[ 'rows' ], []]

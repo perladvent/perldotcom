@@ -103,10 +103,10 @@ The server forked off a child process which read the upload status from a [Berke
 
         # Create an RDF document object to store the data
         my $rdf = KSYNC::Model::Poll::Data::RDF->new(
-                    $gfn, 
+                    $gfn,
                     $poll,
-                    $r->pnotes('SESSION')->{'creator'}, 
-                    DateTime->now->ymd, 
+                    $r->pnotes('SESSION')->{'creator'},
+                    DateTime->now->ymd,
         );
 
         # Get the poll questions for to make sure the answers are valid
@@ -142,7 +142,7 @@ The server forked off a child process which read the upload status from a [Berke
                     scalar( @{$question_data} ) + 1 )
                 {
                     $db->db_put( 'done', '1' );
-                    
+
                     # The dataset isn't valid, so throw an exception
                     KSYNC::Apache::Exception->throw('Invalid Dataset!');
                 }
@@ -155,11 +155,11 @@ The server forked off a child process which read the upload status from a [Berke
             my ( $good_lines, $invalid_lines );
 
             ( $good_lines, $invalid_lines, $question_data, $li, $fragment ) =
-              KSYNC::Model::Poll::Data::validate( \@valid_answers, 
-                                                  $data, 
+              KSYNC::Model::Poll::Data::validate( \@valid_answers,
+                                                  $data,
                                                   $question_data,
-                                                  $li, 
-                                                  $delimiter, 
+                                                  $li,
+                                                  $delimiter,
                                                   $fragment );
 
             # Keep up the running count of good and invalid lines
@@ -211,16 +211,16 @@ The server forked off a child process which read the upload status from a [Berke
         # Set status so the progress window will close
         $db->db_put('done', 1');
         undef $db;
-        
+
         # Send the user to the summary page
         $r->headers_out->set(
-          Location => join('', 
-                           'https://', 
-                           $r->construct_server, 
+          Location => join('',
+                           'https://',
+                           $r->construct_server,
                            '/poll/data/upload/summary',
-                          )                   
+                          )
         );
-        return Apache::REDIRECT; 
+        return Apache::REDIRECT;
     }
 
 During the upload process, the users saw a status window which refreshed every two seconds and had a pleasant animated GIF to enhance their experience, as well as several metrics on the status of the upload. One user uploaded a file that took 45 minutes because of a degraded network connection, but the uploaded file had no errors.
@@ -307,9 +307,9 @@ We also needed an API to manage those documents. We chose [Berkeley DBXML](http:
     # Transform the poll object into an xml document
     sub as_xml {
         my ($self, $id) = @_;
-        
+
         my $dom = XML::LibXML::Document->new();
-        my $pi = $dom->createPI( 'xml-styleshet', 
+        my $pi = $dom->createPI( 'xml-styleshet',
                                  'href="/css/poll.xsl" type="text/xsl"' );
         $dom->appendChild($pi);
         my $element = XML::LibXML::Element->new('Poll');
@@ -342,7 +342,7 @@ We also needed an API to manage those documents. We chose [Berkeley DBXML](http:
         # Create a new document for storage from xml serialization of $self
         my $doc = XmlDocument->new();
         $doc->setContent($self->as_xml);
-        
+
         # Save, throw an exception if problems happen
         eval { $container->putDocument($doc); };
         KSYNC::Exception->throw("Could not add document: $@") if $@;
@@ -358,12 +358,12 @@ We chose RDF as the format for poll data because the format contains links to re
         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
             xmlns:dc="http://purl.org/dc/elements/1.1/"
         xmlns:ourparty="http://www.ourparty.org/xml/schema#">
-        
+
         <rdf:Description rdf:about="http://www.ourparty.org/poll/1234">
             <dc:date>2004-10-14</dc:date>
                 <dc:creator>fmoyer@plusthree.com</dc:creator>
             </rdf:Description>
-            
+
             <rdf:Bag>
             <rdf:li ourparty:id="6372095736" ourparty:question="1"
                 ourparty:answer="1" dc:date="2005-03-01" />
@@ -402,10 +402,10 @@ An example SAX driver for Voter Data, Inc. RDF poll data:
 
     sub start_element {
         my ($self, $data) = @_;
-        
+
         # Process rdf:li elements
         if ( $data->{Name} eq 'rdf:li' ) {
-        
+
             # Grab the data
             my $id      = $data->{Attributes}{ "{$NS{ourparty}}id" }{Value};
             my $answer  = $data->{Attributes}{ "{$NS{ourparty}}answer" }{Value};
@@ -414,8 +414,8 @@ An example SAX driver for Voter Data, Inc. RDF poll data:
 
             # Map the data to a common response
             $self->add_response({ vendor        => $VENDOR,
-                                  voter_id      => $id, 
-                                  support_level => $answer, 
+                                  voter_id      => $id,
+                                  support_level => $answer,
                                   creator       => $creator,
                                   date          => $date,
                                });
@@ -449,12 +449,12 @@ We stored RDF documents compressed in bzip2 format, because bzip2 compression al
                         dbh    => $dbh,
                     );
 
-    # Create a parser which uncompresses the poll data set, summarizes it, and 
+    # Create a parser which uncompresses the poll data set, summarizes it, and
     # outputs data to a filter which warehouses the denormalized data
     my $parser = Pipeline(
                     "bzcat $rdf |" =>
-                    $driver        => 
-                    $warehouser    => 
+                    $driver        =>
+                    $warehouser    =>
     ;
 
     # Parse the poll data
@@ -489,7 +489,7 @@ An example of spider usage:
 
     sub new {
         my ($class, %args) = @_;
-        
+
         # Create an FTP or HTTP spider based on the type specified in %args
         my $spider_pkg = $class->_factory($args{type});
         my $self = $spider_pkg->new(%args);
@@ -502,7 +502,7 @@ An example of spider usage:
 
         # Create the package name for the spider type
         my $pkg = join '::', $class, $type;
-        
+
         # Load the package
         eval "use $pkg";
         croak("Error loading factory module: $@") if $@;
@@ -519,10 +519,10 @@ An example of spider usage:
 
     sub new {
         my ($class, %args) = @_;
-        
+
         my $self = { %args };
 
-        # Load the appropriate authentication package via Spider::Model::Auth 
+        # Load the appropriate authentication package via Spider::Model::Auth
         # factory class
         $self->{auth} = Spider::Model::Auth->new(%{$args{auth}});
 
@@ -531,17 +531,17 @@ An example of spider usage:
 
     sub authenticate {
         my $self = shift;
-        
+
         # Login
         eval { $self->ftp->login($self->auth->username, $self->auth->password); };
-         
+
         # Throw an exception if problems occurred
         KSYNC::Exception->throw("Cannot login ", $self->ftp->message) if $@;
     }
 
     sub crawl {
         my $self = shift;
-        
+
         # Set binary retrieval mode
         $self->ftp->binary;
 
@@ -555,9 +555,9 @@ An example of spider usage:
         }
     }
 
-    sub ftp { 
-        croak("Method Not Implemented!") if @_ > 1; 
-        $_[0]->{ftp} ||= Net::FTP->new($self->auth->host); 
+    sub ftp {
+        croak("Method Not Implemented!") if @_ > 1;
+        $_[0]->{ftp} ||= Net::FTP->new($self->auth->host);
     }
 
     1;
@@ -571,7 +571,7 @@ An example of spider usage:
     use KSYNC::Model::Vendor;
 
     # Retrieve a vendor so we can grab their latest data
-    my $vendor = KSYNC::Model::Vendor->retrieve({ 
+    my $vendor = KSYNC::Model::Vendor->retrieve({
       name => 'Voter Data, Inc.',
     });
 

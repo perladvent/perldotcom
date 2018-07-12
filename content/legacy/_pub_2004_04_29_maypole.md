@@ -36,7 +36,7 @@ In order to add the shopping cart to the site, we need to introduce the concept 
         postal_code varchar(64),
         country varchar(64)
       );
-      
+
       CREATE TABLE cart_item (
         id int not null auto_increment primary key,
         user int,
@@ -175,7 +175,7 @@ And then we need to produce a *user/view\_cart* template that displays them:
       %]
         <TD> [% item.product.name %] </TD>
         <TD> [% item.product.price %] </TD>
-        <TD> 
+        <TD>
           <FORM ACTION="/cart_item/delete/[% item.id %]">
           <INPUT TYPE="submit" VALUE="Remove from cart">
           </FORM>
@@ -234,7 +234,7 @@ Now we write our *user/checkout* template:
           ...
         </select>
 
-        Card number: <input name="card_number"> 
+        Card number: <input name="card_number">
         Expiration: <input name="expiration"> <BR>
         Total: $ [% total_price %]
         </P>
@@ -270,7 +270,7 @@ Now we can submit the payment and see what happens. If there's a problem, we add
 
         $tx->submit;
         if (!$tx->is_success) {
-          $r->{template_args}{message} = 
+          $r->{template_args}{message} =
             "There was a problem authorizing your transaction: ".
             $tx->error_message;
           $r->{template} = "checkout";
@@ -309,7 +309,7 @@ This page doesn't require any objects to be loaded up, since it's just going to 
 
       <FORM METHOD="POST" ACTION="/user/do_register">
         <P>Your name:
-        <input name="first_name"> 
+        <input name="first_name">
         <input name="last_name"> </P>
         <P>Your email address: <input name="email"> </P>
         <P>Please choose a password: <input name="password"> </P>

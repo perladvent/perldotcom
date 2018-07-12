@@ -55,7 +55,7 @@ For this, we set up a corresponding class:
       use base 'My::PhoneBill::DBI';
 
       __PACKAGE__->table('call');
-      __PACKAGE__->columns(All   => 
+      __PACKAGE__->columns(All   =>
         qw/callid number destination calldate calltime type duration cost/);
 
       1;
@@ -89,14 +89,14 @@ The `create()` call runs the SQL to `INSERT` the row for each call. As we're usi
 Now that we have a table populated with calls, we can begin to run queries against it. Let's write a simple script that reports on all the calls to a specified number:
 
       #!/usr/bin/perl
-      
+
       use My::PhoneBill::Call;
-      
+
       my $number = shift or die "Usage: $0 <number>";
-      
+
       my @calls = My::PhoneBill::Call->search(number => $number);
       my $total_cost = 0;
-      
+
       foreach my $call (@calls) {
         $total_cost += $call->cost;
         printf "%s %s - %d secs, %.1f pence\n",
@@ -116,14 +116,14 @@ So, if we want to see how often we're calling the Speaking Clock, then we run
 Similarly, if we want to see all the calls on a given date, then we could have a '`calls_on`' script:
 
       #!/usr/bin/perl
-      
+
       use My::PhoneBill::Call;
-      
+
       my $date = shift or die "Usage: $0 <date>";
-      
+
       my @calls = My::PhoneBill::Call->search(calldate => $date);
       my $total_cost = 0;
-      
+
       foreach my $call (@calls) {
         $total_cost += $call->cost;
         printf "%s) %s - %d secs, %.1f pence\n",
@@ -160,9 +160,9 @@ The first thing we should do is arrange our information a little better. We'll t
 And then we create the relevant class for this table:
 
       package My::PhoneBill::Recipient;
-      
+
       use base 'My::PhoneBill::DBI';
-      
+
       __PACKAGE__->table('recipient');
       __PACKAGE__->columns(All => qw/recipid number location name/);
 
@@ -184,13 +184,13 @@ We also need to modify the Call table:
 and its associated class:
 
       package My::PhoneBill::Call;
-      
+
       use base 'My::PhoneBill::DBI';
-      
+
       __PACKAGE__->table('call');
       __PACKAGE__->columns(All   =>
      *  qw/callid recipient calldate calltime type duration cost/);
-      
+
       1;
 
 Then we can modify our script that populates the database:
@@ -226,14 +226,14 @@ With the table repopulated we can return to our reporting scripts.
 Our `calls_on` script now fails as we can can't ask a call for its 'number'. So, we change it to:
 
       #!/usr/bin/perl
-      
+
       use My::PhoneBill::Call;
-      
+
       my $date = shift or die "Usage: $0 <date>";
-      
+
       my @calls = My::PhoneBill::Call->search(calldate => $date);
       my $total_cost = 0;
-      
+
       foreach my $call (@calls) {
         $total_cost += $call->cost;
         printf "%s) %s - %d secs, %.1f pence\n",
@@ -301,17 +301,17 @@ So, having found our recipient in the `calls_to` script, we can simply ask:
 And now the script works just as before:
 
       #!/usr/bin/perl
-      
+
       use My::PhoneBill::Recipient;
-      
+
       my $number = shift or die "Usage: $0 <number>";
-      
+
       my ($recipient) = My::PhoneBill::Recipient->search(number => $number)
         or die "No calls to $number\n";
       my @calls = $recipient->calls;
-      
+
       my $total_cost = 0;
-      
+
       foreach my $call (@calls) {
         $total_cost += $call->cost;
         printf "%s %s - %d secs, %.1f pence\n",
@@ -329,17 +329,17 @@ And now we can get the old results again:
 Next we need a script to give a name to a number in our address book:
 
       #!/usr/bin/perl
-      
+
       use My::PhoneBill::Recipient;
-      
+
       my($number, $name) = @ARGV;
       die "Usage $0 <number> <name>\n" unless $number and $name;
-      
+
       my $recip = My::PhoneBill::Recipient->find_or_create({number => $number});
       my $old_name = $recip->name;
       $recip->name($name);
       $recip->commit;
-      
+
       if ($old_name) {
         print "OK. $number changed from $old_name to $name\n";
       } else {
@@ -399,7 +399,7 @@ Now, when we fetch the `calldate` it is automatically inflated to a `Date::Simpl
       printf "%s %s - %d secs, %.1f pence\n",
         $call->calldate->format("%d %b"), $call->calltime,
         $call->duration, $call->cost;
-     
+
       > perl calls_to "Speaking Clock"
       17 Sep 11:06:00 - 5 secs, 8.5 pence
       19 Oct 21:20:00 - 8 secs, 8.5 pence
@@ -439,13 +439,13 @@ Firstly we'll add a method to the `Recipient` class to tell us the total we've s
 Then we can create a `top_ten` script:
 
       #!/usr/bin/perl
-      
+
       use My::PhoneBill::Recipient;
-      
+
       my @recipients = My::PhoneBill::Recipient->retrieve_all;
       my @regulars = grep $_->calls > 1, @recipients;
       my @sorted = sort { $b->total_spend <=> $a->total_spend } @regulars;
-      
+
       foreach my $recip (@sorted[0 .. 9]) {
         printf "%s - %d calls = %d pence\n",
           $recip->name || $recip->number,
