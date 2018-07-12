@@ -41,7 +41,7 @@ We could do that with this:
             foreach my $prefix (@dirpath) {
                 my $filepath = $prefix _ $filename;
                 if (-w -r -e $filepath  and  100 < -s $filepath <= 1e6) {
-                    my $fh = open $filepath : mode=>'rw' 
+                    my $fh = open $filepath : mode=>'rw'
                         or die "Something screwy with $filepath: $!";
                     my ($name, $vers, $status, $costs) = <$fh>;
                     next if $vers < $version;
@@ -93,7 +93,7 @@ We could do that with this:
             print "Major expenditure: $( ∑ @costs : {$^_ >= 1000} )\n";
             print "Minor expenditure: $( ∑ @costs : {$^_ < 1000} )\n";
 
-            print "Odd expenditures: @costs[1..Inf:2]\n"; 
+            print "Odd expenditures: @costs[1..Inf:2]\n";
         }
 
         save_data(%data, log => {name=>'metalog', vers=>1, costs=>[], stat=>0});
@@ -180,7 +180,7 @@ It would be more reasonable to expect these to act like:
         # Perl 5 code...
         @account_balances   =
                 map { $credits[$_] + $debits[$_] } 0..max($#credits,$#debits);
-        @biblical_metaphors = 
+        @biblical_metaphors =
                 map { $sheep[$_] - $goats[$_] } 0..max($#sheep,$#goats);
 
 That is, to apply the operation element-by-element, pairwise along the two arrays.
@@ -237,7 +237,7 @@ The test of the file size uses another new form of chaining that Perl 6 supports
 ### <span id="open for business"></span>Open for business
 
 Having verified the file's suitability, we open it for reading and writing:
-        my $fh = open $filepath : mode=>'rw' 
+        my $fh = open $filepath : mode=>'rw'
             or die "Something screwy with $filepath: $!";
 
 The `: mode=>'rw'` is an *adverbial modifier* on the `open`. We'll see more adverbs [shortly](/pub/2001/10/03/exegesis3.html?page=7#would%20you%20like%20an%20adverb%20with%20that).
@@ -609,7 +609,7 @@ respectively.
 
 ### <span id="that's not a number...now that's a number!"></span>That's not a number...now *that's* a number!
 
-One of the perennial problems with Perl 5 is how to read in a number. Or rather, how to read in a string...and then be sure that it contains a valid number. Currently, most people read in the string and then either just assume it's a number (optimism) or use the regexes found in [perlfaq4](http://search.cpan.org/doc/JHI/perl-5.7.2/pod/perlfaq4.pod#How_do_I_determine_whether_a_scalar_is_a_number_whole_integer_float_) or [Regexp::Common](http://search.cpan.org/doc/DCONWAY/Regexp-Common-0.01/lib/Regexp/Common.pm) to make sure (cynicism).
+One of the perennial problems with Perl 5 is how to read in a number. Or rather, how to read in a string...and then be sure that it contains a valid number. Currently, most people read in the string and then either just assume it's a number (optimism) or use the regexes found in [perlfaq4](https://perldoc.perl.org/perlfaq4.html#How_do_I_determine_whether_a_scalar_is_a_number_whole_integer_float_) or {{<mcpan Regexp::Common>}} to make sure (cynicism).
 
 Perl 6 offers a simpler, built-in mechanism.
 
@@ -644,17 +644,17 @@ and recomputing the same expensive function every time each value is compared du
                 @unsorted;                  # step 0: take originals
 
 The use of arrays can make such transforms hard to read (and to maintain), so people sometimes use hashes instead:
-        my @sorted =                        
-            map  { $_.{original} }             
-            sort { $a.{computed} <=> $b.{computed} } 
-            map  { {original=>$_, computed=>expensive($_)} }   
+        my @sorted =
+            map  { $_.{original} }
+            sort { $a.{computed} <=> $b.{computed} }
+            map  { {original=>$_, computed=>expensive($_)} }
                 @unsorted;
 
 That improves the readability, but at the expense of performance. Pairs are an ideal way to get the readability of hashes but with (probably) even better performance than arrays:
-        my @sorted =                        
-            map  { $_.value }             
-            sort { $a.key <=> $b.key }  
-            map  { expensive($_) => $_ }     
+        my @sorted =
+            map  { $_.value }
+            sort { $a.key <=> $b.key }
+            map  { expensive($_) => $_ }
                 @unsorted;
 
 Or in the case of our example program:
