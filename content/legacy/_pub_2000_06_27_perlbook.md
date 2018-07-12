@@ -3,7 +3,7 @@
       "simon-cozens"
    ],
    "draft" : null,
-   "description" : " There are a huge number of books out there about Perl. A quick search onAmazon reveals 362 books; allowing for false positives and books where Perl is a minor part, I'd conservatively estimate there to be over 250 books...",
+   "description" : " There are a huge number of books out there about Perl. A quick search on Amazon reveals 362 books; allowing for false positives and books where Perl is a minor part, I'd conservatively estimate there to be over 250 books...",
    "slug" : "/pub/2000/06/27/perlbook.html",
    "thumbnail" : null,
    "tags" : [],
@@ -15,7 +15,7 @@
 
 
 
-There are a huge number of books out there about Perl. A quick search onAmazon reveals 362 books; allowing for false positives and books where Perl is a minor part, I'd conservatively estimate there to be over 250 books primarily on Perl on the market at the moment. Are they any good?
+There are a huge number of books out there about Perl. A quick search on Amazon reveals 362 books; allowing for false positives and books where Perl is a minor part, I'd conservatively estimate there to be over 250 books primarily on Perl on the market at the moment. Are they any good?
 
 Of course, if you don't know any Perl, it's impossible to say. There are a few good reviews out there -- Tom Christiansen maintains a review site, and the Perl Mongers have a set of reviews of some of the more popular books too. And you can listen to personal testimonies from people who've learnt from the books -- but they'll only tell you about the quality of the teaching, not about the quality of the Perl. If you want to make sure you're learning high-class Perl, you need something external and objective.
 
