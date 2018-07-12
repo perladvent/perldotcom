@@ -101,7 +101,7 @@ In the tradition of past Perl Code katas here is some simplified code to write y
       }
     }
 
-There are four distinct paths through this code, each one resulting in one of the four return messages; `LOGIN SUCCESSFUL`, `BAD PASSWORD`, `USER ACCOUNT LOCKED`, and `USERNAME NOT FOUND`. See if you can write tests enough to cover all four paths. Feel free to use [Devel::Cover](http://search.cpan.org/~pjcj/Devel-Cover-0.52/lib/Devel/Cover.pm) to verify this.
+There are four distinct paths through this code, each one resulting in one of the four return messages; `LOGIN SUCCESSFUL`, `BAD PASSWORD`, `USER ACCOUNT LOCKED`, and `USERNAME NOT FOUND`. See if you can write tests enough to cover all four paths. Feel free to use [Devel::Cover]({{<mcpan "Devel::Cover" >}}) to verify this.
 
 Armed with your knowledge of DBD::Mock, go forth and write tests! The next page describes DBD::Mock in more detail and gives some strategies for writing the appropriate tests. You should spend between 30 and 45 minutes writing the tests before continuing.
 
@@ -319,7 +319,7 @@ The next and final example is the `BAD PASSWORD` path. The test code demonstrate
     } '... our session ran smoothly';
     is($result, 'BAD PASSWORD', '... username is found, but the password is wrong');
 
-This approach uses DBD::Mock::Session's more flexible means of performing SQL comparisons. The first and second statements are compared using regular expressions, which alleviates the need to hardcode test data into the statement. The third statement uses a subroutine reference to perform the SQL comparison. As you may have noticed in the test code provided, the `UPDATE` statement for the `BAD PASSWORD` path used Perl's `qq()` quoting mechanism to format the SQL in a more freeform manner. This can create complexities when trying to verify the SQL using strings or regular expressions. The test here uses [SQL::Parser](https://metacpan.org/pod/SQL::Parser) to determine the *functional equivalence* of the test statement and the statement run in the code.
+This approach uses DBD::Mock::Session's more flexible means of performing SQL comparisons. The first and second statements are compared using regular expressions, which alleviates the need to hardcode test data into the statement. The third statement uses a subroutine reference to perform the SQL comparison. As you may have noticed in the test code provided, the `UPDATE` statement for the `BAD PASSWORD` path used Perl's `qq()` quoting mechanism to format the SQL in a more freeform manner. This can create complexities when trying to verify the SQL using strings or regular expressions. The test here uses [SQL::Parser]({{<mcpan "SQL::Parser" >}}) to determine the *functional equivalence* of the test statement and the statement run in the code.
 
 ### Conclusion
 

@@ -372,7 +372,7 @@ We chose RDF as the format for poll data because the format contains links to re
         </rdf:Bag>
     </rdf:RDF>
 
-We used [SAX machines](https://metacpan.org/pod/XML::SAX::Machines) as drivers to generate summary models of RDF files and [LibXML](https://metacpan.org/pod/XML::LibXML) streaming parsers to traverse the RDF files. We stacked drivers by using [pipelined SAX machines](https://metacpan.org/pod/XML::SAX::Pipeline) and constructed SAX drivers for the different vendor data schemas. Cron-based machines scanned the RDF store, identified new poll data, and processed them into summary XML documents which we served to administrative users via XSLT transformations. Additionally, we used the SAX machines to create denormalized SQL warehouses for data mining.
+We used [SAX machines]({{<mcpan "XML::SAX::Machines" >}}) as drivers to generate summary models of RDF files and [LibXML]({{<mcpan "LibXML" >}}) streaming parsers to traverse the RDF files. We stacked drivers by using [pipelined SAX machines](https://metacpan.org/pod/XML::SAX::Pipeline) and constructed SAX drivers for the different vendor data schemas. Cron-based machines scanned the RDF store, identified new poll data, and processed them into summary XML documents which we served to administrative users via XSLT transformations. Additionally, we used the SAX machines to create denormalized SQL warehouses for data mining.
 
 An example SAX driver for Voter Data, Inc. RDF poll data:
 
