@@ -63,7 +63,7 @@ Nicholas Clark suggested that it would be a lot more efficient if Perl implement
 
 ### <span id="language_sensitive_editors">Language-sensitive editors</span>
 
-The section in the Perl FAQ on Perl-aware editors and IDEs has been updated, thanks to a very complete survey by Peter Primmer and others. Here's what it looks like now:
+The [section in the Perl FAQ on Perl-aware editors and IDEs]({{<perldoc "perlfaq3">}}) has been updated, thanks to a very complete survey by Peter Primmer and others. Here's what it looks like now:
 
 > PerlBuilder (http://www.solutionsoft.com/perl.htm) is an integrated development environment for Windows that supports Perl development. PerlDevKit (http://www.activestate.com/Products/Perl\_Dev\_Kit/index.html) is an IDE from ActiveState supporting the ActivePerl. (VisualPerl, a Visual Studio (or Studio.NET, in time) component is currently (late 2000) in beta). The visiPerl+ IDE is available from Help Consulting (http://helpconsulting.net/visiperl/). Perl code magic is another IDE (http://www.petes-place.com/codemagic.html). CodeMagicCD (http://www.codemagiccd.com/) is a commercial IDE. The Object System (http://www.castlelink.co.uk/object\_system/) is a Perl web applications development IDE.
 >
