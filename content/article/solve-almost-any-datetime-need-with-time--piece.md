@@ -21,7 +21,7 @@
 }
 
 
-*Datetimes come up all the time in programming, so being fluent in handling them is an essential skill. There are [many modules](https://metacpan.org/search?q=date+time) on CPAN for dealing with datetimes, but for most tasks you only need one: [Time::Piece](https://metacpan.org/pod/Time::Piece).*
+*Datetimes come up all the time in programming, so being fluent in handling them is an essential skill. There are [many modules](https://metacpan.org/search?q=date+time) on CPAN for dealing with datetimes, but for most tasks you only need one: [Time::Piece]({{<mcpan "Time::Piece" >}}).*
 
 ### Requirements
 
@@ -132,7 +132,7 @@ my $nextDecade  = $datetime->add_years(10);   # plus 10 years
 my $lastYear    = $datetime->add_years(-1);   # minus 1 year
 ```
 
-You'll often need more granular control over the datetime, and that's where the [Time::Seconds](https://metacpan.org/pod/Time::Seconds) module comes in. Just include it in your program, and it will export several constants which can be used to adjust the datetime. The constants are: ONE\_MINUTE, ONE\_HOUR, ONE\_DAY, ONE\_WEEK, ONE\_MONTH, ONE\_YEAR, ONE\_FINANCIAL\_MONTH, LEAP\_YEAR, NON\_LEAP\_YEAR.
+You'll often need more granular control over the datetime, and that's where the [Time::Seconds]({{<mcpan "Time::Seconds" >}}) module comes in. Just include it in your program, and it will export several constants which can be used to adjust the datetime. The constants are: ONE\_MINUTE, ONE\_HOUR, ONE\_DAY, ONE\_WEEK, ONE\_MONTH, ONE\_YEAR, ONE\_FINANCIAL\_MONTH, LEAP\_YEAR, NON\_LEAP\_YEAR.
 
 Let's see how to use the constants:
 
@@ -157,7 +157,7 @@ my $30SecondsAgo = $now - 30;
 
 ### Documentation
 
-[Time::Piece](https://metacpan.org/pod/Time::Piece) has excellent documentation, you can read it on the command line with perldoc:
+[Time::Piece]({{<mcpan "Time::Piece" >}}) has excellent documentation, you can read it on the command line with perldoc:
 
 ```perl
 $ perldoc Time::Piece

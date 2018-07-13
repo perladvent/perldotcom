@@ -26,7 +26,7 @@ I'm working on a project with Curtis "Ovid" Poe and Adrian Howard. We use Perl 5
 
 This application has its own quirks for setup and installation. I managed to clean up some of the worst offenses as my first work on the project; it installs and passes tests on my server with Perl 5.10.1, so it should install cleanly if all of its dependencies work with Perl 5.12.
 
-My first approach was to manage my own parallel installation of Perl 5 with [local::lib](https://metacpan.org/pod/local::lib) and a custom installation of Perl 5.12, but the manual intervention required to make all of that work was enough of a hassle that I took a tip from [Chris Prather](http://chris.prather.org/) and installed [App::perlbrew](https://metacpan.org/pod/App::perlbrew) to manage my various installations (system Perl 5.10.0 built with threading, custom Perl 5.10.1 without threads, and now Perl 5.12.0 RC1).
+My first approach was to manage my own parallel installation of Perl 5 with [local::lib]({{<mcpan "local::lib" >}}) and a custom installation of Perl 5.12, but the manual intervention required to make all of that work was enough of a hassle that I took a tip from [Chris Prather](http://chris.prather.org/) and installed [App::perlbrew]({{<mcpan "App::perlbrew" >}}) to manage my various installations (system Perl 5.10.0 built with threading, custom Perl 5.10.1 without threads, and now Perl 5.12.0 RC1).
 
         $ cpan App::perlbrew
         $ perlbrew init
@@ -36,9 +36,9 @@ My first approach was to manage my own parallel installation of Perl 5 with [loc
 
 The `-as p512` option was optional; it lets me use `p512` as a short name to refer to that particular installation when switching between versions.
 
-After a while with no obvious output (which is fine), the end result is the ability to switch between parallel Perl 5 installations without them stomping on each other. They're all installed locally in my own home directory, so I can use CPAN or [cpanminus](https://metacpan.org/pod/App::cpanminus) to install modules without worrying about root access or messing up the system for anyone else.
+After a while with no obvious output (which is fine), the end result is the ability to switch between parallel Perl 5 installations without them stomping on each other. They're all installed locally in my own home directory, so I can use CPAN or [cpanminus]({{<mcpan "App::cpanminus" >}}) to install modules without worrying about root access or messing up the system for anyone else.
 
-I had already installed [local::lib](https://metacpan.org/pod/local::lib), but I'm not sure it's necessary in this case.
+I had already installed [local::lib]({{<mcpan "local::lib" >}}), but I'm not sure it's necessary in this case.
 
 With the changes to my *.bashrc*, now `perl` is a symlink. Switching my version with `perlbrew` swaps a symlink, so every time I invoke `perl` directly, it uses the intended version. Shebang lines remain unaffected, so anything which invokes a program directly will use a hard-coded version of Perl. Unfortunately, this includes `cpanm`, so I took to using an alias which does `` perl `which cpanm` `` as a temporary workaround. Miyagawa suggested *not* using CPAN to install cpanminus. Instead, he recommends:
 
@@ -55,7 +55,7 @@ You can see what you have installed with:
 
         $ perlbrew installed
 
-For those of you curious as to the results of my experiments with 5.12.0, [Devel::Cover](https://metacpan.org/pod/Devel::Cover) doesn't work correctly yet, but that's not a requirement for this project. [Devel::BeginLift](https://metacpan.org/pod/Devel::BeginLift) needs a patch to build. Fortunately, that's available in the RT queue. A manual build and test worked just fine. Other than that, a little bit of babysitting on the installation satisfied all of the dependencies.
+For those of you curious as to the results of my experiments with 5.12.0, [Devel::Cover]({{<mcpan "Devel::Cover" >}}) doesn't work correctly yet, but that's not a requirement for this project. [Devel::BeginLift]({{<mcpan "Devel::BeginLift" >}}) needs a patch to build. Fortunately, that's available in the RT queue. A manual build and test worked just fine. Other than that, a little bit of babysitting on the installation satisfied all of the dependencies.
 
 If I'd had to manage the installation (and module paths and...) of all of this software, I'd have spent a lot more time on the fiddly details of installing dependencies and not the interesting part. `App::perlbrew` allowed me to concentrate on what really matters: does my software work?
 

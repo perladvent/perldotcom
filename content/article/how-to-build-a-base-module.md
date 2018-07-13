@@ -44,7 +44,7 @@ In Perl the `import` subroutine is important: it's called every time the module 
 
 ### Handling pragmas
 
-Take a look at the [Modern::Perl](https://metacpan.org/pod/Modern::Perl) [source](https://metacpan.org/source/CHROMATIC/Modern-Perl-1.20150127/lib/Modern/Perl.pm#L30). The `import` subroutine just calls `import` on the pragmas *it* wants to import. Clever and easy!
+Take a look at the [Modern::Perl]({{<mcpan "Modern::Perl" >}}) [source](https://metacpan.org/source/CHROMATIC/Modern-Perl-1.20150127/lib/Modern/Perl.pm#L30). The `import` subroutine just calls `import` on the pragmas *it* wants to import. Clever and easy!
 
 ```perl
 package MyBase;
@@ -95,7 +95,7 @@ Here I've added `use Data::Dumper;` to import the module. Later within `import()
 
 ### Handling local symbols
 
-There are many types of local symbols that might be useful to export: global config hashrefs (maybe one for dev and another for production), accessors for singletons like loggers and queues and so on. My application uses [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl), so I'll export a subroutine to get the logger:
+There are many types of local symbols that might be useful to export: global config hashrefs (maybe one for dev and another for production), accessors for singletons like loggers and queues and so on. My application uses [Log::Log4perl]({{<mcpan "Log::Log4perl" >}}), so I'll export a subroutine to get the logger:
 
 ```perl
 package MyBase;
@@ -152,7 +152,7 @@ Notice that the first character of that line has changed from an asterisk (for t
 
 ### Enable stack traces
 
-Perl has pretty helpful error messages, but I like to see stack traces to figure out what caused an exception. This is easy to add to a base module using the `confess` subroutine from the [Carp](https://metacpan.org/pod/Carp) module:
+Perl has pretty helpful error messages, but I like to see stack traces to figure out what caused an exception. This is easy to add to a base module using the `confess` subroutine from the [Carp]({{<mcpan "Carp" >}}) module:
 
 ```perl
 package MyBase;
@@ -200,7 +200,7 @@ I've added a line to import the Carp module, and within the `BEGIN` block I inst
 
 ### Consider using Import::Base
 
-I'm not sure my code handles all edge cases. It works for my needs, but if you're sharing the project code, consider using [Import::Base](https://metacpan.org/pod/Import::Base) which can do all of this for you. Here's what my base module looks like, re-written to use Import::Base:
+I'm not sure my code handles all edge cases. It works for my needs, but if you're sharing the project code, consider using [Import::Base]({{<mcpan "Import::Base" >}}) which can do all of this for you. Here's what my base module looks like, re-written to use Import::Base:
 
 ```perl
 package MyBase;

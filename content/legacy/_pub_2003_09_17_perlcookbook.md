@@ -176,8 +176,8 @@ The data tags still contain tags and entities. If you don't want the tags and en
 
 #### See Also
 
-The documentation for the CPAN module HTML::TableContentParser; <https://metacpan.org/pod/HTML::TableContentParser>
-
+The documentation for the CPAN module HTML::TableContentParser; <{{<mcpan "HTML::TableContentParser>
+" >}}
 ### Sample Recipe: Templating with HTML::Mason
 
 ### Problem

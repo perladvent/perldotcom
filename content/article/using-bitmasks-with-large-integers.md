@@ -15,7 +15,7 @@ A few weeks ago I wrote [Save space with bit arrays](http://perltricks.com/artic
 > using a module like bigint may not work because of addressable memory limitations
 >
 
-Now I'm not sure exactly where the "addressable memory limitation" line is, but this was something that I'd read elsewhere, and believed to be true, but didn't have time to research. The more I thought about it, the less sense that sentence made. The amount of memory a system can address is controlled by [many factors](https://superuser.com/questions/168114/how-much-memory-can-a-64bit-machine-address-at-a-time#168121), but I don't believe you'd ever want to create a bit array using all the addressable memory just for storing bitmasks. I decided to test bit arrays with large integers and see if they behaved correctly under [bigint](https://metacpan.org/pod/bigint).
+Now I'm not sure exactly where the "addressable memory limitation" line is, but this was something that I'd read elsewhere, and believed to be true, but didn't have time to research. The more I thought about it, the less sense that sentence made. The amount of memory a system can address is controlled by [many factors](https://superuser.com/questions/168114/how-much-memory-can-a-64bit-machine-address-at-a-time#168121), but I don't believe you'd ever want to create a bit array using all the addressable memory just for storing bitmasks. I decided to test bit arrays with large integers and see if they behaved correctly under [bigint]({{<mcpan "bigint" >}}).
 
 ### Testing large bitmasks
 

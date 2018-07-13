@@ -19,7 +19,7 @@
 }
 
 
-*[App::revealup](https://metacpan.org/pod/App::revealup) is a command line app that creates slide shows from markdown documents. We listed it in this this month's "What's new on CPAN", but the app is so much fun I thought it was worth a separate feature.*
+*[App::revealup]({{<mcpan "App::revealup" >}}) is a command line app that creates slide shows from markdown documents. We listed it in this this month's "What's new on CPAN", but the app is so much fun I thought it was worth a separate feature.*
 
 ### Requirements
 

@@ -26,7 +26,7 @@ The DuckDuckGo engine supports several types of plugin, but instant answers that
 
 ### Setup
 
-You'll need to fork the DuckDuckGo [repo](https://github.com/duckduckgo/zeroclickinfo-goodies) and clone your forked repo to your development machine. Optionally you can install [App::DuckPAN](https://metacpan.org/pod/App::DuckPAN), which can launch a local version of the DuckDuckGo site for testing your code. Another way to test the cheatsheet is via [Codio](https://vimeo.com/132712266).
+You'll need to fork the DuckDuckGo [repo](https://github.com/duckduckgo/zeroclickinfo-goodies) and clone your forked repo to your development machine. Optionally you can install [App::DuckPAN]({{<mcpan "App::DuckPAN" >}}), which can launch a local version of the DuckDuckGo site for testing your code. Another way to test the cheatsheet is via [Codio](https://vimeo.com/132712266).
 
 ### An Instant Answer JSON file
 
@@ -93,7 +93,7 @@ Each key pair entry represents the text to be displayed for the instant answer, 
 
 ### Wrap up
 
-You can test your instant answer using [App::DuckPAN](https://metacpan.org/pod/App::DuckPAN) (see my previous [article](http://perltricks.com/article/169/2015/4/20/Writing-DuckDuckGo-instant-answers-is-easy) for examples). If you want to discuss your instant answer with a developer, or resolve an issue, the DuckDuckGo team are on Slack, you can request access via [email](mailto:QuackSlack@duckduckgo.com?subject=AddMe). The official [documentation](https://duck.co/duckduckhack/goodie_overview) is also useful.
+You can test your instant answer using [App::DuckPAN]({{<mcpan "App::DuckPAN" >}}) (see my previous [article](http://perltricks.com/article/169/2015/4/20/Writing-DuckDuckGo-instant-answers-is-easy) for examples). If you want to discuss your instant answer with a developer, or resolve an issue, the DuckDuckGo team are on Slack, you can request access via [email](mailto:QuackSlack@duckduckgo.com?subject=AddMe). The official [documentation](https://duck.co/duckduckhack/goodie_overview) is also useful.
 
 Once you've finished an instant answer, create a pull request! The DuckDuckGo developers will review your code and give feedback. Once your instant answer is approved, it will go live within a few days.
 

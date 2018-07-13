@@ -22,7 +22,7 @@
 
 ### Tech Specs
 
-The comparison was between [Catalyst 5.90062](https://metacpan.org/pod/release/JJNAPIORK/Catalyst-Runtime-5.90062/lib/Catalyst/Runtime.pm) and [Dancer2 0.14](https://metacpan.org/release/XSAWYERX/Dancer2-0.140000). For local tests the machine used was a 2011 MacBook Air running Fedora 19 and Perl 5.16.3.
+The comparison was between [Catalyst 5.90062]({{<mcpan "release/JJNAPIORK/Catalyst-Runtime-5.90062/lib/Catalyst/Runtime.pm" >}}) and [Dancer2 0.14](https://metacpan.org/release/XSAWYERX/Dancer2-0.140000). For local tests the machine used was a 2011 MacBook Air running Fedora 19 and Perl 5.16.3.
 
 ### Number of Dependencies
 
@@ -99,7 +99,7 @@ Files=78, Tests=1112, 21 wallclock secs ( 0.38 usr  0.07 sys + 19.68 cusr  1.46 
 
 These results show that Catalyst ran 3,374 tests over 3 minutes compared to Dancer2's 1,112 tests over 21 seconds. So while Catalyst did run more tests, it was also slower in executing them; Dancer2 executed 53 tests per second and Catalyst managed 19 tests per second.
 
-What would explain this discrepancy? Perhaps Dancer2 has more trivial tests that run quicker than Catalyst's tests. As a control I checked the code coverage of each framework's test suite using [Devel::Cover](https://metacpan.org/pod/Devel::Cover). Dancer2's total test coverage was 84.7% whilst Catalyst's was 85.5% - a negligible difference.
+What would explain this discrepancy? Perhaps Dancer2 has more trivial tests that run quicker than Catalyst's tests. As a control I checked the code coverage of each framework's test suite using [Devel::Cover]({{<mcpan "Devel::Cover" >}}). Dancer2's total test coverage was 84.7% whilst Catalyst's was 85.5% - a negligible difference.
 
 ### Conclusion
 

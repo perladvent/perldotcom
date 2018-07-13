@@ -16,51 +16,51 @@
 Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!
 
 ### APIs & Apps
-* The RSLinux package manager is written in Perl: [App::rs](https://metacpan.org/pod/App::rs)
-* [WebService::S3::Tiny](https://metacpan.org/pod/WebService::S3::Tiny) is a minimalist wrapper for S3 around HTTP::Tiny
-* [Finance::Robinhood](https://metacpan.org/pod/Finance::Robinhood) can trade stocks, ETFs, options, and cryptocurrency without commission
-* Use the Oracle ZFS Storage Appliance RESTful API with [Oracle::ZFSSA::Client](https://metacpan.org/pod/Oracle::ZFSSA::Client)
-* Use the Star Wars API webservice with Perl using [Webservice::Swapi](https://metacpan.org/pod/Webservice::Swapi)
+* The RSLinux package manager is written in Perl: [App::rs]({{<mcpan "App::rs" >}})
+* [WebService::S3::Tiny]({{<mcpan "WebService::S3::Tiny" >}}) is a minimalist wrapper for S3 around HTTP::Tiny
+* [Finance::Robinhood]({{<mcpan "Finance::Robinhood" >}}) can trade stocks, ETFs, options, and cryptocurrency without commission
+* Use the Oracle ZFS Storage Appliance RESTful API with [Oracle::ZFSSA::Client]({{<mcpan "Oracle::ZFSSA::Client" >}})
+* Use the Star Wars API webservice with Perl using [Webservice::Swapi]({{<mcpan "Webservice::Swapi" >}})
 
 
 ### Config & Devops
-* Guess the OpenSSL include path using [Crypt::OpenSSL::Guess](https://metacpan.org/pod/Crypt::OpenSSL::Guess)
-* [Linux::Perl](https://metacpan.org/pod/Linux::Perl) makes system calls but in pure Perl
-* Get legacy support (cpanm v1) for Menlo with [Menlo::Legacy](https://metacpan.org/pod/Menlo::Legacy)
+* Guess the OpenSSL include path using [Crypt::OpenSSL::Guess]({{<mcpan "Crypt::OpenSSL::Guess" >}})
+* [Linux::Perl]({{<mcpan "Linux::Perl" >}}) makes system calls but in pure Perl
+* Get legacy support (cpanm v1) for Menlo with [Menlo::Legacy]({{<mcpan "Menlo::Legacy" >}})
 
 
 ### Data
-* Convert DBIx result schema to JSON schema with [DBIx::Result::Convert::JSONSchema](https://metacpan.org/pod/DBIx::Result::Convert::JSONSchema)
-* [Data::Cuid](https://metacpan.org/pod/Data::Cuid) can generate collision-resistant IDs
-* [File::ContentStore](https://metacpan.org/pod/File::ContentStore) provides a content store built on hard links
-* [Geo::Privacy](https://metacpan.org/pod/Geo::Privacy) provides lookups for EU and GDPR countries
-* Locate lines in images with [Image::Find::Paths](https://metacpan.org/pod/Image::Find::Paths)
-* [UUID::URandom](https://metacpan.org/pod/UUID::URandom) creates UUIDs based on /dev/urandom or the Windows Crypto API
+* Convert DBIx result schema to JSON schema with [DBIx::Result::Convert::JSONSchema]({{<mcpan "DBIx::Result::Convert::JSONSchema" >}})
+* [Data::Cuid]({{<mcpan "Data::Cuid" >}}) can generate collision-resistant IDs
+* [File::ContentStore]({{<mcpan "File::ContentStore" >}}) provides a content store built on hard links
+* [Geo::Privacy]({{<mcpan "Geo::Privacy" >}}) provides lookups for EU and GDPR countries
+* Locate lines in images with [Image::Find::Paths]({{<mcpan "Image::Find::Paths" >}})
+* [UUID::URandom]({{<mcpan "UUID::URandom" >}}) creates UUIDs based on /dev/urandom or the Windows Crypto API
 
 
 ### Development & Version Control
-* Simple, efficient, compile-time class declarations with [Class::Slot](https://metacpan.org/pod/Class::Slot)
-* Run external commands and Perl coderefs using [Command::Runner](https://metacpan.org/pod/Command::Runner)
-* Test Pod for invalid HTTP/S links using [Test::Pod::Links](https://metacpan.org/pod/Test::Pod::Links)
-* Match .gitignore patterns using [Text::Gitignore](https://metacpan.org/pod/Text::Gitignore)
+* Simple, efficient, compile-time class declarations with [Class::Slot]({{<mcpan "Class::Slot" >}})
+* Run external commands and Perl coderefs using [Command::Runner]({{<mcpan "Command::Runner" >}})
+* Test Pod for invalid HTTP/S links using [Test::Pod::Links]({{<mcpan "Test::Pod::Links" >}})
+* Match .gitignore patterns using [Text::Gitignore]({{<mcpan "Text::Gitignore" >}})
 
 
 ### Other
-* Interface with an IXBLUE Gyro using [Device::Gyro::IXBLUE](https://metacpan.org/pod/Device::Gyro::IXBLUE)
-* Generate patterns of text using [Game::TextPatterns](https://metacpan.org/pod/Game::TextPatterns)
+* Interface with an IXBLUE Gyro using [Device::Gyro::IXBLUE]({{<mcpan "Device::Gyro::IXBLUE" >}})
+* Generate patterns of text using [Game::TextPatterns]({{<mcpan "Game::TextPatterns" >}})
 
 
 ### Science & Mathematics
-* [Astro::Units](https://metacpan.org/pod/Astro::Units) performs astronomical unit conversion with high precision and large number support
-* [PDL::Cluster](https://metacpan.org/pod/PDL::Cluster) provides a PDL compatible interface to the C Clustering library
-* Create and manipulate interval trees, using the C based module: [Tree::Interval::Fast](https://metacpan.org/pod/Tree::Interval::Fast)
+* [Astro::Units]({{<mcpan "Astro::Units" >}}) performs astronomical unit conversion with high precision and large number support
+* [PDL::Cluster]({{<mcpan "PDL::Cluster" >}}) provides a PDL compatible interface to the C Clustering library
+* Create and manipulate interval trees, using the C based module: [Tree::Interval::Fast]({{<mcpan "Tree::Interval::Fast" >}})
 
 
 ### Web
-* [Catalyst::Plugin::ServeFile](https://metacpan.org/pod/Catalyst::Plugin::ServeFile) is a less opinionated, minimally featured way to serve static files
-* [Mojo::Feed](https://metacpan.org/pod/Mojo::Feed) provides Mojo::DOM-based parsing of RSS & Atom feeds
-* Add the Content-Security-Policy header to every Mojo HTTP response with [Mojolicious::Plugin::CSPHeader](https://metacpan.org/pod/Mojolicious::Plugin::CSPHeader)
-* Attach a console to an async module with [MooX::Async::Console](https://metacpan.org/pod/MooX::Async::Console)
-* Read Microformats2 metadata from HTML or JSON with [Web::Microformats2](https://metacpan.org/pod/Web::Microformats2)
+* [Catalyst::Plugin::ServeFile]({{<mcpan "Catalyst::Plugin::ServeFile" >}}) is a less opinionated, minimally featured way to serve static files
+* [Mojo::Feed]({{<mcpan "Mojo::Feed" >}}) provides Mojo::DOM-based parsing of RSS & Atom feeds
+* Add the Content-Security-Policy header to every Mojo HTTP response with [Mojolicious::Plugin::CSPHeader]({{<mcpan "Mojolicious::Plugin::CSPHeader" >}})
+* Attach a console to an async module with [MooX::Async::Console]({{<mcpan "MooX::Async::Console" >}})
+* Read Microformats2 metadata from HTML or JSON with [Web::Microformats2]({{<mcpan "Web::Microformats2" >}})
 
 

@@ -229,7 +229,7 @@ That's OK. We can tell the expression not to interpolate the `$paren` quite yet 
 
 When this is run on some text like `(lambda (x) (append x '(hacker)))`, the following happens: we see our opening paren, so all is well. Then we see some things which are not parens (`lambda `) and all is still well. Now we see `(`, which definitely is a paren. Our first alternative fails, we try the second alternative. Now it's finally time to interpolate what's inside the double-secret operator, which just happens to be `$paren`. And what does `$paren` tell us to match? First, an open paren - ooh, we seem to have one of those handy. Then some things which are not parens, such as `x`, and then we can finish this part of the match by matching a close paren. This polishes off the sub-expression, so we can go back to looking for more things that aren't parens, and so on.
 
-Of course, if we need to get this confusing, you might wonder why we're using a regular expression at all. Thankfully, there's a much easier way of doing things: the [the Text::Balanced manpage](https://metacpan.org/pod/Text::Balanced) module helps extract all kinds of balanced, quoted and tagged texts, and this is one of the things we'll look at in our next article, next month.
+Of course, if we need to get this confusing, you might wonder why we're using a regular expression at all. Thankfully, there's a much easier way of doing things: the [the Text::Balanced manpage]({{<mcpan "Text::Balanced" >}}) module helps extract all kinds of balanced, quoted and tagged texts, and this is one of the things we'll look at in our next article, next month.
 
 ### <span id="in_conclusion">In Conclusion</span>
 

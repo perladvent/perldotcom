@@ -22,9 +22,9 @@
 
 
 
-While Perl has a few heavy hitters in the web framework world ([Catalyst](https://metacpan.org/pod/Catalyst), [Jifty](https://metacpan.org/pod/Jifty), [CGI::App](https://metacpan.org/pod/CGI%3A%3AApplication)), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler. This is where [Dancer](http://www.perldancer.org/) comes in.
+While Perl has a few heavy hitters in the web framework world ([Catalyst]({{<mcpan "Catalyst" >}}), [Jifty]({{<mcpan "Jifty" >}}), [CGI::App]({{<mcpan "CGI%3A%3AApplication" >}})), sometimes they can seem like overkill. When writing a light web service or a high-end but not-as-complex website, you might want something smaller and simpler. This is where [Dancer](http://www.perldancer.org/) comes in.
 
-[Dancer](https://metacpan.org/pod/Dancer) is a web framework whose purpose is to let you get a website up and running within a minute, if not sooner. It started as a port of Ruby's [Sinatra](http://www.sinatrarb.com/) but has since took its own path.
+[Dancer]({{<mcpan "Dancer" >}}) is a web framework whose purpose is to let you get a website up and running within a minute, if not sooner. It started as a port of Ruby's [Sinatra](http://www.sinatrarb.com/) but has since took its own path.
 
 Dancer supports [Plack](http://plackperl.org/)/[PSGI](http://plackperl.org/) from an early version and has a built-in scaffolding script to help you get up and running within seconds. It creates deployment scripts for you, includes a guide for deployment situations to help you configure your webserver (whether [Perlbal](http://www.danga.com/perlbal), [Apache](http://httpd.apache.org/), [Lighttpd](http://www.lighttpd.net/) or anything else you might care to use) and has a default clean design to help you prototype your website faster.
 
@@ -161,7 +161,7 @@ Dancer supports internal variables. Declare them with `var`, and you can later f
 **Filters**
 -----------
 
-Sometimes you want to be able to specify code to run before any route. [KiokuDB](https://metacpan.org/pod/KiokuDB), for example, requires you to make a scope whenever you want to work with the database. This is easy to automate with the `before` filter:
+Sometimes you want to be able to specify code to run before any route. [KiokuDB]({{<mcpan "KiokuDB" >}}), for example, requires you to make a scope whenever you want to work with the database. This is easy to automate with the `before` filter:
 
         before sub {
             var scope => $dir->new_scope;
@@ -184,7 +184,7 @@ Dancer will return to the user agent whatever you return from a route, just like
 
         get '/' => sub { 'Hello, world!' };
 
-Plain text isn't always what you want, so Dancer has powerful support for templates. There are various template engines available ([Template::Toolkit](https://metacpan.org/pod/Template), [Template::Tiny](https://metacpan.org/pod/Template%3A%3ATiny), [Tenjin](https://metacpan.org/pod/Tenjin), [Text::Haml](https://metacpan.org/pod/Text%3A%3AHaml), and [Mason](https://metacpan.org/pod/Mason), to name a few). Dancer also provides a default simple template engine called [Dancer::Template::Simple](https://metacpan.org/pod/Dancer%3A%3ATemplate%3A%3ASimple). This gives you a simple self-contained template engine at no additional cost!
+Plain text isn't always what you want, so Dancer has powerful support for templates. There are various template engines available ([Template::Toolkit]({{<mcpan "Template" >}}), [Template::Tiny]({{<mcpan "Template%3A%3ATiny" >}}), [Tenjin]({{<mcpan "Tenjin" >}}), [Text::Haml]({{<mcpan "Text%3A%3AHaml" >}}), and [Mason]({{<mcpan "Mason" >}}), to name a few). Dancer also provides a default simple template engine called [Dancer::Template::Simple]({{<mcpan "Dancer%3A%3ATemplate%3A%3ASimple" >}}). This gives you a simple self-contained template engine at no additional cost!
 
 The `template` keyword allows you to specify which template to process and which variables to pass to the template:
 
@@ -198,7 +198,7 @@ The `template` keyword allows you to specify which template to process and which
             };
         };
 
-Dancer automatically supplies you an encompassing layout for your templates, much like [Template](https://metacpan.org/pod/Template%3A%3AToolkit)'s `WRAPPER` option. This built-in template means you can use the layout with other template engines, such as [Template::Tiny](https://metacpan.org/pod/Template%3A%3ATiny).
+Dancer automatically supplies you an encompassing layout for your templates, much like [Template]({{<mcpan "Template%3A%3AToolkit" >}})'s `WRAPPER` option. This built-in template means you can use the layout with other template engines, such as [Template::Tiny]({{<mcpan "Template%3A%3ATiny" >}}).
 
 Dancer accomplishes this by rendering two templates: the one you provided and a (configurable) layout template. The layout template gets the output of rendering your template as a `content` variable, then embeds that content in the general page layout.
 
@@ -213,7 +213,7 @@ The default templates that come with Dancer demonstrate this point very well. He
 **Serializers make RESTing easier**
 -----------------------------------
 
-Serializers are a new feature in Dancer (available since version 1.170). They allow automatic serialization for your output in various forms ([Data::Dumper](https://metacpan.org/pod/Data%3A%3ADumper), [YAML](https://metacpan.org/pod/YAML), or [JSON](https://metacpan.org/pod/JSON)) to shorten the amount of code you have to write in your application.
+Serializers are a new feature in Dancer (available since version 1.170). They allow automatic serialization for your output in various forms ([Data::Dumper]({{<mcpan "Data%3A%3ADumper" >}}), [YAML]({{<mcpan "YAML" >}}), or [JSON]({{<mcpan "JSON" >}})) to shorten the amount of code you have to write in your application.
 
 When programming a RESTful service, the JSON serializer cuts down much of your code by automatically serializing your output. This makes your server-side AJAX code much more efficient and less boilerplate code for you to write.
 
@@ -244,4 +244,4 @@ You can configure everything (logging, session handling, template layout, file l
 
 While Dancer is still evolving, it is already a production-ready simple-yet-powerful web framework lets you get from zero to web in record time. Put on your dancing shoes, define your steps, and bust a move!
 
-Dancer is available on the CPAN ([Dancer](https://metacpan.org/pod/Dancer)), and [Dancer development takes place on Github](http://github.com/sukria/Dancer).
+Dancer is available on the CPAN ([Dancer]({{<mcpan "Dancer" >}})), and [Dancer development takes place on Github](http://github.com/sukria/Dancer).

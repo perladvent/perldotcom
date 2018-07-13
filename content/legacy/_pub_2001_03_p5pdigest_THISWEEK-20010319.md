@@ -152,7 +152,7 @@ Kurt Starsinic has been patching up some of the standard utilities to be warning
 
 Merijn found loads and loads of bugs in the 5.6.1 trials on AIX and HP/UX, which Sarathy ran around cleaning up. Good work, both.
 
-Brian Ingerson has, sadly, decided that his excellent [Inline](https://metacpan.org/pod/Inline) module is not going to be mature enough for 5.8.0. Still, I heartily hope something like it ships with Perl 6. Have you played with [Inline](https://metacpan.org/pod/Inline) yet? No? Go and play with [Inline](https://metacpan.org/pod/Inline) immediately, and until next week I remain, your humble and obedient servant,
+Brian Ingerson has, sadly, decided that his excellent [Inline]({{<mcpan "Inline" >}}) module is not going to be mature enough for 5.8.0. Still, I heartily hope something like it ships with Perl 6. Have you played with [Inline]({{<mcpan "Inline" >}}) yet? No? Go and play with [Inline]({{<mcpan "Inline" >}}) immediately, and until next week I remain, your humble and obedient servant,
 
 ------------------------------------------------------------------------
 

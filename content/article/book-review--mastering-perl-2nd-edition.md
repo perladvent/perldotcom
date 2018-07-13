@@ -42,9 +42,9 @@ Every chapter is self-contained: you won't find yourself thumbing back through p
 The content of the new edition has been refreshed and beefed-up; it's about 50 pages longer than the first time around. Every chapter has been updated and several have been extensively revised. A complete list of changes is [available](http://www.masteringperl.org/new-in-2e/) however the chapters with the most changes are:
 
 -   The Advanced Regular Expressions chapter now covers recursion, grammars and other advanced regex features, culminating in [Randal Scwartz' JSON parser](http://www.perlmonks.org/?node_id=995856).
--   Secure Programming Techniques has new sections on symbolic references and preventing SQL injection with DBI. The [Safe](https://metacpan.org/pod/Safe) module is also covered.
--   The Detecting and Reporting Errors chapter updates the Fatal content with [autodie](https://metacpan.org/pod/autodie), and introduces [TryCatch](https://metacpan.org/pod/TryCatch).
--   The data formats of the Data Persistence chapter have been reorganized into Perl specific data storage and Perl agnostic data storage. New material has been added on JSON, Storable's [security issue](http://www.masteringperl.org/2012/12/the-storable-security-problem/), and Booking.com's [Sereal](https://metacpan.org/pod/Sereal).
+-   Secure Programming Techniques has new sections on symbolic references and preventing SQL injection with DBI. The [Safe]({{<mcpan "Safe" >}}) module is also covered.
+-   The Detecting and Reporting Errors chapter updates the Fatal content with [autodie]({{<mcpan "autodie" >}}), and introduces [TryCatch]({{<mcpan "TryCatch" >}}).
+-   The data formats of the Data Persistence chapter have been reorganized into Perl specific data storage and Perl agnostic data storage. New material has been added on JSON, Storable's [security issue](http://www.masteringperl.org/2012/12/the-storable-security-problem/), and Booking.com's [Sereal]({{<mcpan "Sereal" >}}).
 
 ### Style changes
 

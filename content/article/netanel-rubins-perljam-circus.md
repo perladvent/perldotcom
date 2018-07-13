@@ -33,7 +33,7 @@ I'm going to address each claim in turn and show why it is false. In my view, Pe
 >
 > -- <cite>Netanel Rubin, The Perl Jam 2</cite>
 
-This isn't true. Since 2008 Perl has supported subroutine signatures, with type checks using the [Method::Signatures](https://metacpan.org/pod/Method::Signatures) module. Since 2006 the [Moose](https://metacpan.org/pod/Moose) object system provided a fully-fledged [type system](https://metacpan.org/pod/Moose::Util::TypeConstraints) and meta object programming interface (there's also [MooseX::Method::Signatures](https://metacpan.org/pod/MooseX::Method::Signatures)).
+This isn't true. Since 2008 Perl has supported subroutine signatures, with type checks using the [Method::Signatures]({{<mcpan "Method::Signatures" >}}) module. Since 2006 the [Moose]({{<mcpan "Moose" >}}) object system provided a fully-fledged [type system]({{<mcpan "Moose::Util::TypeConstraints" >}}) and meta object programming interface (there's also [MooseX::Method::Signatures]({{<mcpan "MooseX::Method::Signatures" >}})).
 
 > Developers treat hashes and arrays as "secure" data types ... this is the Perl standard. You're not expected to use it, you have to, as you don't have any other choice. This security mess is a fundamental part of the language.
 >
@@ -67,7 +67,7 @@ The issue with this code is that if `$file` has the value of `ARGV`, the diamond
 
 The piping open behavior is well documented in [open](http://perldoc.perl.org/functions/open.html), [perlipc](http://perldoc.perl.org/perlipc.html#Using-open%28%29-for-IPC) and [perlsec](http://perldoc.perl.org/perlsec.html). Chapter 2 of [Mastering Perl](http://masteringperl.org) also covers it. It's a useful feature when you want to efficiently process a lot of data from an external command: just like a shell pipe, it creates a socket between the Perl program and the external binary, avoiding the need to read the entire output into memory at once.
 
-Netanel also identified a SQL injection vulnerability in Bugzilla. The weakness was caused by a poorly coded function which failed to properly validate input used in a dynamic SQL query. The developers should have used the safer pass-by-parameter [DBI](https://metacpan.org/pod/DBI) `prepare` and `execute` functions.
+Netanel also identified a SQL injection vulnerability in Bugzilla. The weakness was caused by a poorly coded function which failed to properly validate input used in a dynamic SQL query. The developers should have used the safer pass-by-parameter [DBI]({{<mcpan "DBI" >}}) `prepare` and `execute` functions.
 
 In both cases Perl provided methods for securely parsing untrusted input, but the developers didn't use them.
 
@@ -89,9 +89,9 @@ sub test {
 }
 ```
 
-Aside from the fact that Netanel's code contains a big error which means it would never work, the claim that every other Perl project is coded in this way is preposterous. [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla) is a popular Perl project with over 20,000 lines of code. Can you guess how frequently Dist::Zilla uses the construct Netanel describes? A quick grep of the code shows zero instances. Bugzilla was developed in 1998, it is not an example of [Modern Perl](http://modernperlbooks.com/books/modern_perl_2014/index.html).
+Aside from the fact that Netanel's code contains a big error which means it would never work, the claim that every other Perl project is coded in this way is preposterous. [Dist::Zilla]({{<mcpan "Dist::Zilla" >}}) is a popular Perl project with over 20,000 lines of code. Can you guess how frequently Dist::Zilla uses the construct Netanel describes? A quick grep of the code shows zero instances. Bugzilla was developed in 1998, it is not an example of [Modern Perl](http://modernperlbooks.com/books/modern_perl_2014/index.html).
 
-Regarding CGI.pm, I can't say it better than the official [documentation](https://metacpan.org/pod/CGI#CGI.pm-HAS-BEEN-REMOVED-FROM-THE-PERL-CORE):
+Regarding CGI.pm, I can't say it better than the official [documentation]({{<mcpan "CGI#CGI.pm-HAS-BEEN-REMOVED-FROM-THE-PERL-CORE" >}}):
 
 > CGI.pm HAS BEEN REMOVED FROM THE PERL CORE
 >
@@ -116,7 +116,7 @@ The funny thing is Perl is improving all the time. Every year there is a major r
 
 Instead of waiting for a major release milestone, the Perl development team can fix critical security issues in a minor release if needed (for example see [5.16.3](http://perldoc.perl.org/perl5163delta.html)).
 
-Perl also has a strong toolchain for evaluating Perl code. [Perl::Critic](https://metacpan.org/pod/distribution/Perl-Critic/bin/perlcritic) is a linter that reviews Perl code against recommended coding practices. There is even a [policy](https://metacpan.org/pod/Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection) to check for potential SQL injection vulnerabilities.
+Perl also has a strong toolchain for evaluating Perl code. [Perl::Critic]({{<mcpan "distribution/Perl-Critic/bin/perlcritic" >}}) is a linter that reviews Perl code against recommended coding practices. There is even a [policy]({{<mcpan "Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection" >}}) to check for potential SQL injection vulnerabilities.
 
 ### Conclusion
 > You can't always live in the fear of not knowing what data type you are trying to handle ... not trusting your hashes, not trusting your arrays, what's next, not trusting your own code?

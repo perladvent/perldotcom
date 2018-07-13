@@ -30,7 +30,7 @@
 
 Interfaces to GUI applications like [DCOP](http://developer.kde.org/documentation/library/kdeqt/kde3arch/dcop.html) or [D-BUS](http://www.freedesktop.org/Software/dbus) allow you to interact with GUI applications in order to get at their internal states or set some arbitrary states.
 
-Sometimes GUIs don't allow for such interaction and you need to "click" them. If you're writing such an application, you need some sort of regression tests for it to make sure your widget/windows are as accessible as they should be. If this is the case, there is a Perl module to help you: [X11::GUITest](https://metacpan.org/pod/X11::GUITest).
+Sometimes GUIs don't allow for such interaction and you need to "click" them. If you're writing such an application, you need some sort of regression tests for it to make sure your widget/windows are as accessible as they should be. If this is the case, there is a Perl module to help you: [X11::GUITest]({{<mcpan "X11::GUITest" >}}).
 
 Be aware that `X11::GUITest` allows you to drive a GUI, but you can't "read" data written in a widget, such as a button or an edit box. More on this in the Limitations section below.
 

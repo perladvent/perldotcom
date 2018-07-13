@@ -30,7 +30,7 @@ This article is a case example of using the Perl debugger in a production enviro
 
 I've written the article so that you can follow along yourself, if you wish. To do so, you need a Linux/Unix system with Perl 5.8, Apache (any version), and a basic [TWiki](http://www.twiki.org/) installation. (I'm using version 20040902-3.) TWiki is quite easy to install from packages; it took me 3 minutes under Ubuntu, including answering a few installation questions. If you're installing for this walk-through, enable the sample data set, which installs into the default TWiki directories (*/var/lib/twiki/data* and */var/www/twiki/pub* on Debian and Ubuntu).
 
-Additionally, for any use of the debugger, you should install the Perl modules [Term::ReadLine](https://metacpan.org/pod/Term::ReadLine) and [Term::ReadKey](https://metacpan.org/pod/Term::ReadKey) from [MetaCPAN](https://metacpan.org/). These will give you bash/csh-like cursor control, history browsing with up and down arrows, and tab completion on variables and functions.
+Additionally, for any use of the debugger, you should install the Perl modules [Term::ReadLine]({{<mcpan "Term::ReadLine" >}}) and [Term::ReadKey]({{<mcpan "Term::ReadKey" >}}) from [MetaCPAN](https://metacpan.org/). These will give you bash/csh-like cursor control, history browsing with up and down arrows, and tab completion on variables and functions.
 
 ### Statement of the Problem
 
@@ -230,8 +230,8 @@ This article has barely scratched the surface of the debugger's capabilities; it
 
 [The Perl Debugger. Linux Journal. March 2005, 73-76](http://www.linuxjournal.com/article/7581/)
 
-[perldoc perldebtut](https://metacpan.org/pod/distribution/perl/pod/perldebtut.pod)
+[perldoc perldebtut]({{<mcpan "distribution/perl/pod/perldebtut.pod" >}})
 
-[perldoc perldebug](https://metacpan.org/pod/distribution/perl/pod/perldebug.pod)
+[perldoc perldebug]({{<mcpan "distribution/perl/pod/perldebug.pod" >}})
 
 [Perl Debugger Quick Reference](/pub/2004/11/24/debugger_ref.html)

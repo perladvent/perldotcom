@@ -24,7 +24,7 @@
 
 ### Requirements
 
-You'll need Perl v5.12.3 or greater to install [Nginx::FastCGI::Cache](https://metacpan.org/pod/Nginx::FastCGI::Cache). The CPAN Testers [results](http://matrix.cpantesters.org/?dist=Nginx-FastCGI-Cache+0.008) show that it runs on most platforms including Windows. To install the module using CPAN, just open the terminal and type:
+You'll need Perl v5.12.3 or greater to install [Nginx::FastCGI::Cache]({{<mcpan "Nginx::FastCGI::Cache" >}}). The CPAN Testers [results](http://matrix.cpantesters.org/?dist=Nginx-FastCGI-Cache+0.008) show that it runs on most platforms including Windows. To install the module using CPAN, just open the terminal and type:
 
 ```perl
 $ cpan Nginx::FastCGI::Cache
@@ -45,7 +45,7 @@ A GET request for "http://perltricks.com/" would have a key of "httpGETperltrick
 
 ### Introducing Nginx::FastCGI::Cache
 
-I wrote [Nginx::FastCGI::Cache](https://metacpan.org/pod/Nginx::FastCGI::Cache) to make it easy to purge individually cached fastcgi responses from the nginx cache. For example:
+I wrote [Nginx::FastCGI::Cache]({{<mcpan "Nginx::FastCGI::Cache" >}}) to make it easy to purge individually cached fastcgi responses from the nginx cache. For example:
 
 ```perl
 use Nginx::FastCGI::Cache;
@@ -96,7 +96,7 @@ The nginx [documentation](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.
 
 ### Conclusion
 
-Whether you are using Catalyst, Dancer or Mojolicious, setting the appropriate caching headers is easy (see [part 1](http://perltricks.com/article/76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx-part-1)). Consider using [Nginx::FastCGI::Cache](https://metacpan.org/pod/Nginx::FastCGI::Cache) with nginx to conveniently purge the cache on demand.
+Whether you are using Catalyst, Dancer or Mojolicious, setting the appropriate caching headers is easy (see [part 1](http://perltricks.com/article/76/2014/3/11/Simple-web-framework-FastCGI-caching-with-nginx-part-1)). Consider using [Nginx::FastCGI::Cache]({{<mcpan "Nginx::FastCGI::Cache" >}}) with nginx to conveniently purge the cache on demand.
 
 Enjoyed this article? Help us out and [retweet](https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F77%2F2014%2F3%2F16%2FSimple-web-framework-FastCGI-caching-with-nginx-part-2&text=Simple+web+framework+FastCGI+caching+with+nginx+-+part+2&tw_p=tweetbutton&url=http%3A%2F%2Fperltricks.com%2Farticle%2F77%2F2014%2F3%2F16%2FSimple-web-framework-FastCGI-caching-with-nginx-part-2&via=perltricks) it!
 

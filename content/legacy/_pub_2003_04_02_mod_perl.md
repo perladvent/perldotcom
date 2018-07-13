@@ -325,16 +325,16 @@ The following snapshots show an example of the report about one mod\_perl proces
 
 -   `Time::HiRes`
 
-    <https://metacpan.org/pod/Time::HiRes>
-
+    <{{<mcpan "Time::HiRes>
+" >}}
 -   `Apache::Scoreboard`
 
-    <https://metacpan.org/pod/Apache::Scoreboard>
-
+    <{{<mcpan "Apache::Scoreboard>
+" >}}
 -   `GTop`
 
-    <https://metacpan.org/pod/GTop>
-
+    <{{<mcpan "GTop>
+" >}}
     `GTop` relies in turn on libgtop library not available for all platforms
 
 

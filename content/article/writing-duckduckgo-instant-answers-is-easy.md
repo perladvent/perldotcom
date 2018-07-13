@@ -27,7 +27,7 @@ A few weeks ago, I attended NYC [Quack & Hack](http://duckduckgo.ticketleap.com/
 
 DuckDuckGo support several different types of instant answers, but today I'm going to focus on creating a cheatsheet, which is displayed by the search engine whenever a user searches for a matching set of keywords.
 
-To get going you'll need Perl 5.18 or higher and have installed [App::DuckPAN](https://metacpan.org/pod/App::duckpan), which you can do with `cpan` or `cpanminus`:
+To get going you'll need Perl 5.18 or higher and have installed [App::DuckPAN]({{<mcpan "App::duckpan" >}}), which you can do with `cpan` or `cpanminus`:
 
 ```perl
 $ cpan App::DuckPAN

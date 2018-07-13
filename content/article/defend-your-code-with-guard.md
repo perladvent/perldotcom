@@ -17,7 +17,7 @@
 }
 
 
-I can't always trust my subroutines to leave the world in the same way that they found it. Perl has some features to help with this, but the [Guard](https://metacpan.org/pod/Guard) module goes much further.
+I can't always trust my subroutines to leave the world in the same way that they found it. Perl has some features to help with this, but the [Guard]({{<mcpan "Guard" >}}) module goes much further.
 
 Consider the case where I want to change the current working directory temporarily in my subroutine. If I'm not careful, the rest of the ends up in an unexpected directory since `chdir` has process-level effect:
 
@@ -32,7 +32,7 @@ sub do_some_work {
 
 Since I don't change back to the starting directory, after I call `do_some_work`, the rest of the program uses `/usr/local/etc` as the base to resolve relative paths.
 
-If I were careful, I would have done the work to save the current working directory before I changed it, and I would have changed back to that directory. The `getcw` from the [Cwd](https://metacpan.org/pod/Cwd) module from the Standard Library:
+If I were careful, I would have done the work to save the current working directory before I changed it, and I would have changed back to that directory. The `getcw` from the [Cwd]({{<mcpan "Cwd" >}}) module from the Standard Library:
 
 ```perl
 use Cwd qw(getcwd);
@@ -56,7 +56,7 @@ That's too much work. I have long wished that the `chdir` would return the old d
 
 I also have to call another `chdir` when I'm done, and I probably have to add some extra code to return the right value since I can't easily organize the code to use Perl's nifty last-evaluated-expression idiom (although Perl 5.20 optimizes [return at the end of a subroutine](http://www.effectiveperlprogramming.com/2014/06/perl-5-20-optimizes-return-at-the-end-of-a-subroutine/)). It offends my sense of code style that the two `chdir`s are apart from each other when I want to keep the logical parts close to each other. I'd like all of the code to handle the current working directory next to each other.
 
-Enter the [Guard](https://metacpan.org/pod/Guard) module that lets me define blocks of code that run at the end of the subroutine. Somewhere in the scope I create a guard with `scope_guard` and that guard runs at scope exit:
+Enter the [Guard]({{<mcpan "Guard" >}}) module that lets me define blocks of code that run at the end of the subroutine. Somewhere in the scope I create a guard with `scope_guard` and that guard runs at scope exit:
 
 ```perl
 use v5.10;

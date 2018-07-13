@@ -37,7 +37,7 @@ Windows has many libraries that help you automate such things, but do the applic
 
 ### What You Need
 
-You need a working installation of Perl, with Perl/Tk included. I recommend [ActiveState](http://www.activestate.com/)'s ActivePerl. You also need the [Win32::GuiTest](https://metacpan.org/pod/Win32::GuiTest/) module. Install it from the CPAN or, ideally, through PPM.
+You need a working installation of Perl, with Perl/Tk included. I recommend [ActiveState](http://www.activestate.com/)'s ActivePerl. You also need the [Win32::GuiTest]({{<mcpan "Win32::GuiTest/" >}}) module. Install it from the CPAN or, ideally, through PPM.
 
 ### Example Code
 
@@ -275,8 +275,8 @@ It can be simpler to create a wrapper around these three functions in order to m
 
 Here are some links you may find useful.
 
--   [Win32::GuiTest documentation](https://metacpan.org/pod/Win32::GuiTest)
--   [Win32::GuiTest::Examples](https://metacpan.org/pod/Win32::GuiTest::Examples)
+-   [Win32::GuiTest documentation]({{<mcpan "Win32::GuiTest" >}})
+-   [Win32::GuiTest::Examples]({{<mcpan "Win32::GuiTest::Examples" >}})
 -   The [PerlGuiTest group](http://groups.yahoo.com/group/perlguitest/) on Yahoo; this is quite an active group.
 -   [Win32::GuiTest extended tutorial](http://www.piotrkaluski.com/files/winguitest/docs/index.html)
 

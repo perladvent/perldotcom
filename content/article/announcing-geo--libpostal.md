@@ -16,7 +16,7 @@
    "image" : "/images/announcing-geo--libpostal/openstreetmap-small.png"
 }
 
-[libpostal](https://github.com/openvenues/libpostal) is a C library for normalizing and parsing international street addresses. It's built from [OpenStreetMap](http://www.openstreetmap.org/) data, supports normalization in over 60 languages and can parse addresses from over 100 countries. It's blindingly fast and now you can use it with Perl using [Geo::libpostal](https://metacpan.org/pod/Geo::libpostal), a new module I wrote.
+[libpostal](https://github.com/openvenues/libpostal) is a C library for normalizing and parsing international street addresses. It's built from [OpenStreetMap](http://www.openstreetmap.org/) data, supports normalization in over 60 languages and can parse addresses from over 100 countries. It's blindingly fast and now you can use it with Perl using [Geo::libpostal]({{<mcpan "Geo::libpostal" >}}), a new module I wrote.
 
 ### Normalizing an address
 
@@ -42,7 +42,7 @@ for my $address (@new_variants) {
 }
 ```
 
-`expand_address()` supports a ton of [options](https://metacpan.org/pod/Geo::libpostal#expand_address): including returning results in multiple languages, expanding only certain components of an address, and the format of the expanded addresses.
+`expand_address()` supports a ton of [options]({{<mcpan "Geo::libpostal#expand_address" >}}): including returning results in multiple languages, expanding only certain components of an address, and the format of the expanded addresses.
 
 
 ### Parsing an address
@@ -83,7 +83,7 @@ Similarly, libpostal has teardown functions which unload the lookup tables. Geo:
 
 * [libpostal](https://github.com/openvenues/libpostal) is hosted on GitHub and maintained by [Al Barrentine](http://iam.al/)
 * This [blog post](https://medium.com/@albarrentine/statistical-nlp-on-openstreetmap-b9d573e6cc86#.5cbxb54w5) by Al Barrentine is an in-depth introduction to libpostal
-* [Geo::libpostal](https://metacpan.org/pod/Geo::libpostal) is hosted on [GitHub](https://github.com/dnmfarrell/Geo-libpostal), pull requests welcome!
+* [Geo::libpostal]({{<mcpan "Geo::libpostal" >}}) is hosted on [GitHub](https://github.com/dnmfarrell/Geo-libpostal), pull requests welcome!
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

@@ -82,14 +82,14 @@ The one other recommendation I make is that you [specify `--no-locale` or `--loc
 If you want encrypted communications between Bricolage and its clients, install either `mod_ssl` or `apache-ssl`. SSL is optional in Bricolage, but I recommend using it for security purposes. Bricolage can use SSL for all requests or just for authentication and password changing requests. Tune in for the next article in this series, “Bricolage Runtime Configuration”, for information on configuring SSL support.
 
 Expat
-Bricolage uses the [XML::Parser](https://metacpan.org/pod/XML::Parser) Perl module, which in turn requires the Expat XML parser library. Most Unix systems have a version of Expat installed already, but if you need it, install it from the [Expat home page](https://libexpat.github.io "The Expat XML Parser").
+Bricolage uses the [XML::Parser]({{<mcpan "XML::Parser" >}}) Perl module, which in turn requires the Expat XML parser library. Most Unix systems have a version of Expat installed already, but if you need it, install it from the [Expat home page](https://libexpat.github.io "The Expat XML Parser").
 
 CPAN Modules
-Bricolage uses a very large number of CPAN modules. Most of those required in turn require still more modules. For the most part, we recommend that you let the Bricolage installer install the required modules. It will determine which modules you need and install them using the `CPAN` module. If you want to get ahead of the game, use the `CPAN` module to install them yourself, first. The easiest way to do it is to install [Bundle::Bricolage](https://metacpan.org/pod/Bundle::Bricolage/). This module bundles up all of the required modules so that `CPAN` will install them for you:
+Bricolage uses a very large number of CPAN modules. Most of those required in turn require still more modules. For the most part, we recommend that you let the Bricolage installer install the required modules. It will determine which modules you need and install them using the `CPAN` module. If you want to get ahead of the game, use the `CPAN` module to install them yourself, first. The easiest way to do it is to install [Bundle::Bricolage]({{<mcpan "Bundle::Bricolage/" >}}). This module bundles up all of the required modules so that `CPAN` will install them for you:
 
     % perl -MCPAN -e 'install Bundle::Bricolage'
 
-There are also several optional modules. Install these all in one command by using the [Bundle::BricolagePlus](https://metacpan.org/pod/Bundle::BricolagePlus/ "Bundle::BricolagePlus on CPAN") module:
+There are also several optional modules. Install these all in one command by using the [Bundle::BricolagePlus]({{<mcpan "Bundle::BricolagePlus/ "Bundle::BricolagePlus on CPAN"" >}}) module:
 
     % perl -MCPAN -e 'install Bundle::BricolagePlus'
 
@@ -194,7 +194,7 @@ As I said, Bricolage requires quite a few Perl modules, so I'm truncating the li
     Do you want to install the optional module XML::DOM? [no] [Return]
     Looking for CGI...found.
 
-In this example, I've elected to install the [Text::Levenshtein](https://metacpan.org/pod/Text::Levenshtein) module, but no other optional modules not already installed.
+In this example, I've elected to install the [Text::Levenshtein]({{<mcpan "Text::Levenshtein" >}}) module, but no other optional modules not already installed.
 
 #### Optional Perl Modules
 

@@ -22,14 +22,14 @@ As you've already seen, [Unicode-aware sorting](/pub/2012/06/perlunicook-unicode
 
 The world is a complicated place. Some locales have their own special sorting rules.
 
-The module [Unicode::Collate::Locale](https://metacpan.org/pod/Unicode::Collate::Locale) provides a `sort()` method which supports locale-specific rules:
+The module [Unicode::Collate::Locale]({{<mcpan "Unicode::Collate::Locale" >}}) provides a `sort()` method which supports locale-specific rules:
 
      use Unicode::Collate::Locale;
 
      my $col  = Unicode::Collate::Locale->new(locale => "de__phonebook");
      my @list = $col->sort(@old_list);
 
-This module is part of the Perl 5 core distribution as of Perl 5.12. If you're using an older version of Perl, install the [Unicode::Collate](https://metacpan.org/pod/Unicode::Collate) distribution to take advantage of it.
+This module is part of the Perl 5 core distribution as of Perl 5.12. If you're using an older version of Perl, install the [Unicode::Collate]({{<mcpan "Unicode::Collate" >}}) distribution to take advantage of it.
 
 The *ucsort* program mentioned in [Perl Unicode recipe 35](/pub/2012/06/perlunicook-unicode-collation.html) accepts a `--locale` parameter.
 

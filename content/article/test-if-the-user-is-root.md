@@ -39,7 +39,7 @@ if ($<) {
 }
 ```
 
-In Windows the user id variable is always set to zero and is of limited use. However the Perl [Win32](https://metacpan.org/module/Win32) module has the Win32::IsAdminUser() method that can be used instead of $\<, like this:
+In Windows the user id variable is always set to zero and is of limited use. However the Perl [Win32]({{<mcpan "Win32" >}}) module has the Win32::IsAdminUser() method that can be used instead of $\<, like this:
 
 ```perl
 use Win32;

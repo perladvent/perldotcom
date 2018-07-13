@@ -17,7 +17,7 @@
 }
 
 
-Perl can read and write gzipped streams through its IO layers. [Nicholas Clark](https://metacpan.org/author/NWCLARK) recently updated [PerlIO::gzip](https://metacpan.org/pod/PerlIO::gzip) (with patches from [Zefram](https://metacpan.org/author/ZEFRAM)), after nine years since the last release. Now it works with Perl v5.20 and the upcoming v5.22, although it still has problems on Windows. But as we are used to, there is more then one way to do it.
+Perl can read and write gzipped streams through its IO layers. [Nicholas Clark](https://metacpan.org/author/NWCLARK) recently updated [PerlIO::gzip]({{<mcpan "PerlIO::gzip" >}}) (with patches from [Zefram](https://metacpan.org/author/ZEFRAM)), after nine years since the last release. Now it works with Perl v5.20 and the upcoming v5.22, although it still has problems on Windows. But as we are used to, there is more then one way to do it.
 
 ### The pipe way
 
@@ -77,7 +77,7 @@ while( read( $fh, $buffer, 1024 ) ) {
     }
 ```
 
-If I can't use the I/O layers, perhaps because the operating system does not support it or it's broken on my version of Perl, I can use the [IO::Compress](http://www.metacpan.org/pod/IO::Compress) modules instead. This example uses its object interface to create the write filehandle:
+If I can't use the I/O layers, perhaps because the operating system does not support it or it's broken on my version of Perl, I can use the [IO::Compress]({{<mcpan "IO::Compress" >}}) modules instead. This example uses its object interface to create the write filehandle:
 
 ```perl
 use IO::Compress::Gunzip;
@@ -105,7 +105,7 @@ while(  ) {
     }
 ```
 
-And this one uses [IO::Compress::Gzip](http://www.metacpan.org/pod/IO::Compress::Gzip):
+And this one uses [IO::Compress::Gzip]({{<mcpan "IO::Compress::Gzip" >}}):
 
 ```perl
 use IO::Compress::Gzip;
@@ -120,7 +120,7 @@ while(  ) {
 
 ### An advanced tip
 
-I can read multiple streams of gzipped data with a single filehandle. The `MultiStream` option in [IO::Compress::Gunzip](http://www.metacpan.org/pod/IO::Compress::Gunzip) allows the decompressor to reset itself when it thinks it has detected a new stream and continue to provide output:
+I can read multiple streams of gzipped data with a single filehandle. The `MultiStream` option in [IO::Compress::Gunzip]({{<mcpan "IO::Compress::Gunzip" >}}) allows the decompressor to reset itself when it thinks it has detected a new stream and continue to provide output:
 
 ```perl
 use IO::Uncompress::Gunzip qw($GunzipError);

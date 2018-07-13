@@ -30,7 +30,7 @@ $ perlbrew switch perl-5.19.9
 
 Or you can download and build Perl v5.19.9 from [cpan.org](http://www.cpan.org/src/README.html).
 
-Once 5.19.9 is installed, you'll need the [experimental](https://metacpan.org/pod/experimental) distribution. Install it via cpan at the command line:
+Once 5.19.9 is installed, you'll need the [experimental]({{<mcpan "experimental" >}}) distribution. Install it via cpan at the command line:
 
 ```perl
 $ cpan experimental
@@ -135,7 +135,7 @@ sub fine_code ($arg1, $arg2, arg3){
 
 ### Further enhancements are coming
 
-The native subroutine signatures implementation is a minimalist one compared to the feature-full [Method::Signatures](https://metacpan.org/pod/Method::Signatures) module. Peter Martini the main sponsor of Perl's native subroutine signatures, has confirmed plans to add type checking, aliases, read-only copies, and named parameters in the future. He expects each of these features to bring speed improvements too.
+The native subroutine signatures implementation is a minimalist one compared to the feature-full [Method::Signatures]({{<mcpan "Method::Signatures" >}}) module. Peter Martini the main sponsor of Perl's native subroutine signatures, has confirmed plans to add type checking, aliases, read-only copies, and named parameters in the future. He expects each of these features to bring speed improvements too.
 
 ### Revisiting an old Python and Perl comparison
 

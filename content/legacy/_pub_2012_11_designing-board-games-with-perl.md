@@ -39,7 +39,7 @@ My Lacuna-based board game will be a tile placement game where all the players w
 Let's Get To The Perl Already!
 ------------------------------
 
-There are several great image manipulation libraries on the CPAN, but my personal favorite is [Image::Magick](https://metacpan.org/pod/Image::Magic). I started by creating a base image which I could manipulate in any way that I wanted. (I based my choice off of [The Game Crafter's list of component sizes and prices](https://www.thegamecrafter.com/publish/pricing).) I decided to use [mini cards](https://community.thegamecrafter.com/publish/templates/cards/mini-cards), because the table would fill up too quickly with full poker-sized cards; there'll be a lot of cards on the table!
+There are several great image manipulation libraries on the CPAN, but my personal favorite is [Image::Magick]({{<mcpan "Image::Magic" >}}). I started by creating a base image which I could manipulate in any way that I wanted. (I based my choice off of [The Game Crafter's list of component sizes and prices](https://www.thegamecrafter.com/publish/pricing).) I decided to use [mini cards](https://community.thegamecrafter.com/publish/templates/cards/mini-cards), because the table would fill up too quickly with full poker-sized cards; there'll be a lot of cards on the table!
 
      my $card = Image::Magick->new(size=>'600x825');
      say $card->ReadImage('canvas:white');

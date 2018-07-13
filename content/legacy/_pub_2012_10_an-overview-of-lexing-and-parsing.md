@@ -65,7 +65,7 @@ There are many situations where the only path to a solution requires a lexer and
 
                 <title>Short</title><p>Text</head><head>
 
-    See [Marpa::HTML](http://metacpan.org/module/Marpa::HTML) for more details. So far, I have used [Marpa::R2](http://metacpan.org/module/Marpa::R2) in all my work, which does not involve HTML.
+    See [Marpa::HTML]({{<mcpan "Marpa::HTML" >}}) for more details. So far, I have used [Marpa::R2]({{<mcpan "Marpa::R2" >}}) in all my work, which does not involve HTML.
 
 3.  Rendering an image, perhaps in SVG
 
@@ -95,9 +95,9 @@ There are many situations where the only path to a solution requires a lexer and
 
 4.  Rendering that same image, using a different language in the input file
 
-    Suppose that you decide that the Graphviz language is too complex, and hence you write a wrapper around it, so end users can code in a simplified version of that language. This actually happened, with the original effort available in the now-obsolete Perl module [Graph::Easy](http://metacpan.org/module/Graph::Easy). Tels, the author, devised his own very clever [little language](http://en.wikipedia.org/wiki/Little_languages), which he called [`Graph::Easy`](http://bloodgate.com/perl/graph/manual/).
+    Suppose that you decide that the Graphviz language is too complex, and hence you write a wrapper around it, so end users can code in a simplified version of that language. This actually happened, with the original effort available in the now-obsolete Perl module [Graph::Easy]({{<mcpan "Graph::Easy" >}}). Tels, the author, devised his own very clever [little language](http://en.wikipedia.org/wiki/Little_languages), which he called [`Graph::Easy`](http://bloodgate.com/perl/graph/manual/).
 
-    When I took over maintenance of [Graph::Easy](http://metacpan.org/module/Graph::Easy), I found the code too complex to read, let alone work on, so I wrote another implementation of the lexer and parser, released as [Graph::Easy::Marpa](http://metacpan.org/module/Graph::Easy::Marpa). I'll have much more to say about that in another article. For now, let's discuss the previous graph rewritten in `Graph::Easy` (*teamwork.easy*):
+    When I took over maintenance of [Graph::Easy]({{<mcpan "Graph::Easy" >}}), I found the code too complex to read, let alone work on, so I wrote another implementation of the lexer and parser, released as [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}}). I'll have much more to say about that in another article. For now, let's discuss the previous graph rewritten in `Graph::Easy` (*teamwork.easy*):
 
                 graph {rankdir: LR}
                 node {fontsize: 12pt; shape: rectangle; style: filled, solid}
@@ -106,7 +106,7 @@ There are many situations where the only path to a solution requires a lexer and
                 -> {label: is the key to}
                 [Victory]{fillcolor: red}
 
-    That's simpler for sure, but how does [Graph::Easy::Marpa](http://metacpan.org/module/Graph::Easy::Marpa) work? Easy: *lex*, *parse*, render. More samples of [Graph::Easy::Marpa](http://metacpan.org/module/Graph::Easy::Marpa)'s work are [my Graph::Easy::Marpa examples](http://savage.net.au/Perl-modules/html/graph.easy.marpa/index.html).
+    That's simpler for sure, but how does [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}}) work? Easy: *lex*, *parse*, render. More samples of [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}})'s work are [my Graph::Easy::Marpa examples](http://savage.net.au/Perl-modules/html/graph.easy.marpa/index.html).
 
 It should be clear by now that lexing and parsing are in fact widespread, although they often operate out of sight, with only their rendered output visible to the average programmer, user, or web surfer.
 
@@ -139,7 +139,7 @@ Even better, Marpa has a very simple syntax, once you get used to it, of course!
 
 Finally, Marpa is being improved all the time. For instance, recently the author eliminated the dependency on Glib, to improve portability. His work continues, so that users can expect a series of incremental improvements for some time to come.
 
-I myself use Marpa in [Graph::Easy::Marpa](http://metacpan.org/module/Graph::Easy::Marpa) and [GraphViz2::Marpa](http://metacpan.org/module/GraphViz2::Marpa), but this is not an article on Marpa in specific.
+I myself use Marpa in [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}}) and [GraphViz2::Marpa]({{<mcpan "GraphViz2::Marpa" >}}), but this is not an article on Marpa in specific.
 
 The Lexer's Job Description
 ===========================
@@ -164,7 +164,7 @@ In practice, I prefer to represent these elements as a hashref:
                     value => $value,   # The value from the input stream.
             }
 
-... with the array managed by an object of type [Set::Tiny](http://metacpan.org/module/Set::Tiny). The latter module has many nice methods, making it very suitable for such work. Up until recently I used [Set::Array](http://metacpan.org/module/Set::Array), which I did not write but which I do now maintain. However, insights from a recent report of mine, [Set-handling modules](http://savage.net.au/Perl-modules/html/setops.report.html), comparing a range of similar modules, has convinced me to switch to [Set::Tiny](http://metacpan.org/module/Set::Tiny). For an application which might best store its output in a tree, the Perl module [Tree::DAG\_Node](http://metacpan.org/module/Tree::DAG_Node) is superb.
+... with the array managed by an object of type [Set::Tiny]({{<mcpan "Set::Tiny" >}}). The latter module has many nice methods, making it very suitable for such work. Up until recently I used [Set::Array]({{<mcpan "Set::Array" >}}), which I did not write but which I do now maintain. However, insights from a recent report of mine, [Set-handling modules](http://savage.net.au/Perl-modules/html/setops.report.html), comparing a range of similar modules, has convinced me to switch to [Set::Tiny]({{<mcpan "Set::Tiny" >}}). For an application which might best store its output in a tree, the Perl module [Tree::DAG\_Node]({{<mcpan "Tree::DAG_Node" >}}) is superb.
 
 The `count` field, apparently redundant, is sometimes useful in the clean-up phase of the lexer, which may need to combine tokens unnecessarily split by the regexps used in lexing. Also, it is available to the parser if needed, so I always include it in the hashref.
 
@@ -221,7 +221,7 @@ A programmer can write a lexer in many ways. I do so by combining regexps with a
 
 What is a DFA? Abusing any reasonable definition, let me describe them thusly. The *Deterministic* part means that given the same input at the same stage, you'll always get the same result. The *Finite* part means the input stream only contains a limited number of different tokens, which simplifies the code. The *Automata* is, essentially, a software machine—a program. DFAs are also often called STTs (State Transition Tables).
 
-How do you make this all work in Perl? [MetaCPAN](https://metacpan.org/) is your friend! In particular, I like to use [Set::FA::Element](http://metacpan.org/module/Set::FA::Element) to drive the process. For candidate alternatives I assembled a list of Perl modules with relevance in the area, while cleaning up the docs for `Set::FA`. See [Alternatives to Set::FA](https://metacpan.org/module/Set::FA#See-Also). I did not write [Set::FA](http://metacpan.org/module/Set::FA), nor [Set::FA::Element](http://metacpan.org/module/Set::FA::Element), but I now maintain them.
+How do you make this all work in Perl? [MetaCPAN](https://metacpan.org/) is your friend! In particular, I like to use [Set::FA::Element]({{<mcpan "Set::FA::Element" >}}) to drive the process. For candidate alternatives I assembled a list of Perl modules with relevance in the area, while cleaning up the docs for `Set::FA`. See [Alternatives to Set::FA]({{<mcpan "Set::FA#See-Also" >}}). I did not write [Set::FA]({{<mcpan "Set::FA" >}}), nor [Set::FA::Element]({{<mcpan "Set::FA::Element" >}}), but I now maintain them.
 
 Transforming a grammar from BNF (or whatever form you use) into a DFA provides:
 
@@ -260,7 +260,7 @@ The implication is this: you must associate each regexp with a specific state an
 Sample Lexer Code
 =================
 
-Consider this simplistic code from the synopsis of [Set::FA::Element](http://metacpan.org/module/Set::FA::Element):
+Consider this simplistic code from the synopsis of [Set::FA::Element]({{<mcpan "Set::FA::Element" >}}):
 
             my($dfa) = Set::FA::Element -> new
             (
@@ -279,9 +279,9 @@ Consider this simplistic code from the synopsis of [Set::FA::Element](http://met
 
 In the *transitions* parameter the first line says: "foo" is a state's name, and "b" is a regexp. Jump to state "bar" if the next input char matches that regexp. Other lines are similar.
 
-To use [Set::FA::Element](http://metacpan.org/module/Set::FA::Element), you must prepare that transitions parameter matching this format. Now you see the need for states and regexps.
+To use [Set::FA::Element]({{<mcpan "Set::FA::Element" >}}), you must prepare that transitions parameter matching this format. Now you see the need for states and regexps.
 
-This is code I've used, taken directly from [GraphViz2::Marpa::Lexer::DFA](http://metacpan.org/module/GraphViz2::Marpa::Lexer::DFA):
+This is code I've used, taken directly from [GraphViz2::Marpa::Lexer::DFA]({{<mcpan "GraphViz2::Marpa::Lexer::DFA" >}}):
 
             Set::FA::Element -> new
             (
@@ -326,7 +326,7 @@ With all of that configured, the next problem is how to prepare the grammar in s
 Coding the Lexer - Revisited
 ============================
 
-The coder thus needs to develop regexps etc which can be fed directly into the chosen DFA, here [Set::FA::Element](http://metacpan.org/module/Set::FA::Element), or which can be transformed somehow into a format acceptable to that module. So far I haven't actually said how I do that, but now it's time to be explicit.
+The coder thus needs to develop regexps etc which can be fed directly into the chosen DFA, here [Set::FA::Element]({{<mcpan "Set::FA::Element" >}}), or which can be transformed somehow into a format acceptable to that module. So far I haven't actually said how I do that, but now it's time to be explicit.
 
 I use a spreadsheet with nine columns:
 
@@ -369,25 +369,25 @@ This spreadsheet has various advantages:
 
 *Exportability.* Because I have no code yet, there are several possibilities. I could read the spreadsheet directly. The two problems with this approach are the complexity of the code (in the external module which does the reading of course), and the slowness of loading and running this code.
 
-Because I use [LibreOffice](http://www.libreoffice.org/) I can either force end-users to install [OpenOffice::OODoc](http://metacpan.org/module/OpenOffice::OODoc), or export the spreadsheet as an Excel file, in order to avail themselves of this option. I have chosen to not support reading the*.ods* file directly in the modules ([Graph::Easy::Marpa](http://metacpan.org/module/Graph::Easy::Marpa) and [GraphViz2::Marpa](http://metacpan.org/module/GraphViz2::Marpa)) I ship.
+Because I use [LibreOffice](http://www.libreoffice.org/) I can either force end-users to install [OpenOffice::OODoc]({{<mcpan "OpenOffice::OODoc" >}}), or export the spreadsheet as an Excel file, in order to avail themselves of this option. I have chosen to not support reading the*.ods* file directly in the modules ([Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}}) and [GraphViz2::Marpa]({{<mcpan "GraphViz2::Marpa" >}})) I ship.
 
 I could alternately export the spreadsheet to a CSV file first. This way, we can read a CSV file into the DFA fairly quickly, without loading the module which reads spreadsheets.
 Be careful here with LibreOffice, because it forces you to use Unicode for the spreadsheet but exports odd character sequences, such as double-quotes as the three byte sequence 0xe2, 0x80, 0x9c. When used in a regexp, this sequence will never match a *real* double-quote in your input stream. Sigh. Do No Evil. If only.
 
 I could also incorporate the spreadsheet directly into my code. This is my favorite approach. I do this in two stages. I export my data to a CSV file, then append that file to the end of the source code of the module, after the `__DATA__` token.
 
-Such in-line data can be accessed effortlessly by the very neat and very fast module [Data::Section::Simple](http://metacpan.org/module/Data::Section::Simple). Because Perl has already loaded the module—and is executing it—there is essentially no overhead whatsoever in reading data from within it. Don't you just love Perl! And MetaCPAN of course. And a community which contributes such wondrous code.
+Such in-line data can be accessed effortlessly by the very neat and very fast module [Data::Section::Simple]({{<mcpan "Data::Section::Simple" >}}). Because Perl has already loaded the module—and is executing it—there is essentially no overhead whatsoever in reading data from within it. Don't you just love Perl! And MetaCPAN of course. And a community which contributes such wondrous code.
 
 An advantage of this alternative is that it allows end users to edit the shipped *.csv* or *.ods* files, after which they can use a command line option on scripts to read their own file, overriding the built-in STT.
 
-After all this, it's just a matter of code to read and validate the structure of the STT's data, then to reformat it into what [Set::FA::Element](http://metacpan.org/module/Set::FA::Element) demands.
+After all this, it's just a matter of code to read and validate the structure of the STT's data, then to reformat it into what [Set::FA::Element]({{<mcpan "Set::FA::Element" >}}) demands.
 
 Coding the Parser
 =================
 
 At this point, you know how to incorporate the first sub-grammar into the design and code of the lexer. You also know that the second sub-grammar must be encoded into the parser, for that's how the parser performs syntax checking.
 
-How you do this depends intimately on which pre-existing module, if any, you choose to use to aid the development of the parser. Because I choose Marpa (currently [Marpa::R2](http://metacpan.org/module/Marpa::R2)), I am orienting this article to that module. However, only in the next article will I deal in depth with Marpa.
+How you do this depends intimately on which pre-existing module, if any, you choose to use to aid the development of the parser. Because I choose Marpa (currently [Marpa::R2]({{<mcpan "Marpa::R2" >}})), I am orienting this article to that module. However, only in the next article will I deal in depth with Marpa.
 
 Whichever tool you choose, think of the parsing process like this: Your input stream is a set of pre-defined tokens (probably but necessarily output from the lexer). You must now specify all possible legal combinations of those tokens. This is the *syntax* of the language (or, more accurately, the *remainder* of the syntax, because the first sub-grammar has already handled all of the definitions of legal tokens). At this point, assume all incoming tokens are legal. In other words, the parser will not try to parse and run a program containing token-based syntax errors, although it may contain logic errors (even if written in Perl :-).
 
@@ -548,14 +548,14 @@ Something Fascinating about Rule Descriptors
 
 Take another look at those rule descriptors. They say *nothing* about the values of the tokens! For instance, in *graph\_id =&gt; Perl* what happens to ids such as *Perl*. Nothing. They are ignored. That's just how these grammars work.
 
-Recall: it's the job of the *lexer* to identify valid graph ids based on the first sub-grammar. By the time the data hits the parser, we know we have a valid graph id, and as long as it plugs in to the *structure* of the grammar in the right place, we are prepared to accept *any valid* graph id. Hence [Marpa::R2](http://metacpan.org/module/Marpa::R2) does not even look at the graph id, which is a way of saying this one grammar works with *every* valid graph id.
+Recall: it's the job of the *lexer* to identify valid graph ids based on the first sub-grammar. By the time the data hits the parser, we know we have a valid graph id, and as long as it plugs in to the *structure* of the grammar in the right place, we are prepared to accept *any valid* graph id. Hence [Marpa::R2]({{<mcpan "Marpa::R2" >}}) does not even look at the graph id, which is a way of saying this one grammar works with *every* valid graph id.
 
 This point also raises the tricky discussion of whether a specific implementation of lexer/parser code can or must keep the two phases separate, or whether in fact you can roll them into one without falling into the premature optimisation trap. I'll just draw a veil over that discussion, as I've already declared my stance: my implementation uses two separate modules.
 
 Chains and Trees
 ================
 
-If these rules have to be chained into a tree, how do you handle the root? Consider this call to [Marpa::R2](http://metacpan.org/module/Marpa::R2)'s `new()` method:
+If these rules have to be chained into a tree, how do you handle the root? Consider this call to [Marpa::R2]({{<mcpan "Marpa::R2" >}})'s `new()` method:
 
             my($grammar) = Marpa::R2::Grammar -> new(... start => 'graph_grammar', ...);
 
@@ -563,7 +563,7 @@ If these rules have to be chained into a tree, how do you handle the root? Consi
 
 After that, every rule's *rhs*, including the root's, must be defined later in the list of rule descriptors. These definitions form the links in the chain. If you draw this, you'll see the end result is a tree.
 
-Here's the full [Marpa::R2](http://metacpan.org/module/Marpa::R2) grammar for DOT (as used in the [GraphViz2::Marpa](http://metacpan.org/module/GraphViz2::Marpa) module) as an image: <http://savage.net.au/Ron/html/graphviz2.marpa/Marpa.Grammar.svg>. I created this image with (you guessed it!) [Graphviz](http://www.graphviz.org/) via [GraphViz2](http://metacpan.org/module/GraphViz2). I've added numbers to node names in the tree, otherwise Graphviz would regard any two identical numberless names as one and the same node.
+Here's the full [Marpa::R2]({{<mcpan "Marpa::R2" >}}) grammar for DOT (as used in the [GraphViz2::Marpa]({{<mcpan "GraphViz2::Marpa" >}}) module) as an image: <http://savage.net.au/Ron/html/graphviz2.marpa/Marpa.Grammar.svg>. I created this image with (you guessed it!) [Graphviz](http://www.graphviz.org/) via [GraphViz2]({{<mcpan "GraphViz2" >}}). I've added numbers to node names in the tree, otherwise Graphviz would regard any two identical numberless names as one and the same node.
 
 Less Coding, More Design
 ========================
@@ -618,7 +618,7 @@ Don't Reinvent the Wheel
 
 Yes, I know *you'd* never do that.
 
-The CPAN has plenty of Perl modules to help with things like the STT, such as [Set::FA::Element](http://metacpan.org/module/Set::FA::Element). Check its See Also (in [Set::FA](http://metacpan.org/module/Set::FA), actually) for other STT helpers.
+The CPAN has plenty of Perl modules to help with things like the STT, such as [Set::FA::Element]({{<mcpan "Set::FA::Element" >}}). Check its See Also (in [Set::FA]({{<mcpan "Set::FA" >}}), actually) for other STT helpers.
 
 Be Patient with the STT
 -----------------------
@@ -639,7 +639,7 @@ Developing the STT takes many iterations:
 
     I keep the test data files in the data/ dir, and the scripts in the scripts/ dir. Then, creating tests in the t/ dir can perhaps use these two sets of helpers.
 
-    Because I've only used [Marpa::R2](http://metacpan.org/module/Marpa::R2) for graphical work, the output of the wrapper is a web page, which makes viewing the results simple. I like to include (short) input or output text files on such a page, beside the SVG images. That way I can see at a glance what the input was and hence I can tell what the output should be without switching to the editor's window.
+    Because I've only used [Marpa::R2]({{<mcpan "Marpa::R2" >}}) for graphical work, the output of the wrapper is a web page, which makes viewing the results simple. I like to include (short) input or output text files on such a page, beside the SVG images. That way I can see at a glance what the input was and hence I can tell what the output should be without switching to the editor's window.
 
     There's a little bit of effort initially, but after that it's *so* easy to check the output of the latest test.
 
@@ -666,7 +666,7 @@ Tips:
 
     This refers to when one of several tokens can appear in the input stream. Learn exactly how to draw that without trying to minimize the number of branches in the tree.
 
-    Of course, you will still need to learn how to code such a construct. Here's a bit of code from [Graph::Easy::Marpa](http://metacpan.org/module/Graph::Easy::Marpa) which deals with this (note: we're back to the `Graph::Easy` language from here on!):
+    Of course, you will still need to learn how to code such a construct. Here's a bit of code from [Graph::Easy::Marpa]({{<mcpan "Graph::Easy::Marpa" >}}) which deals with this (note: we're back to the `Graph::Easy` language from here on!):
 
                 {   # Graph stuff.
                         lhs => 'graph_definition',
@@ -685,7 +685,7 @@ Tips:
                         rhs => [qw/edge_definition/],
                 },
 
-    This is telling you that a graph thingy can be any one of a group, node, or edge. It's [Marpa::R2](http://metacpan.org/module/Marpa::R2)'s job to try these alternatives in order to see which (if any) matches the input stream. This ruleset represents a point in the input stream where one of several *alternatives* can appear.
+    This is telling you that a graph thingy can be any one of a group, node, or edge. It's [Marpa::R2]({{<mcpan "Marpa::R2" >}})'s job to try these alternatives in order to see which (if any) matches the input stream. This ruleset represents a point in the input stream where one of several *alternatives* can appear.
 
     The tree looks like:
 

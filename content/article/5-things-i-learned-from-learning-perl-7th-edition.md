@@ -95,7 +95,7 @@ In this example, you can just see that the 7th bit is flipped, and the intent of
 
 ### 4. Check an installed module is up to date
 
-These days we have so many advanced Perl package installers like [cpanm](https://metacpan.org/pod/App::cpanminus) and [cpm](https://metacpan.org/pod/distribution/App-cpm/script/cpm) it's easy to forget that the basic CPAN client can do a lot too. For instance, the `-D` option checks the installed version of a module and compares it to the latest version on CPAN. So to check if the `Test::More` module is up to date, at the terminal I can enter:
+These days we have so many advanced Perl package installers like [cpanm]({{<mcpan "App::cpanminus" >}}) and [cpm]({{<mcpan "distribution/App-cpm/script/cpm" >}}) it's easy to forget that the basic CPAN client can do a lot too. For instance, the `-D` option checks the installed version of a module and compares it to the latest version on CPAN. So to check if the `Test::More` module is up to date, at the terminal I can enter:
 
     $ cpan -D Test::More
 

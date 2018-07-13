@@ -26,7 +26,7 @@ When I use the term "Perl Core" I mean the standard library of modules (distribu
 
 ### What modules are included in the Perl Core?
 
-Did you know that [HTTP::Tiny](http://metacpan.org/pod/HTTP::Tiny) has shipped with Perl since 2011 (version 5.14.0)? It's not listed on [perldoc](http://perldoc.perl.org) (although that is on the list to be fixed at the next [QA Hackathon](http://act.qa-hackathon.org/qa2016/)). Luckily there is a better solution: the `corelist` program. This is supplied with [Module::CoreList](https://metacpan.org/pod/Module::CoreList/). Let's see when Module::CoreList first shipped with Perl:
+Did you know that [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) has shipped with Perl since 2011 (version 5.14.0)? It's not listed on [perldoc](http://perldoc.perl.org) (although that is on the list to be fixed at the next [QA Hackathon](http://act.qa-hackathon.org/qa2016/)). Luckily there is a better solution: the `corelist` program. This is supplied with [Module::CoreList]({{<mcpan "Module::CoreList/" >}}). Let's see when Module::CoreList first shipped with Perl:
 
     $ corelist -a Module::CoreList
 
@@ -187,7 +187,7 @@ Ubuntu and OSX ship with Perl 5.18 so I looked for missing programs and modules 
 
 ### Conclusion
 
-When writing programs that use core Perl modules be careful, especially if you're using any of the modules or programs found to be missing earlier. One way around this is the use [App::FatPacker](https://metacpan.org/pod/App::FatPacker) to compile all the modules used into a single file. Another way would be to use [pp](https://metacpan.org/pod/pp) to create a compiled binary. Finally for modules like Time::Piece, you could always consider wrapping Perl's built-in functions like `gmtime` and `localtime` in subroutines that give the behavior you need, rather than using the module.
+When writing programs that use core Perl modules be careful, especially if you're using any of the modules or programs found to be missing earlier. One way around this is the use [App::FatPacker]({{<mcpan "App::FatPacker" >}}) to compile all the modules used into a single file. Another way would be to use [pp]({{<mcpan "pp" >}}) to create a compiled binary. Finally for modules like Time::Piece, you could always consider wrapping Perl's built-in functions like `gmtime` and `localtime` in subroutines that give the behavior you need, rather than using the module.
 
 Of course it's always easier to work with a locally-installed `perl` than the system version. The local Perls provided by [perlbrew](http://perlbrew.pl) and [plenv](https://github.com/tokuhirom/plenv) contain all the core modules and utilities. You can always [compile](http://perlmaven.com/how-to-build-perl-from-source-code) your own Perl too, it's easy. [Strawberry Perl](http://www.strawberryperl.com) for Windows even comes with some useful extra modules and C libraries. If you do have to rely on the system Perl, you may find a core module isn't there at all.
 

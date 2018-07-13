@@ -22,7 +22,7 @@
 
 The last part of Justin Searls' [talk](https://vimeo.com/165527044#t=28m10s) has some great advice for promoting Ruby that applies to Perl too. If you haven't seen it, I'd encourage you to watch it. Justin points out that some tech projects like Ruby on Rails are essentially, done. They're feature complete and achieve everything they set out to accomplish. This means that they're no longer cutting edge tech, and consequently fewer articles are written about them.
 
-We see this with Perl too. Modules like [Moose](https://metacpan.org/pod/Moose) and [Mojolicious](https://metacpan.org/pod/Mojolicious) are battle-tested, proven libraries that do a wonderful job. So we don't see many hype articles about them either. The solution to this is to focus on evergreen story telling:
+We see this with Perl too. Modules like [Moose]({{<mcpan "Moose" >}}) and [Mojolicious]({{<mcpan "Mojolicious" >}}) are battle-tested, proven libraries that do a wonderful job. So we don't see many hype articles about them either. The solution to this is to focus on evergreen story telling:
 
 > Tell stories that help people solve problems. And if you love Ruby, tell your story in Ruby.
 >

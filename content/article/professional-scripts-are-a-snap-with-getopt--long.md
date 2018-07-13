@@ -21,7 +21,7 @@ Scripts are practically Perl's raison d'être, and so naturally it has some grea
 
 ### Building a basic app
 
-Let's imagine I wanted to create a program for creating software licenses, like [App::Software::License](https://metacpan.org/pod/App::Software::License). The user will run the program and it will print the software license text, with the license text customized for the user. To do this, the program will need to process a few arguments from the user - a perfect use case for Getopt::Long! Let's start with the license holder's name:
+Let's imagine I wanted to create a program for creating software licenses, like [App::Software::License]({{<mcpan "App::Software::License" >}}). The user will run the program and it will print the software license text, with the license text customized for the user. To do this, the program will need to process a few arguments from the user - a perfect use case for Getopt::Long! Let's start with the license holder's name:
 
 ```perl
 #!/usr/bin/env perl
@@ -34,7 +34,7 @@ GetOptions(
 print "$holder_name\n";
 ```
 
-I start by importing [Getopt::Long](https://metacpan.org/pod/Getopt::Long), it's part of the core Perl distribution, so if you have Perl installed, you should already have it. The `GetOptions` function from Getopt::Long is where the magic happens. It takes a hash of parameter names and variable references which define the program's API. The string `holder=s` tells Getopt::Long to accept an argument like `--holder` and assign it to `$holder_name`. If we receive any arguments that are not defined in `GetOptions`, the code dies and prints out an exception message (terminating the exception message with a newline stops Perl from printing the line reference of the exception). The final line just prints out the value. I'll save the script as `license` and test it out:
+I start by importing [Getopt::Long]({{<mcpan "Getopt::Long" >}}), it's part of the core Perl distribution, so if you have Perl installed, you should already have it. The `GetOptions` function from Getopt::Long is where the magic happens. It takes a hash of parameter names and variable references which define the program's API. The string `holder=s` tells Getopt::Long to accept an argument like `--holder` and assign it to `$holder_name`. If we receive any arguments that are not defined in `GetOptions`, the code dies and prints out an exception message (terminating the exception message with a newline stops Perl from printing the line reference of the exception). The final line just prints out the value. I'll save the script as `license` and test it out:
 
 ```perl
 $ chmod a+x license
@@ -151,7 +151,7 @@ sub year_now
 print "$holder_name $year $type $fulltext\n";
 ```
 
-I've added the [Time::Piece](https://metacpan.org/pod/Time::Piece) module, which is a [useful](http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece) module for datetime handling, and a subroutine `year_now` which returns the current year. Meanwhile I've updated `GetOptions` to assign the current year to the `$year` variable. This will be overridden if the user passes the year argument. I've also given the license type the default value of "artistic 2.0" as that is the same license as Perl 5 (and the license used by many modules).
+I've added the [Time::Piece]({{<mcpan "Time::Piece" >}}) module, which is a [useful](http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece) module for datetime handling, and a subroutine `year_now` which returns the current year. Meanwhile I've updated `GetOptions` to assign the current year to the `$year` variable. This will be overridden if the user passes the year argument. I've also given the license type the default value of "artistic 2.0" as that is the same license as Perl 5 (and the license used by many modules).
 
 ### Mandatory parameters
 

@@ -21,11 +21,11 @@
 
 
 
-I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the [Java Community Process](https://www.jcp.org/en/home/index) (JCP), the [Content Repository API for Java](https://jcp.org/en/jsr/detail?id=170) (JCR), which is a hierarchical database standard for storing content. However, not wanting to let the skills in my favorite language waste away, I've been toying with similar technologies at home using Perl. I decided to make a direct port of the JCR to Perl and did so by making Perl use an existing Java implementation via [Inline::Java](https://metacpan.org/pod/Inline::Java). While I ran into some snags along the way, I was happily surprised to find the process of using Java classes from Perl was fabulously easy.
+I started a new job recently to refocus my career from systems administration to web development. Part of that move meant using Java as my primary language at work and using a relatively new technology from the [Java Community Process](https://www.jcp.org/en/home/index) (JCP), the [Content Repository API for Java](https://jcp.org/en/jsr/detail?id=170) (JCR), which is a hierarchical database standard for storing content. However, not wanting to let the skills in my favorite language waste away, I've been toying with similar technologies at home using Perl. I decided to make a direct port of the JCR to Perl and did so by making Perl use an existing Java implementation via [Inline::Java]({{<mcpan "Inline::Java" >}}). While I ran into some snags along the way, I was happily surprised to find the process of using Java classes from Perl was fabulously easy.
 
 ### Bringing the JCR to Perl
 
-The key to using JCR from Perl is `Inline::Java`. This library allows a Perl program to call Java methods with very little effort. For an introduction to Inline::Java, I suggest starting where I did, Phil Crow's 2003 [Bringing Java into Perl](/pub/2003/11/07/java.html) article on [Perl.com](https://www.Perl.com) about Inline::Java. I also relied heavily upon the documentation for [Inline::Java](https://metacpan.org/pod/Inline::Java), which is very complete, if not exhaustive.
+The key to using JCR from Perl is `Inline::Java`. This library allows a Perl program to call Java methods with very little effort. For an introduction to Inline::Java, I suggest starting where I did, Phil Crow's 2003 [Bringing Java into Perl](/pub/2003/11/07/java.html) article on [Perl.com](https://www.Perl.com) about Inline::Java. I also relied heavily upon the documentation for [Inline::Java]({{<mcpan "Inline::Java" >}}), which is very complete, if not exhaustive.
 
 To get started on using the JCR, I used the reference implementation, [Jackrabbit](http://jackrabbit.apache.org/jcr/index.html). I downloaded the Jackrabbit JAR file, along with all the prerequisites, which I found on the Jackrabbit website under [First Hops](http://jackrabbit.apache.org/jcr/getting-started-with-apache-jackrabbit.html). Then, I wrote a small script using `Inline::Java` to load the Java classes from Jackrabbit, create a repository, and then quit. I was able to take the First Hop with Jackrabbit in Perl as fast or faster than in Java:
 
@@ -80,7 +80,7 @@ To create the abstraction I desired, it quickly became apparent that I needed a 
 
 I first needed to discover the classes, methods, and fields to wrap. There are more than 50 classes, interfaces, and exceptions in the JCR specification--I'm too lazy to type all that. Furthermore, the JCR is currently under revision via [JSR 283](https://jcp.org/en/jsr/detail?id=283), I don't want to update the class list again later. Finally, I want my wrappers to handle each method specifically because the use of `AUTOLOAD()` is evil (sometimes useful, but still evil).
 
-I wrote a Java program to find all the classes in the JCR JAR file and write those class names out with additional information about methods, constructors, and fields. I used a [YAML](http://yaml.org/)-formatted file to store the information. I made heavy use of the [Java Reflection API](https://docs.oracle.com/javase/tutorial/reflect/index.html) to make this happen. You can see the full source of JCR package generator (_inc/JCRPackageGenerator.java_) in the [Java::JCR](https://metacpan.org/pod/Java::JCR) distribution. Here's one entry in the YAML JCR package output file (_inc/packages.yml_):
+I wrote a Java program to find all the classes in the JCR JAR file and write those class names out with additional information about methods, constructors, and fields. I used a [YAML](http://yaml.org/)-formatted file to store the information. I made heavy use of the [Java Reflection API](https://docs.oracle.com/javase/tutorial/reflect/index.html) to make this happen. You can see the full source of JCR package generator (_inc/JCRPackageGenerator.java_) in the [Java::JCR]({{<mcpan "Java::JCR" >}}) distribution. Here's one entry in the YAML JCR package output file (_inc/packages.yml_):
 
     javax.jcr.SimpleCredentials:
       isa:
@@ -217,7 +217,7 @@ Other than the custom pieces, I needed some additional helpers to get the job do
     use Java::JCR;
     use Java::JCR::Jackrabbit;
 
-I included a package loader in the main package, [Java::JCR](https://metacpan.org/pod/Java::JCR), that will take care of these details and then created a package for each of the subpackages in the JCR. The loader looks like:
+I included a package loader in the main package, [Java::JCR]({{<mcpan "Java::JCR" >}}), that will take care of these details and then created a package for each of the subpackages in the JCR. The loader looks like:
 
     sub import_my_packages {
         my ($package_name, $package_file) = caller;
@@ -243,7 +243,7 @@ I make sure to call that method once the package has finished loading and pass i
 
 ### Connecting to Jackrabbit
 
-Obviously, the next step was to create the code to connect to Jackrabbit. This was done in [Java::JCR::Jackrabbit](https://metacpan.org/pod/Java::JCR::Jackrabbit). The initial implementation is very simple:
+Obviously, the next step was to create the code to connect to Jackrabbit. This was done in [Java::JCR::Jackrabbit]({{<mcpan "Java::JCR::Jackrabbit" >}}). The initial implementation is very simple:
 
     use base qw( Java::JCR::Base Java::JCR::Repository );
 
@@ -264,7 +264,7 @@ Obviously, the next step was to create the code to connect to Jackrabbit. This w
         }, $class;
     }
 
-I extended [Java::JCR::Repository](https://metacpan.org/pod/Java::JCR::Repository) to add a constructor that calls the Jackrabbit constructor. Done.
+I extended [Java::JCR::Repository]({{<mcpan "Java::JCR::Repository" >}}) to add a constructor that calls the Jackrabbit constructor. Done.
 
 ### Handling Special Cases
 
@@ -359,9 +359,9 @@ The implementation is now, more or less, complete. You can use `Java::JCR` to co
 
     % cpan Java::JCR
 
-I needed a way to build this library. My preferred build tool is Ken Williams' [Module::Build](https://metacpan.org/pod/Module::Build). It's in common use, compatible with the CPAN installer, and cooperates well with *g-cpan.pl*, which is a packaging tool for my favorite Linux distribution, [Gentoo](https://www.gentoo.org/). Finally, it's easy to extend.
+I needed a way to build this library. My preferred build tool is Ken Williams' [Module::Build]({{<mcpan "Module::Build" >}}). It's in common use, compatible with the CPAN installer, and cooperates well with *g-cpan.pl*, which is a packaging tool for my favorite Linux distribution, [Gentoo](https://www.gentoo.org/). Finally, it's easy to extend.
 
-When customizing `Module::Build`, I prefer to create a custom build module rather than by placing the extension directly inline with the *Build.PL* file. In this case, I've called the module [Java::JCR::Build](https://metacpan.org/pod/Java::JCR::Build). I placed it inside a directory named *inc/* with the rest of the tools I built for generating the package.
+When customizing `Module::Build`, I prefer to create a custom build module rather than by placing the extension directly inline with the *Build.PL* file. In this case, I've called the module [Java::JCR::Build]({{<mcpan "Java::JCR::Build" >}}). I placed it inside a directory named *inc/* with the rest of the tools I built for generating the package.
 
 After creating the basic module that extends `Module::Build`, I added a custom action to fetch the JAR files called `get_jars`. I also added the code to execute this action on build by extending the `code` ACTION:
 
@@ -403,7 +403,7 @@ After creating the basic module that extends `Module::Build`, I added a custom a
         $self->SUPER::ACTION_code;
     }
 
-I use Gisle Aas's [LWP::UserAgent](https://metacpan.org/pod/LWP::UserAgent) to fetch the JAR files from the public Maven repositories and drop them into the build library folder, *blib*. `Module::Build` will take care of the rest by copying those JAR files to the appropriate location during the install process.
+I use Gisle Aas's [LWP::UserAgent]({{<mcpan "LWP::UserAgent" >}}) to fetch the JAR files from the public Maven repositories and drop them into the build library folder, *blib*. `Module::Build` will take care of the rest by copying those JAR files to the appropriate location during the install process.
 
 I also needed some code in `Java::JCR` to set the `CLASSPATH` correctly ahead of time:
 

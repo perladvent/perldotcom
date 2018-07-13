@@ -34,7 +34,7 @@ This is useful but it's kind of clunky to type it every time you want to check t
 
 ### Continuous syntax checking
 
-One of my favourite [features](https://metacpan.org/pod/Catalyst::Manual::Tutorial::02_CatalystBasics#The-Simplest-Way) when developing Catalyst web apps is using the test server to automatically check the syntax of the web app as I develop it. This saves me time as I know immediately if the web app compiles or not and don't waste time opening up a browser only to get an error. if you're working on a Unix-based operating system you can achieve a similar effect for any Perl program (not just web apps). The `watch` program can automatically run the check command. Just start a new terminal, and enter:
+One of my favourite [features]({{<mcpan "Catalyst::Manual::Tutorial::02_CatalystBasics#The-Simplest-Way" >}}) when developing Catalyst web apps is using the test server to automatically check the syntax of the web app as I develop it. This saves me time as I know immediately if the web app compiles or not and don't waste time opening up a browser only to get an error. if you're working on a Unix-based operating system you can achieve a similar effect for any Perl program (not just web apps). The `watch` program can automatically run the check command. Just start a new terminal, and enter:
 
 ```perl
 $ watch 'perl -c lib/Devel/DidYouMean.pm'
@@ -76,7 +76,7 @@ Now you don't have to bother setting up a separate terminal window and watching 
 
 ### Alternative Methods in Vim
 
-Several readers got in touch to recommend the Syntastic [plugin](https://github.com/scrooloose/syntastic) for Vim ([manual](https://github.com/scrooloose/syntastic)). One nice thing about Syntastic is you can chain compile checks: first run `perl -c`, if it passes, then run [Perl::Critic](https://metacpan.org/pod/Perl::Critic) and so on. Syntastic also integrates syntax checkers for many other languages, so if Vim is your editor of choice, you might want to check it out.
+Several readers got in touch to recommend the Syntastic [plugin](https://github.com/scrooloose/syntastic) for Vim ([manual](https://github.com/scrooloose/syntastic)). One nice thing about Syntastic is you can chain compile checks: first run `perl -c`, if it passes, then run [Perl::Critic]({{<mcpan "Perl::Critic" >}}) and so on. Syntastic also integrates syntax checkers for many other languages, so if Vim is your editor of choice, you might want to check it out.
 
 A simpler alternative to Syntastic is to use Vim's built-in compiler support. With a Perl file in the current buffer, type:
 

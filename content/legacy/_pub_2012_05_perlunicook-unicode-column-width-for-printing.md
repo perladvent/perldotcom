@@ -20,7 +20,7 @@
 
 Perl's `printf`, `sprintf`, and `format` think all codepoints take up 1 print column, but many codepoints take 0 or 2. If you use any of these builtins to align text, you may find that Perl's idea of the width of any codepoint doesn't match what you think it ought to.
 
-The [Unicode::GCString](https://metacpan.org/pod/Unicode::GCString) module's `columns()` method considers the width of each codepoint and returns the number of columns the string will occupy. Use this to determine the display width of a Unicode string.
+The [Unicode::GCString]({{<mcpan "Unicode::GCString" >}}) module's `columns()` method considers the width of each codepoint and returns the number of columns the string will occupy. Use this to determine the display width of a Unicode string.
 
 To show that normalization makes no diﬀerence to the number of columns of a string, we print out both forms:
 

@@ -18,9 +18,9 @@
    "title" : "Identify slow code with Devel::Timer"
 }
 
-Program speed is an important factor in programming. No one wants their program to execute more slowly. As a general purpose programming language, Perl is usually fast enough for most things, and when it isn't, we have some great tools to help us make it faster. We can use the [Benchmark](https://metacpan.org/pod/Benchmark) module to compare code and [Devel::NYTProf](https://metacpan.org/pod/Devel::NYTProf) to produce detailed analyses of our programs.
+Program speed is an important factor in programming. No one wants their program to execute more slowly. As a general purpose programming language, Perl is usually fast enough for most things, and when it isn't, we have some great tools to help us make it faster. We can use the [Benchmark]({{<mcpan "Benchmark" >}}) module to compare code and [Devel::NYTProf]({{<mcpan "Devel::NYTProf" >}}) to produce detailed analyses of our programs.
 
-This article is about [Devel::Timer](https://metacpan.org/pod/Devel::Timer), another module I like to use when I want to optimize an existing subroutine, and I'm not sure how long each statement within the subroutine takes to execute. It's very easy to setup, so if you haven't used it before, once you've read this article you'll have another tool in your toolbox for optimizing code.
+This article is about [Devel::Timer]({{<mcpan "Devel::Timer" >}}), another module I like to use when I want to optimize an existing subroutine, and I'm not sure how long each statement within the subroutine takes to execute. It's very easy to setup, so if you haven't used it before, once you've read this article you'll have another tool in your toolbox for optimizing code.
 
 
 ### Use Devel::Timer to get a timing report
@@ -100,10 +100,10 @@ One thing to watch out for with Devel::Timer is lazy evaluation. This is when co
 
 ### References
 
-- This article is about [Devel::Timer](https://metacpan.org/pod/Devel::Timer)
-- [Benchmark::Stopwatch](https://metacpan.org/pod/Benchmark::Stopwatch) is another timer module, similar to Devel::Timer
-- [Devel::NYTProf](https://metacpan.org/pod/Devel::NYTProf) is a code profiler for Perl. Tim Bunce regularly gives [talks](https://www.youtube.com/watch?v=SDWoCQf53Ck) about it
-- The [Benchmark](https://metacpan.org/pod/Benchmark) module comes with Perl
+- This article is about [Devel::Timer]({{<mcpan "Devel::Timer" >}})
+- [Benchmark::Stopwatch]({{<mcpan "Benchmark::Stopwatch" >}}) is another timer module, similar to Devel::Timer
+- [Devel::NYTProf]({{<mcpan "Devel::NYTProf" >}}) is a code profiler for Perl. Tim Bunce regularly gives [talks](https://www.youtube.com/watch?v=SDWoCQf53Ck) about it
+- The [Benchmark]({{<mcpan "Benchmark" >}}) module comes with Perl
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

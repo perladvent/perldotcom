@@ -125,7 +125,7 @@ Now we use a Perl module that I wrote to help put together Maypole driver classe
 
 We tell `ISellIt` to go connect to the database and work out the tables and columns in our application. In addition, because we haven't changed any class defaults, it's assumed that we're going to use `Class::DBI` and Template Toolkit. We could have said that we want to use `Apache::MVC` with `DBIx::SearchBuilder` and `HTML::Mason`, but we don't.
 
-Maypole's `Class::DBI`-based class uses [`Class::DBI::Loader`](https://metacpan.org/pod/Class::DBI::Loader) to investigate the structure of the database, and then map the `product` table onto a `ISellIt::Product` class, and so on. You can read more about how `Class::DBI`'s table-class mapping works in [Tony's article about it](http://www.perl.com/pub/2002/11/27/classdbi.html).
+Maypole's `Class::DBI`-based class uses [`Class::DBI::Loader`]({{<mcpan "Class::DBI::Loader" >}}) to investigate the structure of the database, and then map the `product` table onto a `ISellIt::Product` class, and so on. You can read more about how `Class::DBI`'s table-class mapping works in [Tony's article about it](http://www.perl.com/pub/2002/11/27/classdbi.html).
 
 ```
     ISellIt->config->{uri_base} = "http://localhost/isellit";

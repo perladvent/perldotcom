@@ -70,7 +70,7 @@ removing /home/sillymoose/perl5/perlbrew/perls/perl-5.14.2/lib/site_perl/5.14.2/
 
 ### \*App::cpanminus
 
-[App::cpanminus](https://metacpan.org/pod/App::cpanminus) is a popular alternative CPAN client that can be used to manage Perl distributions. It has many great features, including uninstalling modules. Once you've installed App::cpanminus, to remove the `Acme::Dot` module, at the command line type:
+[App::cpanminus]({{<mcpan "App::cpanminus" >}}) is a popular alternative CPAN client that can be used to manage Perl distributions. It has many great features, including uninstalling modules. Once you've installed App::cpanminus, to remove the `Acme::Dot` module, at the command line type:
 
 ```perl
 $ cpanm --uninstall Acme::Dot

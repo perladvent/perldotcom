@@ -32,7 +32,7 @@ Most of us have tried at one time or another to use regular expressions to do th
               }
               {$1 . decode_entities($2) .  $4}gsexi;
 
-I was strutting like a peacock when I wrote that, followed quickly by eating crow when I ran it. I never did get that working right. I'm still not sure what I was trying to do. That regular expression forced me to learn how to use [`HTML::TokeParser`](https://metacpan.org/pod/HTML::TokeParser). More importantly, that was the regular expression that taught me how difficult regular expressions can be.
+I was strutting like a peacock when I wrote that, followed quickly by eating crow when I ran it. I never did get that working right. I'm still not sure what I was trying to do. That regular expression forced me to learn how to use [`HTML::TokeParser`]({{<mcpan "HTML::TokeParser" >}}). More importantly, that was the regular expression that taught me how difficult regular expressions can be.
 
 #### The Problem with Regular Expressions
 
@@ -76,7 +76,7 @@ Recently, on Perlmonks ([parse a query string](http://perlmonks.org/index.pl?nod
 
 The poster needed the alias for each column from that SQL. In this case, the aliases are `date`, `months_old`, `product`, `year`, and `tough_one`. Of course, this was only one example. There's actually plenty of generated SQL, all with subtle variations on the column aliases, so this is not a trivial task. What's interesting about this, though, is that we don't give a fig about anything except the column aliases. The rest of the text is merely there to help us find those aliases.
 
-Your first thought might be to parse this with [`SQL::Statement`](https://metacpan.org/pod/SQL::Statement). As it turns out, this module does not handle `CASE` statements. Thus, you must figure out how to patch `SQL::Statement`, submit said patch, and hope it gets accepted and released in a timely fashion. (Note that `SQL::Statement` uses [`SQL::Parser`](https://metacpan.org/pod/SQL::Parser), so the latter is also not an option.)
+Your first thought might be to parse this with [`SQL::Statement`]({{<mcpan "SQL::Statement" >}}). As it turns out, this module does not handle `CASE` statements. Thus, you must figure out how to patch `SQL::Statement`, submit said patch, and hope it gets accepted and released in a timely fashion. (Note that `SQL::Statement` uses [`SQL::Parser`]({{<mcpan "SQL::Parser" >}}), so the latter is also not an option.)
 
 Second, many of us have worked in environments where we have problems to solve in production *now*, but we still have to wait three weeks to get the necessary modules installed, if we can get them approved at all.
 
@@ -131,7 +131,7 @@ These "things" appear to be parentheses, commas, operators, keywords, and random
     my $text    = qr/(?:\w+|'\w+'|"\w+")/;
     my $op      = qr{[-=+*/<>]};
 
-The text matching is somewhat naive and you might want [`Regexp::Common`](https://metacpan.org/pod/Regexp::Common) for some of the regular expressions, but keep this simple for now.
+The text matching is somewhat naive and you might want [`Regexp::Common`]({{<mcpan "Regexp::Common" >}}) for some of the regular expressions, but keep this simple for now.
 
 The operators are a bit more involved. Assume that some SQL might have math statements embedded in them.
 
@@ -160,7 +160,7 @@ Now create the actual lexer. One way to do this is to make your own. It might lo
 
 Without going into the detail of how that works, it's fair to say that this is not the best solution. By looking at [the original Perlmonks post](http://perlmonks.org/index.pl?node_id=472701), you should find that you need to make two passes through the data to extract what you want. I've left the explanation an exercise for the reader.
 
-To make this simpler, use the [`HOP::Lexer`](https://metacpan.org/pod/HOP::Lexer) module from the CPAN. This module, described by Mark Jason Dominus in his book *Higher Order Perl*, makes creating lexers a rather trivial task and makes them a bit more powerful than the example. Here's the new code:
+To make this simpler, use the [`HOP::Lexer`]({{<mcpan "HOP::Lexer" >}}) module from the CPAN. This module, described by Mark Jason Dominus in his book *Higher Order Perl*, makes creating lexers a rather trivial task and makes them a bit more powerful than the example. Here's the new code:
 
     use HOP::Lexer 'make_lexer';
     my @sql   = $sql;

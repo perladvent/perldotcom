@@ -26,7 +26,7 @@
 
 The sponsors suggest that projects that want to participate label their issues with "Hacktoberfest". That's not strictly necessary, but you can [search](https://github.com/search?q=state%3Aopen+label%3Ahacktoberfest&type=Issues) for issues that projects think are suitable for new users. I think all of my projects are suitable (I may be optimistic), so I wanted a way to label all of my issues across all of my projects.
 
-I found out about this as I was building some other GitHub tools. I looked at [Net::GitHub](https://www.metacpan.org/module/Net::GitHub), [Pithub](https://www.metacpan.org/module/Pithub), and Marchex's [github-api-tools](https://github.com/marchex/github-api-tools) but I wanted to iterate through long lists of paged results and process each item as I received them. The [GitHub Developer API](https://developer.github.com/v3/) is quite nice and even if you are re-inventing the wheel you're learning about wheels, making this a fun night of work.
+I found out about this as I was building some other GitHub tools. I looked at [Net::GitHub]({{<mcpan "Net::GitHub" >}}), [Pithub]({{<mcpan "Pithub" >}}), and Marchex's [github-api-tools](https://github.com/marchex/github-api-tools) but I wanted to iterate through long lists of paged results and process each item as I received them. The [GitHub Developer API](https://developer.github.com/v3/) is quite nice and even if you are re-inventing the wheel you're learning about wheels, making this a fun night of work.
 
 The result is [hacktoberfest.pl](https://github.com/briandfoy/ghojo/blob/master/examples/hacktoberfest.pl) in my [ghojo](https://github.com/briandfoy/ghojo) repo. It will log in, list all of my repos (there are a couple hundred), create the "Hacktoberfest" label in each, and then apply the label to each open issue.
 
@@ -45,7 +45,7 @@ my $callback = sub {
 $ghojo->repos( $repo_callback );
 ```
 
-Each time I find a repo—and you don't have to know how I do that—I run that callback. It's a little bit like [File::Find](https://www.metacpan.org/module/File::Find)'s use of the `wanted` coderef. You don't see the very nice API paging going on either; `repos` keeps fetching more results as long as there are more results.
+Each time I find a repo—and you don't have to know how I do that—I run that callback. It's a little bit like [File::Find]({{<mcpan "File::Find" >}})'s use of the `wanted` coderef. You don't see the very nice API paging going on either; `repos` keeps fetching more results as long as there are more results.
 
 That callback deals with a repo, but each repo has a list of issues. I want to process this list of issues as I run into them. So what I need is a callback to process a repo with a nested callback for the issues:
 

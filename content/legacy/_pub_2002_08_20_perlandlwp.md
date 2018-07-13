@@ -59,7 +59,7 @@ This is the URL of a plain-text file. It lists new files in CPAN in the past two
       % perl -MLWP::Simple -e "getprint 'http://cpan.org/RECENT'"  \
          | grep "/by-module/Acme" | mail -s "New Acme modules! Joy!" $USER
 
-There are other useful functions in `LWP::Simple`, including one function for running a `HEAD` request on a URL (useful for checking links, or getting the last-revised time of a URL), and two functions for saving and mirroring a URL to a local file. See the [LWP::Simple documentation](https://metacpan.org/pod/LWP::Simple) for the full details, or Chapter 2, "Web Basics" of *Perl & LWP* for more examples.
+There are other useful functions in `LWP::Simple`, including one function for running a `HEAD` request on a URL (useful for checking links, or getting the last-revised time of a URL), and two functions for saving and mirroring a URL to a local file. See the [LWP::Simple documentation]({{<mcpan "LWP::Simple" >}}) for the full details, or Chapter 2, "Web Basics" of *Perl & LWP* for more examples.
 
 ### The Basics of the LWP Class Model
 
@@ -246,7 +246,7 @@ See Chapter 5, "Forms" of *Perl & LWP* for a longer discussion of HTML forms a
 
 ### Absolutizing URLs
 
-The URI class that we just mentioned above provides all sorts of methods for accessing and modifying parts of URLs (such as asking sort of URL it is with `$url->scheme`, and asking what host it refers to with `$url->host`, and so on, as described in [the docs for the URI class](https://metacpan.org/pod/URI). However, the methods of most immediate interest are the `query_form` method seen above, and now the `new_abs` method for taking a probably relative URL string (like "../foo.html") and getting back an absolute URL (like "/stuff/foo.html"), as shown here:
+The URI class that we just mentioned above provides all sorts of methods for accessing and modifying parts of URLs (such as asking sort of URL it is with `$url->scheme`, and asking what host it refers to with `$url->host`, and so on, as described in [the docs for the URI class]({{<mcpan "URI" >}}). However, the methods of most immediate interest are the `query_form` method seen above, and now the `new_abs` method for taking a probably relative URL string (like "../foo.html") and getting back an absolute URL (like "/stuff/foo.html"), as shown here:
 
       use URI;
       $abs = URI->new_abs($maybe_relative, $base);
@@ -321,7 +321,7 @@ Of course, using a regexp to match hrefs is a bit simplistic, and for more robus
 
 -   `push @{ $ua->requests_redirectable }, 'POST'`: This tells this browser to obey redirection responses to POST requests (like most modern interactive browsers), even though the HTTP RFC says that should not normally be done.
 
-For more options and information, see [the full documentation for LWP::UserAgent](https://metacpan.org/pod/LWP::UserAgent).
+For more options and information, see [the full documentation for LWP::UserAgent]({{<mcpan "LWP::UserAgent" >}}).
 
 ### Writing Polite Robots
 
@@ -342,7 +342,7 @@ But `HTTP::RobotUA` adds these features:
 
 -   If this `$browser` object sees that the last time it talked to `$url`'s server was too recently, then it will pause (via `sleep`) to avoid making too many requests too often. How long it will pause for, is by default one minute--but you can control it with the `$browser->delay( minutes )` attribute.
 
-For more options and information, see [the full documentation for LWP::RobotUA](https://metacpan.org/pod/LWP::RobotUA).
+For more options and information, see [the full documentation for LWP::RobotUA]({{<mcpan "LWP::RobotUA" >}}).
 
 ### Using Proxies
 
@@ -356,7 +356,7 @@ To make a browser object use proxies that are defined in the usual environment v
       # And before you go making any requests:
       $browser->env_proxy;
 
-For more information on proxy parameters, see [the LWP::UserAgent documentation](https://metacpan.org/pod/LWP::UserAgent), specifically the `proxy`, `env_proxy`, and `no_proxy` methods.
+For more information on proxy parameters, see [the LWP::UserAgent documentation]({{<mcpan "LWP::UserAgent" >}}), specifically the `proxy`, `env_proxy`, and `no_proxy` methods.
 
 ### HTTP Authentication
 

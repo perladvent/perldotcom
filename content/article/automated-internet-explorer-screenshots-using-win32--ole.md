@@ -27,7 +27,7 @@ Some time ago I [wrote](http://blog.nu42.com/2012/06/using-win32ole-with-events-
 
 At the time I was still clinging to Windows XP. Since then, I have upgraded to Windows 8.1 Pro 64-bit, and instead of using [PPMs](http://www.activestate.com/activeperl/ppm-perl-modules) for [ActivePerl](http://www.activestate.com/activeperl), I have been using [Visual Studio 2013](http://blog.nu42.com/2014/11/64-bit-perl-5201-with-visual-studio.html) to build `perl`, and the modules I need.
 
-I have been using Perl's [Win32::OLE](https://metacpan.org/pod/Win32::OLE) to drive Internet Explorer for various purposes for almost 10 years now. There is really not much to it other than having to read copious amounts of Microsoft documentation. It always amazes me how, after all these years, there is no language or environment as well documented as Perl, not just in terms of the amount of information provided, but also the ease with which you can find clear, correct, and useful information.
+I have been using Perl's [Win32::OLE]({{<mcpan "Win32::OLE" >}}) to drive Internet Explorer for various purposes for almost 10 years now. There is really not much to it other than having to read copious amounts of Microsoft documentation. It always amazes me how, after all these years, there is no language or environment as well documented as Perl, not just in terms of the amount of information provided, but also the ease with which you can find clear, correct, and useful information.
 
 In any case, while the organization of the information leaves a lot to be desired, a good starting point for finding information on driving Internet Explorer via OLE is the InternetExplorer object [documentation](http://msdn.microsoft.com/en-us/library/aa752084%28v=vs.85%29) on MSDN. If you want to interact with the content within an InternetExplorer object, you can consult the MSHTML Scripting Object Interfaces [topic](http://msdn.microsoft.com/en-us/library/hh801967%28v=vs.85%29.aspx). It also helps to know a little bit about the [OLE](http://msdn.microsoft.com/en-us/library/19z074ky.aspx) interface.
 
@@ -86,7 +86,7 @@ const my %BrowserEvents => (
 );
 ```
 
-Notice the use of [Win32::MessageLoop-\>QuitMessageLoop](https://metacpan.org/pod/Win32::MessageLoop) instead of `Win32::OLE->QuitMessageLoop` to avoid spurious sleep calls.
+Notice the use of [Win32::MessageLoop-\>QuitMessageLoop]({{<mcpan "Win32::MessageLoop" >}}) instead of `Win32::OLE->QuitMessageLoop` to avoid spurious sleep calls.
 
 Then, I initialize the OLE events interface using:
 
@@ -121,7 +121,7 @@ Upon receiving either `DocumentComplete` or `onQuit`, we terminate the message l
 
 ### Capturing the Internet Explorer window
 
-When I ran this revised script, and tried to take screenshots using [Imager::Screenshot](https://metacpan.org/pod/Imager::Screenshot), I got screenshots with only the frame of the browser, and none of the content. I am not sure what's going on, and I will try to diagnose that issue later. For now, since I was using the venerable [Win32::GuiTest](https://metacpan.org/pod/Win32::GuiTest) module anyway, I decided to use the `Win32::GuiTest::DibSect` class it provides:
+When I ran this revised script, and tried to take screenshots using [Imager::Screenshot]({{<mcpan "Imager::Screenshot" >}}), I got screenshots with only the frame of the browser, and none of the content. I am not sure what's going on, and I will try to diagnose that issue later. For now, since I was using the venerable [Win32::GuiTest]({{<mcpan "Win32::GuiTest" >}}) module anyway, I decided to use the `Win32::GuiTest::DibSect` class it provides:
 
 ```perl
 sub take_screenshot {
@@ -169,7 +169,7 @@ At this point, you can run the script from the command line with a simple `perl 
 
 ### The WebDriver API
 
-The [WebDriver API](http://msdn.microsoft.com/en-us/library/ie/dn725045%28v=vs.85%29.aspx) might obviate the need for using any other solution to drive Internet Explorer, but, until that is available everywhere, [Win32::OLE](https://metacpan.org/pod/Win32::OLE) is more than adequate.
+The [WebDriver API](http://msdn.microsoft.com/en-us/library/ie/dn725045%28v=vs.85%29.aspx) might obviate the need for using any other solution to drive Internet Explorer, but, until that is available everywhere, [Win32::OLE]({{<mcpan "Win32::OLE" >}}) is more than adequate.
 
 ### Conclusion
 

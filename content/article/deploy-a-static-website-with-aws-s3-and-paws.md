@@ -17,7 +17,7 @@
    ]
 }
 
-Amazon Web Services (AWS) is Amazon's cloud services platform and S3 is the AWS file storage service. S3 is commonly used to host static websites. With Perl we have many modules for using AWS, but I like [Paws](https://metacpan.org/pod/Paws), developed by [Jose Luis Martinez](https://metacpan.org/author/JLMARTIN) which supports many AWS services, including S3. In this article I'll walk you through a Perl script I developed to upload and maintain a static website using S3 and Paws.
+Amazon Web Services (AWS) is Amazon's cloud services platform and S3 is the AWS file storage service. S3 is commonly used to host static websites. With Perl we have many modules for using AWS, but I like [Paws]({{<mcpan "Paws" >}}), developed by [Jose Luis Martinez](https://metacpan.org/author/JLMARTIN) which supports many AWS services, including S3. In this article I'll walk you through a Perl script I developed to upload and maintain a static website using S3 and Paws.
 
 ### AWS setup
 
@@ -50,7 +50,7 @@ The `ACL` argument specifies that the bucket can be read publicly, but not edite
 
 ### Upload files to S3
 
-S3 files are stored as objects in buckets. Every file has a key, which is similar to the filename. I've developed a [script](https://github.com/dnmfarrell/Paws-tools/blob/master/s3-upload) called `s3-upload` which uses Paws to upload files to S3 buckets. It uses [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to parse command line options. It requires `--bucket` for the S3 bucket name, `--region` for the AWS region, and `--files` for the directory filepath:
+S3 files are stored as objects in buckets. Every file has a key, which is similar to the filename. I've developed a [script](https://github.com/dnmfarrell/Paws-tools/blob/master/s3-upload) called `s3-upload` which uses Paws to upload files to S3 buckets. It uses [Getopt::Long]({{<mcpan "Getopt::Long" >}}) to parse command line options. It requires `--bucket` for the S3 bucket name, `--region` for the AWS region, and `--files` for the directory filepath:
 
 ```perl
 #!/usr/bin/env perl
@@ -77,7 +77,7 @@ my $local_objects  = upload($s3, $remote_objects);
 delete_stale_objects($s3, $remote_objects, $local_objects) if $DELETE_STALE;
 ```
 
-I've omitted the subroutine definitions for brevity (see the [source](https://github.com/dnmfarrell/Paws-tools/blob/master/s3-upload) for details). The script begins by validating the input options, then creates an `$s3` object. It calls `get_remote_objects` which returns a hashref of keys (files) and their last modified time currently in the bucket. It passes this to `upload` which only uploads files that have been modified since being uploaded to S3 (you don't want to upload the entire website if only one file has changed). `upload` does many things, but essentially, it uses [PutObject](https://metacpan.org/pod/Paws::S3::PutObject) to upload files:
+I've omitted the subroutine definitions for brevity (see the [source](https://github.com/dnmfarrell/Paws-tools/blob/master/s3-upload) for details). The script begins by validating the input options, then creates an `$s3` object. It calls `get_remote_objects` which returns a hashref of keys (files) and their last modified time currently in the bucket. It passes this to `upload` which only uploads files that have been modified since being uploaded to S3 (you don't want to upload the entire website if only one file has changed). `upload` does many things, but essentially, it uses [PutObject]({{<mcpan "Paws::S3::PutObject" >}}) to upload files:
 
 ```perl
 sub upload {
@@ -109,7 +109,7 @@ The script will print any files uploaded to STDOUT and all other output to STDER
 
 ### More features
 
-Whilst the above script does the job, there are some features missing that are useful for static websites. Firstly, you might want to specify the MIME type of the files being uploaded. This is so when browsers fetch the files, S3 responds with the correct content type [header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type). Otherwise, HTML files may not be displayed as websites, images may be downloaded instead of displayed, and so on. I use [Media::Type::Simple](https://metacpan.org/pod/Media::Type::Simple) for this:
+Whilst the above script does the job, there are some features missing that are useful for static websites. Firstly, you might want to specify the MIME type of the files being uploaded. This is so when browsers fetch the files, S3 responds with the correct content type [header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type). Otherwise, HTML files may not be displayed as websites, images may be downloaded instead of displayed, and so on. I use [Media::Type::Simple]({{<mcpan "Media::Type::Simple" >}}) for this:
 
 ```perl
 use Media::Type::Simple;

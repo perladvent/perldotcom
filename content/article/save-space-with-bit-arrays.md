@@ -208,7 +208,7 @@ my %toppings = (
 
 This limitation makes bitmasks less useful for long-term storage of data, unless the existing bitmasks are unlikely to change. Note that it's fine to add additional toppings and bitmasks, it's just re-using existing bitmasks that causes issues.
 
-Another thing to consider is upper limits (update - see [using bit arrays with large integers](http://perltricks.com/article/using-bitmasks-with-large-integers/)). If you want your Perl code to be compatible with 32 bit and 64 bit Perls, you should probably stick to a maximum of 32 bitmasks (using a module like [bigint](https://metacpan.org/pod/bigint) may *not* work because of addressable memory limitations). You can see the settings your Perl has been compiled with by typing `perl -V | grep longsize` at the command line. The longsize value is the number of bytes your Perl can store in an integer natively.
+Another thing to consider is upper limits (update - see [using bit arrays with large integers](http://perltricks.com/article/using-bitmasks-with-large-integers/)). If you want your Perl code to be compatible with 32 bit and 64 bit Perls, you should probably stick to a maximum of 32 bitmasks (using a module like [bigint]({{<mcpan "bigint" >}}) may *not* work because of addressable memory limitations). You can see the settings your Perl has been compiled with by typing `perl -V | grep longsize` at the command line. The longsize value is the number of bytes your Perl can store in an integer natively.
 
 Finally, in order to get the data back out of a bit array it needs to be tested with all the available bitmasks. Consider the `get_toppings` method in `Pizza::Order`. To find out what toppings are set, the code has to check every topping's bitmask. This is pretty inefficient. So bitmasks are good for compact data storage, but not fast access.
 
@@ -218,7 +218,7 @@ Finally, in order to get the data back out of a bit array it needs to be tested 
 * Perl's official [operator documentation](http://perldoc.perl.org/perlop.html) covers the bitwise operators. You can read it in the terminal with the command `perldoc perlop`
 * Use Perl's builtin functions [sprintf](http://perldoc.perl.org/functions/sprintf.html) (`perldoc -f sprintf`) and [printf](http://perldoc.perl.org/functions/printf.html) (`perldoc -f printf`) to inspect binary values
 * Stringifying / printing numbers as binary isn't the only nice binary feature Perl has over other languages. Another is the ability to write binary numbers inline, just like octal and hexadecimal numbers, for example: `0b00001000`. This is great for comparing binary numbers
-* [bigint](https://metacpan.org/pod/bigint) is one of several modules on CPAN for working with large integers, see [using bit arrays with large integers](http://perltricks.com/article/using-bitmasks-with-large-integers/)
+* [bigint]({{<mcpan "bigint" >}}) is one of several modules on CPAN for working with large integers, see [using bit arrays with large integers](http://perltricks.com/article/using-bitmasks-with-large-integers/)
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

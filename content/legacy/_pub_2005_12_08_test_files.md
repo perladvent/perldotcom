@@ -26,11 +26,11 @@ For the last several years, there has been more and more emphasis on automated t
 
 ### Introduction
 
-My boss put me to work writing a moderately large suite in Perl. Among many other things, it needed to perform check out and commit operations on CVS repositories. In a quest to build quality tests for that module, I wrote [`Test::Files`](https://metacpan.org/pod/Test::Files), which is now on CPAN. This article explains how to use that module and, perhaps more importantly, how it tests itself.
+My boss put me to work writing a moderately large suite in Perl. Among many other things, it needed to perform check out and commit operations on CVS repositories. In a quest to build quality tests for that module, I wrote [`Test::Files`]({{<mcpan "Test::Files" >}}), which is now on CPAN. This article explains how to use that module and, perhaps more importantly, how it tests itself.
 
 ### Using `Test::Files`
 
-To use `Test::Files`, first use [`Test::More`](https://metacpan.org/pod/Test::More) and tell it how many tests you want to run.
+To use `Test::Files`, first use [`Test::More`]({{<mcpan "Test::More" >}}) and tell it how many tests you want to run.
 
     use strict;
     use warnings;
@@ -85,7 +85,7 @@ If knowing that certain file names are present is not enough, use the `compare_d
 
 This will generate a separate diagnostic `diff` output for each pair of files that differs, in addition to listing files that are missing from either distribution. (If you need to know which files are missing from the built directory, either reverse the order of the directories or use `dir_only_contains_ok` in addition to `compare_dirs_ok`. This is a bug and might eventually be fixed.) Even though this could yield many diagnostic reports, all of those separate failures only count as one failed test.
 
-There are many times when testing *all* files in the directories is just wrong. In these cases, it is best to use [`File::Find`](https://metacpan.org/pod/File::Find) or an equivalent, putting an exclusion criterion at the top of your wanted function and a call to `compare_ok` at the bottom. This probably requires you to use `no_plan` with `Test::More`:
+There are many times when testing *all* files in the directories is just wrong. In these cases, it is best to use [`File::Find`]({{<mcpan "File::Find" >}}) or an equivalent, putting an exclusion criterion at the top of your wanted function and a call to `compare_ok` at the bottom. This probably requires you to use `no_plan` with `Test::More`:
 
     use Test::More qw(no_plan);
 
@@ -126,7 +126,7 @@ In addition to `compare_dirs_filter_ok` for whole directory structures, there is
 
 ### Testing a Test Module
 
-The most interesting part of writing `Test::Files` was learning how to test it. Thanks to Schwern, I learned about [`Test::Builder::Tester`](https://metacpan.org/pod/Test::Builder::Tester), which eases the problems inherent in testing a Perl test module.
+The most interesting part of writing `Test::Files` was learning how to test it. Thanks to Schwern, I learned about [`Test::Builder::Tester`]({{<mcpan "Test::Builder::Tester" >}}), which eases the problems inherent in testing a Perl test module.
 
 The difficulty with testing Perl tests has to do with how they normally run. The venerable test harness scheme expects test scripts to produce pass and fail data on standard out and diagnostic help on standard error. This is a great design. The simplicity is exactly what you would expect from a Unix-inspired tool. Yet, it poses a problem for testing test modules.
 

@@ -31,7 +31,7 @@ It's common for accelerometers to have several configurable ranges of measuremen
 
 Be sure, then, to set the measurement range to just a little more than what you expect. A sportscar on a track would have a hard time doing 2g's in any direction. Most rollercoasters max at around 4g's, maybe 6. Fighter jets can exceed 10g's, which is about the limit of human ability for any sustainable period. Also note that instantaneous acceleration can be extremely high for any of these cases; a sportscar hitting a brick wall will easily exceed 10g's.
 
-Every chip defines its own interface protocol. This means a new interface driver needs to be written for each chip, and unfortunately, there aren't a lot of CPAN modules out there for individual devices. One that does exist is [Device::LSM303DLHC](https://metacpan.org/pod/Device::LSM303DLHC).
+Every chip defines its own interface protocol. This means a new interface driver needs to be written for each chip, and unfortunately, there aren't a lot of CPAN modules out there for individual devices. One that does exist is [Device::LSM303DLHC]({{<mcpan "Device::LSM303DLHC" >}}).
 
 The LSM303DLHC chip in question also contains a magnetometer, and is available on a breakout board from Adafruit Industries.
 

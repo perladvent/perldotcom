@@ -49,7 +49,7 @@ If I give `open` a filename of an explicit `undef` and the read-write mode (`+>`
 open my $fh, '+>', undef;
 ```
 
-Perl actually creates a named file and opens it, but immediately unlinks the name. No one else will be able to get to that file because no one else has the name for it. If I had used [File::Temp](https://metacpan.org/pod/File::Temp), I might leave the temporary file there, or something else might be able to see it while I'm working with it.
+Perl actually creates a named file and opens it, but immediately unlinks the name. No one else will be able to get to that file because no one else has the name for it. If I had used [File::Temp]({{<mcpan "File::Temp" >}}), I might leave the temporary file there, or something else might be able to see it while I'm working with it.
 
 ### Print to a string
 

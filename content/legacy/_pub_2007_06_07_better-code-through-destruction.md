@@ -25,7 +25,7 @@ Larry Wall said that Perl makes easy things easy and hard things possible. Perl 
 
 Perl's garbage collector counts references. When the count reaches zero (which means that no one has a reference), Perl reclaims the entity. The approach is simple and effective. However, circular references (when object A has a reference to object B, and object B has a reference to object A) present a problem. Even if nothing else in the program has a reference to either A or B, the reference count can never reach zero. Objects A and B do not get destroyed. If the code creates them again and again (perhaps in a loop), you get a memory leak. The amount of memory allocated by the program increases without a sensible reason and can never decrease. This effect may be acceptable for simple run-and-exit scripts, but it's not acceptable for programs running 24x365, such as in a mod\_perl or FastCGI environment or as standalone servers.
 
-Circular references are sometimes too useful to avoid. A common example is a tree-like data structure. To navigate both directions--from root to leaves and vice versa--a parent node has a list of children and a child node has a reference to its parent. Here are the circular references. Many CPAN modules implement their data models this way, including [HTML::Tree](https://metacpan.org/pod/HTML::Tree), [XML::DOM](https://metacpan.org/pod/XML::DOM), and [Text::PDF::File](https://metacpan.org/pod/Text::PDF::File). All these modules provide a method to release the memory. The client application must call the method when it no longer needs an object. However, the requirement of an explicit call is not very appealing and can result in unsafe code:
+Circular references are sometimes too useful to avoid. A common example is a tree-like data structure. To navigate both directions--from root to leaves and vice versa--a parent node has a list of children and a child node has a reference to its parent. Here are the circular references. Many CPAN modules implement their data models this way, including [HTML::Tree]({{<mcpan "HTML::Tree" >}}), [XML::DOM]({{<mcpan "XML::DOM" >}}), and [Text::PDF::File]({{<mcpan "Text::PDF::File" >}}). All these modules provide a method to release the memory. The client application must call the method when it no longer needs an object. However, the requirement of an explicit call is not very appealing and can result in unsafe code:
 
         ##
         ## Code with a memory leak
@@ -82,7 +82,7 @@ There is a better solution--the paradigm of "resource acquisition is initializat
 
 Note that now there is no need to call `$tree->delete` explicitly at the end of the loop. The magic is simple. When program flow leaves the scope, `$sentry` is reclaimable because it participates in no circular references. The code of `DESTROY` method of the `Sentry` package calls, in turn, the method `delete` of the `$tree` object. This is one solution for all means; memory will be released however you leave the block.
 
-Finally, there is no need to code your own `Sentry` class. Use [Object::Destroyer](https://metacpan.org/pod/Object::Destroyer), originally written by Adam Kennedy. As you may guess by its name, it is the object to destroy other objects:
+Finally, there is no need to code your own `Sentry` class. Use [Object::Destroyer]({{<mcpan "Object::Destroyer" >}}), originally written by Adam Kennedy. As you may guess by its name, it is the object to destroy other objects:
 
         ##
         ## An of-the-CPAN solution with Object::Destroyer
@@ -123,9 +123,9 @@ Just for fun, comment out the line with the `$sentry` object and watch the memor
 
 `Object::Destroyer` can make life easier for module authors, too.
 
-If you have written a library with circular references, you may ask your clients to explicitly call a disposal method or use a new feature of Perl (stable since 5.8; see [Scalar::Util](https://metacpan.org/pod/Scalar::Util))--weak references. Weak references do not increment reference counts of the objects to which they refer, so the Perl garbage collector can collect the referents. In the tree example, all references from leaves to parents (but not vice versa, or the tree will be lost!) may be weak. When the final reference to the root node goes away, Perl will dispose of it, which will remove its references to all of its children recursively. They will all reach zero, and Perl will reclaim them all down the branches of the tree to every leaf.
+If you have written a library with circular references, you may ask your clients to explicitly call a disposal method or use a new feature of Perl (stable since 5.8; see [Scalar::Util]({{<mcpan "Scalar::Util" >}}))--weak references. Weak references do not increment reference counts of the objects to which they refer, so the Perl garbage collector can collect the referents. In the tree example, all references from leaves to parents (but not vice versa, or the tree will be lost!) may be weak. When the final reference to the root node goes away, Perl will dispose of it, which will remove its references to all of its children recursively. They will all reach zero, and Perl will reclaim them all down the branches of the tree to every leaf.
 
-Indeed, some CPAN modules use this approach ([XML::Twig](https://metacpan.org/pod/XML::Twig)). However, this solution works only if weak refs are available; this is certainly not the case for older Perl. Secondly, this may require quite a bit of rewriting (there are nine calls to `weaken` throughout the code of `XML::Twig` 3.26).
+Indeed, some CPAN modules use this approach ([XML::Twig]({{<mcpan "XML::Twig" >}})). However, this solution works only if weak refs are available; this is certainly not the case for older Perl. Secondly, this may require quite a bit of rewriting (there are nine calls to `weaken` throughout the code of `XML::Twig` 3.26).
 
 Alternatively, you may use `Object::Destroyer` internally in your library code. It can work as an almost transparent wrapper around your object:
 
@@ -342,8 +342,8 @@ Run the script several times. Due to `rand`, it will break on varying lines, but
 
 RAII is by no means a new technique. It is very popular in the world of C++ programming. If you are not afraid of C++, you may find interesting the standard container [auto\_ptr](http://en.wikipedia.org/wiki/Auto_ptr) and [effective auto\_ptr usage](http://www.gotw.ca/publications/using_auto_ptr_effectively.htm). The non-standard [ScopeGuard](http://www.ddj.com/dept/cpp/184403758) class provides lexically scoped resource management in C++.
 
-The [Devel::Monitor](https://metacpan.org/pod/Devel::Monitor) module has guidelines on how to design data structures with weak and circular references. Its primary goal, by the way, is to trace the memory consumption of a running script.
+The [Devel::Monitor]({{<mcpan "Devel::Monitor" >}}) module has guidelines on how to design data structures with weak and circular references. Its primary goal, by the way, is to trace the memory consumption of a running script.
 
-There are several modules for lexically scoped resource management on CPAN, but the [Object::Destroyer](https://metacpan.org/pod/Object::Destroyer) is my favorite. You may also look at [Hook::Scope](https://metacpan.org/pod/Hook::Scope), [Scope::Guard](https://metacpan.org/pod/Scope::Guard) and [Sub::ScopeFinalizer](https://metacpan.org/pod/Sub::ScopeFinalizer).
+There are several modules for lexically scoped resource management on CPAN, but the [Object::Destroyer]({{<mcpan "Object::Destroyer" >}}) is my favorite. You may also look at [Hook::Scope]({{<mcpan "Hook::Scope" >}}), [Scope::Guard]({{<mcpan "Scope::Guard" >}}) and [Sub::ScopeFinalizer]({{<mcpan "Sub::ScopeFinalizer" >}}).
 
 Finally, [Object Oriented Exception Handling in Perl](/pub/2002/11/14/exception.html) discusses why exceptions are invaluable for big projects.

@@ -26,69 +26,69 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 
 ### Module of the month
 
-[Protocol::ACME](https://metacpan.org/pod/Protocol::ACME) is an alpha-stage implementation providing a perly interface to the [Let's Encrypt](https://letsencrypt.readthedocs.org/en/latest/intro.html) ACME API. This lets you automate the business of fetching and validating Let's Encrypt certificates, and any other certificate which is provided via the ACME protocol. If you build web applications with Mojolicious, you may also like [Toadfarm::Plugin::Letsencrypt](https://metacpan.org/pod/Toadfarm::Plugin::Letsencrypt), a less ambitious module that provides Lets Encrypt domain verification.
+[Protocol::ACME]({{<mcpan "Protocol::ACME" >}}) is an alpha-stage implementation providing a perly interface to the [Let's Encrypt](https://letsencrypt.readthedocs.org/en/latest/intro.html) ACME API. This lets you automate the business of fetching and validating Let's Encrypt certificates, and any other certificate which is provided via the ACME protocol. If you build web applications with Mojolicious, you may also like [Toadfarm::Plugin::Letsencrypt]({{<mcpan "Toadfarm::Plugin::Letsencrypt" >}}), a less ambitious module that provides Lets Encrypt domain verification.
 
 ### APIs & Apps
 
--   [App::Procapult](https://metacpan.org/pod/App::Procapult) is a process launcher / wrapper with a simple interface
--   Another process manager, [Schedule::LongSteps](https://metacpan.org/pod/Schedule::LongSteps) aims to manage long term processes over long periods of time.
--   Do you want to convert colored terminal output to HTML? Check out [App::Term2HTML](https://metacpan.org/pod/App::Term2HTML)
--   [Barracuda::Api](https://metacpan.org/pod/Barracuda::Api) provides a perly interface to Barracuda business IT services
--   [Google::reCAPTCHA](https://metacpan.org/pod/Google::reCAPTCHA) a lightweight implementation of Google's reCAPTCHA service, also see (Captcha::reCAPTCHA::V2)
+-   [App::Procapult]({{<mcpan "App::Procapult" >}}) is a process launcher / wrapper with a simple interface
+-   Another process manager, [Schedule::LongSteps]({{<mcpan "Schedule::LongSteps" >}}) aims to manage long term processes over long periods of time.
+-   Do you want to convert colored terminal output to HTML? Check out [App::Term2HTML]({{<mcpan "App::Term2HTML" >}})
+-   [Barracuda::Api]({{<mcpan "Barracuda::Api" >}}) provides a perly interface to Barracuda business IT services
+-   [Google::reCAPTCHA]({{<mcpan "Google::reCAPTCHA" >}}) a lightweight implementation of Google's reCAPTCHA service, also see (Captcha::reCAPTCHA::V2)
 
 ### Config & Devops
 
--   [Config::MethodProxy](https://metacpan.org/pod/Config::MethodProxy) integrates dynamic logic with static configuration.
--   [Minion::Notifier](https://metacpan.org/pod/Minion::Notifier) notifies queue listeners when a Minion task has completed
--   [Queue::Priority](https://metacpan.org/pod/Queue::Priority) orders messages according to their priority, so the important stuff gets processed first
--   [RBAC::Tiny](https://metacpan.org/pod/RBAC::Tiny) is a miniscule Role-Based Access Control implementation
+-   [Config::MethodProxy]({{<mcpan "Config::MethodProxy" >}}) integrates dynamic logic with static configuration.
+-   [Minion::Notifier]({{<mcpan "Minion::Notifier" >}}) notifies queue listeners when a Minion task has completed
+-   [Queue::Priority]({{<mcpan "Queue::Priority" >}}) orders messages according to their priority, so the important stuff gets processed first
+-   [RBAC::Tiny]({{<mcpan "RBAC::Tiny" >}}) is a miniscule Role-Based Access Control implementation
 
 ### Data
 
--   Get an Attean SPARQL store using [AtteanX::Store::SPARQL](https://metacpan.org/pod/AtteanX::Store::SPARQL)
--   [DBIx::Class::ParameterizedJoinHack](https://metacpan.org/pod/DBIx::Class::ParameterizedJoinHack) provides relationship joins with dynamic logic
--   Cleanly get a locale-specific datetime duration string with [DateTime::Format::Human::Duration::Simple](https://metacpan.org/pod/DateTime::Format::Human::Duration::Simple)
--   [JSON::Schema::AsType](https://metacpan.org/pod/JSON::Schema::AsType) generates Type::Tiny types out of JSON schemas, very nice! (I'm already using it).
--   Add cropmarks to existing PDFs for better printing using [PDF::Cropmarks](https://metacpan.org/pod/PDF::Cropmarks)
--   A Redis-like store implemented on Postgresql. Not "redisql" but [Postgredis](https://metacpan.org/pod/Postgredis)
+-   Get an Attean SPARQL store using [AtteanX::Store::SPARQL]({{<mcpan "AtteanX::Store::SPARQL" >}})
+-   [DBIx::Class::ParameterizedJoinHack]({{<mcpan "DBIx::Class::ParameterizedJoinHack" >}}) provides relationship joins with dynamic logic
+-   Cleanly get a locale-specific datetime duration string with [DateTime::Format::Human::Duration::Simple]({{<mcpan "DateTime::Format::Human::Duration::Simple" >}})
+-   [JSON::Schema::AsType]({{<mcpan "JSON::Schema::AsType" >}}) generates Type::Tiny types out of JSON schemas, very nice! (I'm already using it).
+-   Add cropmarks to existing PDFs for better printing using [PDF::Cropmarks]({{<mcpan "PDF::Cropmarks" >}})
+-   A Redis-like store implemented on Postgresql. Not "redisql" but [Postgredis]({{<mcpan "Postgredis" >}})
 
 ### Development & Version Control
 
--   [App::CPAN::Search](https://metacpan.org/pod/App::CPAN::Search) provides a base class for and script for searching CPAN
--   Oooh look! A new Perl DBGp debugger: [Devel::Debug::DBGp](https://metacpan.org/pod/Devel::Debug::DBGp)
--   Get a "quick and dirty" code coverage measurement with [Devel::QuickCover](https://metacpan.org/pod/Devel::QuickCover)
--   [Devel::SimpleProfiler](https://metacpan.org/pod/Devel::SimpleProfiler) makes it easy to profile subroutines.
--   Useful; include roles in serialization using [MooseX::Storage::Traits::WithRoles](https://metacpan.org/pod/MooseX::Storage::Traits::WithRoles)
--   [Readonly::Tiny](https://metacpan.org/pod/Readonly::Tiny) aims to provide "simple, correct, read only values"
--   Test UNIX sockets with [Test::UNIXSock](https://metacpan.org/pod/Test::UNIXSock)
--   [Test::Alien](https://metacpan.org/pod/Test::Alien) provides testing tools for Alien modules
--   Reliably test if some code uses `exec` with [Test::Exec](https://metacpan.org/pod/Test::Exec)
--   Dump anything into a single line of 80 characters or fewer with [Test::Stream::Plugin::Explain::Terse](https://metacpan.org/pod/Test::Stream::Plugin::Explain::Terse)
+-   [App::CPAN::Search]({{<mcpan "App::CPAN::Search" >}}) provides a base class for and script for searching CPAN
+-   Oooh look! A new Perl DBGp debugger: [Devel::Debug::DBGp]({{<mcpan "Devel::Debug::DBGp" >}})
+-   Get a "quick and dirty" code coverage measurement with [Devel::QuickCover]({{<mcpan "Devel::QuickCover" >}})
+-   [Devel::SimpleProfiler]({{<mcpan "Devel::SimpleProfiler" >}}) makes it easy to profile subroutines.
+-   Useful; include roles in serialization using [MooseX::Storage::Traits::WithRoles]({{<mcpan "MooseX::Storage::Traits::WithRoles" >}})
+-   [Readonly::Tiny]({{<mcpan "Readonly::Tiny" >}}) aims to provide "simple, correct, read only values"
+-   Test UNIX sockets with [Test::UNIXSock]({{<mcpan "Test::UNIXSock" >}})
+-   [Test::Alien]({{<mcpan "Test::Alien" >}}) provides testing tools for Alien modules
+-   Reliably test if some code uses `exec` with [Test::Exec]({{<mcpan "Test::Exec" >}})
+-   Dump anything into a single line of 80 characters or fewer with [Test::Stream::Plugin::Explain::Terse]({{<mcpan "Test::Stream::Plugin::Explain::Terse" >}})
 
 ### Hardware
 
--   An implementation of the Modbus communications protocol, [Device::Modbus](https://metacpan.org/pod/Device::Modbus) provides a base for developing Modbus clients and servers
--   Similarly, [ZWave::Protocol](https://metacpan.org/pod/ZWave::Protocol) provides helpers for the Z-Wave communication protocol
+-   An implementation of the Modbus communications protocol, [Device::Modbus]({{<mcpan "Device::Modbus" >}}) provides a base for developing Modbus clients and servers
+-   Similarly, [ZWave::Protocol]({{<mcpan "ZWave::Protocol" >}}) provides helpers for the Z-Wave communication protocol
 
 ### Language & International
 
--   Split identifiers into words with [Lingua::IdSplitter](https://metacpan.org/pod/Lingua::IdSplitter)
--   [Protocol::IRC](https://metacpan.org/pod/Protocol::IRC) a base class for IRC protocol handling
--   [Text::Frundis](https://metacpan.org/pod/Text::Frundis) an object oriented interface for the [frundis](http://bardinflor.perso.aquilenet.fr/frundis/intro-en) markup language
--   Get a Perl FFI interface to the Hunspell library using [Text::Hunspell::FFI](https://metacpan.org/pod/Text::Hunspell::FFI)
--   [Text::Table::Any](https://metacpan.org/pod/Text::Table::Any) generates beautiful text tables using many different backends/li\>
--   [Ufal::Parsito](https://metacpan.org/pod/Ufal::Parsito) provides bindings to the [Parsito](http://ufal.mff.cuni.cz/parsito) library
+-   Split identifiers into words with [Lingua::IdSplitter]({{<mcpan "Lingua::IdSplitter" >}})
+-   [Protocol::IRC]({{<mcpan "Protocol::IRC" >}}) a base class for IRC protocol handling
+-   [Text::Frundis]({{<mcpan "Text::Frundis" >}}) an object oriented interface for the [frundis](http://bardinflor.perso.aquilenet.fr/frundis/intro-en) markup language
+-   Get a Perl FFI interface to the Hunspell library using [Text::Hunspell::FFI]({{<mcpan "Text::Hunspell::FFI" >}})
+-   [Text::Table::Any]({{<mcpan "Text::Table::Any" >}}) generates beautiful text tables using many different backends/li\>
+-   [Ufal::Parsito]({{<mcpan "Ufal::Parsito" >}}) provides bindings to the [Parsito](http://ufal.mff.cuni.cz/parsito) library
 
 ### Science & Mathematics
 
--   Get a perly interface to the HTS library for DNA sequencing using [Bio::DB::HTS](https://metacpan.org/pod/Bio::DB::HTS)
--   [Graph::Dijkstra](https://metacpan.org/pod/Graph::Dijkstra) provides Dijkstra's shortest path algorithm and additional helper methods
+-   Get a perly interface to the HTS library for DNA sequencing using [Bio::DB::HTS]({{<mcpan "Bio::DB::HTS" >}})
+-   [Graph::Dijkstra]({{<mcpan "Graph::Dijkstra" >}}) provides Dijkstra's shortest path algorithm and additional helper methods
 
 ### Web
 
--   Great idea: use the popular HTTP::Tiny user agent with limited download/upload speed using [HTTP::Tiny::Bandwidth](https://metacpan.org/pod/HTTP::Tiny::Bandwidth)
--   [Dancer::Plugin::Swagger](https://metacpan.org/pod/Dancer::Plugin::Swagger) creates Swagger documentation of the Dancer app's REST interface. Nice!
--   Another wrapper for wget / curl: [HTTP::Command::Wrapper](https://metacpan.org/pod/HTTP::Command::Wrapper)
+-   Great idea: use the popular HTTP::Tiny user agent with limited download/upload speed using [HTTP::Tiny::Bandwidth]({{<mcpan "HTTP::Tiny::Bandwidth" >}})
+-   [Dancer::Plugin::Swagger]({{<mcpan "Dancer::Plugin::Swagger" >}}) creates Swagger documentation of the Dancer app's REST interface. Nice!
+-   Another wrapper for wget / curl: [HTTP::Command::Wrapper]({{<mcpan "HTTP::Command::Wrapper" >}})
 
 
 \

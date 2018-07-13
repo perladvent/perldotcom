@@ -28,7 +28,7 @@ I had another compelling reason, though. I wanted to get an alert on my phone wh
 
 I wrote about my setup in nonspecific terms in [Mastering Perl](http://www.masteringperl.org/2015/12/ive-found-over-200-excellent-numbers/). I didn't show any code, although it's all in [the excellent\_numbers GitHub repository](https://github.com/briandfoy/excellent_numbers).
 
-Before you start, you need some Twitter credentials to use their API through the [Net::Twitter](https://metacpan.org/pod/Net::Twitter) module. Start at [Twitter Application Management](http://apps.twitter.com) to get the four special strings you'll need (["How to Register a Twitter App in 8 Easy Steps" has a good description of the steps](http://iag.me/socialmedia/how-to-create-a-twitter-app-in-8-easy-steps/):
+Before you start, you need some Twitter credentials to use their API through the [Net::Twitter]({{<mcpan "Net::Twitter" >}}) module. Start at [Twitter Application Management](http://apps.twitter.com) to get the four special strings you'll need (["How to Register a Twitter App in 8 Easy Steps" has a good description of the steps](http://iag.me/socialmedia/how-to-create-a-twitter-app-in-8-easy-steps/):
 
 Consumer Key (API Key)  
 

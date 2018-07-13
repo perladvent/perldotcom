@@ -128,7 +128,7 @@ The lowest levels of the Perl core test suite use this approach. It's simpler to
 
 ### <span id="enter test::more">Enter Test::More</span>
 
-Several modules exist to make testing easier and almost enjoyable. *Test* ships with modern Perl distributions and plays well with Test::Harness. The [Perl-Unit](http://perlunit.sourceforge.net) suite reimplements the popular [JUnit](http://www.junit.com) framework in Perl. The rather new [Test::More](https://metacpan.org/pod/Test::Simple) module adds several features beyond those of *Test*. (I admit a particular bias toward the latter, though these and other modules are fine choices.)
+Several modules exist to make testing easier and almost enjoyable. *Test* ships with modern Perl distributions and plays well with Test::Harness. The [Perl-Unit](http://perlunit.sourceforge.net) suite reimplements the popular [JUnit](http://www.junit.com) framework in Perl. The rather new [Test::More]({{<mcpan "Test::Simple" >}}) module adds several features beyond those of *Test*. (I admit a particular bias toward the latter, though these and other modules are fine choices.)
 
 Test::More has its own `ok()` function, but it is rarely used in favor of more specific functions. `is()` compares two expressions. For example, testing an addition function is as simple as:
 

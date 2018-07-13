@@ -19,7 +19,7 @@
 }
 
 
-*Most modern processors are multi-core, yet Perl programs will typically run single-threaded on only one core at a time. Enter the [Many Core Engine](https://metacpan.org/pod/MCE) module - it makes it easy to run your existing Perl code in parallel across every core on your platform, and get a huge speed boost along the way.*
+*Most modern processors are multi-core, yet Perl programs will typically run single-threaded on only one core at a time. Enter the [Many Core Engine]({{<mcpan "MCE" >}}) module - it makes it easy to run your existing Perl code in parallel across every core on your platform, and get a huge speed boost along the way.*
 
 ### Requirements
 
@@ -29,7 +29,7 @@ You'll need to install the MCE module. The current [CPAN Testers' results](http:
 $ cpan MCE
 ```
 
-You do not need to have compiled Perl with threads enabled in order to get the parallel processing benefits as MCE can implement parallel processing using child processes via fork, [forks::shared](https://metacpan.org/pod/forks::shared), or [threads::shared](https://metacpan.org/pod/threads::shared). By default MCE will check for the presence of a threads module, otherwise, child processes are created via fork.
+You do not need to have compiled Perl with threads enabled in order to get the parallel processing benefits as MCE can implement parallel processing using child processes via fork, [forks::shared]({{<mcpan "forks::shared" >}}), or [threads::shared]({{<mcpan "threads::shared" >}}). By default MCE will check for the presence of a threads module, otherwise, child processes are created via fork.
 
 ### Understanding MCE
 
@@ -86,7 +86,7 @@ The other difference is that this code will run a lot faster than the first exam
 
 ![](/images/61/mce_grep_comparison_630.png)
 
-The other basic automation models [MCE::Loop](https://metacpan.org/pod/MCE::Loop) and [MCE::Map](https://metacpan.org/pod/MCE::Map) work in much the same was as MCE::Grep.
+The other basic automation models [MCE::Loop]({{<mcpan "MCE::Loop" >}}) and [MCE::Map]({{<mcpan "MCE::Map" >}}) work in much the same was as MCE::Grep.
 
 ### Working with filepaths
 
@@ -145,7 +145,7 @@ Because the management of assigning work chunks between workers carries a small 
 
 ### Conclusion
 
-MCE's author, Mario Roy has done wonderful job of providing a simple API and fantastic [documentation](https://metacpan.org/pod/MCE::Examples). It's really easy to get started with a basic automation model like MCE::Grep, and obtain instant speed improvements. There is however, a lot more to MCE such as initialization and shutdown routines, callbacks and sequencing. Be sure to check it out.
+MCE's author, Mario Roy has done wonderful job of providing a simple API and fantastic [documentation]({{<mcpan "MCE::Examples" >}}). It's really easy to get started with a basic automation model like MCE::Grep, and obtain instant speed improvements. There is however, a lot more to MCE such as initialization and shutdown routines, callbacks and sequencing. Be sure to check it out.
 
 ### Thanks
 

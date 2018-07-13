@@ -19,7 +19,7 @@
 }
 
 
-*The recent release of Perl 5.20 came with the exciting news that Perl was now installable on Android, Google's mobile operating system. But before you get grand visions of flying phone-controlled drones via [UAV::Pilot](https://metacpan.org/pod/UAV::Pilot), know that right now, how to get a working Perl binary is just about all that's documented. This article shows you how to get that far - solving the rest is left for the pioneers!*
+*The recent release of Perl 5.20 came with the exciting news that Perl was now installable on Android, Google's mobile operating system. But before you get grand visions of flying phone-controlled drones via [UAV::Pilot]({{<mcpan "UAV::Pilot" >}}), know that right now, how to get a working Perl binary is just about all that's documented. This article shows you how to get that far - solving the rest is left for the pioneers!*
 
 ### Requirements
 

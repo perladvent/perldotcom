@@ -22,7 +22,7 @@ Unicode is more than an expanded character set. Unicode is a set of rules about 
 
 Comparing strings for equivalence often requires normalizing them to a standard form. That normalized form often requires that all characters be in a specific case. [℞ 20: Unicode casing](/pub/2012/05/perl-unicook-unicode-casing.html) demonstrated that converting between upper- and lower-case Unicode characters is more complicated than simply mapping `[A-Z]` to `[a-z]`. (Remember also that many characters have a title case form!)
 
-The proper solution for normalized comparisons is to perform [casefolding](http://www.w3.org/International/wiki/Case_folding) instead of mapping a subset of some characters to another. Perl 5.16 added a new feature fc(), or "foldcase", to perform Unicode casefolding as the `/i` pattern modiﬁer has always provided. This feature is available for other Perls thanks to the CPAN module [`Unicode::CaseFold`](https://metacpan.org/pod/Unicode::CaseFold):
+The proper solution for normalized comparisons is to perform [casefolding](http://www.w3.org/International/wiki/Case_folding) instead of mapping a subset of some characters to another. Perl 5.16 added a new feature fc(), or "foldcase", to perform Unicode casefolding as the `/i` pattern modiﬁer has always provided. This feature is available for other Perls thanks to the CPAN module [`Unicode::CaseFold`]({{<mcpan "Unicode::CaseFold" >}}):
 
      use feature "fc"; # fc() function is from v5.16
      # OR

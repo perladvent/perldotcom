@@ -23,7 +23,7 @@ In [part I](http://perltricks.com/article/183/2015/7/20/Port-scanning-with-Perl)
 
 ### Scan a range of ports
 
-The first feature I want to add is the ability to scan user-defined port ranges, instead of the default list of named ports. Because I'm using [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to parse command line arguments, I can add `range` to the parameter options:
+The first feature I want to add is the ability to scan user-defined port ranges, instead of the default list of named ports. Because I'm using [Getopt::Long]({{<mcpan "Getopt::Long" >}}) to parse command line arguments, I can add `range` to the parameter options:
 
 ```perl
 GetOptions (
@@ -80,7 +80,7 @@ GetOptions (
 
 This code does a few neat things: by using the `=i` definition, `GetOptions` will do integer type checking for the number of processors. Likewise `=f` will enforce a floating-point number type. The other thing this code does is declare and set a default value for the variables within the `GetOptions` function.
 
-To support `sleep` for floating point seconds, I need to import the [Time::HiRes](https://metacpan.org/pod/Time::HiRes) module (part of the Perl core):
+To support `sleep` for floating point seconds, I need to import the [Time::HiRes]({{<mcpan "Time::HiRes" >}}) module (part of the Perl core):
 
 ```perl
 use Time::HiRes 'sleep';
@@ -121,7 +121,7 @@ And the scanner will now fork `$procs` number of processes, and sleep `$delay` s
 
 The simple scanner prints out every scanned port and the port status. This can be too much information - in most cases the user is interested in vulnerable open ports and doesn't care about filtered or closed ones. On the other hand, the output is missing key information that would be required for a security audit: datetime of execution, program version, parameters used, overall runtime etc. So I need to add this information to the output.
 
-To calculate the program runtime duration, and print the start datetime I can use the [Time::Piece](https://metacpan.org/pod/Time::Piece) module. The module is part of core Perl so there is no need to install it, plus you can do [almost anything](http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece) with it.
+To calculate the program runtime duration, and print the start datetime I can use the [Time::Piece]({{<mcpan "Time::Piece" >}}) module. The module is part of core Perl so there is no need to install it, plus you can do [almost anything](http://perltricks.com/article/59/2014/1/10/Solve-almost-any-datetime-need-with-Time--Piece) with it.
 
 ```perl
 use Time::Piece;
@@ -225,7 +225,7 @@ sub send_packet
 }
 ```
 
-The updated subroutine transparently passes the arguments received to [Net::RawIP](https://metacpan.org/pod/Net::RawIP), which handles the details. The remaining ip and port variables are globals and already defined by this point in the code.
+The updated subroutine transparently passes the arguments received to [Net::RawIP]({{<mcpan "Net::RawIP" >}}), which handles the details. The remaining ip and port variables are globals and already defined by this point in the code.
 
 The [read\_packet](https://gist.github.com/dnmfarrell/3db321fc11b0d85f729d#file-port_scanner-L145-L171) subroutine also needs to be updated to parse different packet types:
 
@@ -264,7 +264,7 @@ sub read_packet
 }
 ```
 
-If we receive a TCP packet, the code examines the packet flags to determine the status of the port. A port is considered open if we receive an ACK/SYN response, which can be tested for by checking the presence of the `SYN` flag. An `RST` flag indicates the port is closed. Note that to test for presence of the flag we use bitwise `&` against the flag constants exported by [NetPacket::TCP](https://metacpan.org/pod/NetPacket::TCP).
+If we receive a TCP packet, the code examines the packet flags to determine the status of the port. A port is considered open if we receive an ACK/SYN response, which can be tested for by checking the presence of the `SYN` flag. An `RST` flag indicates the port is closed. Note that to test for presence of the flag we use bitwise `&` against the flag constants exported by [NetPacket::TCP]({{<mcpan "NetPacket::TCP" >}}).
 
 UDP is a simpler affair as it doesn't support flags. If we receive a UDP datagram, we treat the port as open.
 

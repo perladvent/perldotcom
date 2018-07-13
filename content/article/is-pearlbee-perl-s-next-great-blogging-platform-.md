@@ -87,7 +87,7 @@ Comments can be security risk as they allow users to upload text which is then d
 
 ### User Management
 
-PearlBee recognizes two types of users: "administrators" who can manage the site's data, and "authors" who can write blog posts but not do much else. As with the other database objects, PearlBee provides a form-driven interface for managing the site's users. During testing I was able to create a new author, login with that author and write blog posts. It worked well. PearlBee created a default, random, encrypted password for the account and sent the new user an email with instructions on how to login (the email actually wasn't sent, more on this later). PearlBee uses [Crypt::RandPasswd](https://metacpan.org/pod/Crypt::RandPasswd) to generate the initial password, and [Digest::SHA1](https://metacpan.org/pod/Digest::SHA1) to encrypt it. This should be set to a stronger encryption method, as Digest::SHA1 contains [security weaknesses](https://www.schneier.com/blog/archives/2005/02/cryptanalysis_o.html).
+PearlBee recognizes two types of users: "administrators" who can manage the site's data, and "authors" who can write blog posts but not do much else. As with the other database objects, PearlBee provides a form-driven interface for managing the site's users. During testing I was able to create a new author, login with that author and write blog posts. It worked well. PearlBee created a default, random, encrypted password for the account and sent the new user an email with instructions on how to login (the email actually wasn't sent, more on this later). PearlBee uses [Crypt::RandPasswd]({{<mcpan "Crypt::RandPasswd" >}}) to generate the initial password, and [Digest::SHA1]({{<mcpan "Digest::SHA1" >}}) to encrypt it. This should be set to a stronger encryption method, as Digest::SHA1 contains [security weaknesses](https://www.schneier.com/blog/archives/2005/02/cryptanalysis_o.html).
 
 Additional roles might be useful here: an editor role that can edit and publish posts, but not change the site's settings or create new users would bridge the gap between the current admin and author roles. I would probably remove the author role's permission to publish articles.
 
@@ -97,7 +97,7 @@ PearlBee is built in a responsive design with the Twitter Bootstrap framework. T
 
 Apart from the design, you'll want to edit the PearlBee templates to use your blog's name, and update the default footer information. It would be awesome if PearlBee were able to read this from the config.yml file, rather than requiring code edits to the template toolkit view files.
 
-PearlBee requires a local SMTP server to send emails (such as the new user welcome email). I found the email settings were hard-coded to use the default and not configurable, which meant I wasn't able to test the email functionality. Contrary to the Makefile, PearlBee uses [Email::Template](https://metacpan.org/pod/Email::Template) and not MIME::Email or Email::Sender::Simple to handle email. PearlBee does come with some pre-configured email templates which look useful.
+PearlBee requires a local SMTP server to send emails (such as the new user welcome email). I found the email settings were hard-coded to use the default and not configurable, which meant I wasn't able to test the email functionality. Contrary to the Makefile, PearlBee uses [Email::Template]({{<mcpan "Email::Template" >}}) and not MIME::Email or Email::Sender::Simple to handle email. PearlBee does come with some pre-configured email templates which look useful.
 
 ### Conclusion
 

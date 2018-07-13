@@ -32,11 +32,11 @@ After I left academia I worked as a Perl developer and started developing a more
 
 ### Geekuni's technology stack
 
-The public [site](https://geekuni.com) is a web application where users can view the course outlines and create an account. It's based on [Starman](https://metacpan.org/pod/Starman) and [Dancer2](https://metacpan.org/pod/Dancer2) . Templating is provided by the [Template::Toolkit](https://metacpan.org/pod/Template::Toolkit) integrated with [Bootstrap](http://getbootstrap.com/). The application classes are written in [Moo](https://metacpan.org/pod/Moo) and [DBIx::Class](https://metacpan.org/pod/DBIx::Class) provides the DB interface.
+The public [site](https://geekuni.com) is a web application where users can view the course outlines and create an account. It's based on [Starman]({{<mcpan "Starman" >}}) and [Dancer2]({{<mcpan "Dancer2" >}}) . Templating is provided by the [Template::Toolkit]({{<mcpan "Template::Toolkit" >}}) integrated with [Bootstrap](http://getbootstrap.com/). The application classes are written in [Moo]({{<mcpan "Moo" >}}) and [DBIx::Class]({{<mcpan "DBIx::Class" >}}) provides the DB interface.
 
 The course notes and exercises are hosted on [Moodle](https://moodle.org/), probably the most established open source Learning Management System used in universities across the world. With help from one of Moodle's core developers, Jamie Pratt, I put together plugins which help the student start an [AWS](http://aws.amazon.com/) instance to get feedback from the Tutor-bot.
 
-Each student's AWS instance is called an "eBox". I manage them using [Net::Amazon::EC2](https://metacpan.org/pod/Net::Amazon::EC2). The eBox integrates with the Moodle API to provide feedback on student submissions. It uses [PPI](https://metacpan.org/pod/PPI) to parse the student's code, and then it traverses down a dependency [Graph](https://metacpan.org/pod/distribution/Graph/lib/Graph.pod) to identify the essence of any problem the student needs to resolve.
+Each student's AWS instance is called an "eBox". I manage them using [Net::Amazon::EC2]({{<mcpan "Net::Amazon::EC2" >}}). The eBox integrates with the Moodle API to provide feedback on student submissions. It uses [PPI]({{<mcpan "PPI" >}}) to parse the student's code, and then it traverses down a dependency [Graph]({{<mcpan "distribution/Graph/lib/Graph.pod" >}}) to identify the essence of any problem the student needs to resolve.
 
 ### Looking forwards
 

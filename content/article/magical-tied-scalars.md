@@ -42,7 +42,7 @@ Besides all the goofy things going on with the code, such as printing directly a
 
 I could have replaced the subroutine using one of the techniques I showed in [Mastering Perl](http://www.masteringperl.org/), but there was something simpler. If I could get `$color` to change on its own, I wouldn't have to mess with the code.
 
-Thus, I invented [Tie::Cycle](https://metacpan.org/pod/Tie::Cycle). The `tie` interface allows me to decide what a scalar should do when I access it or store it. I supply code behind both of those operations by defining special subroutines. Here's an extract of the code that shows those special methods:
+Thus, I invented [Tie::Cycle]({{<mcpan "Tie::Cycle" >}}). The `tie` interface allows me to decide what a scalar should do when I access it or store it. I supply code behind both of those operations by defining special subroutines. Here's an extract of the code that shows those special methods:
 
 ```perl
 package Tie::Cycle;
@@ -177,7 +177,7 @@ Each time I access the scalar, I get back the previous value multiplied by the r
 
 This is a tidy solution because it fits into the code that's already there. The existing code that expected a single value gets a scalar that changes its value each time.
 
-Instead of giving Tie::Scalar::Ratio, I'd like to give it a callback. David also created [Tie::Scalar::Callback](https://metacpan.org/pod/Tie::Scalar::Callback). Each time I access the scalar, this module calls the subroutine I passed to it and give me back the result. The code looks similar to the others:
+Instead of giving Tie::Scalar::Ratio, I'd like to give it a callback. David also created [Tie::Scalar::Callback]({{<mcpan "Tie::Scalar::Callback" >}}). Each time I access the scalar, this module calls the subroutine I passed to it and give me back the result. The code looks similar to the others:
 
 ```perl
 use strict;

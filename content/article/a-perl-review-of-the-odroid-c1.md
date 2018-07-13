@@ -32,7 +32,7 @@ Since installing CPAN modules (especially ones that don't have official OS packa
 
 I've spent entire evenings waiting for layers of CPAN dependencies to install on a Raspberry Pi's SD card. Using [Hiveberry's images](https://vonbienenstock.de/hiveberry/) can certainly help here. Of course, most people will be starting from the official OS images, and may hesitate to use a third-party; understandably so.
 
-Here's a quick-and-dirty benchmark of installing [Device::WebIO](https://metacpan.org/pod/Device::WebIO) from a fresh deployment on an SD card bought directly from the ODROID store:
+Here's a quick-and-dirty benchmark of installing [Device::WebIO]({{<mcpan "Device::WebIO" >}}) from a fresh deployment on an SD card bought directly from the ODROID store:
 
 ```perl
 $ time sudo cpanm Device::WebIO
@@ -42,7 +42,7 @@ user    3m46.290s
 sys     0m18.780s
 ```
 
-Then [Dancer](https://metacpan.org/pod/Dancer) immediately after that (which has quite the dependency list):
+Then [Dancer]({{<mcpan "Dancer" >}}) immediately after that (which has quite the dependency list):
 
 ```perl
 $ time sudo cpanm Dancer

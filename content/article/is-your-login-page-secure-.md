@@ -37,7 +37,7 @@ If you'd like to download the app and follow along you can, but this step is opt
 $ git clone https://github.com/dnmfarrell/SecApp_login
 ```
 
-There's no way around it; this app has a lot of dependencies. To ease the burden, start by installing [cpanminus](https://metacpan.org/pod/App::cpanminus) at the command line:
+There's no way around it; this app has a lot of dependencies. To ease the burden, start by installing [cpanminus]({{<mcpan "App::cpanminus" >}}) at the command line:
 
 ```perl
 $ cpan App::cpanminus
@@ -194,7 +194,7 @@ So even if attackers obtained the application password file, the passwords are s
 
 The code that validates credentials can also contain weaknesses. Passwords should be validated in full, without modification or truncation and in a case-sensitive comparison. Multi-stage login processes are particularly susceptible to attacks. The login code should be peer-reviewed and substantially tested for errors.
 
-The [Catalyst::Plugin::Authentication](https://metacpan.org/pod/Catalyst::Plugin::Authentication) module makes authentication easy. SecApp keeps the login process simple: just a username and password form, with an optional CAPTCHA. Here is the full login code:
+The [Catalyst::Plugin::Authentication]({{<mcpan "Catalyst::Plugin::Authentication" >}}) module makes authentication easy. SecApp keeps the login process simple: just a username and password form, with an optional CAPTCHA. Here is the full login code:
 
 ```perl
 sub login_auth :Chained('login') PathPart('') Args(0) POST {
@@ -237,7 +237,7 @@ sub login_auth :Chained('login') PathPart('') Args(0) POST {
 
 Let's walk through the code. If the CAPTCHA functionality is enabled, the login function will attempt to validate the CAPTCHA. If successful, the code then retrieves the username and password, and if they exist, attempts to validate them using the authenticate method. The authenticate method checks both username and password in full against the database. If the username and password are validated, then the user will be re-directed to the landing page which is in the secure Admin.pm controller. Else an error message will set indicating a bad username or password. In all failing cases, the login form will be reloaded and displayed.
 
-So the code looks good, but how do we know if it will do the right thing in all cases? Fortunately [Catalyst::Test](https://metacpan.org/pod/Catalyst::Test) can make unit testing an application's methods easy. SecApp has the test file [Root.t](https://github.com/dnmfarrell/SecApp_login/blob/master/t/Root.t) which tests the login function with many different combinations of credentials, such as null, zero-length string, correct username incorrect password etc. Running these tests makes it easy to confirm that the login function does the right thing. Want to check for yourself? At the command line run:
+So the code looks good, but how do we know if it will do the right thing in all cases? Fortunately [Catalyst::Test]({{<mcpan "Catalyst::Test" >}}) can make unit testing an application's methods easy. SecApp has the test file [Root.t](https://github.com/dnmfarrell/SecApp_login/blob/master/t/Root.t) which tests the login function with many different combinations of credentials, such as null, zero-length string, correct username incorrect password etc. Running these tests makes it easy to confirm that the login function does the right thing. Want to check for yourself? At the command line run:
 
 ```perl
 $ TESTING=1 perl -Ilib t/Root.t
@@ -245,7 +245,7 @@ $ TESTING=1 perl -Ilib t/Root.t
 
 ### 4. Prevent brute-force attacks
 
-Brute force attacks are attempts to crack the username and password of an account by repeatedly trying different combinations until one succeeds. SecApp uses [Captcha::reCAPTCHA](https://metacpan.org/pod/Captcha::reCAPTCHA) to prevent automated brute force attacks. You'll need a Google account and web domain to sign up for it (it's free). The difficulty of the captcha puzzles presented are very difficult to reliably pass with automation. If you do have a Google [reCAPtCHA account](https://www.google.com/recaptcha/intro/index.html), you can try it out with SecApp by updating [SecApp.pm](https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp.pm#L54) with your account credentials.
+Brute force attacks are attempts to crack the username and password of an account by repeatedly trying different combinations until one succeeds. SecApp uses [Captcha::reCAPTCHA]({{<mcpan "Captcha::reCAPTCHA" >}}) to prevent automated brute force attacks. You'll need a Google account and web domain to sign up for it (it's free). The difficulty of the captcha puzzles presented are very difficult to reliably pass with automation. If you do have a Google [reCAPtCHA account](https://www.google.com/recaptcha/intro/index.html), you can try it out with SecApp by updating [SecApp.pm](https://github.com/dnmfarrell/SecApp_login/blob/master/lib/SecApp.pm#L54) with your account credentials.
 
 ![](/images/84/secapp_login_catpcha.png)
 

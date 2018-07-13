@@ -121,7 +121,7 @@ need a tool to build it before we can use it:
       XSMULTI        => 1,
     );
 
-The ExtUtils::MakeMaker [docs](https://metacpan.org/pod/ExtUtils::MakeMaker) explain these options.
+The ExtUtils::MakeMaker [docs]({{<mcpan "ExtUtils::MakeMaker" >}}) explain these options.
 
 But let's talk about `XSMULTI`. This is a relatively new feature which allows
 you to have separate .xs files for modules. By default EUMM assumes the xs
@@ -297,12 +297,12 @@ This will delete all the build files and reset the working directory to normal.
 
 ### References
 
-- This article and code are on CPAN as [XS::Tutorial::One](https://metacpan.org/pod/XS::Tutorial::One)
+- This article and code are on CPAN as [XS::Tutorial::One]({{<mcpan "XS::Tutorial::One" >}})
 - XS Mechanics by Steven W. McDougall is my second favorite :) XS [tutorial](http://world.std.com/~swmcd/steven/perl/pm/xs/intro/)
-- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp](https://metacpan.org/pod/distribution/ExtUtils-ParseXS/lib/ExtUtils/xsubpp)
+- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp]({{<mcpan "distribution/ExtUtils-ParseXS/lib/ExtUtils/xsubpp" >}})
 - [perlapi](http://perldoc.perl.org/perlapi.html) : C macros used to interact with Perl data structures (and the interpreter)
 - The [stdlib.h](http://pubs.opengroup.org/onlinepubs/9699919799/) man page defines the C standard library functions and types
-- For writing Makefile.PL files: ExtUtils::MakeMaker [docs](https://metacpan.org/pod/ExtUtils::MakeMaker) are invaluable
+- For writing Makefile.PL files: ExtUtils::MakeMaker [docs]({{<mcpan "ExtUtils::MakeMaker" >}}) are invaluable
 - Perl's built-in [rand](http://perldoc.perl.org/functions/rand.html) and [srand](http://perldoc.perl.org/functions/srand.html) functions
 
 \

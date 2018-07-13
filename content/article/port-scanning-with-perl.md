@@ -33,7 +33,7 @@ A basic port scanner needs to be able to take an IP address of a livehost, enume
 
 #### Parsing command line arguments
 
-We can use [Getopt::Long](https://metacpan.org/pod/Getopt::Long) and [Pod::Usage](https://metacpan.org/pod/Pod::Usage):
+We can use [Getopt::Long]({{<mcpan "Getopt::Long" >}}) and [Pod::Usage]({{<mcpan "Pod::Usage" >}}):
 
 ```perl
 use Getopt::Long;
@@ -83,7 +83,7 @@ my $local_port = do {
 };
 ```
 
-To get the local ip address, I call the `public` method provided by the [Net::Address::IP::Local](https://metacpan.org/pod/Net::Address::IP::Local) module. Easy! Finding a local port that is available is more involved. In theory any unnamed port should be available, but there might be another service already using it. Instead I create a new socket object using [IO::Socket::INET](https://metacpan.org/pod/IO::Socket::INET) without specifying a local port. Under the hood, this attempts to open a socket on port zero, and the operating system will then automatically assign an available port to the socket (zero is reserved). This has the added benefit of randomizing the local port used by the scanner every time it runs. I then save the port number the socket was opened on, and close the socket.
+To get the local ip address, I call the `public` method provided by the [Net::Address::IP::Local]({{<mcpan "Net::Address::IP::Local" >}}) module. Easy! Finding a local port that is available is more involved. In theory any unnamed port should be available, but there might be another service already using it. Instead I create a new socket object using [IO::Socket::INET]({{<mcpan "IO::Socket::INET" >}}) without specifying a local port. Under the hood, this attempts to open a socket on port zero, and the operating system will then automatically assign an available port to the socket (zero is reserved). This has the added benefit of randomizing the local port used by the scanner every time it runs. I then save the port number the socket was opened on, and close the socket.
 
 #### Getting a list of ports to scan
 
@@ -119,7 +119,7 @@ my @ports = shuffle do {
 };
 ```
 
-This code starts by importing the `shuffle` function from [List::Util](https://metacpan.org/pod/List::Util), which I use later to randomize the order of the list of ports. I then open a filehandle to the nmap-services text file, loop through it building the `%port_directory` hash. Finally I loop through the the port directory with `grep`, extracting all the tcp ports not labeled "unknown", use `map` to extract the port number from the hash, shuffling the port numbers to randomize their entry into `@ports` (shuffle may be unnecessary in newer versions of Perl as hash key order is randomized anyway).
+This code starts by importing the `shuffle` function from [List::Util]({{<mcpan "List::Util" >}}), which I use later to randomize the order of the list of ports. I then open a filehandle to the nmap-services text file, loop through it building the `%port_directory` hash. Finally I loop through the the port directory with `grep`, extracting all the tcp ports not labeled "unknown", use `map` to extract the port number from the hash, shuffling the port numbers to randomize their entry into `@ports` (shuffle may be unnecessary in newer versions of Perl as hash key order is randomized anyway).
 
 #### Sending packets and listening for responses
 
@@ -191,7 +191,7 @@ until (waitpid(-1, WNOHANG) == -1) # until all children exit
 }
 ```
 
-This is a lot of code to process, but l'm going to cover the broad strokes. The code forks 50 child processes and assigns a batch of ports to each child. I install a signal handler for the `CONT` signal in each child, and pause the child processes until that signal is received. This is to stop the children from going ahead and firing off packets that the parent is not ready to capture. Once all the children have been created, the parent process sets up a packet capture object using [Lib::Pcap](https://metacpan.org/pod/Lib::Pcap). The capture object is given a filter for the `$target_ip` and the `$local_port` which we discovered earlier.
+This is a lot of code to process, but l'm going to cover the broad strokes. The code forks 50 child processes and assigns a batch of ports to each child. I install a signal handler for the `CONT` signal in each child, and pause the child processes until that signal is received. This is to stop the children from going ahead and firing off packets that the parent is not ready to capture. Once all the children have been created, the parent process sets up a packet capture object using [Lib::Pcap]({{<mcpan "Lib::Pcap" >}}). The capture object is given a filter for the `$target_ip` and the `$local_port` which we discovered earlier.
 
 The parent then signals the children processes using `kill` and the children begin sending packets using `send_packet` (defined below). Finally the parent process starts a loop listening for packets using `waitpid` to determine when all of the children have finished sending their packets and exited. During the loop, the parent calls `read_packet` (defined below) every time it receives a new packet.
 
@@ -219,7 +219,7 @@ sub send_packet
 }
 ```
 
-This code uses the much under-appreciated [Net::RawIP](https://metacpan.org/pod/Net::RawIP) module to craft TCP packets and send them to our target destination. We set the SYN flag to 1 to trigger the beginning of a three-way TCP connection which we will never complete. This is a stealthy way to discover ports - by not completing the handshake our requests will not be logged unless the target has been configured to capture this data.
+This code uses the much under-appreciated [Net::RawIP]({{<mcpan "Net::RawIP" >}}) module to craft TCP packets and send them to our target destination. We set the SYN flag to 1 to trigger the beginning of a three-way TCP connection which we will never complete. This is a stealthy way to discover ports - by not completing the handshake our requests will not be logged unless the target has been configured to capture this data.
 
 The `read_packet` subroutine is a bit more involved:
 
@@ -257,7 +257,7 @@ sub read_packet
 }
 ```
 
-I use the [NetPacket](https://metacpan.org/pod/NetPacket) distribution to parse the incoming packets. The first check `if ($ip_packet->{proto} == 6)` is to check that we're processing a TCP packet (each protocol has a number - see [list](https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers)). The code then parses the TCP packet and looks up the port name in our `%port_directory` created earlier. `SYN` and `RST` are constants exported by [NetPacket::TCP](https://metacpan.org/pod/NetPacket::TCP), which are ANDed against the flags value of the TCP header to identify the type of TCP packet. If we've received a SYN packet, it looks like the port is open, a RST packet indicates the port is closed.
+I use the [NetPacket]({{<mcpan "NetPacket" >}}) distribution to parse the incoming packets. The first check `if ($ip_packet->{proto} == 6)` is to check that we're processing a TCP packet (each protocol has a number - see [list](https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers)). The code then parses the TCP packet and looks up the port name in our `%port_directory` created earlier. `SYN` and `RST` are constants exported by [NetPacket::TCP]({{<mcpan "NetPacket::TCP" >}}), which are ANDed against the flags value of the TCP header to identify the type of TCP packet. If we've received a SYN packet, it looks like the port is open, a RST packet indicates the port is closed.
 
 #### Summarizing the results
 

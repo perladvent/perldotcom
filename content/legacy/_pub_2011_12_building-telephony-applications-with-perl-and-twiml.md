@@ -15,9 +15,9 @@
 
 
 
-Perl makes writing Twilio telephony applications simple and enjoyable. My previous article, [Automating Telephony with Perl and Twilio](/pub/2011/09/automating-telephony-with-perl-and-twilio.html) showed how to use [WWW::Twilio::API](https://metacpan.org/pod/WWW::Twilio::API) to make a phone survey using Twilio's text-to-speech synthesizer as well as send an SMS message to a phone number of your choice.
+Perl makes writing Twilio telephony applications simple and enjoyable. My previous article, [Automating Telephony with Perl and Twilio](/pub/2011/09/automating-telephony-with-perl-and-twilio.html) showed how to use [WWW::Twilio::API]({{<mcpan "WWW::Twilio::API" >}}) to make a phone survey using Twilio's text-to-speech synthesizer as well as send an SMS message to a phone number of your choice.
 
-This article builds an easy phone menu application using Twilio's [TwiML](http://www.twilio.com/docs/api/twiml/) application language, [WWW::Twilio::TwiML](https://metacpan.org/pod/WWW::Twilio::TwiML), and [Mojolicious](http://mojolicio.us/).
+This article builds an easy phone menu application using Twilio's [TwiML](http://www.twilio.com/docs/api/twiml/) application language, [WWW::Twilio::TwiML]({{<mcpan "WWW::Twilio::TwiML" >}}), and [Mojolicious](http://mojolicio.us/).
 
 **Installation and Twilio account creation**
 --------------------------------------------
@@ -338,4 +338,4 @@ Finally, invoke Mojolicious's `render()` method to create an XML *Content-type* 
 
 [Here is the full source](/media/_pub_2011_12_building-telephony-applications-with-perl-and-twiml/menu) for your enjoyment. If you've already set Twilio's Voice URL in uour Sandbox, nothing further needs to be done on Twilio's side. Just upload the new application to the web server and start it (Mojolicious supports a variety of [deployment options](http://mojolicio.us/perldoc/Mojolicious/Guides/Cookbook#DEPLOYMENT) including Morbo, CGI, FastCGI, or Plack).
 
-You've made a simple phone menu here, but you've only learned a few of [Twilio's TwiML verbs](http://www.twilio.com/docs/api/twiml/). With [WWW::Twilio::API](https://metacpan.org/pod/WWW::Twilio::API), [WWW::Twilio::TwiML](https://metacpan.org/pod/WWW::Twilio::TwiML), and [Mojolicious](http://mojolicio.us) you can also create conference rooms, make voice recordings, send and receive SMS messages, reject calls from unwanted numbers, and do other useful actions in just a few lines of code.
+You've made a simple phone menu here, but you've only learned a few of [Twilio's TwiML verbs](http://www.twilio.com/docs/api/twiml/). With [WWW::Twilio::API]({{<mcpan "WWW::Twilio::API" >}}), [WWW::Twilio::TwiML]({{<mcpan "WWW::Twilio::TwiML" >}}), and [Mojolicious](http://mojolicio.us) you can also create conference rooms, make voice recordings, send and receive SMS messages, reject calls from unwanted numbers, and do other useful actions in just a few lines of code.

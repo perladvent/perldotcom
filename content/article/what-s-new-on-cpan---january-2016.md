@@ -25,51 +25,51 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 
 ### APIs & Apps
 
--   Convert CPAN distributions into RPM packages with the newly-repackaged [App::CPANtoRPM](https://metacpan.org/pod/App::CPANtoRPM)!
--   [App::Inspect](https://metacpan.org/pod/App::Inspect) helps you easily find the versions and locations of installed modules
--   [App::tt](https://metacpan.org/pod/App::tt) is a command line time tracking app
--   [Net::Duo](https://metacpan.org/pod/Net::Duo) provides a Perl API for the popular multifactor authentication service
--   Read articles from two popular sources at the command line: [App::tldr](https://metacpan.org/pod/App::tldr) and [WebService::TDWTF](https://metacpan.org/pod/WebService::TDWTF)
+-   Convert CPAN distributions into RPM packages with the newly-repackaged [App::CPANtoRPM]({{<mcpan "App::CPANtoRPM" >}})!
+-   [App::Inspect]({{<mcpan "App::Inspect" >}}) helps you easily find the versions and locations of installed modules
+-   [App::tt]({{<mcpan "App::tt" >}}) is a command line time tracking app
+-   [Net::Duo]({{<mcpan "Net::Duo" >}}) provides a Perl API for the popular multifactor authentication service
+-   Read articles from two popular sources at the command line: [App::tldr]({{<mcpan "App::tldr" >}}) and [WebService::TDWTF]({{<mcpan "WebService::TDWTF" >}})
 
 ### Config & Devops
 
--   Conveniently find local outdated modules and for CPAN:[CPAN::Diff](https://metacpan.org/pod/CPAN::Diff) and Pinto: [DarkPAN::Compare](https://metacpan.org/pod/DarkPAN::Compare)
--   Dispatch log events to Slack with log4perl and [Log::Dispatch::Slack](https://metacpan.org/pod/Log::Dispatch::Slack)
+-   Conveniently find local outdated modules and for CPAN:[CPAN::Diff]({{<mcpan "CPAN::Diff" >}}) and Pinto: [DarkPAN::Compare]({{<mcpan "DarkPAN::Compare" >}})
+-   Dispatch log events to Slack with log4perl and [Log::Dispatch::Slack]({{<mcpan "Log::Dispatch::Slack" >}})
 
 ### Data
 
--   Useful for low-level network tasks, [Net::Frame::Layer::VRRP](https://metacpan.org/pod/Net::Frame::Layer::VRRP) provides a Virtual Router Redundancy Protocol class
--   A simple way to get a high-resolution Unix epoch: [Time::TAI::Simple](https://metacpan.org/pod/Time::TAI::Simple)
--   [Types::SQL](https://metacpan.org/pod/Types::SQL) is library of SQL types; useful for Moo/Moose/Mouse classes
+-   Useful for low-level network tasks, [Net::Frame::Layer::VRRP]({{<mcpan "Net::Frame::Layer::VRRP" >}}) provides a Virtual Router Redundancy Protocol class
+-   A simple way to get a high-resolution Unix epoch: [Time::TAI::Simple]({{<mcpan "Time::TAI::Simple" >}})
+-   [Types::SQL]({{<mcpan "Types::SQL" >}}) is library of SQL types; useful for Moo/Moose/Mouse classes
 
 ### Development & Version Control
 
--   Interesting; call functions / methods from a different caller with [Call::From](https://metacpan.org/pod/Call::From)
--   [Export::Declare](https://metacpan.org/pod/Export::Declare) provides simple and clean ways to export code and variables.
--   [Importer](https://metacpan.org/pod/Importer) provides convenient routines for importing (and renaming!) code from modules
--   Easily test non-blocking Perl scripts (like Mojo apps) with [Test::Script::Async](https://metacpan.org/pod/Test::Script::Async)
--   [Test2::Workflow](https://metacpan.org/pod/Test2::Workflow) is a framework for building testing workflows (e.g. [Test2::Tools::Spec](https://metacpan.org/pod/Test2::Tools::Spec))
--   Make scalars which execute a subroutine every time they're accessed using [Tie::Scalar::Callback](https://metacpan.org/pod/Tie::Scalar::Callback)
--   Run Visual Basic and JavaScript code via OLE with [Win32::VBScript](https://metacpan.org/pod/Win32::VBScript). Fun!
+-   Interesting; call functions / methods from a different caller with [Call::From]({{<mcpan "Call::From" >}})
+-   [Export::Declare]({{<mcpan "Export::Declare" >}}) provides simple and clean ways to export code and variables.
+-   [Importer]({{<mcpan "Importer" >}}) provides convenient routines for importing (and renaming!) code from modules
+-   Easily test non-blocking Perl scripts (like Mojo apps) with [Test::Script::Async]({{<mcpan "Test::Script::Async" >}})
+-   [Test2::Workflow]({{<mcpan "Test2::Workflow" >}}) is a framework for building testing workflows (e.g. [Test2::Tools::Spec]({{<mcpan "Test2::Tools::Spec" >}}))
+-   Make scalars which execute a subroutine every time they're accessed using [Tie::Scalar::Callback]({{<mcpan "Tie::Scalar::Callback" >}})
+-   Run Visual Basic and JavaScript code via OLE with [Win32::VBScript]({{<mcpan "Win32::VBScript" >}}). Fun!
 
 ### Hardware
 
--   Paul Evans continues to deliver new hardware tools via [Device::Chip](https://metacpan.org/pod/Device::Chip)! Get a driver for the PCF8563 chip ([Device::Chip::PCF8563](https://metacpan.org/pod/Device::Chip::PCF8563)), and a driver for SD and MMC cards ([Device::Chip::SDCard](https://metacpan.org/pod/Device::Chip::SDCard))
+-   Paul Evans continues to deliver new hardware tools via [Device::Chip]({{<mcpan "Device::Chip" >}})! Get a driver for the PCF8563 chip ([Device::Chip::PCF8563]({{<mcpan "Device::Chip::PCF8563" >}})), and a driver for SD and MMC cards ([Device::Chip::SDCard]({{<mcpan "Device::Chip::SDCard" >}}))
 
 ### Other
 
--   [Poker::Eval](https://metacpan.org/pod/Poker::Eval) is a base class providing routines for Poker games including dealing, scoring and calculating expected win rates.
--   [URI::redis](https://metacpan.org/pod/URI::redis) provides a URI class specific to Redis URIs
+-   [Poker::Eval]({{<mcpan "Poker::Eval" >}}) is a base class providing routines for Poker games including dealing, scoring and calculating expected win rates.
+-   [URI::redis]({{<mcpan "URI::redis" >}}) provides a URI class specific to Redis URIs
 
 ### Science & Mathematics
 
--   [Bio::HTS](https://metacpan.org/pod/Bio::HTS) is an early-stage Perl interface for htslib
--   Get cryptographically-secure and fast pseudo random number generators using [Crypt::DRBG](https://metacpan.org/pod/Crypt::DRBG)
+-   [Bio::HTS]({{<mcpan "Bio::HTS" >}}) is an early-stage Perl interface for htslib
+-   Get cryptographically-secure and fast pseudo random number generators using [Crypt::DRBG]({{<mcpan "Crypt::DRBG" >}})
 
 ### Web
 
--   Create CGI (yes!) GitHub webhooks with[CGI::Github::Webhook](https://metacpan.org/pod/CGI::Github::Webhook)
--   Curious: [Lemplate](https://metacpan.org/pod/Lemplate) compiles TT templates to standalone Lua modules for OpenResty
+-   Create CGI (yes!) GitHub webhooks with[CGI::Github::Webhook]({{<mcpan "CGI::Github::Webhook" >}})
+-   Curious: [Lemplate]({{<mcpan "Lemplate" >}}) compiles TT templates to standalone Lua modules for OpenResty
 
 
 \

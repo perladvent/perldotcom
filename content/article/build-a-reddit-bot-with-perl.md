@@ -28,7 +28,7 @@ A busier Perl subreddit is good for the community; more links on /r/perl should 
 
 ### Reddit API
 
-You'll need a Reddit account to use the API. I like to use [Reddit::Client](https://metacpan.org/pod/Reddit::Client) as it works well, has good documentation and maintains a session cache. This is a subroutine for posting links to Reddit:
+You'll need a Reddit account to use the API. I like to use [Reddit::Client]({{<mcpan "Reddit::Client" >}}) as it works well, has good documentation and maintains a session cache. This is a subroutine for posting links to Reddit:
 
 ```perl
 use warnings;
@@ -110,7 +110,7 @@ In addition to the try/catch, I've added a `log_error` subroutine which will wri
 
 ### Reading blog feeds
 
-Now I have a subroutine for posting links to Reddit, I need a way to monitor blog feeds and post links to new articles. Most blogs provide feed data via RSS or atom data, for example [blogs.perl.org](http://blogs.perl.org) uses atom. I can monitor this feed using [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny) and [XML::Atom::Client](https://metacpan.org/pod/XML::Atom::Client).
+Now I have a subroutine for posting links to Reddit, I need a way to monitor blog feeds and post links to new articles. Most blogs provide feed data via RSS or atom data, for example [blogs.perl.org](http://blogs.perl.org) uses atom. I can monitor this feed using [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) and [XML::Atom::Client]({{<mcpan "XML::Atom::Client" >}}).
 
 ```perl
 use XML::Atom::Client;

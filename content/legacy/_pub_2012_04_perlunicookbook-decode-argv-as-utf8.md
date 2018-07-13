@@ -32,7 +32,7 @@ The second approach is to use the `PERL_UNICODE` environment variable. It takes 
 
 You may temporarily *disable* this automatic Unicode treatment with `PERL_UNICODE=0`.
 
-Finally, you may decode the contents of `@ARGV` yourself manually with the [Encode](https://metacpan.org/pod/Encode) module:
+Finally, you may decode the contents of `@ARGV` yourself manually with the [Encode]({{<mcpan "Encode" >}}) module:
 
         use Encode qw(decode_utf8);
         @ARGV = map { decode_utf8($_, 1) } @ARGV;

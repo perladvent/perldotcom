@@ -20,69 +20,69 @@
 
 ### APIs
 
--   [Games::EveOnline::EveCentral](https://metacpan.org/pod/Games::EveOnline::EveCentral) is an interface to the ever-popular game EVE Online.
--   Want to manage corporate HR data via an online service? [WebService::BambooHR.](https://metacpan.org/pod/WebService::BambooHR) provides an API for BambooHR.com.
--   Add setlock functionality to Redis with [Redis::Setlock](https://metacpan.org/pod/Redis::Setlock).
--   Need to translate addresses into map coordinates (geocoding)? [WebService::Geocodio](https://metacpan.org/pod/WebService::Geocodio) is a wrapper for geocod.io that does just that.
--   If you're interested in Bitcoin trading, [Finance::Bank::Kraken](https://metacpan.org/pod/Finance::Bank::Kraken) is an API for the Kraken bitcoin market.
--   Want to scrape websites intelligently ? [WebService::Diffbot](https://metacpan.org/pod/WebService::Diffbot) is an unoffical Perl API for the Diffbot service.
+-   [Games::EveOnline::EveCentral]({{<mcpan "Games::EveOnline::EveCentral" >}}) is an interface to the ever-popular game EVE Online.
+-   Want to manage corporate HR data via an online service? [WebService::BambooHR.]({{<mcpan "WebService::BambooHR" >}}) provides an API for BambooHR.com.
+-   Add setlock functionality to Redis with [Redis::Setlock]({{<mcpan "Redis::Setlock" >}}).
+-   Need to translate addresses into map coordinates (geocoding)? [WebService::Geocodio]({{<mcpan "WebService::Geocodio" >}}) is a wrapper for geocod.io that does just that.
+-   If you're interested in Bitcoin trading, [Finance::Bank::Kraken]({{<mcpan "Finance::Bank::Kraken" >}}) is an API for the Kraken bitcoin market.
+-   Want to scrape websites intelligently ? [WebService::Diffbot]({{<mcpan "WebService::Diffbot" >}}) is an unoffical Perl API for the Diffbot service.
 
 ### Apps
 
--   [proxyhunter](https://metacpan.org/pod/proxyhunter) is a proxy server search and checking tool. It supports Postgres, MySQL and SQLite as backend models.
--   Pipe application output to a websocket with [App::screenorama](https://metacpan.org/pod/App::screenorama) it can capture stdout / stderr.
--   [App::YTDL](https://metacpan.org/pod/App::YTDL) is another YouTube downloader. Time will tell if it surpasses current king WWW::YouTube::Download.
+-   [proxyhunter]({{<mcpan "proxyhunter" >}}) is a proxy server search and checking tool. It supports Postgres, MySQL and SQLite as backend models.
+-   Pipe application output to a websocket with [App::screenorama]({{<mcpan "App::screenorama" >}}) it can capture stdout / stderr.
+-   [App::YTDL]({{<mcpan "App::YTDL" >}}) is another YouTube downloader. Time will tell if it surpasses current king WWW::YouTube::Download.
 
 ### Bots
 
--   Now you can control you're own remote control car with [UAV::Pilot::WumpusRover::Server](https://metacpan.org/pod/UAV::Pilot::WumpusRover::Server).
+-   Now you can control you're own remote control car with [UAV::Pilot::WumpusRover::Server]({{<mcpan "UAV::Pilot::WumpusRover::Server" >}}).
 
 ### Data
 
--   Work with JSON in Perl? Consider [IO::Async::JSONStream](https://metacpan.org/pod/IO::Async::JSONStream) it asynchronously decodes JSON into Perl data structures.
--   [EBook::EPUB::Check](https://metacpan.org/pod/EBook::EPUB::Check) validates .epub files.
--   Need to create realistic but fake data? [Faker](https://metacpan.org/pod/Faker) is a re-implementation of the classic Data::Faker module.
--   Give [Image::JPEG::EstimateQuality](https://metacpan.org/pod/Image::JPEG::EstimateQuality) a JPEG and it will estimate the photo quality.
--   Convert markdown to phpBB / BBCode using [Markdown::phpBB](https://metacpan.org/pod/Markdown::phpBB).
--   [Biblio::SICI](https://metacpan.org/pod/Biblio::SICI) provides methods for working with Serial Item and Contribution Identifiers an ANSI/NISO standard for periodicals.
--   If you work with TBX data, [Convert::TBX::Min](https://metacpan.org/pod/Convert::TBX::Min) will convert TBX-Min to TBX-Basic.
+-   Work with JSON in Perl? Consider [IO::Async::JSONStream]({{<mcpan "IO::Async::JSONStream" >}}) it asynchronously decodes JSON into Perl data structures.
+-   [EBook::EPUB::Check]({{<mcpan "EBook::EPUB::Check" >}}) validates .epub files.
+-   Need to create realistic but fake data? [Faker]({{<mcpan "Faker" >}}) is a re-implementation of the classic Data::Faker module.
+-   Give [Image::JPEG::EstimateQuality]({{<mcpan "Image::JPEG::EstimateQuality" >}}) a JPEG and it will estimate the photo quality.
+-   Convert markdown to phpBB / BBCode using [Markdown::phpBB]({{<mcpan "Markdown::phpBB" >}}).
+-   [Biblio::SICI]({{<mcpan "Biblio::SICI" >}}) provides methods for working with Serial Item and Contribution Identifiers an ANSI/NISO standard for periodicals.
+-   If you work with TBX data, [Convert::TBX::Min]({{<mcpan "Convert::TBX::Min" >}}) will convert TBX-Min to TBX-Basic.
 
 ### Development & System Administration
 
--   Use [Sub::Trigger::Lock](https://metacpan.org/pod/Sub::Trigger::Lock) to prevent direct access of Moose attributes, and force users to only use the implemented interface.
--   Monitor process memory usage with [Memory::Stats](https://metacpan.org/pod/Memory::Stats).
--   Writing a Perl XS module? [Dist::Zilla::Plugin::TemplateXS](https://metacpan.org/pod/Dist::Zilla::Plugin::TemplateXS) is a template driven plugin for minting new XS files.
+-   Use [Sub::Trigger::Lock]({{<mcpan "Sub::Trigger::Lock" >}}) to prevent direct access of Moose attributes, and force users to only use the implemented interface.
+-   Monitor process memory usage with [Memory::Stats]({{<mcpan "Memory::Stats" >}}).
+-   Writing a Perl XS module? [Dist::Zilla::Plugin::TemplateXS]({{<mcpan "Dist::Zilla::Plugin::TemplateXS" >}}) is a template driven plugin for minting new XS files.
 
 ### Fun
 
--   [Chess::960](https://metacpan.org/pod/Chess::960) is a random starting position generator for Chess960.
--   [WebService::SyoboiCalendar](https://metacpan.org/pod/WebService::SyoboiCalendar) provides an interface to an online Japanese TV schedule for Anime shows.
--   Check out [Acme::Ehoh](https://metacpan.org/pod/Acme::Ehoh), it will return your lucky direction, based on ancient Japanese traditions.
+-   [Chess::960]({{<mcpan "Chess::960" >}}) is a random starting position generator for Chess960.
+-   [WebService::SyoboiCalendar]({{<mcpan "WebService::SyoboiCalendar" >}}) provides an interface to an online Japanese TV schedule for Anime shows.
+-   Check out [Acme::Ehoh]({{<mcpan "Acme::Ehoh" >}}), it will return your lucky direction, based on ancient Japanese traditions.
 
 ### Maths & Science
 
--   Calculate moving averages of data with [PDL::Finance::TA](https://metacpan.org/pod/PDL::Finance::TA).
--   [Graph::RandomPath](https://metacpan.org/pod/Graph::RandomPath) will generate a random path between to vertices in a Graph object.
--   [Graph::SomeUtils](https://metacpan.org/pod/Graph::SomeUtils) provides utility methods for Graph objects.
+-   Calculate moving averages of data with [PDL::Finance::TA]({{<mcpan "PDL::Finance::TA" >}}).
+-   [Graph::RandomPath]({{<mcpan "Graph::RandomPath" >}}) will generate a random path between to vertices in a Graph object.
+-   [Graph::SomeUtils]({{<mcpan "Graph::SomeUtils" >}}) provides utility methods for Graph objects.
 
 ### Networking
 
--   Forward TCP / UDP packets to another host with [Net::Forward](https://metacpan.org/pod/Net::Forward).
+-   Forward TCP / UDP packets to another host with [Net::Forward]({{<mcpan "Net::Forward" >}}).
 
 ### Testing
 
--   [Lembas](https://metacpan.org/pod/Lembas) is a new framework for testing command line applications. It has a simple markup that follows shell commands almost verbatim.
--   Want to use database data in your testing? Take a look at [Test::FixtureBuilder](https://metacpan.org/pod/Test::FixtureBuilder).
+-   [Lembas]({{<mcpan "Lembas" >}}) is a new framework for testing command line applications. It has a simple markup that follows shell commands almost verbatim.
+-   Want to use database data in your testing? Take a look at [Test::FixtureBuilder]({{<mcpan "Test::FixtureBuilder" >}}).
 
 ### Web
 
--   Render React JavaScript components in TT templates using [Template::Plugin::React](https://metacpan.org/pod/Template::Plugin::React)
--   Display beautiful Perl code in webpages without JavaScript using [PPI::Prettify](https://metacpan.org/pod/PPI::Prettify).
--   Authenticate a user against multiple realms with [Catalyst::Authentication::Credential::Fallback](https://metacpan.org/pod/Catalyst::Authentication::Credential::Fallback).
--   [Dancer::Plugin::Legacy::Routing](https://metacpan.org/pod/Dancer::Plugin::Legacy::Routing) helps you safely refactor your Dancer application routes.
--   Speed up Mojolicious' JSON handling with [MojoX::JSON::XS](https://metacpan.org/pod/MojoX::JSON::XS).
--   Render POD in your Mojolicious app with [MojoX::Plugin::PODRenderer](https://metacpan.org/pod/MojoX::Plugin::PODRenderer).
--   Use [Mojolicious::Command::nopaste](https://metacpan.org/pod/Mojolicious::Command::nopaste) to build a pastebin (nopaste) site with Mojolicious.
+-   Render React JavaScript components in TT templates using [Template::Plugin::React]({{<mcpan "Template::Plugin::React" >}})
+-   Display beautiful Perl code in webpages without JavaScript using [PPI::Prettify]({{<mcpan "PPI::Prettify" >}}).
+-   Authenticate a user against multiple realms with [Catalyst::Authentication::Credential::Fallback]({{<mcpan "Catalyst::Authentication::Credential::Fallback" >}}).
+-   [Dancer::Plugin::Legacy::Routing]({{<mcpan "Dancer::Plugin::Legacy::Routing" >}}) helps you safely refactor your Dancer application routes.
+-   Speed up Mojolicious' JSON handling with [MojoX::JSON::XS]({{<mcpan "MojoX::JSON::XS" >}}).
+-   Render POD in your Mojolicious app with [MojoX::Plugin::PODRenderer]({{<mcpan "MojoX::Plugin::PODRenderer" >}}).
+-   Use [Mojolicious::Command::nopaste]({{<mcpan "Mojolicious::Command::nopaste" >}}) to build a pastebin (nopaste) site with Mojolicious.
 
 Enjoyed this article? Help us out and [retweet](https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F65%2F2014%2F2%2F3%2FWhat-s-new-on-CPAN-January-2014&text=What's%20new%20on%20CPAN%20-%20January%202014&tw_p=tweetbutton&url=http%3A%2F%2Fperltricks.com%2Farticle%2F65%2F2014%2F2%2F3%2FWhat-s-new-on-CPAN-January-2014&via=perltricks) us!
 

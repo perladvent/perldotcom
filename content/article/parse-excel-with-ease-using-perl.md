@@ -28,7 +28,7 @@ In the business world, it seems like Excel spreadsheets are everywhere. Recently
 
 ### Requirements
 
-You'll need to install [Spreadsheet::Read](https://metacpan.org/pod/Spreadsheet::Read) and a couple of interface modules. [Spreadsheet::ParseExcel](https://metacpan.org/pod/Spreadsheet::ParseExcel) is an interface for Excel 2003 spreadsheets and [Spreadsheet::XLSX](https://metacpan.org/pod/Spreadsheet::XLSX) is for reading the modern Excel format. You can install all three modules from the terminal using cpan:
+You'll need to install [Spreadsheet::Read]({{<mcpan "Spreadsheet::Read" >}}) and a couple of interface modules. [Spreadsheet::ParseExcel]({{<mcpan "Spreadsheet::ParseExcel" >}}) is an interface for Excel 2003 spreadsheets and [Spreadsheet::XLSX]({{<mcpan "Spreadsheet::XLSX" >}}) is for reading the modern Excel format. You can install all three modules from the terminal using cpan:
 
 ```perl
 $ cpan Spreadsheet::ParseExcel Spreadsheet::XLSX Spreadsheet::Read
@@ -44,7 +44,7 @@ use Spreadsheet::Read;
 my $workbook = ReadData('income_statement.xlsx');
 ```
 
-Now `$workbook` contains the data structure representing the spreadsheet. We can inspect this structure by printing it with [Data::Printer](https://metacpan.org/pod/Data::Printer):
+Now `$workbook` contains the data structure representing the spreadsheet. We can inspect this structure by printing it with [Data::Printer]({{<mcpan "Data::Printer" >}}):
 
 ```perl
 \ [

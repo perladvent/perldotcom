@@ -20,7 +20,7 @@
 
 There are several ways in Perl to read an entire file into a string, (a procedure also known as "slurping").
 
-If you have access to CPAN, you can use the [File::Slurp](https://metacpan.org/module/File::Slurp) module:
+If you have access to CPAN, you can use the [File::Slurp]({{<mcpan "File::Slurp" >}}) module:
 
 ```perl
 use File::Slurp;
@@ -28,7 +28,7 @@ use File::Slurp;
 my $file_content = read_file('text_document.txt');
 ```
 
-File::Slurp's `read_file` function to reads the entire contents of a file with the file name and returns it as a string. It's simple and usually does what it's expected to do. However use of `File::Slurp` is discouraged as it has some encoding layer problems that may cause issues. [File::Slurper](https://metacpan.org/pod/File::Slurper) aims to be a safer alternative that, regrettably is still described as experimental:
+File::Slurp's `read_file` function to reads the entire contents of a file with the file name and returns it as a string. It's simple and usually does what it's expected to do. However use of `File::Slurp` is discouraged as it has some encoding layer problems that may cause issues. [File::Slurper]({{<mcpan "File::Slurper" >}}) aims to be a safer alternative that, regrettably is still described as experimental:
 
 ```perl
 use File::Slurper;

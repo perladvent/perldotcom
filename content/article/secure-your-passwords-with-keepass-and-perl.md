@@ -22,7 +22,7 @@
 
 ### Requirements
 
-You'll need to install [File::KeePass](https://metacpan.org/pod/File::KeePass). The CPAN testers [results](http://matrix.cpantesters.org/?dist=File-KeePass+2.03) show that it runs on all modern Perls and many platforms including Windows. To install the module with CPAN, fire up the terminal and enter:
+You'll need to install [File::KeePass]({{<mcpan "File::KeePass" >}}). The CPAN testers [results](http://matrix.cpantesters.org/?dist=File-KeePass+2.03) show that it runs on all modern Perls and many platforms including Windows. To install the module with CPAN, fire up the terminal and enter:
 
 ```perl
 $ cpan File::KeePass
@@ -130,7 +130,7 @@ In the code above we opened the database file, and used the "find\_entry" method
 
 ### Conclusion
 
-File::KeePass has a simple API that works great and comes with comprehensive [documentation](https://metacpan.org/pod/File::KeePass). I would recommend using the ".kdb" format as File::KeePass has [open issues](https://rt.cpan.org/Public/Dist/Display.html?Name=File-KeePass) for the ".kdbx" format.
+File::KeePass has a simple API that works great and comes with comprehensive [documentation]({{<mcpan "File::KeePass" >}}). I would recommend using the ".kdb" format as File::KeePass has [open issues](https://rt.cpan.org/Public/Dist/Display.html?Name=File-KeePass) for the ".kdbx" format.
 
 Enjoyed this article? Help us out and [retweet](https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F79%2F2014%2F3%2F24%2FSecure-your-passwords-with-KeePass-and-Perl&text=Secure+your+passwords+with+KeePass+and+Perl&tw_p=tweetbutton&url=http%3A%2F%2Fperltricks.com%2Farticle%2F79%2F2014%2F3%2F24%2FSecure-your-passwords-with-KeePass-and-Perl&via=perltricks) it!
 

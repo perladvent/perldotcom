@@ -30,7 +30,7 @@ use autodie;
 open my $fh, '<:raw', '/usr/share/zoneinfo/America/New_York';
 ```
 
-This is a suitably Modern Perlish beginning. I start by importing [autodie](https://metacpan.org/pod/autodie) which ensures the code will `die` if any function call fails. This avoids repetitive `... or die "IO failed"` type coding constructs. 
+This is a suitably Modern Perlish beginning. I start by importing [autodie]({{<mcpan "autodie" >}}) which ensures the code will `die` if any function call fails. This avoids repetitive `... or die "IO failed"` type coding constructs. 
 
 Next I use the `:raw` IO layer to open a filehandle to a binary file. This will avoid newline translation issues. No need for `binmode` here. The file I'm opening is a history of New York timezone changes, from the [tz database](https://en.wikipedia.org/wiki/Tz_database).
 
@@ -80,7 +80,7 @@ my ($magic, $version, @numbers) = unpack 'a4 a x15 N N N N N N', $bytes;
 
 This code passes my template to `unpack` and it returns the variables we asked for. Now they're in Perl variables, the hard part is done. In the case of a tzfile, the header defines the length of the body of the file, so I can use these variables to calculate how much more data to read from the file.
 
-If you're interested in how to parse the rest of a tzfile, check out the source code of my module [Time::Tzfile](https://metacpan.org/pod/Time::Tzfile).
+If you're interested in how to parse the rest of a tzfile, check out the source code of my module [Time::Tzfile]({{<mcpan "Time::Tzfile" >}}).
 
 ### Troubleshooting
 

@@ -39,7 +39,7 @@ HTML can represent these links by using `<head>` tag and `<link rel="next" href=
 
 #### Site Maps and Breadcrumb Trails
 
-Other navigation aids provided by sites include a *site map* (like [the one on Eric S. Raymond's home page](http://www.catb.org/~esr/sitemap.html)) and a *breadcrumb trail*. A breadcrumb trail is a path of the components of the navigation menu that leads to the current page. The [documentation for Module::Build::Cookbook](https://metacpan.org/pod/Module::Build::Cookbook) provides an example ("Ken Williams &gt; Module-Build &gt; Module::Build::Cookbook," in this case).
+Other navigation aids provided by sites include a *site map* (like [the one on Eric S. Raymond's home page](http://www.catb.org/~esr/sitemap.html)) and a *breadcrumb trail*. A breadcrumb trail is a path of the components of the navigation menu that leads to the current page. The [documentation for Module::Build::Cookbook]({{<mcpan "Module::Build::Cookbook" >}}) provides an example ("Ken Williams &gt; Module-Build &gt; Module::Build::Cookbook," in this case).
 
 #### Hidden Pages and Skipped Pages
 
@@ -254,7 +254,7 @@ The [final example](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/arti
 
 ### A CGI Script
 
-Until now, the examples have demonstrated generating a set of static HTML pages. The code can also run dynamically on a server. One approach is to use the ubiquitous [CGI.pm](https://metacpan.org/pod/CGI), which comes bundled with Perl.
+Until now, the examples have demonstrated generating a set of static HTML pages. The code can also run dynamically on a server. One approach is to use the ubiquitous [CGI.pm]({{<mcpan "CGI" >}}), which comes bundled with Perl.
 
 Converting to [the CGI script](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/article/examples/cgi-script/H-W-NM-serve.pl.html) required [few changes](http://web-cpan.berlios.de/modules/HTML-Widgets-NavMenu/article/examples/fine-grained-2-cgi.diff.html). Inside of the page loop, the code checks if the page matches the CGI path info (the path appended after the CGI script name). If so, the code calls the `render_page()` function.
 

@@ -20,7 +20,7 @@
 }
 
 
-Most Perl programmers are familiar with [Test::More](https://metacpan.org/pod/Test::More); it's the go-to library for writing unit tests in Perl. But Test::More doesn't provide functions for testing exceptions. For that you'll need [Test::Exception](https://metacpan.org/pod/Test::Exception). And good code throws exceptions - Paul Fenwick [once](http://perltraining.com.au/tips/2008-08-20.html) summed this approach nicely:
+Most Perl programmers are familiar with [Test::More]({{<mcpan "Test::More" >}}); it's the go-to library for writing unit tests in Perl. But Test::More doesn't provide functions for testing exceptions. For that you'll need [Test::Exception]({{<mcpan "Test::Exception" >}}). And good code throws exceptions - Paul Fenwick [once](http://perltraining.com.au/tips/2008-08-20.html) summed this approach nicely:
 
     bIlujDI' yIchegh()Qo'; yIHegh()!
 
@@ -28,7 +28,7 @@ Most Perl programmers are familiar with [Test::More](https://metacpan.org/pod/Te
 
         -- Klingon programming proverb.
 
-The simplest way to throw an exception is with Perl's built-in `die` function. Just like Test::More makes it easy to test that subroutines return the right values, Test::Exception makes it easy to check the code is *dying* in the right way (and [Test::Fatal](https://metacpan.org/pod/Test::Fatal) is a good alternative).
+The simplest way to throw an exception is with Perl's built-in `die` function. Just like Test::More makes it easy to test that subroutines return the right values, Test::Exception makes it easy to check the code is *dying* in the right way (and [Test::Fatal]({{<mcpan "Test::Fatal" >}}) is a good alternative).
 
 ### Did my code die ok?
 
@@ -134,7 +134,7 @@ ok 11 - nine nine nine doubled is one nine nine eight
 1..11
 ```
 
-All the tests pass. [Test::Exception](https://metacpan.org/pod/Test::Exception) has great documentation and is easy to use, so add exception testing to your code today!
+All the tests pass. [Test::Exception]({{<mcpan "Test::Exception" >}}) has great documentation and is easy to use, so add exception testing to your code today!
 
 **Updated:** *Added Test::Fatal reference 2015-03-10*
 

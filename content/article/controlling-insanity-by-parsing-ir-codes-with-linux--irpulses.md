@@ -36,7 +36,7 @@ are geared towards executing a program after detecting a valid series of pulses.
 
 If we would rather take the pulses and handle them within our own program, then
 we need to ignore the top layers of LIRC and parse the pulse data directly. That is
-what [Linux::IRPulses](https://metacpan.org/pod/Linux::IRPulses) does.
+what [Linux::IRPulses]({{<mcpan "Linux::IRPulses" >}}) does.
 
 We first need the hardware to detect the pulses. On a regular computer, there are many
 modules available which can be plugged in to a USB port. On a single board

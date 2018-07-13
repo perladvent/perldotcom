@@ -27,7 +27,7 @@ All three of major Perl web frameworks provide some kind of identifying header. 
 
 -   By default Catalyst does not turn on its application header. The header is controlled by the "enable\_catalyst\_header" config option, normally located in the root application class (e.g. lib/MyApp.pm) or the application config file.
 -   Mojolicious does not set this header since [version 4.00](https://github.com/kraih/mojo/blob/b5da0c7afcdd793c85e8e2a67eb29f7f36bdb601/Changes#L538).
--   Dancer (and Dancer2) use the [server tokens](https://metacpan.org/pod/release/XSAWYERX/Dancer2-0.11/lib/Dancer2/Config.pod#server_tokens-%28boolean%29) directive.
+-   Dancer (and Dancer2) use the [server tokens]({{<mcpan "release/XSAWYERX/Dancer2-0.11/lib/Dancer2/Config.pod#server_tokens-%28boolean%29" >}}) directive.
 
 ### Server
 

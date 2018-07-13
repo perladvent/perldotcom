@@ -23,7 +23,7 @@
 }
 
 
-Recently I've been working on a [game engine](https://github.com/sillymoose/March) which uses a composition pattern for its actors. I'm using [Role::Tiny](https://metacpan.org/pod/Role::Tiny) to create the roles. Role::Tiny is really convenient as it lets you use roles with native OO Perl, without committing to a whole object system like Moose. A typical role looks like this:
+Recently I've been working on a [game engine](https://github.com/sillymoose/March) which uses a composition pattern for its actors. I'm using [Role::Tiny]({{<mcpan "Role::Tiny" >}}) to create the roles. Role::Tiny is really convenient as it lets you use roles with native OO Perl, without committing to a whole object system like Moose. A typical role looks like this:
 
 ```perl
 package March::Attribute::Id;
@@ -177,13 +177,13 @@ ok $self->inspect_data({ test => 'data' });
 done_testing();
 ```
 
-As before I bless the role in the test file and then proceed to test the `inspect_data` method. This test file runs and all the tests pass. Can you spot this issue here? Notice that the Data::Inspector role uses [Data::Dumper's](https://metacpan.org/pod/Data::Dumper) `Dump` method, but it doesn't load the Data::Dumper module, the test file does! This is a problem as when the Data::Inspector role is used elsewhere in real code, it will crash and burn when it doesn't find Data::Dumper loaded in memory.
+As before I bless the role in the test file and then proceed to test the `inspect_data` method. This test file runs and all the tests pass. Can you spot this issue here? Notice that the Data::Inspector role uses [Data::Dumper's]({{<mcpan "Data::Dumper" >}}) `Dump` method, but it doesn't load the Data::Dumper module, the test file does! This is a problem as when the Data::Inspector role is used elsewhere in real code, it will crash and burn when it doesn't find Data::Dumper loaded in memory.
 
 ### Conclusion
 
 With this project I intend to create a lot of simple roles, so this approach provides a lightweight way for me to test roles within the test file without creating test classes for every role.
 
-I really like [Role::Tiny](https://metacpan.org/pod/Role::Tiny). It's flexible: you can create minimalist trait-like behavior or go further and create mixins (roles which modify state). It has nice features like auto-enabling strict and warnings, method modifiers and good [documentation](https://metacpan.org/pod/Role::Tiny). [Role::Basic](https://metacpan.org/pod/Role::Basic) is another lightweight roles module that supports traits only (by [design](https://metacpan.org/pod/Role::Basic#DESIGN-GOALS-AND-LIMITATIONS)). I wonder if I'll come to regret using a mixin approach as I get further into development of the game engine.
+I really like [Role::Tiny]({{<mcpan "Role::Tiny" >}}). It's flexible: you can create minimalist trait-like behavior or go further and create mixins (roles which modify state). It has nice features like auto-enabling strict and warnings, method modifiers and good [documentation]({{<mcpan "Role::Tiny" >}}). [Role::Basic]({{<mcpan "Role::Basic" >}}) is another lightweight roles module that supports traits only (by [design]({{<mcpan "Role::Basic#DESIGN-GOALS-AND-LIMITATIONS" >}})). I wonder if I'll come to regret using a mixin approach as I get further into development of the game engine.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

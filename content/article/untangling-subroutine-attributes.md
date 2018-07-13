@@ -125,7 +125,7 @@ sub call_internal_function {
 1;
 ```
 
-This code imports the `svref_2object` function from the [B](https://metacpan.org/pod/B) module. This handy function takes a reference and returns an object with the data from Perl's internals. In this case, passing a coderef returns a [B::CV](https://metacpan.org/pod/B#B::CV-Methods) object. I use this to get the subroutine name and overrride the subroutine later.
+This code imports the `svref_2object` function from the [B]({{<mcpan "B" >}}) module. This handy function takes a reference and returns an object with the data from Perl's internals. In this case, passing a coderef returns a [B::CV]({{<mcpan "B#B::CV-Methods" >}}) object. I use this to get the subroutine name and overrride the subroutine later.
 
 I've created a hash called `%allowed` which is where I can declare any permitted custom attributes and their associated code. For `Private` I made a coderef that checks the caller is in the same package and croaks if it's not, else it will call it.
 
@@ -198,7 +198,7 @@ sub MODIFY_CODE_ATTRIBUTES {
 
 Rather than hardcoding the package name, I've made it dynamic. The key change here is that the coderef for `Private` has been changed to a coderef that returns another coderef. Now I can execute some arbitrary code at compile time and optionally manufacture a new coderef that uses compile time information. In the case of `Private`, I want to pass the package name of the private subroutine, so I can check later that the caller is from within the same package.
 
-Why optionally return a coderef? Imagine if I created an attribute called `After` which behaved like the `after` function in [Class::Method::Modifiers](https://metacpan.org/pod/Class::Method::Modifiers). In this case the subroutine with the private attribute would be reference a _different_ subroutine. That might look like this:
+Why optionally return a coderef? Imagine if I created an attribute called `After` which behaved like the `after` function in [Class::Method::Modifiers]({{<mcpan "Class::Method::Modifiers" >}}). In this case the subroutine with the private attribute would be reference a _different_ subroutine. That might look like this:
 
 ```perl
 sub foo { }
@@ -361,12 +361,12 @@ I added a regex which captures the attribute name and value when passing attribu
 ### Resources
 
 * [attributes](http://perldoc.perl.org/attributes.html) is the official documentation on attributes.
-* [Sub::Attributes](https://metacpan.org/pod/Sub::Attributes) is my module which implements the above code, and adds a few more custom attributes.
+* [Sub::Attributes]({{<mcpan "Sub::Attributes" >}}) is my module which implements the above code, and adds a few more custom attributes.
 * [perldata](http://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles) has an entry on typeglobs and the symbol table.
 * Chapters 7 & 8 of [Mastering Perl](https://www.amazon.com/Mastering-Perl-brian-d-foy/dp/144939311X/) second edition cover the symbol table and overrriding subroutines in detail.
 * [perlsub](http://perldoc.perl.org/perlsub.html) has information on lvalue subroutines.
 * Two useful blog posts by mascip on [possible uses](http://blogs.perl.org/users/mascip/2014/02/subroutine-attributes-how-to-use-them-and-what-for.html) and [when to use](http://blogs.perl.org/users/mascip/2014/02/three-ways-to-introduce-othogonal-behavior-aspects-method-modifiers-and-subroutine-attributes.html) subroutine attributes.
-* [Attribute::Handlers](https://metacpan.org/pod/Attribute::Handlers) provides a mechanism for calling subroutines via attributes.
+* [Attribute::Handlers]({{<mcpan "Attribute::Handlers" >}}) provides a mechanism for calling subroutines via attributes.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

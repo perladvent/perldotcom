@@ -51,11 +51,11 @@ I wouldn't start a new site with Everything as it exists today, but I've wanted 
 
 ### **Doing Everything Better**
 
-The [Moose](http://moose.perl.org/) object system provides an obvious way to define nodes. A node is merely a Moose object, and a nodetype is its class. This provides a well-understood and robust mechanism for dealing with attributes and methods and roles and the like, and the metaobject protocol provided by [Class::MOP](https://metacpan.org/pod/Class::MOP) allows introspective capabilities which will become obviously important soon.
+The [Moose](http://moose.perl.org/) object system provides an obvious way to define nodes. A node is merely a Moose object, and a nodetype is its class. This provides a well-understood and robust mechanism for dealing with attributes and methods and roles and the like, and the metaobject protocol provided by [Class::MOP]({{<mcpan "Class::MOP" >}}) allows introspective capabilities which will become obviously important soon.
 
-[Plack](https://metacpan.org/pod/Plack) support is obviously the current best way to deploy a web application in Perl 5, as it allows reusable middleware and offers many deployment strategies.
+[Plack]({{<mcpan "Plack" >}}) support is obviously the current best way to deploy a web application in Perl 5, as it allows reusable middleware and offers many deployment strategies.
 
-[DBIx::Class](https://metacpan.org/pod/DBIx::Class) is the first ORM to consider in Perl 5 right now. I'm partial to [KiokuDB](https://metacpan.org/pod/KiokuDB) for applications where I need persistent objects but don't need to provide a relational interface to interact with the data. The ability to use either one as a serialization backend is important.
+[DBIx::Class]({{<mcpan "DBIx::Class" >}}) is the first ORM to consider in Perl 5 right now. I'm partial to [KiokuDB]({{<mcpan "KiokuDB" >}}) for applications where I need persistent objects but don't need to provide a relational interface to interact with the data. The ability to use either one as a serialization backend is important.
 
 Any of the modern frameworks or libraries or toolkits for providing the controller part of the MVC application will do. In particular, all this layer of the application needs to do is to map requests to nodes, manage concerns of user authentication and logging, invoke the fat model objects to perform their business actions, then dispatch to the view to render the appropriate information in the user interface. I like the simplicity of Dancer, but anything compatible with Plack will work for web applications.
 

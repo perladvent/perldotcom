@@ -19,7 +19,7 @@
 
 How can I easily run the same tests on different data without duplicating a lot of code? If I follow my usual pattern, I start off with a couple of tests where I write some code then cut-and-paste that a couple of times. I add a few more tests before I realize I have a mess. If I had the foresight to know that I would make a mess (again), I would have started with a table of data and a little bit of code that went through it.
 
-Consider a silly and small example of testing `sprintf`-like behavior of [String::Sprintf](https://metacpan.org/pod/String::Sprintf). I can use this module to create my own format specifiers, such as one to commify a number. I stole this mostly from its documentation, although I threw in the [v5.20 signatures feature](http://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/) and the [v5.14 non-destructive substitution operator](http://www.effectiveperlprogramming.com/2010/09/use-the-r-substitution-flag-to-work-on-a-copy/) because I love those features:
+Consider a silly and small example of testing `sprintf`-like behavior of [String::Sprintf]({{<mcpan "String::Sprintf" >}}). I can use this module to create my own format specifiers, such as one to commify a number. I stole this mostly from its documentation, although I threw in the [v5.20 signatures feature](http://www.effectiveperlprogramming.com/2015/04/use-v5-20-subroutine-signatures/) and the [v5.14 non-destructive substitution operator](http://www.effectiveperlprogramming.com/2010/09/use-the-r-substitution-flag-to-work-on-a-copy/) because I love those features:
 
 ```perl
 use v5.20;
@@ -47,7 +47,7 @@ sub commify ( $n ) {
 
     Numbers are: 12,345,678.90,   87,654.32
 
-The mess I might make to test this starts with a single input and output with the [Test::More](https://metacpan.org/pod/Test::More) function `is`:
+The mess I might make to test this starts with a single input and output with the [Test::More]({{<mcpan "Test::More" >}}) function `is`:
 
 ```perl
 use v5.20;

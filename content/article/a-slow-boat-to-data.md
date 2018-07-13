@@ -228,5 +228,5 @@ There are several areas that could use some help. Perhaps you can work on one of
 - [Perl 6 Data::Dump::Tree version 1.5](http://blogs.perl.org/users/nadim_khemir/2017/08/perl-6-datadumptree-version-15.html)
 - [Take a walk on the C side, ddt, du du, du du ...](http://blogs.perl.org/users/nadim_khemir/2017/08/take-a-walk-on-the-c-side.html)
 - [Show me the data!](https://perl6advent.wordpress.com/2016/12/21/show-me-the-data/)
-- `Data::Dump::Tree` is the continuation of my Perl 5 module [Data::TreeDumper](http://www.metacpan.org/pod/Data::TreeDumper)
+- `Data::Dump::Tree` is the continuation of my Perl 5 module [Data::TreeDumper]({{<mcpan "Data::TreeDumper" >}})
 

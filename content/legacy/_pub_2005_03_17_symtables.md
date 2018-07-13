@@ -21,7 +21,7 @@
 
 
 
-Having almost achieved the state of perfect laziness, one of my favorite modules is [Class::DBI::mysql](https://metacpan.org/pod/Class::DBI::mysql). It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This article explains how `Class::DBI::mysql` carries out its magic. Instead of delving into the complexities of `Class::DBI::mysql`, I will use a simpler case study: [Class::Colon](https://metacpan.org/pod/Class::Colon).
+Having almost achieved the state of perfect laziness, one of my favorite modules is [Class::DBI::mysql]({{<mcpan "Class::DBI::mysql" >}}). It makes MySQL database tables seem like classes, and their rows like objects. This completely relieves me from using SQL in most cases. This article explains how `Class::DBI::mysql` carries out its magic. Instead of delving into the complexities of `Class::DBI::mysql`, I will use a simpler case study: [Class::Colon]({{<mcpan "Class::Colon" >}}).
 
 ### Introduction
 
@@ -124,7 +124,7 @@ Instead of storing a reference to the subroutine in a variable, this code stores
 
 ### Classes from Sheer Magic
 
-The previous example demonstrated how to make symbol table entries whenever you want. These can save typing and/or make things more readable. The standard module [English](https://metacpan.org/pod/English) uses this technique to give meaningful English names to the standard punctuation variables (like `$_`). You want more, though. You want to build classes out of thin air during run time.
+The previous example demonstrated how to make symbol table entries whenever you want. These can save typing and/or make things more readable. The standard module [English]({{<mcpan "English" >}}) uses this technique to give meaningful English names to the standard punctuation variables (like `$_`). You want more, though. You want to build classes out of thin air during run time.
 
 The key to fabricating classes is to realize that a class is just a package and a package is really just a symbol table (more or less). That, and the fact that symbol tables autovivify, is all you need to carry off hugely helpful deceptions like `Class::DBI::mysql`.
 
@@ -242,4 +242,4 @@ Recall that `NEW` returns a blessed hash reference with nothing in it. In `objec
 
 By making entries into symbol tables, you can create aliases for data that is hard to name. Further, you can create new symbol tables simply by referring to them. This allows you to build classes on the fly. Modules like `Class::DBI::mysql` and `Class::Colon` do this to provide classes representing tabular data.
 
-There are other uses of these techniques. For example, [Memoize](https://metacpan.org/pod/Memoize) wraps an original function with a cache scheme, storing the wrapped version in place of the original in the caller's own symbol table. For functions which return the same result whenever the arguments are the same, this can save time. [Exporter](https://metacpan.org/pod/Exporter) does even more sophisticated work to pollute the caller's symbol table with symbols from a used package. At heart, these schemes are similar to the one shown above. By carefully performing symbol table manipulations in modules, you can often greatly simplify an API, making client code easier to read, write, and maintain.
+There are other uses of these techniques. For example, [Memoize]({{<mcpan "Memoize" >}}) wraps an original function with a cache scheme, storing the wrapped version in place of the original in the caller's own symbol table. For functions which return the same result whenever the arguments are the same, this can save time. [Exporter]({{<mcpan "Exporter" >}}) does even more sophisticated work to pollute the caller's symbol table with symbols from a used package. At heart, these schemes are similar to the one shown above. By carefully performing symbol table manipulations in modules, you can often greatly simplify an API, making client code easier to read, write, and maintain.

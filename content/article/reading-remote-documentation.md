@@ -32,8 +32,8 @@ After having performed this routine more times than I'd like to admit, I finally
 
 ```bash
 #!/bin/sh
-URL="https://metacpan.org/pod/$1"
-
+URL="{{<mcpan "$1"
+" >}}
 if [[ "$OSTYPE" == "linux-gnu"  ]]; then
   xdg-open "$URL" &>/dev/null
 elif [[ "$OSTYPE" == "darwin"*  ]]; then

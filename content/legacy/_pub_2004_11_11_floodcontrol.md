@@ -172,7 +172,7 @@ Here is the actual code:
       return 0;
     }
 
-I've put this on the CPAN as [Algorithm::FloodControl](https://metacpan.org/pod/Algorithm::FloodControl).
+I've put this on the CPAN as [Algorithm::FloodControl]({{<mcpan "Algorithm::FloodControl" >}}).
 
 To test it, I wrote a simple program that accepts text, line by line, from standard input and prints each accepted line or the amount of time before the program will accept the next line.
 
@@ -276,7 +276,7 @@ I'd prefer to allow any user to request scores no more than twice per minute, bu
           }
     }
 
-This code uses the [Net::IRC](https://metacpan.org/pod/Net::IRC) module, so if you want to know the details of the `notice()` and `privmsg()` functions, check the module documentation.
+This code uses the [Net::IRC]({{<mcpan "Net::IRC" >}}) module, so if you want to know the details of the `notice()` and `privmsg()` functions, check the module documentation.
 
 This is good example of combining events, but it works correctly only if the second flood ratio (in this case 10/120) is greater than first one (2/60). Otherwise you should extend the `flood_check()` function with an array of events to check in one loop, so if any of them fails the internal storage will update. Perhaps `Algorithm::FloodControl` will have such a feature in the future.
 
@@ -286,7 +286,7 @@ Another common case is to limit the execution of resource-consuming web scripts 
 
 If you want to limit CGI-script execution you will hit a problem: you must save and restore the flood-control internal data between script invocations. For this reason the `Algorithm::FloodControl` module exports another function called `flood_storage`, which can get or set the internal data.
 
-In this example I'll use two other modules, [Storable](https://metacpan.org/pod/Storable) and [LockFile::Simple](https://metacpan.org/pod/LockFile::Simple). I use the first to save and restore the flood-control data to and from disk files and the second to lock this file to avoid corruptions if two or more instances of the script run at the same time:
+In this example I'll use two other modules, [Storable]({{<mcpan "Storable" >}}) and [LockFile::Simple]({{<mcpan "LockFile::Simple" >}}). I use the first to save and restore the flood-control data to and from disk files and the second to lock this file to avoid corruptions if two or more instances of the script run at the same time:
 
     #!/usr/bin/perl
     use strict;

@@ -27,7 +27,7 @@ Adding tweet automation to an existing app can bring several benefits. Firstly i
 
 ### Writing tweets
 
-The core code for writing tweets is very simple. I'm using the [Net::Twitter::Lite](https://metacpan.org/pod/Net::Twitter::Lite) distribution, which supports the latest version of the Twitter [API](https://dev.twitter.com/rest/public).
+The core code for writing tweets is very simple. I'm using the [Net::Twitter::Lite]({{<mcpan "Net::Twitter::Lite" >}}) distribution, which supports the latest version of the Twitter [API](https://dev.twitter.com/rest/public).
 
 ```perl
 use strict;
@@ -102,7 +102,7 @@ sub tweet
 }
 ```
 
-This code is largely the same as before, except now it checks for the required variables before processing. The code also imports [Try::Tiny](https://metacpan.org/pod/Try::Tiny) as I added a try/catch block around the twitter code. The catch block will activate if the Twitter interaction throws an exception. Because Net::Twitter::Lite throws structured exceptions, the catch block builds an exception string by extracting information from the structured exception, then calls `die` itself.
+This code is largely the same as before, except now it checks for the required variables before processing. The code also imports [Try::Tiny]({{<mcpan "Try::Tiny" >}}) as I added a try/catch block around the twitter code. The catch block will activate if the Twitter interaction throws an exception. Because Net::Twitter::Lite throws structured exceptions, the catch block builds an exception string by extracting information from the structured exception, then calls `die` itself.
 
 You might be wondering if it's necessary to call `die` at all. Can't we just return `undef` instead and keep our code running? The advantage of calling `die` is that the caller of the `tweet` subroutine is better placed to decide how to handle the issue, and so we defer that decision to them. If the calling code doesn't handle `die` correctly, we know the program will exit. But if we returned `undef`, we would have no such assurances. This doesn't mean however that the code *has* to exit. Let's assume I had hundreds of tweets to send out, maybe I just want to log the error somewhere and keep going:
 

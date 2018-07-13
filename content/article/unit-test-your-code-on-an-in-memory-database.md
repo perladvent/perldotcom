@@ -26,7 +26,7 @@ One way to deal with this is to create an in-memory database, visible only to th
 
 ### DBI
 
-The Perl [DBI](https://metacpan.org/pod/DBI) module is the de-facto way of accessing relational databases in Perl. To create an in-memory database, I can use call `connect` specifying the SQLite driver, and the database name as ":memory:". This returns a database handle to a new, in memory SQLite3 database.
+The Perl [DBI]({{<mcpan "DBI" >}}) module is the de-facto way of accessing relational databases in Perl. To create an in-memory database, I can use call `connect` specifying the SQLite driver, and the database name as ":memory:". This returns a database handle to a new, in memory SQLite3 database.
 
 ```perl
 use Test::More;
@@ -55,7 +55,7 @@ From here I slurp a SQL script for creating the tables into a string and use the
 
 ### DBIx::Class
 
-[DBIx::Class](https://metacpan.org/pod/DBIx::Class), the Perl ORM uses the same underlying technology as DBI, but because it creates Perl classes representing each table, I can leverage that code to make the database setup even easier than with vanilla DBI:
+[DBIx::Class]({{<mcpan "DBIx::Class" >}}), the Perl ORM uses the same underlying technology as DBI, but because it creates Perl classes representing each table, I can leverage that code to make the database setup even easier than with vanilla DBI:
 
 ```perl
 use Test::More;
@@ -71,11 +71,11 @@ SomeApp::Schema->deploy;
 done_testing;
 ```
 
-I'm using an example app, called `SomeApp` to demonstrate. First the `connection` is set to the same database connection string as with the DBI example. The `load_namespaces` method loads all of the result and resultset DBIx::Class modules in the application and `deploy` creates them on the in-memory database. Obviously this approach requires that you've already created the DBIx::Class files. If you haven't done that yet, but you have an application database with the tables in it, you can use the `dbicdump` command from [DBIx::Class::Schema::Loader](https://metacpan.org/pod/DBIx::Class::Schema::Loader) to auto generate them for you.
+I'm using an example app, called `SomeApp` to demonstrate. First the `connection` is set to the same database connection string as with the DBI example. The `load_namespaces` method loads all of the result and resultset DBIx::Class modules in the application and `deploy` creates them on the in-memory database. Obviously this approach requires that you've already created the DBIx::Class files. If you haven't done that yet, but you have an application database with the tables in it, you can use the `dbicdump` command from [DBIx::Class::Schema::Loader]({{<mcpan "DBIx::Class::Schema::Loader" >}}) to auto generate them for you.
 
 ### Not just for testing
 
-The in-memory feature of SQLite is provided by [DBD::SQLite](https://metacpan.org/pod/DBD::SQLite), the DBI driver. It's a cool feature, and could be used for more than just unit testing. Anytime you have a need for a temporary relational datastore, consider this; it's fast, is portable and automatically cleans itself up when the program ends.
+The in-memory feature of SQLite is provided by [DBD::SQLite]({{<mcpan "DBD::SQLite" >}}), the DBI driver. It's a cool feature, and could be used for more than just unit testing. Anytime you have a need for a temporary relational datastore, consider this; it's fast, is portable and automatically cleans itself up when the program ends.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

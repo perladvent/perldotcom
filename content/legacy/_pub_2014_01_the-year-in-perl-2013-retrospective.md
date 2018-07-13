@@ -26,7 +26,7 @@ The [2013 Perl Oasis conference](http://www.perloasis.info/opw2013/) took place 
 
 At the Perl Oasis conference, Stevan Little gave a talk entitled [Perl is not Dead, it is a Dead End](https://speakerdeck.com/stevan_little/perl-is-not-dead-it-is-a-dead-end) about forking Perl to experiment with new design and implementation ideas. The talk included an announcement of [Moe](http://moeorganization.github.io/moe-web/), a reimplementation of parts of Perl. By September, Moe would go dormant.
 
-Shawn Moore formally deprecated [Any::Moose](https://metacpan.org/pod/Any::Moose). If you need a lightweight OO system which can upgrade to Moose when you use Moose features, use [Moo](https://metacpan.org/pod/Moo) instead.
+Shawn Moore formally deprecated [Any::Moose]({{<mcpan "Any::Moose" >}}). If you need a lightweight OO system which can upgrade to Moose when you use Moose features, use [Moo]({{<mcpan "Moo" >}}) instead.
 
 Nick Perez wrote an article about [CloudPAN, a way to use modules locally without installing them](http://perl-yarg.blogspot.ca/2013/01/cloudpan.html).
 
@@ -38,9 +38,9 @@ The Perl 5 Porters announced [core modules scheduled for removal in Perl 5.20](h
 
 VM Brasseur tackled the problem of recruiting new programmers to Perl in [Improving Perl's New Programmer Outreach](http://anonymoushash.vmbrasseur.com/2013/01/22/improving-perls-new-programmer-outreach/).
 
-[Ovid announced the release of Test::Class::Moose](http://blogs.perl.org/users/ovid/2013/01/testclassmoose-on-the-cpan.html) to the CPAN. Since then, he's expanded the combination of [Test::Class](https://metacpan.org/pod/Test::Class) with [Moosey goodness](http://moose.perl.org/) to create the ultimate testing tool. See the [Test::Class::Moose introduction video](http://blogs.perl.org/users/ovid/2013/09/testclassmoose-introductory-video.html).
+[Ovid announced the release of Test::Class::Moose](http://blogs.perl.org/users/ovid/2013/01/testclassmoose-on-the-cpan.html) to the CPAN. Since then, he's expanded the combination of [Test::Class]({{<mcpan "Test::Class" >}}) with [Moosey goodness](http://moose.perl.org/) to create the ultimate testing tool. See the [Test::Class::Moose introduction video](http://blogs.perl.org/users/ovid/2013/09/testclassmoose-introductory-video.html).
 
-[David Golden announced Path::Tiny, the successor to Path::Class](http://www.dagolden.com/index.php/1838/goodbye-path-class-hello-path-tiny/). If you're still using [File::Spec](https://metacpan.org/pod/File::Spec), try [Path::Tiny](https://metacpan.org/pod/Path::Tiny).
+[David Golden announced Path::Tiny, the successor to Path::Class](http://www.dagolden.com/index.php/1838/goodbye-path-class-hello-path-tiny/). If you're still using [File::Spec]({{<mcpan "File::Spec" >}}), try [Path::Tiny]({{<mcpan "Path::Tiny" >}}).
 
 ### February 2013
 
@@ -114,7 +114,7 @@ The [DC Baltimore Perl Workshop](http://dcbpw.org/) took place in Baltimore, Mar
 
 In sad news, CPAN developer AMORETTE—Hojung Yoon—passed away on May 8, 2013. South Korea and Perl lost a valued member of the community. [C.H. Kang posted a small tribute to Hojung Yoon on Twitter](https://twitter.com/aer0/status/333229465293443072).
 
-The Perl 5 Porters announced [the release of Perl 5.18](http://perlnews.org/2013/05/perl-5-18-0-released/). This yearly release added a couple of nice new features, fixed a slew of bugs, updated some core modules, and updated plans to continue Perl's evolution to 5.20 and beyond. See the [Perl 5.18 delta](https://metacpan.org/module/RJBS/perl-5.18.0/pod/perldelta.pod) documentation for more details. CPAN developers had some work to do; see David Oswald's [A call to action for CPAN authors](http://blogs.perl.org/users/david_oswald/2013/05/a-call-to-action-for-cpan-authors.html) about finding and fixing hash order bugs in library code as well as Mark Fowler's [explanation of hash key ordering changes](http://blog.twoshortplanks.com/2013/05/20/5-18-hash-keys/).
+The Perl 5 Porters announced [the release of Perl 5.18](http://perlnews.org/2013/05/perl-5-18-0-released/). This yearly release added a couple of nice new features, fixed a slew of bugs, updated some core modules, and updated plans to continue Perl's evolution to 5.20 and beyond. See the [Perl 5.18 delta]({{<mcpan "RJBS/perl-5.18.0/pod/perldelta.pod" >}}) documentation for more details. CPAN developers had some work to do; see David Oswald's [A call to action for CPAN authors](http://blogs.perl.org/users/david_oswald/2013/05/a-call-to-action-for-cpan-authors.html) about finding and fixing hash order bugs in library code as well as Mark Fowler's [explanation of hash key ordering changes](http://blog.twoshortplanks.com/2013/05/20/5-18-hash-keys/).
 
 The Mojolicious team started beating the drum about the upcoming Mojolicious 4.0 release. [Joel Berger introduced some new features of Mojolicious 4.0](http://blogs.perl.org/users/joel_berger/2013/05/mojolicious-40-is-coming-soon.html). Mojolicious creator Sebastian Riedel provided the [Mojolicious 4.0 release announcement](http://blog.kraih.com/post/50517069291/mojolicious-4-0-released-perl-real-time-web-framework).
 
@@ -122,11 +122,11 @@ The Bugzilla developers announced [the releases of Bugzilla 4.4 and 4.2.6](http:
 
 Joel Berger also finished a TPF grant. His [report at the completion of the Alien::Base grant](http://news.perlfoundation.org/2013/05/alienbase-grant---report-9-fin.html) gives a retrospective of the project.
 
-Toby Inkster continued making things smaller, faster, and easier to use in isolation. While his [Moops](https://metacpan.org/pod/Moops) module is your editor's favorite, his [Type::Tiny constraint system](http://blogs.perl.org/users/toby_inkster/2013/05/typetiny---not-just-for-attributes.html) has a lot of potential.
+Toby Inkster continued making things smaller, faster, and easier to use in isolation. While his [Moops]({{<mcpan "Moops" >}}) module is your editor's favorite, his [Type::Tiny constraint system](http://blogs.perl.org/users/toby_inkster/2013/05/typetiny---not-just-for-attributes.html) has a lot of potential.
 
 Timm Murray announced [Perl modules for controlling unmanned drones](http://blogs.perl.org/users/timm_murray/2013/05/announcing-uavpilot-v01.html).
 
-Tokuhiro Matsuno received far too little attention for his work with [Compiler::Lexer](https://metacpan.org/pod/Compiler::Lexer). See his [CLI for Compiler::Lexer](http://blog.64p.org/entry/2013/05/25/085607) for more details.
+Tokuhiro Matsuno received far too little attention for his work with [Compiler::Lexer]({{<mcpan "Compiler::Lexer" >}}). See his [CLI for Compiler::Lexer](http://blog.64p.org/entry/2013/05/25/085607) for more details.
 
 VM Brasseur and Jeffrey Thalhammer (the man who was approximately everywhere in Perl in 2013) announced [the Perl Companies Project](http://anonymoushash.vmbrasseur.com/2013/05/29/announcing-the-perl-companies-project/), a single place to list all of the companies using Perl.
 
@@ -154,7 +154,7 @@ Chad Granum released [Fennec v2, an advanced testing system for Perl](http://blo
 
 Jessy Shy published [an announcement about Classsmith.com](http://blogs.perl.org/users/jesse_shy/2013/07/announce-classmithcom.html), an app for home schoolers.
 
-Tatsuhiko Miyagawa's [Carton](https://metacpan.org/pod/Carton) tool for managing CPAN dependencies reached 1.0 status. Miyagawa published his [Carton slides from OSCON 2013](https://speakerdeck.com/miyagawa/carton-1-dot-0-at-oscon-2013) and [the Carton 1.0 release announcement](http://weblog.bulknews.net/post/57356232719/carton-1-0-is-released).
+Tatsuhiko Miyagawa's [Carton]({{<mcpan "Carton" >}}) tool for managing CPAN dependencies reached 1.0 status. Miyagawa published his [Carton slides from OSCON 2013](https://speakerdeck.com/miyagawa/carton-1-dot-0-at-oscon-2013) and [the Carton 1.0 release announcement](http://weblog.bulknews.net/post/57356232719/carton-1-0-is-released).
 
 The music fan and hacker known as Barbie addressed [frequently asked questions about CPANTS and CPAN Testers](http://blog.cpantesters.org/diary/164).
 
@@ -212,7 +212,7 @@ The [Portugese Perl Workshop 2013](http://workshop.perl.pt/ptpw2013/) took place
 
 ### November 2013
 
-Jeffrey Thalhammer (the creator of [Perl::Critic](https://metacpan.org/pod/Perl::Critic) launched a public beta of his [Stratopan](http://stratopan.com/) service. Stratopan lets you freeze a stack of CPAN modules as development and deployment targets.
+Jeffrey Thalhammer (the creator of [Perl::Critic]({{<mcpan "Perl::Critic" >}}) launched a public beta of his [Stratopan](http://stratopan.com/) service. Stratopan lets you freeze a stack of CPAN modules as development and deployment targets.
 
 John Napiorkowski announced [the Catalyst 5.90050 stable release](http://jjnapiorkowski.typepad.com/modern-perl/2013/11/perl-catalyst-hamburg-is-now-stable-version-590050-is-now-on-cpan.html).
 

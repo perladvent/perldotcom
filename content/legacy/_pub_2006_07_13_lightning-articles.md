@@ -33,7 +33,7 @@
 
 It has been common practice within the Perl community for ages to ship distributions with a *Makefile.PL* so that the user will be able to install the packages when he retrieves them, either via the shell which the `CPAN/CPANPLUS` modules offer or via manual CPAN download.
 
-The *Makefile.PL* consists of meta-information, which in the case of the distribution [`HTML::Tagset`](https://metacpan.org/pod/HTML::Tagset) is:
+The *Makefile.PL* consists of meta-information, which in the case of the distribution [`HTML::Tagset`]({{<mcpan "HTML::Tagset" >}}) is:
 
      # This -*-perl-*- program writes the Makefile for installing this distribution.
      #
@@ -63,13 +63,13 @@ Of interest are the arguments to `WriteMakefile()`, because they influence the *
 
 ### `Module::Build`, Successor of `ExtUtils::MakeMaker`?
 
-As Ken Williams grew tired of [`ExtUtils::MakeMaker`](https://metacpan.org/pod/ExtUtils::MakeMaker) and its portability issues, he invented [`Module::Build`](https://metacpan.org/pod/Module::Build), a successor of `ExtUtils::MakeMaker`. One goal of `Module::Build` is to run smoothly on most operating systems, because it takes advantage of creating Perl-valid syntax files only and does not rely upon crufty *Makefiles*, which are often subject to misinterpretation, because so many incompatible flavors of `make` exist in the wild.
+As Ken Williams grew tired of [`ExtUtils::MakeMaker`]({{<mcpan "ExtUtils::MakeMaker" >}}) and its portability issues, he invented [`Module::Build`]({{<mcpan "Module::Build" >}}), a successor of `ExtUtils::MakeMaker`. One goal of `Module::Build` is to run smoothly on most operating systems, because it takes advantage of creating Perl-valid syntax files only and does not rely upon crufty *Makefiles*, which are often subject to misinterpretation, because so many incompatible flavors of `make` exist in the wild.
 
 The current maintainer of `ExtUtils::MakeMaker`, Michael G. Schwern, elaborated about this problem in his talk reachable via "[MakeMaker is DOOMED](http://mungus.schwern.org/~schwern/talks/MakeMaker_Is_DOOMED/slides/)."
 
 ### `Module::Build` Distribution "Skeleton"
 
-If you take in consideration the distribution `HTML::Tagset` again, the rough skeleton suitable for `Module::Build` having converted the *Makefile.PL* by [`Module::Build::Convert`](https://metacpan.org/pod/Module::Build::Convert) into a *Build.PL*, the output would be:
+If you take in consideration the distribution `HTML::Tagset` again, the rough skeleton suitable for `Module::Build` having converted the *Makefile.PL* by [`Module::Build::Convert`]({{<mcpan "Module::Build::Convert" >}}) into a *Build.PL*, the output would be:
 
      # This -*-perl-*- program writes the Makefile for installing this distribution.
      #
@@ -259,7 +259,7 @@ Phil Crow
 
 Perl does not have a native graphical user interface (GUI) toolkit. So we use all manner of existing GUI tools in front of our Perl applications. Often we use a web browser. We have long had Perl/Tk and other libraries based on C/C++. Now we can also use Java's Swing toolkit with similar ease.
 
-In my sample application, when the user presses a button, Perl evaluates an arithmetic expression from the input text box. The result appears in another text box. I'll show the code for this application a piece at a time with a discussion after each piece. To see the whole thing, look in the examples directory of the [`Java::Swing`](https://metacpan.org/pod/Java::Swing) distribution.
+In my sample application, when the user presses a button, Perl evaluates an arithmetic expression from the input text box. The result appears in another text box. I'll show the code for this application a piece at a time with a discussion after each piece. To see the whole thing, look in the examples directory of the [`Java::Swing`]({{<mcpan "Java::Swing" >}}) distribution.
 
         #!/usr/bin/perl
         use strict; use warnings;

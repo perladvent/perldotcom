@@ -24,7 +24,7 @@ Sometimes data processing is better when separated into different processes that
 
 In an attempt to simplify this client-server interaction, the *Remote Procedure Call* (RPC) technique appeared. It tries to map functions inside the client code to their counterparts inside the server. RPC hides all the details between a client function call and the server function's response. This includes argument serialization (to make data appropriate to transfer over the net, also known as marshaling), transport, the server function call, and returning response data back to the client (also serialized). In some implementations, RPC also tries to remove requirements for the client and the server to run on the same operating system or hardware, or to be written in the same programming language.
 
-In the Perl world there are several modules that offer different kinds of RPC, including [RPC::Simple](https://metacpan.org/pod/RPC::Simple), [RPC::XML](https://metacpan.org/pod/RPC::XML), [DCE::RPC](https://metacpan.org/pod/DCE::RPC), and more.
+In the Perl world there are several modules that offer different kinds of RPC, including [RPC::Simple]({{<mcpan "RPC::Simple" >}}), [RPC::XML]({{<mcpan "RPC::XML" >}}), [DCE::RPC]({{<mcpan "DCE::RPC" >}}), and more.
 
 In this article I'll explain how to use Perl-specific features to develop a compact RPC implementation that I will name *Perl-centric Remote Call* (PerlRC). As the name suggests, it will run only with Perl clients and servers.
 
@@ -111,8 +111,8 @@ With this in mind, the PerlRC code must follow these steps:
 
 The implementation uses two modules:
 
--   [`Storable`](https://metacpan.org/pod/Storable) handles the serialization of arbitrary data. Serializing data converts it to a string of characters suitable for saving or sending across the network and unserializable later into the form of the original. The rest of the article will also refer to this process as packing and unpacking the data.
--   [IO::Socket::INET](https://metacpan.org/pod/IO::Socket::INET) handles the creation of Internet domain sockets.
+-   [`Storable`]({{<mcpan "Storable" >}}) handles the serialization of arbitrary data. Serializing data converts it to a string of characters suitable for saving or sending across the network and unserializable later into the form of the original. The rest of the article will also refer to this process as packing and unpacking the data.
+-   [IO::Socket::INET]({{<mcpan "IO::Socket::INET" >}}) handles the creation of Internet domain sockets.
 
 Both modules are standard in the latest Perl distribution packages.
 

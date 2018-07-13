@@ -19,11 +19,11 @@
 }
 
 
-Sometimes crazy ideas are brilliant, but most of the time they are just crazy. I recently uploaded a new module to CPAN: [Cache::Reddit](https://metacpan.org/pod/Cache::Reddit). It's a caching module with a twist: it saves cached data as text posts on Reddit. Is that a good idea? Probably not, it's definitely crazy.
+Sometimes crazy ideas are brilliant, but most of the time they are just crazy. I recently uploaded a new module to CPAN: [Cache::Reddit]({{<mcpan "Cache::Reddit" >}}). It's a caching module with a twist: it saves cached data as text posts on Reddit. Is that a good idea? Probably not, it's definitely crazy.
 
 ### Setup
 
-You probably don't want to do this, but if you were considering using the module, here's how. First you'll need a Reddit account with enough karma to use the API (usually handful of upvoted links and comments is enough). Second you should create your own [subreddit](http://www.reddit.com/subreddits/create/) to post to. Install [Cache::Reddit](https://metacpan.org/pod/Cache::Reddit) using the command line clients cpan or cpanm
+You probably don't want to do this, but if you were considering using the module, here's how. First you'll need a Reddit account with enough karma to use the API (usually handful of upvoted links and comments is enough). Second you should create your own [subreddit](http://www.reddit.com/subreddits/create/) to post to. Install [Cache::Reddit]({{<mcpan "Cache::Reddit" >}}) using the command line clients cpan or cpanm
 
 ```perl
 $ cpan Cache::Reddit
@@ -65,7 +65,7 @@ Although the data is stored in a failsafe, redundant, backed-up environment in t
 
 Retrieval from the cache using `get` doesn't use a hash lookup; instead Cache::Reddit iterates through all available posts on the subreddit until it finds a match. This yields 0(n) performance, which means that the `get` function will get slower the more items are cached. This is not likely to be a performance bottleneck though, as typically a subreddit only holds 1,000 links before they are lost to the ether.
 
-The data is serialized and deserialized using [Storable](https://metacpan.org/pod/Storable), which may open pose a security risk if the cached data is edited by a mod. Up to 40,000 characters of data can be stored at one time. Unless the subreddit permits both links and text posts, in which case the limit is 10,000 characters. But Cache::Reddit does boast 100% test coverage.
+The data is serialized and deserialized using [Storable]({{<mcpan "Storable" >}}), which may open pose a security risk if the cached data is edited by a mod. Up to 40,000 characters of data can be stored at one time. Unless the subreddit permits both links and text posts, in which case the limit is 10,000 characters. But Cache::Reddit does boast 100% test coverage.
 
 ### Looking forwards
 

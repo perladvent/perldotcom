@@ -49,7 +49,7 @@ Without wading through the details, I tend think of buckets as folders, objects 
 
 I'll assume that you have already signed up for [Amazon S3](http://aws.amazon.com/s3) and received your Access Key ID and Secret Access Key. If not, please do so.
 
-Please note that the `S3::*` modules aren't the only Perl modules available for connecting to Amazon S3. In particular, [Net::Amazon::S3](https://metacpan.org/pod/Net::Amazon::S3) hides a lot of the details of the S3 service for you. For now, I'm going to use a simpler module to explain how the service works internally.
+Please note that the `S3::*` modules aren't the only Perl modules available for connecting to Amazon S3. In particular, [Net::Amazon::S3]({{<mcpan "Net::Amazon::S3" >}}) hides a lot of the details of the S3 service for you. For now, I'm going to use a simpler module to explain how the service works internally.
 
 #### Connecting, Creating, and Listing Buckets
 
@@ -88,7 +88,7 @@ Because every S3 action takes place over HTTP, it is good practice to check for 
         # Not Good
     }
 
-As you can see from the output, the results come back in a hash. I've used [Data::Dumper](https://metacpan.org/pod/Data::Dumper) as a convenient way to view the contents. If you are running this for the first time, you will obviously not see anything listed in the bucket.
+As you can see from the output, the results come back in a hash. I've used [Data::Dumper]({{<mcpan "Data::Dumper" >}}) as a convenient way to view the contents. If you are running this for the first time, you will obviously not see anything listed in the bucket.
 
     listing bucket foo
     $VAR1 = {

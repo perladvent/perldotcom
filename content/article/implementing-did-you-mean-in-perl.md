@@ -20,7 +20,7 @@
 }
 
 
-A couple of weeks ago Yuki Nishijima released a clever Ruby [gem](http://www.yukinishijima.net/2014/10/21/did-you-mean-experience-in-ruby.html) called "Did You Mean", that intercepts failed method calls and suggests the closest matching (correct) method in the exception message. I wanted to create an equivalent module in Perl, and so armed with a limited appreciation of `AUTOLOAD` I set about creating [Devel::DidYouMean](https://metacpan.org/pod/Devel::DidYouMean).
+A couple of weeks ago Yuki Nishijima released a clever Ruby [gem](http://www.yukinishijima.net/2014/10/21/did-you-mean-experience-in-ruby.html) called "Did You Mean", that intercepts failed method calls and suggests the closest matching (correct) method in the exception message. I wanted to create an equivalent module in Perl, and so armed with a limited appreciation of `AUTOLOAD` I set about creating [Devel::DidYouMean]({{<mcpan "Devel::DidYouMean" >}}).
 
 ### Using the module
 
@@ -74,11 +74,11 @@ Walking through this code, you might be wondering what that strange `CHECK` bloc
 
 The code then adds the `AUTOLOAD`subroutine to main (the namespace of the executing program) and every other namespace in the symbol table. I got the syntax for this from the "Dynamic Subroutines" chapter of [Mastering Perl](http://shop.oreilly.com/product/0636920012702.do).
 
-The code for the autoloaded [subroutine](https://github.com/sillymoose/Devel-DidYouMean/blob/master/lib/Devel/DidYouMean.pm#L97)is long, so I won't reproduce it here. High level, it extracts the name of the failed subroutine called from `$AUTOLOAD` and using the [Text::Levenshtein](https://metacpan.org/pod/Text::Levenshtein) module, calculates the Levenshtein distance between the name of the failed subroutine call and every available subroutine in the calling namespace. It then croaks displaying the usual undefined subroutine error message with a list of matching subroutines.
+The code for the autoloaded [subroutine](https://github.com/sillymoose/Devel-DidYouMean/blob/master/lib/Devel/DidYouMean.pm#L97)is long, so I won't reproduce it here. High level, it extracts the name of the failed subroutine called from `$AUTOLOAD` and using the [Text::Levenshtein]({{<mcpan "Text::Levenshtein" >}}) module, calculates the Levenshtein distance between the name of the failed subroutine call and every available subroutine in the calling namespace. It then croaks displaying the usual undefined subroutine error message with a list of matching subroutines.
 
 ### Conclusion
 
-Although the module "works", it feels heavy-handed to export a subroutine to every namespace in memory. An alternative approach that I considered but couldn't get to work would be to define the code in an `END` block, and then check if the program is ending with an "unknown subroutine" error. This challenge with this is that in the end phase, Perl has already nullified the error variable `$!` so it's hard to know why the program is ending (tieing `$!` might get around this). If you're interested in tackling this challenge, the repo is hosted on [GitHub](https://github.com/sillymoose/Devel-DidYouMean), pull requests are welcome :) The module [documentation](https://metacpan.org/pod/Devel::DidYouMean) has more examples of Devel::DidYouMean in action.
+Although the module "works", it feels heavy-handed to export a subroutine to every namespace in memory. An alternative approach that I considered but couldn't get to work would be to define the code in an `END` block, and then check if the program is ending with an "unknown subroutine" error. This challenge with this is that in the end phase, Perl has already nullified the error variable `$!` so it's hard to know why the program is ending (tieing `$!` might get around this). If you're interested in tackling this challenge, the repo is hosted on [GitHub](https://github.com/sillymoose/Devel-DidYouMean), pull requests are welcome :) The module [documentation]({{<mcpan "Devel::DidYouMean" >}}) has more examples of Devel::DidYouMean in action.
 
 **Update:***Devel::DidYouMean now uses a signal handling approach and avoids AUTOLOAD altogether 2014-11-09*
 

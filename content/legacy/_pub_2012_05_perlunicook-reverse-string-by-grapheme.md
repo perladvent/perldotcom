@@ -26,7 +26,7 @@ As one option, use [Perl's `\X` regex metacharacter](/pub/2012/05/perlunicook-ma
 
      $str = join("", reverse $str =~ /\X/g);
 
-As another option, use [Unicode::GCString](https://metacpan.org/pod/Unicode::GCString) to treat a string as a sequence of graphemes, not codepoints:
+As another option, use [Unicode::GCString]({{<mcpan "Unicode::GCString" >}}) to treat a string as a sequence of graphemes, not codepoints:
 
      use Unicode::GCString;
      $str = reverse Unicode::GCString->new($str);

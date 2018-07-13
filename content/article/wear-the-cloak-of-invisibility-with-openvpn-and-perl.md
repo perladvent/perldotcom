@@ -19,7 +19,7 @@
 }
 
 
-*Screen-scraping useragents can be identified by several characteristics including their IP address and useragent string. This article shows how with the VPN service of [HideMyAss.com](http://hidemyass.com/vpn/r14824/) and the Perl module [Net::OpenVPN::Agent](https://metacpan.org/pod/Net::OpenVPN::Agent) you can obfuscate these data points and make your useragent harder to detect and monitor.*
+*Screen-scraping useragents can be identified by several characteristics including their IP address and useragent string. This article shows how with the VPN service of [HideMyAss.com](http://hidemyass.com/vpn/r14824/) and the Perl module [Net::OpenVPN::Agent]({{<mcpan "Net::OpenVPN::Agent" >}}) you can obfuscate these data points and make your useragent harder to detect and monitor.*
 
 ### Pre-requisites
 
@@ -35,15 +35,15 @@ Finally you will need a "VPN Pro" account with [HideMyAss.com](http://hidemyass.
 
 ### Overview
 
-The Net::OpenVPN::Agent provides a configurable useragent that will automatically connect to a random [HideMyAss.com](http://hidemyass.com/vpn/r14824/) server before fetching the target URL. After a configurable number of requests, the useragent will automatically disconnect and re-connect to another random server. When connecting to a new server, the useragent will also select a new useragent string from a configurable list of useragent strings. This way both the IP address and the useragent string will change at the same time to adopt a new identity. The useragent is designed to be resilient: server connections and failed page requests will be attempted multiple times (configurable), new IP addresses are confirmed using a remote service and full logging capability is provided via [Log::log4perl](https://metacpan.org/pod/Log::Log4perl) (also configurable).
+The Net::OpenVPN::Agent provides a configurable useragent that will automatically connect to a random [HideMyAss.com](http://hidemyass.com/vpn/r14824/) server before fetching the target URL. After a configurable number of requests, the useragent will automatically disconnect and re-connect to another random server. When connecting to a new server, the useragent will also select a new useragent string from a configurable list of useragent strings. This way both the IP address and the useragent string will change at the same time to adopt a new identity. The useragent is designed to be resilient: server connections and failed page requests will be attempted multiple times (configurable), new IP addresses are confirmed using a remote service and full logging capability is provided via [Log::log4perl]({{<mcpan "Log::Log4perl" >}}) (also configurable).
 
 ### Configuration
 
-[Net::OpenVPN::Agent](https://metacpan.org/pod/Net::OpenVPN::Agent) requires a YAML file called agent.conf to be present in the root application directory. This is explained in the [module documentation](https://metacpan.org/pod/Net::OpenVPN::Agent#new).
+[Net::OpenVPN::Agent]({{<mcpan "Net::OpenVPN::Agent" >}}) requires a YAML file called agent.conf to be present in the root application directory. This is explained in the [module documentation]({{<mcpan "Net::OpenVPN::Agent#new" >}}).
 
 ### Writing a covert scraper
 
-Let's pull together a simple scraper to demonstrate the concept. The code below initializes uses [Net::OpenVPN::Agent](https://metacpan.org/pod/Net::OpenVPN::Agent) to get the main page of the New York times website. It then extracts and requests every URL it finds, with the aim of doing something with that content.
+Let's pull together a simple scraper to demonstrate the concept. The code below initializes uses [Net::OpenVPN::Agent]({{<mcpan "Net::OpenVPN::Agent" >}}) to get the main page of the New York times website. It then extracts and requests every URL it finds, with the aim of doing something with that content.
 
 ```perl
 use Net::OpenVPN::Agent;

@@ -60,7 +60,7 @@ while ($sender = $sock->recv($datagram, 0xFFFF))
 }
 ```
 
-The script opens a UDP socket on port 2055 and reads datagrams from it. It uses [Data::Netflow](https://metacpan.org/pod/Data::Netflow) to parse the datagrams from the socket. The `decode` function accepts a datagram and returns a hashref of header data, and an arrayref of NetFlow [records](https://en.wikipedia.org/wiki/NetFlow#NetFlow_Record). Each record is a hashref and strangely by default its keys are stringified numbers ("1" through "20").
+The script opens a UDP socket on port 2055 and reads datagrams from it. It uses [Data::Netflow]({{<mcpan "Data::Netflow" >}}) to parse the datagrams from the socket. The `decode` function accepts a datagram and returns a hashref of header data, and an arrayref of NetFlow [records](https://en.wikipedia.org/wiki/NetFlow#NetFlow_Record). Each record is a hashref and strangely by default its keys are stringified numbers ("1" through "20").
 
 However if the second argument passed to `decode` is true, then the record hashrefs use field names instead of numbers. Each record contains data like the source and destination IP addresses and ports, the number of packets sent, total number of bytes in the packets and so on. If the record's source IP address match my phone's network address, the script prints the pertinent information to a logfile.
 
@@ -68,7 +68,7 @@ I disabled mobile data on my phone, and ran this script for 24 hours.
 
 ### Results
 
-I used [Net::Whois::IP](https://metacpan.org/pod/Net::Whois::IP) to lookup the organization for each IP address. Here's the top ten Organizations by the number of packets sent:
+I used [Net::Whois::IP]({{<mcpan "Net::Whois::IP" >}}) to lookup the organization for each IP address. Here's the top ten Organizations by the number of packets sent:
 
     Fastly (SKYCA-3) => 1243
     OPENX TECHNOLOGIES, INC. (OPENX) => 989
@@ -101,8 +101,8 @@ In the meantime, Google has stopped warning me about unusual activity, and I hav
 ### References
 
 * [DD-WRT](http://www.dd-wrt.com/site/index) is a Linux distribution for routers
-* [Data::Netflow](https://metacpan.org/pod/Data::Netflow) is a Perl module that can encode/decode Netflow data versions 5 and 9 (DD-WRT produces version 5).
-* [Net::Whois::IP](https://metacpan.org/pod/Net::Whois::IP) is a Perl module for running [WHOIS](https://en.wikipedia.org/wiki/WHOIS) queries, it parses the response into a Perl data structure although it doesn't normalize the keys.
+* [Data::Netflow]({{<mcpan "Data::Netflow" >}}) is a Perl module that can encode/decode Netflow data versions 5 and 9 (DD-WRT produces version 5).
+* [Net::Whois::IP]({{<mcpan "Net::Whois::IP" >}}) is a Perl module for running [WHOIS](https://en.wikipedia.org/wiki/WHOIS) queries, it parses the response into a Perl data structure although it doesn't normalize the keys.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

@@ -154,7 +154,7 @@ FreeBSD
 
 This stub module does a couple of important things: having the package means CPAN can index the module and it will be searchable on [metacpan](https://metacpan.org/) and installable by CPAN clients like `cpan` and `cpanm`. It sets the distribution version number and it includes some basic documentation to point users towards the `foo` script, which is the meat and potatoes of this distribution.
 
-<br/><sup>1</sup> You can trick CPAN by editing the META files and not providing a Perl module. Check out [stasis](https://metacpan.org/pod/stasis) for an example of this. The downside is it's not clear what other tools in the Perl toolchain might break without a real package. Not recommended.
+<br/><sup>1</sup> You can trick CPAN by editing the META files and not providing a Perl module. Check out [stasis]({{<mcpan "stasis" >}}) for an example of this. The downside is it's not clear what other tools in the Perl toolchain might break without a real package. Not recommended.
 
 ### Create a Makefile.PL
 
@@ -191,13 +191,13 @@ WriteMakefile(
 );
 ```
 
-This `Makefile.PL` script uses [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker). Right at the top of the script the statement `use 5.008004` ensures this script can only be run by Perl version 5.8.4 or higher. The `MINIMUM_PERL_VERSION` entry is there so CPAN clients and services like CPAN testers will know what minimum Perl version is required to use the distribution.
+This `Makefile.PL` script uses [ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}). Right at the top of the script the statement `use 5.008004` ensures this script can only be run by Perl version 5.8.4 or higher. The `MINIMUM_PERL_VERSION` entry is there so CPAN clients and services like CPAN testers will know what minimum Perl version is required to use the distribution.
 
-You can see I've set the version and abstract text to come from the stub module. I've set the license to be FreeBSD, but there are many [others](https://metacpan.org/pod/CPAN::Meta::Spec#license) that are accepted. Both the license and minimum Perl version entries are newer options that may generate warnings in older versions of ExtUtils::MakeMaker - that's fine, they'll be ignored and the build can continue regardless.
+You can see I've set the version and abstract text to come from the stub module. I've set the license to be FreeBSD, but there are many [others]({{<mcpan "CPAN::Meta::Spec#license" >}}) that are accepted. Both the license and minimum Perl version entries are newer options that may generate warnings in older versions of ExtUtils::MakeMaker - that's fine, they'll be ignored and the build can continue regardless.
 
-The `EXE_FILES` line is important; it will make sure the script is copied to an executable directory on installation. `PREREQ_PM` is a hashref of the runtime modules used by the script. In this case the first version of [DateTime](https://metacpan.org/pod/DateTime) that supported the `mon()` method used in the script was 0.37 (technically `mon()` is an alias that I could switch to `month()` but that would make for a less interesting example). For the strict and warnings pragmas, there is no minimum version so I can just use zero.
+The `EXE_FILES` line is important; it will make sure the script is copied to an executable directory on installation. `PREREQ_PM` is a hashref of the runtime modules used by the script. In this case the first version of [DateTime]({{<mcpan "DateTime" >}}) that supported the `mon()` method used in the script was 0.37 (technically `mon()` is an alias that I could switch to `month()` but that would make for a less interesting example). For the strict and warnings pragmas, there is no minimum version so I can just use zero.
 
-The final part of the script begins with the `eval` and it's a little odd. Older versions of ExtUtils::MakeMaker didn't support version 2 of the CPAN meta specification, so using [META_MERGE](https://metacpan.org/pod/ExtUtils::MakeMaker#META_MERGE) this will only be included if being built with a modern version. This optional entry can be used if the distribution code is in a repository like GitHub, otherwise it's not needed. Sites like MetaCPAN will include a link to the repo on GitHub if this is present.
+The final part of the script begins with the `eval` and it's a little odd. Older versions of ExtUtils::MakeMaker didn't support version 2 of the CPAN meta specification, so using [META_MERGE]({{<mcpan "ExtUtils::MakeMaker#META_MERGE" >}}) this will only be included if being built with a modern version. This optional entry can be used if the distribution code is in a repository like GitHub, otherwise it's not needed. Sites like MetaCPAN will include a link to the repo on GitHub if this is present.
 
 ### Create a README
 
@@ -209,7 +209,7 @@ This writes the raw POD out of the script into `README.pod`. One thing to rememb
 
 ### Add a LICENSE file
 
-I've already specified this distribution's software license as FreeBSD in the makefile, so I should include a copy of the license in the distribution. This is easy with [App::Software::License](https://metacpan.org/pod/App::Software::License):
+I've already specified this distribution's software license as FreeBSD in the makefile, so I should include a copy of the license in the distribution. This is easy with [App::Software::License]({{<mcpan "App::Software::License" >}}):
 
     $ software-license --holder 'David Farrell' --license FreeBSD --type fulltext > LICENSE
 
@@ -224,7 +224,7 @@ Ok now the fun begins!
     Writing Makefile for App::foo
     Writing MYMETA.yml and MYMETA.json
 
-This creates the `Makefile` but also META files which define the metadata of the distribution. These is used by the CPAN toolchain for things like indexing, version control and dependency management ([CPAN::Meta::Spec](https://metacpan.org/pod/CPAN::Meta::Spec) describes the metadata specification).
+This creates the `Makefile` but also META files which define the metadata of the distribution. These is used by the CPAN toolchain for things like indexing, version control and dependency management ([CPAN::Meta::Spec]({{<mcpan "CPAN::Meta::Spec" >}}) describes the metadata specification).
 
     $ make manifest
     "/home/dfarrell/.plenv/versions/5.22.0/bin/perl5.22.0" "-MExtUtils::Manifest=mkmanifest" -e mkmanifest
@@ -321,7 +321,7 @@ Almost done, I'll use the Makefile to clean up the build files:
 
 I already have a PAUSE account, so I can skip this step. Otherwise prospective CPAN authors need to [register](http://pause.perl.org/pause/query?ACTION=request_id) for a PAUSE account. Don't skip on the "A short description of why you would like a PAUSE ID" entry - this is one way the PAUSE admins identify human versus bot requests, and you don't want to be mistaken for a bot!
 
-Once I [login](https://pause.perl.org/pause/authenquery) to PAUSE, I can upload the distribution from the [uploads page](https://pause.perl.org/pause/authenquery?ACTION=add_uri). These days I like to do it from the command line with [CPAN::Uploader](https://metacpan.org/pod/CPAN::Uploader). That would work like this:
+Once I [login](https://pause.perl.org/pause/authenquery) to PAUSE, I can upload the distribution from the [uploads page](https://pause.perl.org/pause/authenquery?ACTION=add_uri). These days I like to do it from the command line with [CPAN::Uploader]({{<mcpan "CPAN::Uploader" >}}). That would work like this:
 
     $ cpan-upload -u DFARRELL App-foo-0.01.tar.gz
 

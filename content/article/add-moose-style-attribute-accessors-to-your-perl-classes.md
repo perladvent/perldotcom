@@ -19,7 +19,7 @@
 }
 
 
-*Let's face it, writing attribute accessors for out-of-the-box Perl classes is repetitive and not much fun. Of course you could use [Moose](https://metacpan.org/pod/Moose) or even [Class::Accessor](https://metacpan.org/pod/Class::Accessor) to ease the burden but sometimes you want to roll your own solution, *sans* dependencies.*
+*Let's face it, writing attribute accessors for out-of-the-box Perl classes is repetitive and not much fun. Of course you could use [Moose]({{<mcpan "Moose" >}}) or even [Class::Accessor]({{<mcpan "Class::Accessor" >}}) to ease the burden but sometimes you want to roll your own solution, *sans* dependencies.*
 
 ### A typical class
 
@@ -98,7 +98,7 @@ Whilst this approach does offer faster extensibility and a nicer syntax than van
 
 ### Sources
 
-Thanks to David Golden whose awesome [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny) source code inspired this article.
+Thanks to David Golden whose awesome [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) source code inspired this article.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

@@ -67,7 +67,7 @@ Quick tip: if you need detailed information about the installed Perl version, us
 
 ### Load modules with M
 
-Modules can be loaded at the command line too. For instance to download and print the PerlTricks.com homepage, I can use [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny):
+Modules can be loaded at the command line too. For instance to download and print the PerlTricks.com homepage, I can use [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}):
 
 ```perl
 $ perl -MHTTP::Tiny -E 'say HTTP::Tiny->new->get("http://perltricks.com")->{content}';
@@ -79,7 +79,7 @@ $ perl -MHTTP::Tiny -E 'say HTTP::Tiny->new->get("http://perltricks.com")->{cont
    ,,,
 ```
 
-If you need to import functions from a module, use an equals sign followed by a comma separated list of function names. I can check if an XML file is valid XML with [XML::Simple](https://metacpan.org/pod/XML::Simple) and it's `XMLin` function just by loading the XML file:
+If you need to import functions from a module, use an equals sign followed by a comma separated list of function names. I can check if an XML file is valid XML with [XML::Simple]({{<mcpan "XML::Simple" >}}) and it's `XMLin` function just by loading the XML file:
 
 ```perl
 $ perl -MXML::Simple=XMLin -e 'XMLin("data.xml")'
@@ -116,7 +116,7 @@ Can you see what's wrong here? The `catch` block is missing a trailing semicolon
 
 ### Use I to include directories
 
-Sometimes you'll be working with modules that are not installed in Perl's standard locations. This often happens when you're debugging an application but it's not installed via CPAN. To demonstrate this, I'll download my [WWW::curlmyip](https://metacpan.org/pod/WWW::curlmyip) module:
+Sometimes you'll be working with modules that are not installed in Perl's standard locations. This often happens when you're debugging an application but it's not installed via CPAN. To demonstrate this, I'll download my [WWW::curlmyip]({{<mcpan "WWW::curlmyip" >}}) module:
 
 ```perl
 $ cpan -g WWW::curlmyip

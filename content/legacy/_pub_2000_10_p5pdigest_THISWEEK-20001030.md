@@ -55,7 +55,7 @@ In other Unicode news, Jarkko also noted that `\x{some number}` should always pr
 
 ### <span id="Self_Tying_Is_Broken">Self-Tying Is Broken</span>
 
-Steffen Beyer has noticed that removing the capacity to tie an object to itself breaks his [Data::Locations](https://metacpan.org/pod/Data::Locations) module: he was using it to make filehandles which were also objects. (A really cool idea, but undocumented and unsupported.)
+Steffen Beyer has noticed that removing the capacity to tie an object to itself breaks his [Data::Locations]({{<mcpan "Data::Locations" >}}) module: he was using it to make filehandles which were also objects. (A really cool idea, but undocumented and unsupported.)
 
 There followed a long and fairly acrimonious thread, but a [sensible conclusion](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg01139.html): Jarkko reallowed self-ties on scalars. Marc Lehmann tried to stir up trouble by asking what should be done about pseudohashes. Jarkko got it right:
 
@@ -85,7 +85,7 @@ The thread wandered off into discussion of what the Unicode characters `0x0000` 
 
 ### <span id="Switch">Switch</span>
 
-Jarkko considered adding Damian Conway's `switch` module into core; the module simulates the `switch` statement you'll see in many other languages. Damian's old version is available from [CPAN](https://metacpan.org/pod/Switch), but he should be working on a new version in line with [his Perl 6 RFC](http://dev.perl.org/rfc/22.html). Tim worried about Perl 5 appearing to bless a particular switch semanting before Larry had decided anything - Jarkko said that Damian would get it right anyway, and Andy pointed out that it would encourage people to play with it.
+Jarkko considered adding Damian Conway's `switch` module into core; the module simulates the `switch` statement you'll see in many other languages. Damian's old version is available from [CPAN]({{<mcpan "Switch" >}}), but he should be working on a new version in line with [his Perl 6 RFC](http://dev.perl.org/rfc/22.html). Tim worried about Perl 5 appearing to bless a particular switch semanting before Larry had decided anything - Jarkko said that Damian would get it right anyway, and Andy pointed out that it would encourage people to play with it.
 
 As he mentioned, there are three ways we could do it: use the Perl module and a source filter, convert the module to XS and use a source filter, or hack at the tokeniser and parser. Nobody wanted to do the latter option, since Hugo pointed out that it probably wouldn't be worth it due to the emergence of Perl 6. It might not happen, but if it does, it'll probably happen with an XS module.
 

@@ -115,7 +115,7 @@ Another other problem with the echo script is that because it opens a raw socket
 
 ### Useful resources
 
-In preparing this script I learned a lot about sockets and network programming. Lincoln Stein's [Network Programming with Perl](http://www.amazon.com/Network-Programming-Perl-Lincoln-Stein/dp/0201615711/ref=la_B000APT5P6_1_1) was an invaluable resource for understanding sockets and the arcane invocations to use with them. If you're considering working with sockets, the [IO::Socket](https://metacpan.org/pod/IO::Socket) module has a cleaner interface than the [Socket](https://metacpan.org/pod/Socket) module (and is also part of core). The source code for the excellent [NetPacket](https://metacpan.org/pod/NetPacket) distribution was useful in understanding how to parse packets.
+In preparing this script I learned a lot about sockets and network programming. Lincoln Stein's [Network Programming with Perl](http://www.amazon.com/Network-Programming-Perl-Lincoln-Stein/dp/0201615711/ref=la_B000APT5P6_1_1) was an invaluable resource for understanding sockets and the arcane invocations to use with them. If you're considering working with sockets, the [IO::Socket]({{<mcpan "IO::Socket" >}}) module has a cleaner interface than the [Socket]({{<mcpan "Socket" >}}) module (and is also part of core). The source code for the excellent [NetPacket]({{<mcpan "NetPacket" >}}) distribution was useful in understanding how to parse packets.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

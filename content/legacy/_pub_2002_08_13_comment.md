@@ -128,7 +128,7 @@ And this is how you use it:
         ... C++ style!
     */
 
-It's as simple as that. Now, to just do one language seemed a waste of this idea. Many languages have nice multiline comments or even single line comments. So, we decided to support a few more languages - in fact, [44 in total right now](https://metacpan.org/pod/Acme::Comment)
+It's as simple as that. Now, to just do one language seemed a waste of this idea. Many languages have nice multiline comments or even single line comments. So, we decided to support a few more languages - in fact, [44 in total right now]({{<mcpan "Acme::Comment" >}})
 
 Below are 5 styles of doing multi- or single-line comments in a language that `Acme::Comment` supports. So let's play a game of 'Name That Language'! (answers at the bottom)
 
@@ -255,7 +255,7 @@ So you can say:
 
             { .. this code is not .. }
 
-If you want to learn more about source filtering, take a look at the [`Filter::Simple` manpage](https://metacpan.org/pod/Filter::Simple).
+If you want to learn more about source filtering, take a look at the [`Filter::Simple` manpage]({{<mcpan "Filter::Simple" >}}).
 
 ### Answers to the comment game
 

@@ -20,7 +20,7 @@
 
 While it may be most common in modern operating systems for your command-line arguments to be encoded as UTF-8, `@ARGV` may use other encodings. If you have configured your system with a proper locale, you may need to decode `@ARGV` appropriately. Unlike [automatic UTF-8 `@ARGV` decoding](/pub/2012/04/perlunicookbook-decode-argv-as-utf8.html), you must do this manually.
 
-Install the [Encode::Locale](https://metacpan.org/pod/Encode::Locale) module from the CPAN:
+Install the [Encode::Locale]({{<mcpan "Encode::Locale" >}}) module from the CPAN:
 
         # cpan -i Encode::Locale
         use Encode qw(locale);

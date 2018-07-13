@@ -33,7 +33,7 @@ How do you test DBI programs:
 -   With complete control over all database return values, along with all DBI method return values?
 -   With an easy, regex-based rules interface?
 
-You test with [Test::MockDBI](https://metacpan.org/pod/Test::MockDBI), that's how. Test::MockDBI provides all of this by using Test::MockObject::Extends to mock up the entire DBI API. Without a solution like Test::MockDBI--a solution that enables direct manipulation of the DBI--you'll have to trace DBI methods through a series of test databases.
+You test with [Test::MockDBI]({{<mcpan "Test::MockDBI" >}}), that's how. Test::MockDBI provides all of this by using Test::MockObject::Extends to mock up the entire DBI API. Without a solution like Test::MockDBI--a solution that enables direct manipulation of the DBI--you'll have to trace DBI methods through a series of test databases.
 
 You can make test databases work, but:
 
@@ -46,7 +46,7 @@ Using Test::MockDBI avoids these problems. Read on to learn how Test::MockDBI ea
 
 ### A Mock Up of the Entire DBI
 
-Test::MockDBI mocks up the entire DBI API by using [Test::MockObject::Extends](https://metacpan.org/pod/Test::MockObject::Extends) to substitute a Test::MockObject::Extends object in place of the [DBI](https://metacpan.org/pod/DBI). A feature of this approach is that if the DBI API changes (and you use that change), you will notice during testing if you haven't upgraded Test::MockDBI, as your program will complain about missing DBI API method(s).
+Test::MockDBI mocks up the entire DBI API by using [Test::MockObject::Extends]({{<mcpan "Test::MockObject::Extends" >}}) to substitute a Test::MockObject::Extends object in place of the [DBI]({{<mcpan "DBI" >}}). A feature of this approach is that if the DBI API changes (and you use that change), you will notice during testing if you haven't upgraded Test::MockDBI, as your program will complain about missing DBI API method(s).
 
 Mocking up the entire DBI means that you can add the DBI testing code into an existing application without changing the initial application code--using Test::MockDBI is entirely transparent to the rest of your application, as it neither knows nor cares that it's using Test::MockDBI in place of the DBI. This property of transparency is what drove me to develop Test::MockDBI, as it meant I could add the Test::MockDBI DBI testing code to existing client applications without modifying the existing code (handy, for us consultants).
 
@@ -78,7 +78,7 @@ This ease of database value testing also applies when you need to test against c
 
 This modern incarnation of the age-old stubbed-functions technique also uses the old technique of "`printf()` and scratch head" as its output interface. This being Perl we are working with, and not FORTRAN IV (thank goodness), we have multiple options beyond the use of unvarnished standard output.
 
-One option that I think integrates well with DBI-using module testing is to redirect standard output into a string using [IO::String](https://metacpan.org/pod/IO::String). You can then match the string against the regex you are looking for. As you have already guessed, use of pure standard output integrates well with command-line program testing.
+One option that I think integrates well with DBI-using module testing is to redirect standard output into a string using [IO::String]({{<mcpan "IO::String" >}}). You can then match the string against the regex you are looking for. As you have already guessed, use of pure standard output integrates well with command-line program testing.
 
 What you will look for, irrespective of where your code actually looks, is the output of each DBI method as it executes--the method name and arguments--along with anything else your code writes to standard output.
 
@@ -90,7 +90,7 @@ One of the major advances in software engineering is the increasing ability to g
 
 ### When to Use Test::MockDBI
 
-DBI's `trace()`, [DBD::Mock](https://metacpan.org/pod/DBD::Mock), and Test::MockDBI are complementary solutions to the problem of testing DBI software. DBI's `trace()` is a pure tracing mechanism, as it does not change the data returned from the database or the DBI method return values. DBD::Mock works at level of a database driver, so you have to look at your DBI testing from the driver's point of view, rather than the DBI caller's point of view. DBD::Mock also requires that your code supports configurable DBI DSNs, which may not be the case in all circumstances, especially when you must maintain or enhance legacy DBI software.
+DBI's `trace()`, [DBD::Mock]({{<mcpan "DBD::Mock" >}}), and Test::MockDBI are complementary solutions to the problem of testing DBI software. DBI's `trace()` is a pure tracing mechanism, as it does not change the data returned from the database or the DBI method return values. DBD::Mock works at level of a database driver, so you have to look at your DBI testing from the driver's point of view, rather than the DBI caller's point of view. DBD::Mock also requires that your code supports configurable DBI DSNs, which may not be the case in all circumstances, especially when you must maintain or enhance legacy DBI software.
 
 Test::MockDBI works at the DBI caller's level, which is (IMHO) more natural for testing DBI-using software (possibly a matter of taste: TMTOWTDI). Test::MockDBI's interface with your DBI software is a set of easy-to-program, regex-based rules, which incorporate a lot of power into one or a few lines of code, thereby using Perl's built-in regex support to best advantage. This binds test data and test code tightly together, reducing the chance of synchronization problems between the test data and the test code. Using Test::MockDBI does not require modifying the current code of the DBI software being tested, as you only need additional code to enable Test::MockDBI-driven DBI testing.
 

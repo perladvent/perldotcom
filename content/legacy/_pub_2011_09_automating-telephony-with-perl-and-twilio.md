@@ -78,11 +78,11 @@ Twilio can also record voice input, transcribe it, send and receive SMS messages
 **Twilio, meet Perl**
 ---------------------
 
-CPAN makes writing Twilio applications easy, thanks to [WWW::Twilio::API](https://metacpan.org/pod/WWW::Twilio::API). My (current) favorite way to install CPAN modules comes from the Mojolicious project:
+CPAN makes writing Twilio applications easy, thanks to [WWW::Twilio::API]({{<mcpan "WWW::Twilio::API" >}}). My (current) favorite way to install CPAN modules comes from the Mojolicious project:
 
     curl -L cpanmin.us | perl - WWW::Twilio::API
 
-cpanmin.us returns a Perl program which handles all of the build dependencies for you. If you’re leery of running code from a website directly on the command line, install [App::cpanminus](https://metacpan.org/pod/App::cpanminus) and use its `cpanm` program instead.
+cpanmin.us returns a Perl program which handles all of the build dependencies for you. If you’re leery of running code from a website directly on the command line, install [App::cpanminus]({{<mcpan "App::cpanminus" >}}) and use its `cpanm` program instead.
 
 If you’re like me and don’t want to mess up your clean development environment, tell cpanmin.us or `cpanm` to install things into a temporary location:
 
@@ -97,7 +97,7 @@ See [How to install CPAN modules](http://www.cpan.org/modules/INSTALL.html) for 
 **Getting all the necessary Twilio information**
 ------------------------------------------------
 
-After you install [WWW::Twilio::API](https://metacpan.org/pod/WWW::Twilio::API), but before you make your first call, you need several pieces of information from your Twilio Dashboard:
+After you install [WWW::Twilio::API]({{<mcpan "WWW::Twilio::API" >}}), but before you make your first call, you need several pieces of information from your Twilio Dashboard:
 
 -   AccountSid: this is a long string begining with “AC”
 
@@ -153,7 +153,7 @@ Early on in Twilio development, you’re likely to experience a few little gotch
     LWP will support https URLs if the LWP::Protocol::https module
     is installed.
 
-That’s LWP telling you to install [LWP::Protocol::https](https://metacpan.org/pod/LWP::Protocol::https). (It will also install or update a few other modules, including [Net::SSLeay](https://metacpan.org/pod/Net::SSLeay)).
+That’s LWP telling you to install [LWP::Protocol::https]({{<mcpan "LWP::Protocol::https" >}}). (It will also install or update a few other modules, including [Net::SSLeay]({{<mcpan "Net::SSLeay" >}})).
 
 If you see XML after running the script, your development environment is probably fine. You might instead see:
 

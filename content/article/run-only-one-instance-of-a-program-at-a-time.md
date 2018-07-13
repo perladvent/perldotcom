@@ -35,7 +35,7 @@ flock $file, 2 or die "Unable to lock file $!";
 # we have the lock
 ```
 
-This code starts by opening a write filehandle to the file `app.lock`. If successful, it attempts to get an exclusive lock on the file by calling flock with the number 2. An exclusive lock means no other process can access the file whilst the lock is active. Remembering the constant values for lock types can be a pain, so helpfully the [Fcntl](https://metacpan.org/pod/Fcntl) module will export constant names if you ask nicely. I'll update the code to do that:
+This code starts by opening a write filehandle to the file `app.lock`. If successful, it attempts to get an exclusive lock on the file by calling flock with the number 2. An exclusive lock means no other process can access the file whilst the lock is active. Remembering the constant values for lock types can be a pain, so helpfully the [Fcntl]({{<mcpan "Fcntl" >}}) module will export constant names if you ask nicely. I'll update the code to do that:
 
 ```perl
 use Fcntl qw(:flock);
@@ -108,7 +108,7 @@ flock $file, LOCK_EX|LOCK_NB or die "Unable to lock file $!";
 sleep(60);
 ```
 
-This frees up `DATA` and has the added benefit that the code can be exported by a module (by using `our` instead of `my`). Note that the `open` arguments have been changed to use a read-only filehandle to avoid truncating the source code of the program! If you need this behavior, you can implement it yourself as shown above, or use my module [IPC::Lockfile](https://metacpan.org/pod/IPC::Lockfile), which will do it for you. If you need more refined lockfile functionality, have a look at [Sys::RunAlone](https://metacpan.org/pod/Sys::RunAlone) which uses the same trick (thanks to [BooK](https://metacpan.org/author/BOOK) for the reference). There are also plenty of other options on [CPAN](https://metacpan.org/search?size=20&q=lockfile&search_type=modules).
+This frees up `DATA` and has the added benefit that the code can be exported by a module (by using `our` instead of `my`). Note that the `open` arguments have been changed to use a read-only filehandle to avoid truncating the source code of the program! If you need this behavior, you can implement it yourself as shown above, or use my module [IPC::Lockfile]({{<mcpan "IPC::Lockfile" >}}), which will do it for you. If you need more refined lockfile functionality, have a look at [Sys::RunAlone]({{<mcpan "Sys::RunAlone" >}}) which uses the same trick (thanks to [BooK](https://metacpan.org/author/BOOK) for the reference). There are also plenty of other options on [CPAN](https://metacpan.org/search?size=20&q=lockfile&search_type=modules).
 
 **Update:** *added Sys::RunAlone reference - 2015-11-28.*
 

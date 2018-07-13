@@ -17,7 +17,7 @@
 }
 
 
-*The [B::Deparse](https://metacpan.org/pod/B::Deparse) module compiles a Perl program and then deparses it, producing the internally generated source code. What's the point of that you say? Well it let's you look behind the curtain and inspect how Perl is structuring the program code which can help you debug it, among other things.*
+*The [B::Deparse]({{<mcpan "B::Deparse" >}}) module compiles a Perl program and then deparses it, producing the internally generated source code. What's the point of that you say? Well it let's you look behind the curtain and inspect how Perl is structuring the program code which can help you debug it, among other things.*
 
 ### Example
 
@@ -60,7 +60,7 @@ The generated code shows how Perl structured the signatures.pl code internally. 
 
 ### More on B::Deparse
 
-B::Deparse comes with extensive [documentation](https://metacpan.org/pod/B::Deparse) and has some useful options for altering the output.
+B::Deparse comes with extensive [documentation]({{<mcpan "B::Deparse" >}}) and has some useful options for altering the output.
 
 One of the many gems in brian d foy's [Mastering Perl](http://www.amazon.com/gp/product/144939311X/ref=as_li_qf_sp_asin_il_tl?ie=UTF8&camp=1789&creative=9325&creativeASIN=144939311X&linkCode=as2&tag=perltrickscom-20) book is the B::Deparse entry in the "Cleaning up Perl" chapter (affiliate link). In the book brian shows several uses for B::Deparse including debugging one-liners and decoding obfuscated code. You can read a draft version of the chapter online [here](http://chimera.labs.oreilly.com/books/1234000001527/ch07.html).
 

@@ -24,11 +24,11 @@ the Internet must go to [Let’s Encrypt](http://letsencrypt.org) (LE),
 who provide free TLS certificates via an open-access RESTful API. That
 API has a large number of clients in many languages, including Perl.
 (The list includes the [cPanel](http://cpanel.com)-derived
-[Net::ACME](https://metacpan.org/pod/Net::ACME)
-as well as [Crypt::LE](https://metacpan.org/pod/Crypt::LE),
-[Protocol::ACME](https://metacpan.org/pod/Protocol::ACME),
-[WWW::LetsEncrypt](https://metacpan.org/pod/WWW::LetsEncrypt), and
-[Mojo::ACME](https://metacpan.org/pod/Mojo::ACME).)
+[Net::ACME]({{<mcpan "Net::ACME" >}})
+as well as [Crypt::LE]({{<mcpan "Crypt::LE" >}}),
+[Protocol::ACME]({{<mcpan "Protocol::ACME" >}}),
+[WWW::LetsEncrypt]({{<mcpan "WWW::LetsEncrypt" >}}), and
+[Mojo::ACME]({{<mcpan "Mojo::ACME" >}}).)
 
 LE has worked with the [IETF](http://ietf.org) to standardize their
 “ACME” (Automated Certificate Management Environment) protocol as an
@@ -44,13 +44,13 @@ the new protocol and quickly decided that a new distribution would suit
 the need best. Besides the significant protocol changes that have taken
 place, I wanted to make some “deeper” changes like:
 
-* I wanted to incorporate [X::Tiny](https://metacpan.org/pod/X::Tiny)
+* I wanted to incorporate [X::Tiny]({{<mcpan "X::Tiny" >}})
 to reduce some logic duplication and gain the benefits of that library.
 
 * The new protocol suggests some changes to the class structure that
 would have been unwieldy to incorporate in the prior version.
 
-And so, [Net::ACME2](https://metacpan.org/pod/Net::ACME2) is now available.
+And so, [Net::ACME2]({{<mcpan "Net::ACME2" >}}) is now available.
 This is a generic client library for any standard ACME implementation,
 though the only known public ACME implementation right now is
 Let’s Encrypt’s. Their API only provides testing certificates for now,
@@ -61,7 +61,7 @@ Like its predecessor, Net::ACME2:
 * … supports both RSA and ECDSA
 
 * … runs anywhere that Perl runs—no XS required except for core
-modules. (cf. [Crypt::Perl](https://metacpan.org/pod/Crypt::Perl))
+modules. (cf. [Crypt::Perl]({{<mcpan "Crypt::Perl" >}}))
 
 * … reports detailed errors via typed exceptions
 

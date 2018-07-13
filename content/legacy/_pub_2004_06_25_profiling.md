@@ -38,7 +38,7 @@ There's nothing worse than setting off a long-running Perl program and then not 
             Email::Store::Mail->store(scalar read_file($_));
         }
 
-It's an innocent little program -- it looks for all the files in the *perl6-language* directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with `File::Slurp::read_file`, and then uses [`Email::Store`](https://metacpan.org/pod/Email::Store) to put them into a database. You start it running, and come back a few hours later and it's done.
+It's an innocent little program -- it looks for all the files in the *perl6-language* directory whose names are purely numeric (this is how messages are stored in an ezmlm archive), reads the contents of the files into memory with `File::Slurp::read_file`, and then uses [`Email::Store`]({{<mcpan "Email::Store" >}}) to put them into a database. You start it running, and come back a few hours later and it's done.
 
 All through, though, you have this nervous suspicion that it's not doing the right thing; or at least, not doing it very quickly. Sure there's a lot of mail, but should it really be taking this long? What's it actually spending its time doing? We can add some `print` statements to help us feel more at ease:
 
@@ -58,7 +58,7 @@ Now we can at least see more progress, but we still don't know if this program i
 
 ### <span id="Simple_Profiling">Simple Profiling</span>
 
-The granddaddy of Perl profiling tools is [`Devel::DProf`](https://metacpan.org/pod/Devel::DProf). To profile a code run, add the `-d:DProf` argument to your Perl command line and let it go:
+The granddaddy of Perl profiling tools is [`Devel::DProf`]({{<mcpan "Devel::DProf" >}}). To profile a code run, add the `-d:DProf` argument to your Perl command line and let it go:
 
         % perl -d:DProf store_archive
 
@@ -67,7 +67,7 @@ The run will now take slightly longer than normal as Perl collects and writes ou
 A couple of notes about this:
 
 -   It's important to control the length of the run; in this case, I'd probably ensure that the mail archive contained about ten or fifteen mails to store. (I used seven in this example.) If your run goes on too long, you will end up processing a vast amount of profiling data, and not only will it take a lot time to read back in, it'll take far too long for you to wade through all the statistics. On the other hand, if the run's too short, the main body of the processing will be obscured by startup and other "fixed costs."
--   The other problem you might face is that `Devel::DProf`, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the [`Devel::Profiler`](https://metacpan.org/pod/Devel::Profiler) module from CPAN, which is a pure-Perl replacement for it.
+-   The other problem you might face is that `Devel::DProf`, being somewhat venerable, occasionally has problems keeping up on certain recent Perls, (particularly the 5.6.x series) and may end up segfaulting all over the place. If this affects you, download the [`Devel::Profiler`]({{<mcpan "Devel::Profiler" >}}) module from CPAN, which is a pure-Perl replacement for it.
 
 The next step is to run the preprocessor for the profiler output, `dprofpp`. This will produce a table of where our time has been spent:
 
@@ -211,11 +211,11 @@ We started with a program that runs for 10 seconds, and now it runs for 4. Throu
 
 ### <span id="Writing_your_own_profiler">Writing your Own Profiler</span>
 
-At least, that is, if you want to use *dprofpp*; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released [`Devel::DProfPP`](https://metacpan.org/pod/Devel::DProfPP), which provides an event-driven interface to reading *tmon.out* files. I intended to use it to write a new version of *dprofpp* because I find the current profiler intolerably slow; ironically, though, I haven't profiled it yet.
+At least, that is, if you want to use *dprofpp*; until yesterday, that was the only way of reading profiling data. Yesterday, however, I released [`Devel::DProfPP`]({{<mcpan "Devel::DProfPP" >}}), which provides an event-driven interface to reading *tmon.out* files. I intended to use it to write a new version of *dprofpp* because I find the current profiler intolerably slow; ironically, though, I haven't profiled it yet.
 
 Anyway, `Devel::DProfPP` allows you to specify callbacks to be run every time the profiling data shows Perl entering or exiting a subroutine, and provides access to the same timing and call stack information used by *dprofpp*.
 
-So, for instance, I like visualization of complicated data. I'd prefer to see what's calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together `Devel::DProfPP` and the trusty [`Graphviz`](https://metacpan.org/pod/GraphViz) module, and create my own profiler:
+So, for instance, I like visualization of complicated data. I'd prefer to see what's calling what as a graph that I can print out and pore over, rather than as a listing. So, I pull together `Devel::DProfPP` and the trusty [`Graphviz`]({{<mcpan "GraphViz" >}}) module, and create my own profiler:
 
      use GraphViz;
      use Devel::DProfPP;

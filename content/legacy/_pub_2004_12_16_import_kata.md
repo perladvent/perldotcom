@@ -31,7 +31,7 @@ Perl 5 added the ideas of namespaces and modules, making code reusable and easie
 
 Behind the scenes, when you `use` a module, Perl loads it from disk and, if successful, calls the special method `import()`. By convention, this generally imports functions. Much of the time, `import()` mundanely installs subroutines into the current namespace. That's why so many modules use Exporter to provide a default `import()`.
 
-However, it's also a general module-loading hook that can perform many different types of manipulations. For example, [Filter::Simple](https://metacpan.org/pod/Filter::Simple) allows the use of source filters to transform code that looks entirely unlike Perl into valid code in the using module. Other modules change their behavior depending on any arguments passed to `import()`. This includes [Test::More](https://metacpan.org/pod/Test::More) and [Test::Simple](https://metacpan.org/pod/Test::Simple), which interpret their arguments as information about how many tests to run.
+However, it's also a general module-loading hook that can perform many different types of manipulations. For example, [Filter::Simple]({{<mcpan "Filter::Simple" >}}) allows the use of source filters to transform code that looks entirely unlike Perl into valid code in the using module. Other modules change their behavior depending on any arguments passed to `import()`. This includes [Test::More]({{<mcpan "Test::More" >}}) and [Test::Simple]({{<mcpan "Test::Simple" >}}), which interpret their arguments as information about how many tests to run.
 
     use Test::More 'no_plan';
 
@@ -165,7 +165,7 @@ The only tricky part of the tests here is in trying to import functions again. C
 
 #### Testing Weird Exports
 
-The easist way to test an `import()` function that relies on command-line invocation or produces weird side effects that you may not want to handle in your current program is to launch it as a separate program. There are plenty of options for this, from `system` to `fork` and `exec` to tricks with pipes and shell redirection. [IPC::Open3](https://metacpan.org/pod/IPC::Open3) is one good approach, if you want to use it in your test suite:
+The easist way to test an `import()` function that relies on command-line invocation or produces weird side effects that you may not want to handle in your current program is to launch it as a separate program. There are plenty of options for this, from `system` to `fork` and `exec` to tricks with pipes and shell redirection. [IPC::Open3]({{<mcpan "IPC::Open3" >}}) is one good approach, if you want to use it in your test suite:
 
     #! perl
 
@@ -194,7 +194,7 @@ The easist way to test an `import()` function that relies on command-line invoca
 
 ### Conclusion
 
-You should now have several ideas on how to test `import()` methods of various kinds. For more details, read the tests of [Pod::ToDemo](https://metacpan.org/pod/Pod::ToDemo) or [Test::Builder](https://metacpan.org/pod/Test::Builder), which play strange games to achieve good test coverage.
+You should now have several ideas on how to test `import()` methods of various kinds. For more details, read the tests of [Pod::ToDemo]({{<mcpan "Pod::ToDemo" >}}) or [Test::Builder]({{<mcpan "Test::Builder" >}}), which play strange games to achieve good test coverage.
 
 If you've found a differently workable approach, I'd like to hear from you. Also, if you have suggestions for another kata (or would like to write one), please let me know.
 

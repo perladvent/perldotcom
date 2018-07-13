@@ -37,7 +37,7 @@ Let's walkthrough config.yaml: the config file starts with three hyphens ("---")
 
 ### Load the config file
 
-Perl's [YAML::XS](https://metacpan.org/module/YAML::XS) module provides a `LoadFile` subroutine that can be used to read any YAML file into a scalar variable. This script loads the "config.yaml" config file and prints it using [Data::Dumper](https://metacpan.org/pod/Data::Dumper):
+Perl's [YAML::XS]({{<mcpan "YAML::XS" >}}) module provides a `LoadFile` subroutine that can be used to read any YAML file into a scalar variable. This script loads the "config.yaml" config file and prints it using [Data::Dumper]({{<mcpan "Data::Dumper" >}}):
 
 ```perl
 use strict;
@@ -100,7 +100,7 @@ for (keys %{$config->{credentials}}) {
 
 ### More YAML
 
-[YAML::XS](https://metacpan.org/module/YAML::XS) uses the libyaml C library and provides strong performance and adherence to the YAML specification. However if you have difficulty installing YAML::XS, there are pure Perl alternatives available: [YAML](https://metacpan.org/module/YAML) is not actively maintained and has several bugs but excellent documentation and generally works, [YAML::Tiny](https://metacpan.org/module/YAML::Tiny) is a newer module that implements a useful subset of the YAML specification.
+[YAML::XS]({{<mcpan "YAML::XS" >}}) uses the libyaml C library and provides strong performance and adherence to the YAML specification. However if you have difficulty installing YAML::XS, there are pure Perl alternatives available: [YAML]({{<mcpan "YAML" >}}) is not actively maintained and has several bugs but excellent documentation and generally works, [YAML::Tiny]({{<mcpan "YAML::Tiny" >}}) is a newer module that implements a useful subset of the YAML specification.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

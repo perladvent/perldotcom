@@ -42,7 +42,7 @@ As in *dist.ini* from [Map::Tube::Delhi](https://metacpan.org/release/Map-Tube-D
    ...
 ```
 
-For all the different types of license, please read the [Software::License](https://metacpan.org/pod/Software::License).
+For all the different types of license, please read the [Software::License]({{<mcpan "Software::License" >}}).
 
 I would like one more classic situation where distribution missing license name and repository includes *META.yml* with license as unknown. In such cases, you would simply add the license meta to the build script and try to build the dist. Surprise surprise, build is complaining with warning message *"Invalid LICENSE value ..."*. Although there is nothing wrong with the given license name.
 
@@ -65,7 +65,7 @@ Is it that simple? **Yes** and **No**.
 
 **No**, if it is *Moose* or *Moo* or something similar based package then it becomes redundant.
 
-For more information about which modules give you *strict* pragma for free, please have a look [Test::Strict](https://metacpan.org/pod/Test::Strict). I must say that I adopted this wonderful module *4 years* ago, thanks to **Gabor Szabo**.
+For more information about which modules give you *strict* pragma for free, please have a look [Test::Strict]({{<mcpan "Test::Strict" >}}). I must say that I adopted this wonderful module *4 years* ago, thanks to **Gabor Szabo**.
 
 You could do something like below:
 
@@ -87,17 +87,17 @@ So the moral of the story is, be carefull when adding *use warnings;* line. To b
 
 ### Missing META.json
 
-Sometimes, you will find the distribution missing META.json. With the recent popularity of [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla), I have noticed many CPAN module authors have adopted Dist::Zilla as distribution builder. I am a big fan of this tool, don't get me wrong. However if the author is moving from traditional distribution builder e.g. ExtUtils::MakeMaker then he/she would most likely going to suffer from this issue. However there is an easy solution to this problem, as you guessed it correctly, there is a plugin readily available for the module author that can generate the *META.json* file automatically. You just need to add **[MetaJSON]** to the *dist.ini* file, as simple as that.
+Sometimes, you will find the distribution missing META.json. With the recent popularity of [Dist::Zilla]({{<mcpan "Dist::Zilla" >}}), I have noticed many CPAN module authors have adopted Dist::Zilla as distribution builder. I am a big fan of this tool, don't get me wrong. However if the author is moving from traditional distribution builder e.g. ExtUtils::MakeMaker then he/she would most likely going to suffer from this issue. However there is an easy solution to this problem, as you guessed it correctly, there is a plugin readily available for the module author that can generate the *META.json* file automatically. You just need to add **[MetaJSON]** to the *dist.ini* file, as simple as that.
 
 #### Is there any catch here?
 
-As always **yes**, sometimes I have come across few distributions not using **Dist::Zilla**, and still missing *META.json*. You would ask *why?* In my personal experience, if the module is using [Module::Build](https://metacpan.org/pod/Module::Build) or [Module::Install](https://metacpan.org/pod/Module::Install) then you have no luck at all creating *META.json*. I would love to know if there is any way one can generate *META.json* using either of the above distribution builders. If you fancy then you can send the patch for the same.
+As always **yes**, sometimes I have come across few distributions not using **Dist::Zilla**, and still missing *META.json*. You would ask *why?* In my personal experience, if the module is using [Module::Build]({{<mcpan "Module::Build" >}}) or [Module::Install]({{<mcpan "Module::Install" >}}) then you have no luck at all creating *META.json*. I would love to know if there is any way one can generate *META.json* using either of the above distribution builders. If you fancy then you can send the patch for the same.
 
 ### Missing minimum perl version
 
 I am now going to show you how to add this information depending on what distribution builder is used by the module author.
 
-In case of [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker), it is as simple as adding the key **"MIN_PERL_VERSION"** as shown below to your *Makefile.PL* script.
+In case of [ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}), it is as simple as adding the key **"MIN_PERL_VERSION"** as shown below to your *Makefile.PL* script.
 
 ```perl
    ....
@@ -116,7 +116,7 @@ In case of [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker), 
 
 ```
 
-Whereas if distribution builder is [Module::Build](https://metacpan.org/pod/Module::Build) then you can do something like this:
+Whereas if distribution builder is [Module::Build]({{<mcpan "Module::Build" >}}) then you can do something like this:
 
 ```perl
    ....

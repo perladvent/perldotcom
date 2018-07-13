@@ -119,7 +119,7 @@ Now you can choose whether your macros should be expanded by flipping on `-DEXPA
         #define EXPAND_HERE
         #include <sv.h>
 
-Then if `EXPAND_MACROS` was defined, the function definitions would all be provided in one place; if macros were not expanded, `sv_inline.c` would define no functions. The function prototypes would be extracted automatically with [C::Scan](https://metacpan.org/pod/C::Scan).
+Then if `EXPAND_MACROS` was defined, the function definitions would all be provided in one place; if macros were not expanded, `sv_inline.c` would define no functions. The function prototypes would be extracted automatically with [C::Scan]({{<mcpan "C::Scan" >}}).
 
 With the state of compiler optimization these days, it's likely that turning everything into macros makes no significant speed difference. In which case, it's best to turn on `EXPAND_MACROS` to assist with source-level debuggers which cannot read macros. However, you can't tell until you benchmark, and the \`\`optional expansion'' method gives you a nice easy way to do that.
 

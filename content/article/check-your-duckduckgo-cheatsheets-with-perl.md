@@ -22,7 +22,7 @@ With DuckDuckGo's global [Quack & Hack](https://duck.co/blog) just around the co
 
 ### Setup
 
-To run the script, download it from [Github](https://github.com/dnmfarrell/DDG-cheatsheet-check/blob/master/cheatsheet_check). It requires the [JSON](https://metacpan.org/pod/JSON) and [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny) Perl modules which you can install with `cpan` at the terminal:
+To run the script, download it from [Github](https://github.com/dnmfarrell/DDG-cheatsheet-check/blob/master/cheatsheet_check). It requires the [JSON]({{<mcpan "JSON" >}}) and [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) Perl modules which you can install with `cpan` at the terminal:
 
 ```perl
 $ cpan JSON HTTP::Tiny
@@ -118,7 +118,7 @@ This will run over 20 different tests against the cheatsheet. The script checks 
 
 ### Wrap up
 
-Remember, even if the cheatsheet passes all the tests, you still need to check it looks right in the browser. [App::DuckPAN](https://metacpan.org/pod/App::DuckPAN) can help with that. This Saturday I'll be hanging out at the NYC Quack & Hack at [Orbital](http://www.meetup.com/Quack-Hack-New-York-City/events/224567174/). I look forward to seeing everyone there!
+Remember, even if the cheatsheet passes all the tests, you still need to check it looks right in the browser. [App::DuckPAN]({{<mcpan "App::DuckPAN" >}}) can help with that. This Saturday I'll be hanging out at the NYC Quack & Hack at [Orbital](http://www.meetup.com/Quack-Hack-New-York-City/events/224567174/). I look forward to seeing everyone there!
 
 **Update:** added HTTP::Tiny dependency. 2015-08-28
 

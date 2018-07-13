@@ -17,32 +17,32 @@
 
 This series has shown you several features of Unicode by example, as well as several techniques for working with Unicode correctly and easily with recent releases of Perl 5. By now you know more than many programmers do about Unicode, but your journey to mastery continues.
 
-Perl 5 includes several pieces of documentation which explain Unicode and Perl's Unicode support. See [perlunicode](https://metacpan.org/pod/perlunicode), [perluniprops](https://metacpan.org/pod/perluniprops), [perlre](https://metacpan.org/pod/perlre), [perlrecharclass](https://metacpan.org/pod/perlrecharclass), [perluniintro](https://metacpan.org/pod/perluniintro), [perlunitut](https://metacpan.org/pod/perlunitut) and [perlunifaq](https://metacpan.org/pod/perlunifaq).
+Perl 5 includes several pieces of documentation which explain Unicode and Perl's Unicode support. See [perlunicode]({{<mcpan "perlunicode" >}}), [perluniprops]({{<mcpan "perluniprops" >}}), [perlre]({{<mcpan "perlre" >}}), [perlrecharclass]({{<mcpan "perlrecharclass" >}}), [perluniintro]({{<mcpan "perluniintro" >}}), [perlunitut]({{<mcpan "perlunitut" >}}) and [perlunifaq]({{<mcpan "perlunifaq" >}}).
 
 Perl 5 and the CPAN provide several modules and distributions to allow the effective use of Unicode. As of Perl 5.16, many of these are in the core library. Many of them work just as well with earlier versions of Perl 5, though for the best and most correct support for Unicode as a whole, consider using Perl 5.14 or 5.16.
 
 These modules include:
 
--   [PerlIO](https://metacpan.org/pod/PerlIO)
--   [DB\_File](https://metacpan.org/pod/DB_File)
--   [DBM\_Filter](https://metacpan.org/pod/DBM_Filter)
--   [DBM\_Filter::utf8](https://metacpan.org/pod/DBM_Filter::utf8)
--   [Encode](https://metacpan.org/pod/Encode)
--   [Encode::Locale](https://metacpan.org/pod/Encode::Locale)
--   [Unicode::UCD](https://metacpan.org/pod/Unicode::UCD)
--   [Unicode::Normalize](https://metacpan.org/pod/Unicode::Normalize)
--   [Unicode::GCString](https://metacpan.org/pod/Unicode::GCString)
--   [Unicode::LineBreak](https://metacpan.org/pod/Unicode::LineBreak)
--   [Unicode::Collate](https://metacpan.org/pod/Unicode::Collate)
--   [Unicode::Collate::Locale](https://metacpan.org/pod/Unicode::Collate::Locale)
--   [Unicode::Unihan](https://metacpan.org/pod/Unicode::Unihan)
--   [Unicode::CaseFold](https://metacpan.org/pod/Unicode::CaseFold)
--   [Unicode::Tussle](https://metacpan.org/pod/Unicode::Tussle)
--   [Lingua::JA::Romanize::Japanese](https://metacpan.org/pod/Lingua::JA::Romanize::Japanese)
--   [Lingua::ZH::Romanize::Pinyin](https://metacpan.org/pod/Lingua::ZH::Romanize::Pinyin)
--   [Lingua::KO::Romanize::Hangul](https://metacpan.org/pod/Lingua::KO::Romanize::Hangul)
+-   [PerlIO]({{<mcpan "PerlIO" >}})
+-   [DB\_File]({{<mcpan "DB_File" >}})
+-   [DBM\_Filter]({{<mcpan "DBM_Filter" >}})
+-   [DBM\_Filter::utf8]({{<mcpan "DBM_Filter::utf8" >}})
+-   [Encode]({{<mcpan "Encode" >}})
+-   [Encode::Locale]({{<mcpan "Encode::Locale" >}})
+-   [Unicode::UCD]({{<mcpan "Unicode::UCD" >}})
+-   [Unicode::Normalize]({{<mcpan "Unicode::Normalize" >}})
+-   [Unicode::GCString]({{<mcpan "Unicode::GCString" >}})
+-   [Unicode::LineBreak]({{<mcpan "Unicode::LineBreak" >}})
+-   [Unicode::Collate]({{<mcpan "Unicode::Collate" >}})
+-   [Unicode::Collate::Locale]({{<mcpan "Unicode::Collate::Locale" >}})
+-   [Unicode::Unihan]({{<mcpan "Unicode::Unihan" >}})
+-   [Unicode::CaseFold]({{<mcpan "Unicode::CaseFold" >}})
+-   [Unicode::Tussle]({{<mcpan "Unicode::Tussle" >}})
+-   [Lingua::JA::Romanize::Japanese]({{<mcpan "Lingua::JA::Romanize::Japanese" >}})
+-   [Lingua::ZH::Romanize::Pinyin]({{<mcpan "Lingua::ZH::Romanize::Pinyin" >}})
+-   [Lingua::KO::Romanize::Hangul]({{<mcpan "Lingua::KO::Romanize::Hangul" >}})
 
-The CPAN distribution [`Unicode::Tussle`](https://metacpan.org/pod/Unicode::Tussle) module includes many command-line programs to help with working with Unicode, including these programs to fully or partly replace standard utilities: *tcgrep* instead of *egrep*, *uniquote* instead of *cat -v* or *hexdump*, *uniwc* instead of *wc*, *unilook* instead of *look*, *unifmt* instead of *fmt*, and *ucsort* instead of *sort*. For exploring Unicode character names and character properties, see its *uniprops*, *unichars*, and *uninames* programs. It also supplies these programs, all of which are general ﬁlters that do Unicode-y things: *unititle* and *unicaps*; *uniwide* and *uninarrow*; *unisupers* and *unisubs*; *nfd*, *nfc*, *nfkd*, and *nfkc*; and *uc*, *lc*, and *tc*.
+The CPAN distribution [`Unicode::Tussle`]({{<mcpan "Unicode::Tussle" >}}) module includes many command-line programs to help with working with Unicode, including these programs to fully or partly replace standard utilities: *tcgrep* instead of *egrep*, *uniquote* instead of *cat -v* or *hexdump*, *uniwc* instead of *wc*, *unilook* instead of *look*, *unifmt* instead of *fmt*, and *ucsort* instead of *sort*. For exploring Unicode character names and character properties, see its *uniprops*, *unichars*, and *uninames* programs. It also supplies these programs, all of which are general ﬁlters that do Unicode-y things: *unititle* and *unicaps*; *uniwide* and *uninarrow*; *unisupers* and *unisubs*; *nfd*, *nfc*, *nfkd*, and *nfkc*; and *uc*, *lc*, and *tc*.
 
 Finally, see [the published Unicode Standard](http://unicode.org/standard/standard.html) (page numbers are from version 6.0.0), including these speciﬁc annexes and technical reports:
 

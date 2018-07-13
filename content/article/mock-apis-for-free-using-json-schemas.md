@@ -10,7 +10,7 @@
     "categories": "data"
   }
 
-[JSON::Schema::ToJSON](https://metacpan.org/pod/JSON::Schema::ToJSON) is a module which takes a [JSON schema](http://json-schema.org/), and generates a data structure compliant with the schema. Here's a quick script to generate a data structure based on a schema:
+[JSON::Schema::ToJSON]({{<mcpan "JSON::Schema::ToJSON" >}}) is a module which takes a [JSON schema](http://json-schema.org/), and generates a data structure compliant with the schema. Here's a quick script to generate a data structure based on a schema:
 
 ```perl
 #!/usr/bin/perl
@@ -173,7 +173,7 @@ I've run into a couple of limitations when using `JSON::Schema::ToJSON`. One I a
 
 Another issue is caused by limitations in JSON schema itself: you might not be able to generate the data in the format your API returns, for example there is no date [format](http://json-schema.org/latest/json-schema-validation.html#rfc.section.8.3), only datetimes.
 
-But these are minor limitations, and I remain convinced that [JSON::Schema::ToJSON](https://metacpan.org/pod/JSON::Schema::ToJSON) is great way to augment the value of JSON schemas, by rapidly generating test data and/or mocking APIs.
+But these are minor limitations, and I remain convinced that [JSON::Schema::ToJSON]({{<mcpan "JSON::Schema::ToJSON" >}}) is great way to augment the value of JSON schemas, by rapidly generating test data and/or mocking APIs.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

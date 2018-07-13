@@ -60,7 +60,7 @@ One way to improve this technique is to automatically wrap every interesting sub
 
 Perl 5.6 introduced *attributes* that allow you to add arbitrary metadata to a variable. Attributes can be attached both to package variables, including subroutines, and lexical variables. Since Perl 5.8, attributes on lexical variables apply at runtime. Attributes on package variables activate at compile-time.
 
-The interface to Perl attributes is via the [attributes](https://metacpan.org/pod/attributes) pragma. (The older attrs is deprecated.) The CPAN module [Attribute::Handlers](https://metacpan.org/pod/Attribute::Handlers) makes working with attributes a bit easier. Here's an example of how you might rewrite the logging system using an attribute handler.
+The interface to Perl attributes is via the [attributes]({{<mcpan "attributes" >}}) pragma. (The older attrs is deprecated.) The CPAN module [Attribute::Handlers]({{<mcpan "Attribute::Handlers" >}}) makes working with attributes a bit easier. Here's an example of how you might rewrite the logging system using an attribute handler.
 
         use strict;
         use warnings;
@@ -124,7 +124,7 @@ However, few 3D developers think of Perl when it comes to performance. They shou
 
 GPUs are increasingly taking the load off of CPUs for number-crunching. Modern GPGPU processing leverages C-like programs and loads large data arrays onto the GPU, where processing executes independent of the CPU. As a result, the overall contribution of CPU-bound programs diminish, while Perl and C differences become statistically insignificant in terms of GPU performance.
 
-The author has recently published a open source update to CPAN's [OpenGL](https://metacpan.org/pod/OpenGL) module, adding support for GPGPU features. With this release, he has also posted OpenGL Perl versus C benchmarks--demonstrating cases where Perl outperforms C for OpenGL operations.
+The author has recently published a open source update to CPAN's [OpenGL]({{<mcpan "OpenGL" >}}) module, adding support for GPGPU features. With this release, he has also posted OpenGL Perl versus C benchmarks--demonstrating cases where Perl outperforms C for OpenGL operations.
 
 ### What Is OpenGL?
 
@@ -203,13 +203,13 @@ By writing your OpenGL/GPU code in Perl, you will likely:
 
 by Shlomi Fish
 
-A typical [Test::More](https://metacpan.org/pod/Test::More) test script contains several checks. It is preferable to keep track of the number of checks that the script is running (using `use Test::More tests => $NUM_CHECKS` or the `plan tests => $NUM_CHECKS`), so that if some checks are not run (for whatever reason), the test script will still fail when being run by the harness.
+A typical [Test::More]({{<mcpan "Test::More" >}}) test script contains several checks. It is preferable to keep track of the number of checks that the script is running (using `use Test::More tests => $NUM_CHECKS` or the `plan tests => $NUM_CHECKS`), so that if some checks are not run (for whatever reason), the test script will still fail when being run by the harness.
 
 If you add more checks to a test file, then you have to remember to update the plan. However, how do you keep track of how many tests *should* run? I've already encountered a case where [a DBI related module](http://dbi.perl.org/) had a different number of tests with an older version of DBI than with a more recent one.
 
-Enter [Test::Count](https://metacpan.org/pod/Test::Count). Test::Count originated from a [Vim](http://www.vim.org/) script I wrote to keep track of the number of tests by using meta-comments such as `# TEST` (for one test) or `# TEST*3*5` (for 15 tests). However, there was a limit to what I could do with Vim's scripting language, as I wanted a richer syntax for specifying the tests as well as variables.
+Enter [Test::Count]({{<mcpan "Test::Count" >}}). Test::Count originated from a [Vim](http://www.vim.org/) script I wrote to keep track of the number of tests by using meta-comments such as `# TEST` (for one test) or `# TEST*3*5` (for 15 tests). However, there was a limit to what I could do with Vim's scripting language, as I wanted a richer syntax for specifying the tests as well as variables.
 
-Thus, I wrote the Test::Count module and placed it on CPAN. [Test::Count::Filter](https://metacpan.org/pod/Test::Countlib) acts as a filter, counts the tests, and updates them. Here's an example, taken from a code I wrote for a Perl Quiz of the Week:
+Thus, I wrote the Test::Count module and placed it on CPAN. [Test::Count::Filter]({{<mcpan "Test::Countlib" >}}) acts as a filter, counts the tests, and updates them. Here's an example, taken from a code I wrote for a Perl Quiz of the Week:
 
     #!/usr/bin/perl -w
 
@@ -287,7 +287,7 @@ There's a bug there. `ref` returns an empty string if the scalar isn't an object
 
        unless( '' eq ref $maybe_object ) { ... }
 
-This still doesn't tell me if I have an object. I know it's a reference, but maybe it's a regular data reference. The `blessed` function from [Scalar::Util](https://metacpan.org/pod/Scalar::Util) can help:
+This still doesn't tell me if I have an object. I know it's a reference, but maybe it's a regular data reference. The `blessed` function from [Scalar::Util]({{<mcpan "Scalar::Util" >}}) can help:
 
        if( blessed $maybe_object ) { ... }
 
@@ -351,7 +351,7 @@ That's solved it, right? Not quite. Why do all of that checking? I can just call
 
        my $result = eval { $object->method };
 
-Now I have to wrap all of my method calls in an eval. None of this would really be a problem if Perl were an object language. Or is it? The [autobox](https://metacpan.org/pod/autobox) module makes Perl data types look like objects:
+Now I have to wrap all of my method calls in an eval. None of this would really be a problem if Perl were an object language. Or is it? The [autobox]({{<mcpan "autobox" >}}) module makes Perl data types look like objects:
 
        use autobox;
 

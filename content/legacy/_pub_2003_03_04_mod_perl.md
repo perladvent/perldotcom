@@ -329,5 +329,5 @@ in the normal way (no `<Perl>` section required).
 =======================================
 
 -   The mod\_perl site's URL: <http://perl.apache.org/>
--   `Time::HiRes`: <https://metacpan.org/pod/Time::HiRes>
-
+-   `Time::HiRes`: <{{<mcpan "Time::HiRes>
+" >}}

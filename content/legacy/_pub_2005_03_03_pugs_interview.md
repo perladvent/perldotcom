@@ -29,7 +29,7 @@
 
 **chromatic:** I've followed your journal from the beginning, but it didn't start from the start. Where did you come up with this crazy idea?
 
-**Autrijus:** Ok. The story is that I hacked [SVK](http://svk.elixus.org/) for many months with [clkao](https://metacpan.org/author/CLKAO). SVK worked, except it is not very flexible. There is a VCS named [darcs](http://abridgegame.org/darcs/), which is much more flexible, but is specced using quantum physics language and written in a scary language called [Haskell](https://www.haskell.org/). So, I spent one month doing nothing but learning Haskell, so I could understand darcs. Which worked well; I convinced a crazy client (who paid me to develop [Parse::AFP](https://metacpan.org/pod/Parse::AFP)) that Perl 5 is doomed because it has no COW (which, surprisingly, it now has), and to fund me to develop an alternate library using Haskell.
+**Autrijus:** Ok. The story is that I hacked [SVK](http://svk.elixus.org/) for many months with [clkao](https://metacpan.org/author/CLKAO). SVK worked, except it is not very flexible. There is a VCS named [darcs](http://abridgegame.org/darcs/), which is much more flexible, but is specced using quantum physics language and written in a scary language called [Haskell](https://www.haskell.org/). So, I spent one month doing nothing but learning Haskell, so I could understand darcs. Which worked well; I convinced a crazy client (who paid me to develop [Parse::AFP]({{<mcpan "Parse::AFP" >}})) that Perl 5 is doomed because it has no COW (which, surprisingly, it now has), and to fund me to develop an alternate library using Haskell.
 
 (I mean "Perl 5 is doomed for that task", not "Perl 5 is doomed in general".)
 
@@ -93,9 +93,9 @@ Oh. p6 land.
 
 **chromatic:** You should see Attributes::Scary. Total sympathy here.
 
-**Autrijus:** [Template::Extract](https://metacpan.org/pod/Template::Extract) uses `(?{})` as a nondet engine; [PAR](https://metacpan.org/pod/PAR) comes with its own *perlmain.c*; let me not mention source filtering. All these techniques are unmaintainable unless with large dosage of caffeine.
+**Autrijus:** [Template::Extract]({{<mcpan "Template::Extract" >}}) uses `(?{})` as a nondet engine; [PAR]({{<mcpan "PAR" >}}) comes with its own *perlmain.c*; let me not mention source filtering. All these techniques are unmaintainable unless with large dosage of caffeine.
 
-**chromatic:** Yeah, I fixed some of the startup warnings in [B::Generate](https://metacpan.org/pod/B::Generate) a couple of weeks ago...
+**chromatic:** Yeah, I fixed some of the startup warnings in [B::Generate]({{<mcpan "B::Generate" >}}) a couple of weeks ago...
 
 **Autrijus:** Cool. Yeah, B::Generate is abstracted klugery and may pave a way for Pugs to produce Perl 5 code.
 
@@ -227,7 +227,7 @@ But anyway. And the beginning stage of Ponie is XS hackery which is by far not m
 
 **Autrijus:** Yup. And it's your favorite module.
 
-**chromatic:** I've started a few attempts to write [Test::Builder](https://metacpan.org/pod/Test::Builder) in Parrot, but I'm missing a few pieces. How far along are classes and objects in Pugs?
+**chromatic:** I've started a few attempts to write [Test::Builder]({{<mcpan "Test::Builder" >}}) in Parrot, but I'm missing a few pieces. How far along are classes and objects in Pugs?
 
 **Autrijus:** They don't exist. 6.2.x will do that, though. But the short term task is to get all the todo\_() cleaned. which will give us an interpreter that really agrees with all synopses. At least in the places we have implementation of, that is.
 

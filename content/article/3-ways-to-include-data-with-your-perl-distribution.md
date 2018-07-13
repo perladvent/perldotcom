@@ -103,7 +103,7 @@ The FindBin pattern works well if you can guarantee the data file will be in the
 
 Another way to include data files with a Perl distribution is to place them in a 'share' directory within the distribution root directory, update the Makefile.PL / Build.PL to copy the data files during install and then use File::Share to access the files.
 
-If your distribution uses ExtUtils::MakeMaker, you can use [File::ShareDir::Install](https://metacpan.org/pod/File::ShareDir::Install) in your Makefile.PL to copy the data files. Here is a vanilla Makefile.PL for a fictional module " Data::File":
+If your distribution uses ExtUtils::MakeMaker, you can use [File::ShareDir::Install]({{<mcpan "File::ShareDir::Install" >}}) in your Makefile.PL to copy the data files. Here is a vanilla Makefile.PL for a fictional module " Data::File":
 
 ```perl
 use 5.006;
@@ -142,7 +142,7 @@ use File::ShareDir::Install 'postamble';
 
 In the Makefile we import File::ShareDir:Install, and pass our "share" directory as an argument to the "install\_share" function. The strange last two lines of the Makefile include a package declaration for MY and an import of File::ShareDir::Install's "postamble" method. Be sure to include those two lines else the data files will not be copied.
 
-If you are using [Module::Build](https://metacpan.org/pod/Module::Build::API), update Build.PL file with the [share\_dir](https://metacpan.org/pod/https://metacpan.org/pod/Module::Build::API#share_dir) directive. Here's a vanilla Build.PL for a fictional module "Data::File":
+If you are using [Module::Build]({{<mcpan "Module::Build::API" >}}), update Build.PL file with the [share\_dir]({{<mcpan "https://metacpan.org/pod/Module::Build::API#share_dir" >}}) directive. Here's a vanilla Build.PL for a fictional module "Data::File":
 
 ```perl
 use 5.006;
@@ -197,7 +197,7 @@ sub read_data {
 1;
 ```
 
-Much of this code should look familiar. In the "read\_data" subroutine we use the "dist\_file" function of [File::Share](https://metacpan.org/pod/File::Share) to get the absolute filepath for the data file. The "dist\_file" function is great: it will find the data file during testing and once the module is installed. After that line we open a filehandle to the file and process it as normal.
+Much of this code should look familiar. In the "read\_data" subroutine we use the "dist\_file" function of [File::Share]({{<mcpan "File::Share" >}}) to get the absolute filepath for the data file. The "dist\_file" function is great: it will find the data file during testing and once the module is installed. After that line we open a filehandle to the file and process it as normal.
 
 This method requires more work than the first two, but also offers a lot in return: we are able to include data with the distribution and access it at install and runtime. Our code files are not clogged with additional data that we may not need and we are not restricted to including the data files in the same directory as the consuming code file. It's even possible to share data from distribution with another (using "dist\_file").
 

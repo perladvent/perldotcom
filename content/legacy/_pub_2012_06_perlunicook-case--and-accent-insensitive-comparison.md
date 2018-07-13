@@ -20,7 +20,7 @@
 
 As you've noticed by now, many Unicode strings have multiple possible representations. Comparing two Unicode strings for equality requires far more than merely comparing their codepoints. Not only must you account for multiple representations, you must decide which types of differences are significant: do you care about the case of individual characters? How about the presence or absence of accents?
 
-Use a collator object to compare Unicode text by character instead of by codepoint. To perform comparisions without regard for case or accent differences, choose the appropriate comparison level. [Unicode::Collate](https://metacpan.org/pod/Unicode::Collate)'s `eq()` method offers customizable Unicode-aware equality:
+Use a collator object to compare Unicode text by character instead of by codepoint. To perform comparisions without regard for case or accent differences, choose the appropriate comparison level. [Unicode::Collate]({{<mcpan "Unicode::Collate" >}})'s `eq()` method offers customizable Unicode-aware equality:
 
      use Unicode::Collate;
      my $es = Unicode::Collate->new(

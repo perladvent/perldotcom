@@ -20,7 +20,7 @@
 }
 
 
-I use [Dist::Zilla](https://metacpan.org/pod/Dist::Zilla) to release my code to CPAN. I really like it as with a single command I can build, package and ship a distribution. But most of my code lives on GitHub. In fact, a quick check shows that I have 90 [repos](https://github.com/dnmfarrell), but only 13 distributions on [CPAN](https://metacpan.org/author/DFARRELL). So only 14% of my code makes it to CPAN.
+I use [Dist::Zilla]({{<mcpan "Dist::Zilla" >}}) to release my code to CPAN. I really like it as with a single command I can build, package and ship a distribution. But most of my code lives on GitHub. In fact, a quick check shows that I have 90 [repos](https://github.com/dnmfarrell), but only 13 distributions on [CPAN](https://metacpan.org/author/DFARRELL). So only 14% of my code makes it to CPAN.
 
 Traditionally Dist::Zilla makes a distinction between your code and the files needed for CPAN and PAUSE to work, (like package metadata, a readme etc). The basic use case goes like this: you write your class files, scripts and unit tests, and when you tell Dist::Zilla to release the distribution, it generates all of the extra files, creates a tarball and uploads it to [PAUSE](https://pause.perl.org/pause/query). The problem is though, some of those additional files would be nice to have in my GitHub repos too. I don't want to write another `readme.md`, or spend time copying the license file into the repo if Dist::ZIlla can already generate one. To solve this issue I use two Dist::Zilla plugins from [Ryan Thompson](https://metacpan.org/author/RTHOMPSON).
 
@@ -34,7 +34,7 @@ $ cpan Dist::Zilla \
   Dist::Zilla::Plugin::CopyFilesFromBuild
 ```
 
-If you're installing Dist::Zilla consider using [cpanminus](https://metacpan.org/pod/App::cpanminus) instead, with no tests for a much faster install:
+If you're installing Dist::Zilla consider using [cpanminus]({{<mcpan "App::cpanminus" >}}) instead, with no tests for a much faster install:
 
 ```perl
 $ cpanm --notest Dist::Zilla \ 
@@ -44,7 +44,7 @@ $ cpanm --notest Dist::Zilla \
 
 ### Creating a readme automatically
 
-Ryan's module [Dist::Zilla::Plugin::ReadmeAnyFromPod](https://metacpan.org/pod/Dist::Zilla::Plugin::ReadmeAnyFromPod) can generate a readme automatically, in any common format. It uses the Pod text from the main modules in the distribution. I use it to create my GitHub readme files in Pod, by adding the following text to my `dist.ini`.
+Ryan's module [Dist::Zilla::Plugin::ReadmeAnyFromPod]({{<mcpan "Dist::Zilla::Plugin::ReadmeAnyFromPod" >}}) can generate a readme automatically, in any common format. It uses the Pod text from the main modules in the distribution. I use it to create my GitHub readme files in Pod, by adding the following text to my `dist.ini`.
 
     [ReadmeAnyFromPod]
     type = pod 
@@ -61,7 +61,7 @@ This line instructs Dist::Zilla to build the distribution, which generates the n
 
 ### Adding a license
 
-I use another module from Ryan, [Dist::Zilla::Plugin::CopyFilesFromBuild](https://metacpan.org/pod/Dist::Zilla::Plugin::CopyFilesFromBuild) to copy the software license from the Dist::Zilla build into my project directory:
+I use another module from Ryan, [Dist::Zilla::Plugin::CopyFilesFromBuild]({{<mcpan "Dist::Zilla::Plugin::CopyFilesFromBuild" >}}) to copy the software license from the Dist::Zilla build into my project directory:
 
     [CopyFilesFromBuild]
     copy = LICENSE
@@ -78,7 +78,7 @@ $ dzil build && dzil clean
 
 Dist::Zilla is great, but if you don't have it, installing a distribution from GitHub can really suck. Recently a friend was trying to deploy some code of mine to his Macbook with a vanilla Perl install. I didn't want to upload the code to CPAN and wait for PAUSE to index it. Installing Dist::Zilla on the his machine was not a great option either: Dist::Zilla is a beast. According to Devel::Modlist, Dist::Zilla has **178** non-core dependencies (including indirectly-used modules). That's the price you pay for automation and modularity - Dist::Zilla is working hard so us module authors don't have to. But for someone who barely knows Perl, installing Dist::Zilla in a virgin environment can be a nightmare.
 
-To get around this issue, I used [Dist::Zilla::Plugin::CopyFilesFromBuild](https://metacpan.org/pod/Dist::Zilla::Plugin::CopyFilesFromBuild) again to copy the Makefile.PL and cpanfile into the project directory. My friend then cloned the directory with Git and used [cpanminus](https://metacpan.org/pod/App::cpanminus) to install it. Easy! It worked so well, I'm going to include a Makefile and cpanfile in my GitHub repos from now on.
+To get around this issue, I used [Dist::Zilla::Plugin::CopyFilesFromBuild]({{<mcpan "Dist::Zilla::Plugin::CopyFilesFromBuild" >}}) again to copy the Makefile.PL and cpanfile into the project directory. My friend then cloned the directory with Git and used [cpanminus]({{<mcpan "App::cpanminus" >}}) to install it. Easy! It worked so well, I'm going to include a Makefile and cpanfile in my GitHub repos from now on.
 
 ### A sample Dist::Zilla config
 
@@ -137,7 +137,7 @@ $ cpan Dist::Zilla::Plugin::Clean \
 
 Ok it's not *all* gravy. The copy file method has one downside: it overwrites the copied files every time they're generated. This isn't an issue for me; the commit diff only shows the changed lines, but some people may not like it.
 
-For more information on Dist::Zilla, check out the official [documentation](http://dzil.org/tutorial/contents.html). For a completely different approach to releasing code to CPAN, you may like[Module::Release](https://metacpan.org/pod/%20Module::Release). Oh and if you find yourself in a new development environment, needing to install dependencies for a local module, David Golden has a useful [post](http://www.dagolden.com/index.php/1528/five-ways-to-install-modules-prereqs-by-hand/) that includes five different ways to do it.
+For more information on Dist::Zilla, check out the official [documentation](http://dzil.org/tutorial/contents.html). For a completely different approach to releasing code to CPAN, you may like[Module::Release]({{<mcpan "%20Module::Release" >}}). Oh and if you find yourself in a new development environment, needing to install dependencies for a local module, David Golden has a useful [post](http://www.dagolden.com/index.php/1528/five-ways-to-install-modules-prereqs-by-hand/) that includes five different ways to do it.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

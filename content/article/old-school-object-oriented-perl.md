@@ -22,7 +22,7 @@
 
 If you need to write object oriented Perl code with no dependencies, then you need to use the old school Perl syntax. This article describes the main features of old school object oriented Perl including class declaration, constructors, destructors, methods, attributes, accessors and inheritance.
 
-If you want to write object oriented Perl code using modern Perl tools, consider using [Moose](https://metacpan.org/module/ETHER/Moose-2.0802/lib/Moose.pm) for a feature rich implementation including type checking, roles and accessor methods. An alternative is [Moo](https://metacpan.org/module/Moo) which provides a speedy, minimalist implementation of the Moose syntax, without the sugar (or the overhead) of Moose.
+If you want to write object oriented Perl code using modern Perl tools, consider using [Moose]({{<mcpan "ETHER/Moose-2.0802/lib/Moose.pm" >}}) for a feature rich implementation including type checking, roles and accessor methods. An alternative is [Moo]({{<mcpan "Moo" >}}) which provides a speedy, minimalist implementation of the Moose syntax, without the sugar (or the overhead) of Moose.
 
 ### Classes
 

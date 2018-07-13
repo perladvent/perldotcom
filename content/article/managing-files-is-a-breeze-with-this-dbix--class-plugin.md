@@ -26,7 +26,7 @@
 
 ### Requirements
 
-To use this example, you'll need to install [DBIx::Class::InflateColumn::FS](https://metacpan.org/pod/DBIx::Class::InflateColumn::FS) from CPAN. The CPAN Testers [results](http://matrix.cpantesters.org/?dist=DBIx-Class-InflateColumn-FS+0.01007) show that it should run on all platforms, including Windows. You'll also need [DBIx::Class::Schema::Loader](https://metacpan.org/pod/DBIx::Class::Schema::Loader) and [File::MimeInfo](https://metacpan.org/pod/File::MimeInfo) if you don't already have them and [SQLite3](https://sqlite.org/). To install the Perl modules, open the terminal and enter:
+To use this example, you'll need to install [DBIx::Class::InflateColumn::FS]({{<mcpan "DBIx::Class::InflateColumn::FS" >}}) from CPAN. The CPAN Testers [results](http://matrix.cpantesters.org/?dist=DBIx-Class-InflateColumn-FS+0.01007) show that it should run on all platforms, including Windows. You'll also need [DBIx::Class::Schema::Loader]({{<mcpan "DBIx::Class::Schema::Loader" >}}) and [File::MimeInfo]({{<mcpan "File::MimeInfo" >}}) if you don't already have them and [SQLite3](https://sqlite.org/). To install the Perl modules, open the terminal and enter:
 
 ```perl
 $ cpan DBIx::Class::InflateColumn::FS DBIx::Class::Schema::Loader File::MimeInfo
@@ -111,7 +111,7 @@ Just by creating the object, DBIx::Class::InflateColumn::FS will save the file i
 
 ### Retrieve an upload
 
-This script will retrieve the upload object. DBIx::Class::InflateColumn::FS automatically inflates the "file" column to be a [Path::Class::File](https://metacpan.org/pod/Path::Class::File) object, which gives us many convenience methods:
+This script will retrieve the upload object. DBIx::Class::InflateColumn::FS automatically inflates the "file" column to be a [Path::Class::File]({{<mcpan "Path::Class::File" >}}) object, which gives us many convenience methods:
 
 ```perl
 #!/usr/bin/env perl

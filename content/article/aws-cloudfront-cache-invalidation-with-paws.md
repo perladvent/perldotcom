@@ -17,7 +17,7 @@
    ]
 }
 
-In [Deploy a static website with Paws]({{< relref "deploy-a-static-website-with-aws-s3-and-paws.md" >}}), I developed a simple script to upload files to AWS S3, using [Paws](https://metacpan.org/pod/Paws). In this article I'll describe a script to invalidate CloudFront caches: this can be used to force CloudFront to re-cache files which have changed on S3.
+In [Deploy a static website with Paws]({{< relref "deploy-a-static-website-with-aws-s3-and-paws.md" >}}), I developed a simple script to upload files to AWS S3, using [Paws]({{<mcpan "Paws" >}}). In this article I'll describe a script to invalidate CloudFront caches: this can be used to force CloudFront to re-cache files which have changed on S3.
 
 ### AWS CloudFront
 
@@ -67,7 +67,7 @@ $cfront->CreateInvalidation(
 );
 ```
 
-As before, I use [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to process the command line options. The script requires a CloudFront distribution id and an AWS region string. The `--keys` switch is optional as the script also reads keys from `STDIN`. This snippet is curious:
+As before, I use [Getopt::Long]({{<mcpan "Getopt::Long" >}}) to process the command line options. The script requires a CloudFront distribution id and an AWS region string. The `--keys` switch is optional as the script also reads keys from `STDIN`. This snippet is curious:
 
 ```perl
 # don't block on empty STDIN
@@ -77,7 +77,7 @@ STDIN->blocking(0);
 
 It sets the `STDIN` filehandle to non-blocking mode. That way, if STDIN is empty when the script tries to read from it, it won't block. On the next line, `map` is used to prepend a slash to every key. This is required by CloudFront.
 
-The script then creates a Paws CloudFront object, and the [Time::HiRes](https://metacpan.org/pod/Time::HiRes) `gettimeofday` function is used to calculate a cheap unique id (it returns the current epoch seconds and microseconds).
+The script then creates a Paws CloudFront object, and the [Time::HiRes]({{<mcpan "Time::HiRes" >}}) `gettimeofday` function is used to calculate a cheap unique id (it returns the current epoch seconds and microseconds).
 
 ```perl
 my $cfront = Paws->service('CloudFront', region => $REGION);

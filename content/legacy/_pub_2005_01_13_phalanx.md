@@ -119,7 +119,7 @@ Other Links
 -----------
 
 -   [Phalanx homepage](http://qa.perl.org/phalanx/)
--   [Devel::Cover](https://metacpan.org/pod/Devel::Cover)
+-   [Devel::Cover]({{<mcpan "Devel::Cover" >}})
 -   [Transcript of "Join the Phalanx Project" lighting talk](http://www.petdance.com/perl/join-phalanx-lt.pdf)
 -   [Phalanx Wiki](http://phalanx.kwiki.org/)
 

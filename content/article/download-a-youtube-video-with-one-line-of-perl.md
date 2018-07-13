@@ -17,7 +17,7 @@
 }
 
 
-*Downloading YouTube videos with Perl is easy when you're packing the right module. That module is [WWW::YouTube::Download](https://metacpan.org/pod/WWW::YouTube::Download). Here's how you can download a video in one line of Perl.*
+*Downloading YouTube videos with Perl is easy when you're packing the right module. That module is [WWW::YouTube::Download]({{<mcpan "WWW::YouTube::Download" >}}). Here's how you can download a video in one line of Perl.*
 
 ***Edit** - this article was updated on 27/1/2014 to describe the "youtube-download" app that comes with WWW::YouTube::Download.*
 
@@ -55,7 +55,7 @@ $ perl -MWWW::YouTube::Download -e 'WWW::YouTube::Download->new->download(q/$id/
 
 ### Explaining the one liner
 
-This one liner is simple. First we load WWW::YouTube::Download using the "-M" switch. Then the "-e" switch tells Perl to execute the code between the apostrophes. We then initiate a WWW::YouTube::Download object with new, and immediately call the [download](https://metacpan.org/pod/WWW::YouTube::Download#download-video_id-args) method on the new object. We use the quoting construct "q//" to quote strings without using quote marks as this makes the one liner more cross-platform compatible.
+This one liner is simple. First we load WWW::YouTube::Download using the "-M" switch. Then the "-e" switch tells Perl to execute the code between the apostrophes. We then initiate a WWW::YouTube::Download object with new, and immediately call the [download]({{<mcpan "WWW::YouTube::Download#download-video_id-args" >}}) method on the new object. We use the quoting construct "q//" to quote strings without using quote marks as this makes the one liner more cross-platform compatible.
 
 ### On Windows
 
@@ -106,7 +106,7 @@ $ chmod 755 download.pl
 
 ### Conclusion
 
-WWW::YouTube::Download is easy to use, fast and just works. The module's [documentation](https://metacpan.org/pod/WWW::YouTube::Download) is easy to follow. Thanks to Yuji Shimada for writing it!
+WWW::YouTube::Download is easy to use, fast and just works. The module's [documentation]({{<mcpan "WWW::YouTube::Download" >}}) is easy to follow. Thanks to Yuji Shimada for writing it!
 
 There is more to WWW::YouTube::Download than shown here - one interesting feature is that you can specify the video format (if more than one is available). By default the module downloads the highest quality video available.
 

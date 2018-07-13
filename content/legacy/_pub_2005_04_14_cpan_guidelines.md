@@ -58,13 +58,13 @@ If you know that your module simply will not run in a certain environment, you s
 
 -   Perl versions/features
 
-    Check `$]` and `%INC` for this. `$]` holds the Perl version and `%INC` contains a list of loaded Perl modules so far. (See the [Threading section](/pub/2005/04/14/cpan_guidelines.html?page=2#threading) for an example.) If your module simply cannot be run in Perl before a certain version, make sure you have a `use 5.00#` (where `#` is the version you need) within your module. Additionally, [Module::Build](https://metacpan.org/pod/Module::Build) allows you to specify a minimum Perl version in the `requires` option for the constructor.
+    Check `$]` and `%INC` for this. `$]` holds the Perl version and `%INC` contains a list of loaded Perl modules so far. (See the [Threading section](/pub/2005/04/14/cpan_guidelines.html?page=2#threading) for an example.) If your module simply cannot be run in Perl before a certain version, make sure you have a `use 5.00#` (where `#` is the version you need) within your module. Additionally, [Module::Build]({{<mcpan "Module::Build" >}}) allows you to specify a minimum Perl version in the `requires` option for the constructor.
 
 -   Modules/libraries
 
-    In [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker), you can specify a `PREREQ_PM` in your call to `WriteMakefile()` to indicate that your module needs other modules to run. That can include version numbers, both the minimum and maximum acceptable. `Module::Build` has a similar feature with the `requires` option to the constructor.
+    In [ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}), you can specify a `PREREQ_PM` in your call to `WriteMakefile()` to indicate that your module needs other modules to run. That can include version numbers, both the minimum and maximum acceptable. `Module::Build` has a similar feature with the `requires` option to the constructor.
 
-    If you depend on external, non-Perl libraries, you should see if they exist before continuing onwards. Like everything else, CPAN has a solution: [App::Info](https://metacpan.org/pod/App::Info).
+    If you depend on external, non-Perl libraries, you should see if they exist before continuing onwards. Like everything else, CPAN has a solution: [App::Info]({{<mcpan "App::Info" >}}).
 
         use App::Info::HTTPD::Apache;
 
@@ -78,7 +78,7 @@ If you know that your module simply will not run in a certain environment, you s
 
 What OS your module happens to land on is both less and more of an issue than most people realize. Most of us have had to work in both Unix-land and Windows-land, so we know of pitfalls with directory separators and hard-coding outside executables. However, there are other problems that only arise when your module lands in a place like VMS.
 
-The VMS filesystem, for example, has the idea of a volume in a fully qualified filename. VMS also handles file permissions and file versioning very differently than the standard Unix/Win32/Mac model. An excellent example of how to handle these differences is the core module [File::Spec](https://metacpan.org/pod/File::Spec).
+The VMS filesystem, for example, has the idea of a volume in a fully qualified filename. VMS also handles file permissions and file versioning very differently than the standard Unix/Win32/Mac model. An excellent example of how to handle these differences is the core module [File::Spec]({{<mcpan "File::Spec" >}}).
 
 Because this is an issue most authors have had to face at some point, there is a standard `perlpod` called, fittingly, [`perlport`](http://perldoc.perl.org/perlport.html). If you follow what's in there, you will be just fine.
 
@@ -143,7 +143,7 @@ Now, even if your module runs with Perls older than 5.6.0, your tests won't! Thi
 
 #### Major New Features
 
-Some new features are so large that they change the name of the game. These include Unicode and threading. Unicode has had support, in one form or another, in every version of Perl 5. That support has slowly moved from modules (such as [Unicode::String](https://metacpan.org/pod/Unicode::String)) to the Perl core itself.
+Some new features are so large that they change the name of the game. These include Unicode and threading. Unicode has had support, in one form or another, in every version of Perl 5. That support has slowly moved from modules (such as [Unicode::String]({{<mcpan "Unicode::String" >}})) to the Perl core itself.
 
 ##### Threading
 
@@ -293,13 +293,13 @@ At some point, your module needs to accept some data from somewhere. If you're l
 
 -   Assume that objects are special
 
-    By using [Scalar::Util](https://metacpan.org/pod/Scalar::Util)'s `blessed()` and `reftype()` functions, you can determine if a given scalar is a blessed reference or what type of reference it really is. If you want to find out if something is a hash reference, but you want to avoid the pitfalls listed above, write:
+    By using [Scalar::Util]({{<mcpan "Scalar::Util" >}})'s `blessed()` and `reftype()` functions, you can determine if a given scalar is a blessed reference or what type of reference it really is. If you want to find out if something is a hash reference, but you want to avoid the pitfalls listed above, write:
 
         my $is_hash = ( !blessed( $data ) && ref $data eq 'HASH' );
         # or
         my $is_hash = reftype( $data ) eq 'HASH';
 
-    Nearly every use of overloading is to make an object behave as a scalar, as in Number::Fraction and similar classes. Using this technique allows you to respect the client's wishes more easily. You will still miss a few possibilities, such as (the somewhat eccentric) [Object::MultiType](https://metacpan.org/pod/Object::MultiType) (an excellent example of what you *can* do in Perl, if you put your mind to it).
+    Nearly every use of overloading is to make an object behave as a scalar, as in Number::Fraction and similar classes. Using this technique allows you to respect the client's wishes more easily. You will still miss a few possibilities, such as (the somewhat eccentric) [Object::MultiType]({{<mcpan "Object::MultiType" >}}) (an excellent example of what you *can* do in Perl, if you put your mind to it).
 
     My personal preference is to let `$data` tell *you* what it can do.
 
@@ -315,7 +315,7 @@ At some point, your module needs to accept some data from somewhere. If you're l
 
 #### Letting Others Do Your Dirty Work
 
-The modules that you and I use on a daily basis are, in general, as OS-portable, version-independent, and polite as possible. This means that the more your module depends upon other modules to do the dirty work, the less you have to worry about it. Modules like File::Spec and Scalar::Util exist to help you out. Other modules like [XML::Parser](https://metacpan.org/pod/XML::Parser) will do their jobs, but also handle things like any Unicode you encounter so that you don't have to.
+The modules that you and I use on a daily basis are, in general, as OS-portable, version-independent, and polite as possible. This means that the more your module depends upon other modules to do the dirty work, the less you have to worry about it. Modules like File::Spec and Scalar::Util exist to help you out. Other modules like [XML::Parser]({{<mcpan "XML::Parser" >}}) will do their jobs, but also handle things like any Unicode you encounter so that you don't have to.
 
 That said, you still have to be careful with whom your young module fraternizes with. Every module you add as a dependency is another module that can restrict where your module can live. If one of your module's dependencies is Windows-only, such as anything from the Win32 namespace, then your module is now Windows-only. If one of your dependencies has a bug, then you also have that bug. Fortunately, there are a few ways to bypass these problems.
 

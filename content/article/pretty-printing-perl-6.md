@@ -141,7 +141,7 @@ I was much more pleased with the output which allowed me easily pick out the par
       :to(7)
     )
 
-That solves that problem. But what about all the other types? One of my first improvements was a way to dump a class that my module did not know about. I knew about the `TO_JSON` method that the Perl 5 [JSON](https://www.metacpan.org/module/JSON) module. With that, a class could decide its own JSON representation. I could do that with `PrettyDump`. If a class or object has a `PrettyDump` method, my module will use that preferentially:
+That solves that problem. But what about all the other types? One of my first improvements was a way to dump a class that my module did not know about. I knew about the `TO_JSON` method that the Perl 5 [JSON]({{<mcpan "JSON" >}}) module. With that, a class could decide its own JSON representation. I could do that with `PrettyDump`. If a class or object has a `PrettyDump` method, my module will use that preferentially:
 
 ```perl
 class SomeClass {
@@ -271,7 +271,7 @@ method dump ( $ds, Int $depth = 0 --> Str ) {
   }
 ```
 
-As I got further into this code, I looked at Perl 5's [Data::Dumper](https://www.metacpan.org/module/Data::Dumper), but discovered that this isn't the same sort of thing. That module outputs Perl code that I could [eval](https://perldoc.perl.org/functions/eval.html) to get back the same data structure. I didn't want that [can of worms](https://www.masteringperl.org/2012/12/the-storable-security-problem/) in my module.
+As I got further into this code, I looked at Perl 5's [Data::Dumper]({{<mcpan "Data::Dumper" >}}), but discovered that this isn't the same sort of thing. That module outputs Perl code that I could [eval](https://perldoc.perl.org/functions/eval.html) to get back the same data structure. I didn't want that [can of worms](https://www.masteringperl.org/2012/12/the-storable-security-problem/) in my module.
 
 Beyond what I've shown here, I've been fiddling with formatting and other minor things as I run into problems. If there's something that you'd like to do with the code, you can contribute through the [PrettyDump GitHub repo](https://github.com/briandfoy/perl6-PrettyDump), or even fork my code as the basis for your own experiments.
 

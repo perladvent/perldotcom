@@ -25,7 +25,7 @@ Let's look at an example. I'm going to use [Mojolicious](http://mojolicio.us) si
 
 ### User Storage
 
-The example application is going to need a persistent mechanism to store user information. A tool I reach for in examples and prototyping is [DBM::Deep](https://metacpan.org/pod/DBM::Deep). It is a file-backed system for storing Perl data structures. To use it, simply create an instance (or `tie` one) and use it as a hash reference (array references are possible too); any changes will be saved automagically!
+The example application is going to need a persistent mechanism to store user information. A tool I reach for in examples and prototyping is [DBM::Deep]({{<mcpan "DBM::Deep" >}}). It is a file-backed system for storing Perl data structures. To use it, simply create an instance (or `tie` one) and use it as a hash reference (array references are possible too); any changes will be saved automagically!
 
 ```perl
 my $db = DBM::Deep->new('filename.db');
@@ -51,17 +51,17 @@ More fields would be stored in a more complete app but this is all that is neede
 
 ### Password encryption
 
-I use an encryption called `bcrypt` to store the password. [Mojolicious::Plugin::Bcrypt](https://metacpan.org/pod/Mojolicious::Plugin::Bcrypt) is a handy plugin to use Bcrypt encryption with Mojolicious; you load it by simply writing `plugin 'Bcrypt';`. This plugin provides two helpers, `bcrypt` for encryption and `bcrypt_validate` for checking that another value is valid.
+I use an encryption called `bcrypt` to store the password. [Mojolicious::Plugin::Bcrypt]({{<mcpan "Mojolicious::Plugin::Bcrypt" >}}) is a handy plugin to use Bcrypt encryption with Mojolicious; you load it by simply writing `plugin 'Bcrypt';`. This plugin provides two helpers, `bcrypt` for encryption and `bcrypt_validate` for checking that another value is valid.
 
 Bcrypt is one of many hashing algorithms with properties that are useful for security. There is no `decrypt` function, since this is a one-way algorithm. When validating the password, the best you can know is that if some future input hashes to the same result then it must have been the original password. Storing passwords in this way is good because if a hacker gets database access, they don't get the passwords, just the hashes; they can't be leaked because you simply don't have them.
 
 ### Sending an email
 
-CPAN is replete with modules which can send email. For this example I employ [Email::Sender](https://metacpan.org/pod/Email::Sender), which is the current recommended module (for [example](http://shadow.cat/blog/matt-s-trout/mstpan-15/)). Written by our reigning Perl Pumpking Ricardo Signes, this module makes it very easy to send email.
+CPAN is replete with modules which can send email. For this example I employ [Email::Sender]({{<mcpan "Email::Sender" >}}), which is the current recommended module (for [example](http://shadow.cat/blog/matt-s-trout/mstpan-15/)). Written by our reigning Perl Pumpking Ricardo Signes, this module makes it very easy to send email.
 
 The app declares a helper to send an email, cleverly called `send_email` which takes a target email address, a subject, and a body.
 
-A nice feature of Email::Sender is that you can specify [transport via the environment](https://metacpan.org/pod/Email::Sender::Manual::QuickStart#specifying-transport-in-the-environment). For prototyping purposes, by setting an environment variable, the email is "sent" to the terminal. Meanwhile, the Mojolicious [eval](http://mojolicio.us/perldoc/Mojolicious/Command/eval) command is a handy way to perform one-line scripts with your app. If I combine these features together, I can see what the resulting email would look like with a one liner:
+A nice feature of Email::Sender is that you can specify [transport via the environment]({{<mcpan "Email::Sender::Manual::QuickStart#specifying-transport-in-the-environment" >}}). For prototyping purposes, by setting an environment variable, the email is "sent" to the terminal. Meanwhile, the Mojolicious [eval](http://mojolicio.us/perldoc/Mojolicious/Command/eval) command is a handy way to perform one-line scripts with your app. If I combine these features together, I can see what the resulting email would look like with a one liner:
 
 ```perl
 $ EMAIL_SENDER_TRANSPORT=Print ./app.pl eval 'app->send_email(q[me@spam.org], "Care for some SPAM?", "Well how about it?")'
@@ -75,7 +75,7 @@ Since the user won't be logged in, I need some other way to know which username 
 
 If instead the app were sending a password reset token I would also want to include a timeout on the JWT to prevent replay attacks. For a simple confirmation though that is probably not necessary.
 
-I create a helper which initializes an instance of [Mojo::JWT](https://metacpan.org/pod/Mojo::JWT) and uses the application's primary [secret](https://metacpan.org/pod/Mojolicious#secrets) as its secret. The JWT can also use some other secret, but this is convenient. Note that the example app uses the default set of secrets, but yours should change it to something only you know.
+I create a helper which initializes an instance of [Mojo::JWT]({{<mcpan "Mojo::JWT" >}}) and uses the application's primary [secret]({{<mcpan "Mojolicious#secrets" >}}) as its secret. The JWT can also use some other secret, but this is convenient. Note that the example app uses the default set of secrets, but yours should change it to something only you know.
 
 To create the confirmation URL, the app first sets the claims and encodes to a JWT encoded string containing the data structure.
 
@@ -105,7 +105,7 @@ Many tasks that happen as a result of a web request can be quite slow. Sending e
 
 A job queue is a system by which you can push the actual work of doing slow work onto another process. Typically a job queue functions by inserting a record into a database indicating which task is to be done and parameters to be passed to it. The job worker then knows how to perform that task and watches the database until a job needs doing.
 
-Mojolicious has a job queue spinoff project, named [Minion](https://metacpan.org/pod/Minion). It is the perfect tool for sending email from a job worker to keep the site responsive. Minion ships with a Postgres backend but for this example I will be using the SQLite backend from CPAN. *(N.B an earlier version of this article used a file backend that has since been removed).* The task is declared as a subroutine reference to `add_task` and later jobs can be created by `enqueue`.
+Mojolicious has a job queue spinoff project, named [Minion]({{<mcpan "Minion" >}}). It is the perfect tool for sending email from a job worker to keep the site responsive. Minion ships with a Postgres backend but for this example I will be using the SQLite backend from CPAN. *(N.B an earlier version of this article used a file backend that has since been removed).* The task is declared as a subroutine reference to `add_task` and later jobs can be created by `enqueue`.
 
 The app declares a task, called `email_task` which is a wrapper for the `send_email` helper. It also declare a helper named `email`, a nicely Huffmanized name, which enqueues the job (and takes the same arguments). (I've called the task `email_task` to make it clear where that name is used; it could as easily simply have been called `email`, but I didn't want the name to be confused with the helper).
 

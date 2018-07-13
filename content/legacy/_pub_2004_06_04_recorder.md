@@ -20,7 +20,7 @@
 
 
 
-`HTTP::Recorder` is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces `WWW::Mechanize` scripts by default (see [`WWW::Mechanize`](https://metacpan.org/pod/WWW::Mechanize) by Andy Lester), but provides functionality to use your own custom logger.
+`HTTP::Recorder` is a browser-independent recorder that records interactions with web sites and produces scripts for automated playback. Recorder produces `WWW::Mechanize` scripts by default (see [`WWW::Mechanize`]({{<mcpan "WWW::Mechanize" >}}) by Andy Lester), but provides functionality to use your own custom logger.
 
 ### Why Use `HTTP::Recorder`?
 
@@ -44,7 +44,7 @@ When you think about web automation, the first thing you think of may be automat
 
 #### Use It with a Web Proxy
 
-One way to use `HTTP::Recorder` (as recommended in the POD) is to set it as the user agent of a web proxy (see [`HTTP::Proxy`](https://metacpan.org/pod/HTTP::Proxy) by Phillipe "BooK" Bruhat). Start the proxy running like this:
+One way to use `HTTP::Recorder` (as recommended in the POD) is to set it as the user agent of a web proxy (see [`HTTP::Proxy`]({{<mcpan "HTTP::Proxy" >}}) by Phillipe "BooK" Bruhat). Start the proxy running like this:
 
         #!/usr/bin/perl
 
@@ -333,7 +333,7 @@ Some ideas for the future include:
 
 ### Where to Get `HTTP::Recorder`
 
-The latest released version of `HTTP::Recorder` is available at [CPAN](https://metacpan.org/pod/HTTP::Recorder).
+The latest released version of `HTTP::Recorder` is available at [CPAN]({{<mcpan "HTTP::Recorder" >}}).
 
 ### Contributions, Requests, and Bugs
 
@@ -345,6 +345,6 @@ The mailing list archives can be found at <http://lists.fsck.com/piper-mail/http
 
 ### See Also
 
-[`WWW::Mechanize`](https://metacpan.org/pod/WWW::Mechanize) by Andy Lester.
+[`WWW::Mechanize`]({{<mcpan "WWW::Mechanize" >}}) by Andy Lester.
 
-[`HTTP::Proxy`](https://metacpan.org/pod/HTTP::Proxy) by Phillipe "BooK" Bruhat.
+[`HTTP::Proxy`]({{<mcpan "HTTP::Proxy" >}}) by Phillipe "BooK" Bruhat.

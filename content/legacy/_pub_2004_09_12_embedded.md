@@ -158,5 +158,5 @@ In this paper, we considered three ways to add database capabilities to a Perl p
 -   [`Tie::File` Home Page](http://perl.plover.com/TieFile)
 -   [Berkeley DB Home Page](http://www.sleepycat.com/)
 -   [SQLite Home Page](http://www.sqlite.org/)
--   [Perl DBI Driver for SQLite on CPAN](https://metacpan.org/pod/DBD::SQLite)
+-   [Perl DBI Driver for SQLite on CPAN]({{<mcpan "DBD::SQLite" >}})
 -   [Practical Database Design](http://www-106.ibm.com/developerworks/web/library/wa-dbdsgn2.html) A brief introduction to the representation of relationships in relational DBs and to DB Normalization.

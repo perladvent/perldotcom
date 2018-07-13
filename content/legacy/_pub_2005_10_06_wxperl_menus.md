@@ -22,7 +22,7 @@
 
 
 
-In a previous article about wxPerl published on Perl.com, Jouke Visser taught [the very basics of wxPerl programming](/pub/2001/09/12/wxtutorial1.html). In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover the creation, editing, and erasure of menus with the [Wx::Menu](https://metacpan.org/pod/Wx::Menu) and Wx::MenuBar modules, and also will show examples of their use.
+In a previous article about wxPerl published on Perl.com, Jouke Visser taught [the very basics of wxPerl programming](/pub/2001/09/12/wxtutorial1.html). In this article, I will continue with Jouke's work, explaining how to add menus in our wxPerl applications. I will cover the creation, editing, and erasure of menus with the [Wx::Menu]({{<mcpan "Wx::Menu" >}}) and Wx::MenuBar modules, and also will show examples of their use.
 
 ### Conventions
 

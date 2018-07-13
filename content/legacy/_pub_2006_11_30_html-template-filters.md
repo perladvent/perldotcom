@@ -20,7 +20,7 @@
 
 
 
-The CPAN module [`HTML::Template`](https://metacpan.org/pod/HTML::Template) is a very simple, yet extremely useful module to achieve true separation of presentation and logic when programming CGI scripts. The basic idea is that, rather than having `print` statements scattered all through your code (the "classic" CGI approach), or mixing logic in with HTML (as in JSP, ASP, and Perl Mason), you maintain *two* files. One is the actual Perl script containing the business logic and the other one is a *template* file, containing exclusively presentation layer statements.
+The CPAN module [`HTML::Template`]({{<mcpan "HTML::Template" >}}) is a very simple, yet extremely useful module to achieve true separation of presentation and logic when programming CGI scripts. The basic idea is that, rather than having `print` statements scattered all through your code (the "classic" CGI approach), or mixing logic in with HTML (as in JSP, ASP, and Perl Mason), you maintain *two* files. One is the actual Perl script containing the business logic and the other one is a *template* file, containing exclusively presentation layer statements.
 
 The template is straight-up HTML, augmented by a small set of special tags. The templating system replaces these tags by dynamic content. The dynamic content comes from a Perl data structure that you have built in your code.
 

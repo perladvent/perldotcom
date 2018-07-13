@@ -36,7 +36,7 @@ Data::Password::zxcvbn is on CPAN, so installation can be done with your favorit
 
 ### How to use it
 
-Data::Password::zxcvbn is easy to use. It exports a function called `password_strength` which accepts a password string parameter. It then returns a hashref containing useful [information](https://metacpan.org/pod/Data::Password::zxcvbn#Return-value) about the strength of the password.
+Data::Password::zxcvbn is easy to use. It exports a function called `password_strength` which accepts a password string parameter. It then returns a hashref containing useful [information]({{<mcpan "Data::Password::zxcvbn#Return-value" >}}) about the strength of the password.
 
 For example, this quick script accepts a password argument, and prints how strong it's estimated to be:
 

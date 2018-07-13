@@ -18,7 +18,7 @@
 ℞ 23: Get character category
 ----------------------------
 
-Unicode is a set of characters and a list of rules and properties applied to those characters. The [Unicode Character Database](http://www.unicode.org/ucd/) collects those properties. The core module [Unicode::UCD](https://metacpan.org/pod/Unicode::UCD) provides access to these properties.
+Unicode is a set of characters and a list of rules and properties applied to those characters. The [Unicode Character Database](http://www.unicode.org/ucd/) collects those properties. The core module [Unicode::UCD]({{<mcpan "Unicode::UCD" >}}) provides access to these properties.
 
 These general properties group characters into groups, such as upper- or lowercase characters, punctuation symbols, math symbols, and more. (See `Unicode::UCD`'s `general_categories()` for more information.)
 

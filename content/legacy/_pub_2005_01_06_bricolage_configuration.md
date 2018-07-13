@@ -127,13 +127,13 @@ This directive tells Bricolage where to store formatting templates, object files
 
 ### <span id="xml::writerconfiguration">XML::Writer Configuration</span>
 
-The Bricolage Mason burner is responsible for pushing documents through Mason formatting templates. If you're writing templates that output XML (and I'll demonstrate writing templates in a later article, so hang in there!), you might want to simplify things by using an [XML::Writer](https://metacpan.org/pod/XML::Writer) object to generate the XML. Bricolage simplifies things by providing these directives to create a globally available XML::Writer object for use in all Mason templates.
+The Bricolage Mason burner is responsible for pushing documents through Mason formatting templates. If you're writing templates that output XML (and I'll demonstrate writing templates in a later article, so hang in there!), you might want to simplify things by using an [XML::Writer]({{<mcpan "XML::Writer" >}}) object to generate the XML. Bricolage simplifies things by providing these directives to create a globally available XML::Writer object for use in all Mason templates.
 
 <span id="includexmlwriter">`INCLUDE_XML_WRITER`</span>
 Enable this Boolean directive to tell Bricolage to create an XML::Writer object that's globally available as `$writer` to all Mason templates. Bricolage is smart enough to configure the XML::Writer object to output XML to Mason's buffer, so that you can even mix standard Mason output in your templates with XML::Writer output.
 
 <span id="xmlwriterargs">`XML_WRITER_ARGS`</span>
-Use this directive to specify a list of options to pass to the XML::Writer constructor when `INCLUDE_XML_WRITER` is enabled. This directive is a string containing a Perl expression to pass to XML::Writer. The [XML::Writer documentation](https://metacpan.org/pod/XML::Writer) has the full list of possible parameters. Common parameters include `NEWLINES` to trigger the output of new lines between XML elements, and `DATA_INDENT` to indent nested XML elements by a certain number of characters.
+Use this directive to specify a list of options to pass to the XML::Writer constructor when `INCLUDE_XML_WRITER` is enabled. This directive is a string containing a Perl expression to pass to XML::Writer. The [XML::Writer documentation]({{<mcpan "XML::Writer" >}}) has the full list of possible parameters. Common parameters include `NEWLINES` to trigger the output of new lines between XML elements, and `DATA_INDENT` to indent nested XML elements by a certain number of characters.
 
 ### <span id="authenticationconfiguration">Authentication Configuration</span>
 
@@ -174,16 +174,16 @@ This string directive identifies the default media type (also called a “MIME t
 By default, Bricolage does not support distribution via secure FTP (SFTP). If you need it, install the required Net::SFTP module, enable this directive, and restart Bricolage.
 
 <span id="sftphome">`SFTP_HOME`</span>
-If you've enabled SFTP distribution, use this directive specify a home directory for SFTP to use, especially if you want to use public and private SSH keys. Consult the [Net::SFTP](https://metacpan.org/pod/Net::SFTP) documentation for details.
+If you've enabled SFTP distribution, use this directive specify a home directory for SFTP to use, especially if you want to use public and private SSH keys. Consult the [Net::SFTP]({{<mcpan "Net::SFTP" >}}) documentation for details.
 
 <span id="enablesftpv2">`ENABLE_SFTP_V2`</span>
 Enable this directive to prefer SSH2 support for SFTP distribution. You'll also need to install more Perl modules from CPAN. Consult the Net::SFTP documentation for details.
 
 <span id="sftpmovercipher">`SFTP_MOVER_CIPHER`</span>
-Net::SFTP uses the [Net::SSH::Perl](https://metacpan.org/pod/Net::SSH::Perl) module to handle the SSH side of things. This module supports multiple encryption ciphers. If you prefer one, specify it via this directive.
+Net::SFTP uses the [Net::SSH::Perl]({{<mcpan "Net::SSH::Perl" >}}) module to handle the SSH side of things. This module supports multiple encryption ciphers. If you prefer one, specify it via this directive.
 
 <span id="enablewebdavmover">`ENABLE_WEBDAV_MOVER`</span>
-Bricolage also supports distribution via [WebDAV](https://web.archive.org/web/20120626092812/http://webdav.org/), a standard for distributing documents via the HTTP protocol. DAV, as it is also known, has support in multiple web servers including Microsoft's IIS and Apache 2. If you'd like to distribute document files to your production server or servers via DAV, install the [HTTP::DAV](https://metacpan.org/pod/HTTP::DAV) module, enable this Boolean directive and restart Bricolage.
+Bricolage also supports distribution via [WebDAV](https://web.archive.org/web/20120626092812/http://webdav.org/), a standard for distributing documents via the HTTP protocol. DAV, as it is also known, has support in multiple web servers including Microsoft's IIS and Apache 2. If you'd like to distribute document files to your production server or servers via DAV, install the [HTTP::DAV]({{<mcpan "HTTP::DAV" >}}) module, enable this Boolean directive and restart Bricolage.
 
 <span id="queuepublishjobs">`QUEUE_PUBLISH_JOBS`</span>
 By default, when a user schedules a document to publish immediately, the Bricolage server will immediately execute the distribution. If users publish a lot of documents or you're bulk publishing large sections of your site at once, this can really slow down the Bricolage UI for other users. This is even true even if you've scheduled a bulk of documents to publish at a future date and time, because the way the default *bric\_dist\_mon* script works is to tickle the Bricolage server to distribute documents.
@@ -259,7 +259,7 @@ This Boolean directive complements the `ALLOW_SLUGLESS_NONFIXED` directive. If y
 
 Bricolage is a large application that includes many CPAN modules as well as its own 120,000+ lines of code. When you start it up, its processes can take up 30MB of memory or more. In general this isn't a problem, because Apache shares that memory between child processes. As each process handles requests, however, its size can swell independent of other processes. If you're performing resource intensive activities, such as publishing a lot of documents at once, the process that handles the request can become quite large. Because Perl (and, by extension, `mod_perl`) does not return memory to the system, this can give the appearance that you have a memory leak.
 
-The solution to this problem is to use the [Apache::SizeLimit](https://metacpan.org/pod/Apache::SizeLimit) module distributed with `mod_perl` to check your `mod_perl` processes periodically and kill them when they exceed a certain size. Bricolage has integrated support for Apache::SizeLimit that these directives can quickly enable and configure.
+The solution to this problem is to use the [Apache::SizeLimit]({{<mcpan "Apache::SizeLimit" >}}) module distributed with `mod_perl` to check your `mod_perl` processes periodically and kill them when they exceed a certain size. Bricolage has integrated support for Apache::SizeLimit that these directives can quickly enable and configure.
 
 <span id="checkprocesssize">`CHECK_PROCESS_SIZE`</span>
 This Boolean directive turns on the Apache::SizeLimit support. After you set it to a true value and restart Bricolage, it will use the settings in the following directives to decide how often to check your processes and to kill them when they get to be too big.
@@ -310,7 +310,7 @@ Because Bricolage runs on Apache 1.3, the parent process loads all of its code a
 When loading a lot of code, children never overwrite much of it. It's highly advantageous to load as much code as you think you'll need into the parent process at startup time, to prevent each of the children from loading it themselves and taking up that much more memory. These directives help you to do just that.
 
 <span id="perlloader">`PERL_LOADER`</span>
-This string directive can be any Perl code you like, as long as it's all on one line in the *bricolage.conf* file. Bricolage will execute this code at startup time, in the namespace used by the Mason burner. This is very useful for loading Perl modules that your templates use, so that you're not loading them in each child process. The default value loads [Apache::Util](https://metacpan.org/pod/Apache::Util), which has many useful HTML output utility functions, and [Bric::Util::Burner](http://www.bricolage.cc/docs/current/api/Bric::Util::Burner), which exports several constants that you can use in templates to tell what type of burn is being executed (preview or publish). Other common modules you might want to load here include [CGI.pm](https://metacpan.org/pod/CGI) or [XML::RSS](https://metacpan.org/pod/XML::RSS) to assist with HTML and RSS output, respectively. You can load anything here, really.
+This string directive can be any Perl code you like, as long as it's all on one line in the *bricolage.conf* file. Bricolage will execute this code at startup time, in the namespace used by the Mason burner. This is very useful for loading Perl modules that your templates use, so that you're not loading them in each child process. The default value loads [Apache::Util]({{<mcpan "Apache::Util" >}}), which has many useful HTML output utility functions, and [Bric::Util::Burner](http://www.bricolage.cc/docs/current/api/Bric::Util::Burner), which exports several constants that you can use in templates to tell what type of burn is being executed (preview or publish). Other common modules you might want to load here include [CGI.pm]({{<mcpan "CGI" >}}) or [XML::RSS]({{<mcpan "XML::RSS" >}}) to assist with HTML and RSS output, respectively. You can load anything here, really.
 
 <span id="loadlanguages">`LOAD_LANGUAGES`</span>
 Bricolage has localizations for multiple languages, including German, Portuguese, Italian, Cantonese, Mandarin, and Russian. The localization libraries are Perl modules loaded at server startup time. For the most efficient use of memory, load the languages you expect to use most often by specifying the appropriate language codes (such as “en” for English, “pt\_pt” for Portuguese, “de\_de” for German, etc.) in a space-delimited list via the `LOAD_LANGUAGES` directive.
@@ -320,7 +320,7 @@ This directive functions just like the `LOAD_LANGUAGES` directive, except that i
 
 ### <span id="thumbnailconfiguration">Thumbnail Configuration</span>
 
-As of Bricolage 1.8.0, Bricolage can generate thumbnail versions of image files uploaded for media documents. All you need to do is install the [Imager](https://metacpan.org/pod/Imager) module from CPAN (along with the necessary libraries for the image formats you use—see the [Imager README](https://metacpan.org/pod/Imager) file for details) and configure thumbnail support via these directives.
+As of Bricolage 1.8.0, Bricolage can generate thumbnail versions of image files uploaded for media documents. All you need to do is install the [Imager]({{<mcpan "Imager" >}}) module from CPAN (along with the necessary libraries for the image formats you use—see the [Imager README]({{<mcpan "Imager" >}}) file for details) and configure thumbnail support via these directives.
 
 <span id="usethumbnails">`USE_THUMBNAILS`</span>
 Set this Boolean directive to a true value and restart Bricolage to have thumbnails generated for all image files in Bricolage. You must have Imager installed, of course. You might also want to consider installing media type icons specific to particular types of non-image files. See the *README* file and script in *contrib/copy\_gnome\_icons* in the Bricolage sources for information on which icon files to use and how to install them using the *copy\_gnome\_icons* script.

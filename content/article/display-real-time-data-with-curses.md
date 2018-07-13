@@ -105,7 +105,7 @@ sub draw ($self) {
 }
 ```
 
-Now I have a little script that makes some fancy output to the screen as I sort the list of largest files in real time. Here's a run against my [MiniCPAN](https://metacpan.org/pod/CPAN::Mini) directory:
+Now I have a little script that makes some fancy output to the screen as I sort the list of largest files in real time. Here's a run against my [MiniCPAN]({{<mcpan "CPAN::Mini" >}}) directory:
 
 The way I've written it, I have to run it from the directory I want to check. I can avoid all sorts of nonsense with taint-checking and weird directory names that way. You could easily make it work otherwise. You could even adapt this program to list something else. The list management stuff is already there and it doesn't really care about the particular problem. The full code is on [GitHub](https://github.com/PerlTricks/du-curses/blob/master/curses.pl).
 

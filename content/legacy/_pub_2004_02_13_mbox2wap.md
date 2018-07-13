@@ -34,7 +34,7 @@ The tool I ended up building fills **my** needs very well, but possibly won't be
 
 ### <span id="Overview_of_messages">Overview of Messages</span>
 
-The first challenge is reading the contents of our target mailbox. For this, we turn to the Perl Email Project's [`Email::Folder`](https://metacpan.org/pod/Email::Folder):
+The first challenge is reading the contents of our target mailbox. For this, we turn to the Perl Email Project's [`Email::Folder`]({{<mcpan "Email::Folder" >}}):
 
      use Email::Folder;
      
@@ -44,7 +44,7 @@ The first challenge is reading the contents of our target mailbox. For this, we 
      
             ...
 
-[`Email::Folder`](https://metacpan.org/pod/Email::Folder)'s messages() function returns [`Email::Simple`](https://metacpan.org/pod/Email::Simple) objects. For my folder-view, I chose to group messages by date, and use the sender's "real name" as the subject. Something like:
+[`Email::Folder`]({{<mcpan "Email::Folder" >}})'s messages() function returns [`Email::Simple`]({{<mcpan "Email::Simple" >}}) objects. For my folder-view, I chose to group messages by date, and use the sender's "real name" as the subject. Something like:
 
      30 Jan 2004
         Michael Roberts
@@ -53,7 +53,7 @@ The first challenge is reading the contents of our target mailbox. For this, we 
      29 Jan 2004
         Kate Pugh
 
-Extracting header fields from [`Email::Simple`](https://metacpan.org/pod/Email::Simple) objects couldn't be simpler:
+Extracting header fields from [`Email::Simple`]({{<mcpan "Email::Simple" >}}) objects couldn't be simpler:
 
      my $from = $message->header('from')
 
@@ -61,13 +61,13 @@ But people familiar with the various email RFCs will know that since email heade
 
       =?iso-8859-1?q?Pete=20Sergeant?= <pete@clueball.com>
 
-This will not look pretty if you use it literally. Thankfully, [`MIME::WordDecoder`](https://metacpan.org/pod/MIME::WordDecoder) exports the function `unmime` -- rendering the above as "Pete Sergeant &lt;pete@clueball.com&gt;."
+This will not look pretty if you use it literally. Thankfully, [`MIME::WordDecoder`]({{<mcpan "MIME::WordDecoder" >}}) exports the function `unmime` -- rendering the above as "Pete Sergeant &lt;pete@clueball.com&gt;."
 
 Getting the date from an email is also somewhat nontrivial -- an example "Date" header looks like:
 
      Fri, 30 Jan 2004 14:09:51 -0000
 
-And that's if you're lucky, and it's well-formed, without starting to think about time zones. If we want to do anything useful with dates, we're going to want the date as an epoch time. Luckily, [`DateTime::Format::Mail`](https://metacpan.org/pod/DateTime::Format::Mail) steps in, and not only parses our date, but returns a highly useful [`DateTime`](https://metacpan.org/pod/DateTime) object, allowing us to do all kinds of fun date stuff. To simply reformat the date as Day/Month/Year:
+And that's if you're lucky, and it's well-formed, without starting to think about time zones. If we want to do anything useful with dates, we're going to want the date as an epoch time. Luckily, [`DateTime::Format::Mail`]({{<mcpan "DateTime::Format::Mail" >}}) steps in, and not only parses our date, but returns a highly useful [`DateTime`]({{<mcpan "DateTime" >}}) object, allowing us to do all kinds of fun date stuff. To simply reformat the date as Day/Month/Year:
 
      my $datetime = DateTime::Format::Mail->new( loose => 1 );
      my $time = $datetime->parse_datetime( $message->header('date') );
@@ -106,19 +106,19 @@ Now let's put this all together to produce a listing of a folder. We'll use the 
 
 Those are the main challenges of a folder-view. Viewing an individual message presents a different set of challenges.
 
-First and foremost is the appalling habit people have of sending each other HTML-"enriched" emails, with all sorts of attachments. If you're trying to read the email on a cell phone over a slow connection, you don't want to be battling with this -- you want a nice plain-text representation of the email. So, [`Email::StripMIME`](https://metacpan.org/pod/Email::StripMIME) is your friend. Assuming we have an [`Email::Simple`](https://metacpan.org/pod/Email::Simple) object, we can simply:
+First and foremost is the appalling habit people have of sending each other HTML-"enriched" emails, with all sorts of attachments. If you're trying to read the email on a cell phone over a slow connection, you don't want to be battling with this -- you want a nice plain-text representation of the email. So, [`Email::StripMIME`]({{<mcpan "Email::StripMIME" >}}) is your friend. Assuming we have an [`Email::Simple`]({{<mcpan "Email::Simple" >}}) object, we can simply:
 
      my $string = $email_simple_object->as_string();
      $string = Email::StripMIME::strip_mime( $string );
      $email_simple_object = Email::Simple->new( $string );
 
-Of course, if we really wanted to cut down on the amount of content we're receiving, and we're only using this tool to get an overview of our messages, we can cut out quoted text, remnants of the email that the sender was replying to, and so on. [`Text::Original`](https://metacpan.org/pod/Text::Original) does just this for us, as well as stripping out attribution lines:
+Of course, if we really wanted to cut down on the amount of content we're receiving, and we're only using this tool to get an overview of our messages, we can cut out quoted text, remnants of the email that the sender was replying to, and so on. [`Text::Original`]({{<mcpan "Text::Original" >}}) does just this for us, as well as stripping out attribution lines:
 
      my $body = $email_simple_object->body();
      $body = first_lines( $body, 20);
      $email_simple_object->body( $body );
 
-The final problem is in creating actual real WML. Sadly, this is nontrivial, and in the past, I've tended to resort to outputting it by hand. But it doesn't have to be that way --; [`CGI::WML`](https://metacpan.org/pod/CGI::WML) just about handles the task for us. [`CGI::WML`](https://metacpan.org/pod/CGI::WML) is a subclass of [`CGI`](https://metacpan.org/pod/CGI), with methods specific to WAP.
+The final problem is in creating actual real WML. Sadly, this is nontrivial, and in the past, I've tended to resort to outputting it by hand. But it doesn't have to be that way --; [`CGI::WML`]({{<mcpan "CGI::WML" >}}) just about handles the task for us. [`CGI::WML`]({{<mcpan "CGI::WML" >}}) is a subclass of [`CGI`]({{<mcpan "CGI" >}}), with methods specific to WAP.
 
 ### <span id="Conclusion">Conclusion</span>
 

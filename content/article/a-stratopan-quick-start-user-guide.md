@@ -38,7 +38,7 @@ You should now have a new repository.
 
 ### Add or pull modules
 
-Modules reside in "stacks" which belong to a repository and helpfully Stratopan creates a default "master" stack for you. To insert modules into a stack you can "pull" them from CPAN or "add" them from a local machine. Let's start by pulling a module onto our master stack. Click the "pulling" link to launch the pull module screen and start typing the name of the module you want to pull. Note that this must be the distribution name and not the module name. For example to pull the module "Method::Signatures", you should type "Method-Signatures". Helpfully Stratopan provides a case-insensitive predictive text search and lists the module version numbers available too, in case you need a specific variant. Let's pull my wildly unpopular [WWW::CheckHTML](https://metacpan.org/pod/WWW::CheckHTML) module:
+Modules reside in "stacks" which belong to a repository and helpfully Stratopan creates a default "master" stack for you. To insert modules into a stack you can "pull" them from CPAN or "add" them from a local machine. Let's start by pulling a module onto our master stack. Click the "pulling" link to launch the pull module screen and start typing the name of the module you want to pull. Note that this must be the distribution name and not the module name. For example to pull the module "Method::Signatures", you should type "Method-Signatures". Helpfully Stratopan provides a case-insensitive predictive text search and lists the module version numbers available too, in case you need a specific variant. Let's pull my wildly unpopular [WWW::CheckHTML]({{<mcpan "WWW::CheckHTML" >}}) module:
 
 ![stratopan screenshot](/images/Stratopan/stratopan_3_600.png)
 
@@ -46,7 +46,7 @@ Decide if you want Stratopan to recursively pull all module dependencies; this i
 
 ![stratopan screenshot](/images/Stratopan/stratopan_4_600.png)
 
-It can be surprising how many dependencies there are - for example [WWW::CheckHTML](https://metacpan.org/pod/WWW::CheckHTML) has 5 direct dependencies and 69 indirect ones. Obviously when there are more dependent modules, Stratopan will take longer to pull them into the stack (usually a minute or two). When it's finished, Stratopan will present the the latest view of the stack.
+It can be surprising how many dependencies there are - for example [WWW::CheckHTML]({{<mcpan "WWW::CheckHTML" >}}) has 5 direct dependencies and 69 indirect ones. Obviously when there are more dependent modules, Stratopan will take longer to pull them into the stack (usually a minute or two). When it's finished, Stratopan will present the the latest view of the stack.
 
 ![stratopan screenshot](/images/Stratopan/stratopan_5_600.png)
 
@@ -68,7 +68,7 @@ Finally the "settings" link let's you update the stack name, description and tar
 
 ### Installing modules from your Stratopan stack
 
-To install modules from Stratopan you'll need [cpanm](https://metacpan.org/pod/release/MIYAGAWA/App-cpanminus-1.7001/bin/cpanm). You can install this via cpan from the terminal:
+To install modules from Stratopan you'll need [cpanm]({{<mcpan "release/MIYAGAWA/App-cpanminus-1.7001/bin/cpanm" >}}). You can install this via cpan from the terminal:
 
 ```perl
 cpan App::cpanminus
@@ -78,7 +78,7 @@ Once cpanm has installed, open one of your stacks on Stratopan and copy the stac
 
 ![stratopan screenshot](/images/Stratopan/stratopan_24_600.png)
 
-At the terminal type "cpanm --mirror-only --mirror " and paste your copied stack URL and enter one or more module names that you wish to install. For example to install [WWW::CheckHTML](https://metacpan.org/pod/WWW::CheckHTML) from my master stack:
+At the terminal type "cpanm --mirror-only --mirror " and paste your copied stack URL and enter one or more module names that you wish to install. For example to install [WWW::CheckHTML]({{<mcpan "WWW::CheckHTML" >}}) from my master stack:
 
 ```perl
 cpanm --mirror-only --mirror 

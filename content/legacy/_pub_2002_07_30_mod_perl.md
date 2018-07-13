@@ -370,18 +370,18 @@ Also it's obvious that in your case it's possible that the process size will be 
 -   The mod\_perl site's URL: <http://perl.apache.org/>
 -   `GTop`
 
-    <https://metacpan.org/pod/GTop>
-
+    <{{<mcpan "GTop>
+" >}}
     `GTop` relies in turn on libgtop library not available for all platforms
 
     Visit <http://home-of-linux.org/gnome/libgtop/> for more information
 
 -   `Apache::Peek`
 
-    <https://metacpan.org/pod/Apache::Peek>
-
+    <{{<mcpan "Apache::Peek>
+" >}}
 -   `Devel::Peek`
 
-    <https://metacpan.org/pod/Devel::Peek>
-
+    <{{<mcpan "Devel::Peek>
+" >}}
 

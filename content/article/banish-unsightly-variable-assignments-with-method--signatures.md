@@ -17,7 +17,7 @@
 }
 
 
-One drawback of Perl is that its subroutines and methods do not have signatures (ignoring [prototypes](http://perldoc.perl.org/perlsub.html#Prototypes)). This means that Perl developers have to write their own code for variable assignment and type checking which leads to repetitive and verbose code. This article shows how by using the [Method::Signatures](https://metacpan.org/module/Method::Signatures) module developers can banish this boilerplate forever.
+One drawback of Perl is that its subroutines and methods do not have signatures (ignoring [prototypes](http://perldoc.perl.org/perlsub.html#Prototypes)). This means that Perl developers have to write their own code for variable assignment and type checking which leads to repetitive and verbose code. This article shows how by using the [Method::Signatures]({{<mcpan "Method::Signatures" >}}) module developers can banish this boilerplate forever.
 
 ### The func subroutine
 
@@ -45,7 +45,7 @@ Replacing "sub" with "func" means that it will declare $url, croak if $\_[0] doe
 
 ### The method subroutine
 
-Method::Signatures also exports a subroutine called "method" that can replace "sub" in object-oriented code. In addition to accepting a signature argument like "func", "method" automatically declares and assigns $self. Consider the difference between this code extract (taken from [Nginx::Log::Entry](https://metacpan.org/module/Nginx::Log::Entry)):
+Method::Signatures also exports a subroutine called "method" that can replace "sub" in object-oriented code. In addition to accepting a signature argument like "func", "method" automatically declares and assigns $self. Consider the difference between this code extract (taken from [Nginx::Log::Entry]({{<mcpan "Nginx::Log::Entry" >}})):
 
 ```perl
 package Entry;
@@ -131,7 +131,7 @@ By using "method" we were able to remove all the boilerplate declarations and ch
 
 ### Benchmarking Method::Signatures
 
-Does using Method::Signatures come with a significant performance hit? We can test the performance impact by comparing the vanilla and refactored Entry classes from earlier in this article. We'll use the [Benchmark::Forking](https://metacpan.org/module/Benchmark::Forking) module to improve the benchmark accuracy. This is the benchmark script:
+Does using Method::Signatures come with a significant performance hit? We can test the performance impact by comparing the vanilla and refactored Entry classes from earlier in this article. We'll use the [Benchmark::Forking]({{<mcpan "Benchmark::Forking" >}}) module to improve the benchmark accuracy. This is the benchmark script:
 
 ```perl
 use Benchmark::Forking qw/cmpthese/;
@@ -175,7 +175,7 @@ These results suggest that using Method::Signatures comes with only a 1% perform
 
 ### Additional features
 
-There is a lot more to Method::Signatures such as named and optional parameters, type checking, default values and aliases. Check out the excellent module [documentation](https://metacpan.org/module/Method::Signatures) for more details.
+There is a lot more to Method::Signatures such as named and optional parameters, type checking, default values and aliases. Check out the excellent module [documentation]({{<mcpan "Method::Signatures" >}}) for more details.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

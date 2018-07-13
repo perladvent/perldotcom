@@ -24,7 +24,7 @@
 }
 
 
-*Last week we covered [Wallflower](https://metacpan.org/pod/distribution/App-Wallflower/bin/wallflower) an awesome utility for generating static websites from Perl web applications. This week we're covering an alternative method, that uses [Wget](https://en.wikipedia.org/wiki/Wget). One benefit of this method is it can be used on any dynamic web application, not just Perl ones.*
+*Last week we covered [Wallflower]({{<mcpan "App::Wallflower" >}}) an awesome utility for generating static websites from Perl web applications. This week we're covering an alternative method, that uses [Wget](https://en.wikipedia.org/wiki/Wget). One benefit of this method is it can be used on any dynamic web application, not just Perl ones.*
 
 ### Requirements
 
@@ -107,7 +107,7 @@ $ cat urls.txt | xargs -P16 wget -i
 
 To take advantage of the parallel GET requests, you'll need to serve the application on a web server though.
 
-Wallflower has nice option ("-F") to take a list of URLs to download, which can be useful if the entire site cannot be downloaded by following links from the root application page. [App::Wallflower](https://metacpan.org/pod/Wallflower) is the source library for Wallflower, and extendible through Perl code, so you can further tailor the process to meet your needs. This can be used for post-processing actions like generating a sitemap.xml or advanced setups like a hybrid application, where the public pages of the site are static, but the secure parts remain dynamic. With Wallflower all of this can be scripted in Perl, with Wget you'd need to a combination of shell scripts and Perl, which is less convenient.
+Wallflower has nice option ("-F") to take a list of URLs to download, which can be useful if the entire site cannot be downloaded by following links from the root application page. [App::Wallflower]({{<mcpan "App::Wallflower" >}}) is the source library for Wallflower, and extendible through Perl code, so you can further tailor the process to meet your needs. This can be used for post-processing actions like generating a sitemap.xml or advanced setups like a hybrid application, where the public pages of the site are static, but the secure parts remain dynamic. With Wallflower all of this can be scripted in Perl, with Wget you'd need to a combination of shell scripts and Perl, which is less convenient.
 
 As was recommended in last week's [article](http://perltricks.com/article/102/2014/7/15/Generate-static-websites-from-dynamic-Perl-web-apps#h3Wallflower%20Tips) make sure you're using absolute urls in your template code to avoid deployment issues with your static files.
 

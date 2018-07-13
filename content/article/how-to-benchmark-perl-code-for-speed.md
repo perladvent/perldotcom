@@ -17,7 +17,7 @@
 }
 
 
-Benchmarking Perl code speed is easy with the [Benchmark](https://metacpan.org/module/Benchmark) module. This article discusses benchmarking in general and how to use the [Benchmark](https://metacpan.org/module/Benchmark) module.
+Benchmarking Perl code speed is easy with the [Benchmark]({{<mcpan "Benchmark" >}}) module. This article discusses benchmarking in general and how to use the [Benchmark]({{<mcpan "Benchmark" >}}) module.
 
 ### What is a benchmark?
 
@@ -29,7 +29,7 @@ One thing to keep in mind with benchmarks is that they are affected by the envir
 
 ### Perl's Benchmark Module
 
-[Benchmark](https://metacpan.org/module/Benchmark) comes installed in Perl core so if you have Perl installed you should already have Benchmark installed as well. If you are on a UNIX-like system then consider installing [Benchmark::Forking](https://metacpan.org/module/Benchmark::Forking) as it can improve the accuracy of benchmarks. [Benchmark::Forking](https://metacpan.org/module/Benchmark::Forking) is a drop-in replacement for [Benchmark](https://metacpan.org/module/Benchmark) and all of the following code examples will work with either module.
+[Benchmark]({{<mcpan "Benchmark" >}}) comes installed in Perl core so if you have Perl installed you should already have Benchmark installed as well. If you are on a UNIX-like system then consider installing [Benchmark::Forking]({{<mcpan "Benchmark::Forking" >}}) as it can improve the accuracy of benchmarks. [Benchmark::Forking]({{<mcpan "Benchmark::Forking" >}}) is a drop-in replacement for [Benchmark]({{<mcpan "Benchmark" >}}) and all of the following code examples will work with either module.
 
 ### Timing Perl Code
 
@@ -103,7 +103,7 @@ The results above are ordered from slowest to fastest (as seen by the rate/s mea
 -   Use a negative number as the CPU seconds count for `timethese` or `cmpthese`. This specifies the minimum number of CPU seconds to run. [Some sources](http://www.perlmonks.org/?node_id=8745) recommend at least -5 seconds to avoid inaccurate benchmarks.
 -   Sanity check your results: if you're not sure try comparing two code blocks with one obviously slower than the other to check that Benchmark is returning sensible results.
 -   Compare code examples rather than time individual ones: the actual execution time of a block of code is usually not that important; knowing which set of code is faster than the other however is useful as this will generally be a repeatable occurrence.
--   If you require more in depth benchmarking consider using [Devel::NYTProf](https://metacpan.org/module/Devel::NYTProf).
+-   If you require more in depth benchmarking consider using [Devel::NYTProf]({{<mcpan "Devel::NYTProf" >}}).
 
 ### Sources
 

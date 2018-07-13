@@ -85,7 +85,7 @@ Nicholas Clark asked
 
 Jarkko noted that this would cause problems with CPAN.pm; Nick turned around and asked when 5.7.1 was likely to happen. The outstanding issues seem to be Unicode, PerlIO and numerical problems including casting.
 
-PerlIO is now the default IO system, and isn't giving that many problems. Nick Ing-Simmons noted that Nicholas Clark had produced a [PerlIO::gzip](https://metacpan.org/pod/PerlIO::gzip) filter extension which had flushed out a bunch of bugs.
+PerlIO is now the default IO system, and isn't giving that many problems. Nick Ing-Simmons noted that Nicholas Clark had produced a [PerlIO::gzip]({{<mcpan "PerlIO::gzip" >}}) filter extension which had flushed out a bunch of bugs.
 
 Philip Newton said that a 5.7.0.8670-style release number wouldn't help us much anyway, because features would get folded back into, say, 5.6.1 or 5.6.2, and if you said
 

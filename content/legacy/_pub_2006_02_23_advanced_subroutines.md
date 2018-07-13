@@ -116,7 +116,7 @@ By using named arguments, you gain the benefit that some or all of your argument
 
 Argument validation is more difficult in Perl than in other languages. In C or Java, for instance, every variable has a type associated with it. This includes subroutine declarations, meaning that trying to pass the wrong type of variable to a subroutine gives a compile-time error. By contrast, because `perl` flattens everything to a single list, there is no compile-time checking at all. (Well, there kinda is with prototypes.)
 
-This has been such a problem that there are dozens of modules on CPAN to address the problem. The most commonly recommended one is [`Params::Validate`](https://metacpan.org/pod/Params::Validate).
+This has been such a problem that there are dozens of modules on CPAN to address the problem. The most commonly recommended one is [`Params::Validate`]({{<mcpan "Params::Validate" >}}).
 
 ### Prototypes
 
@@ -124,7 +124,7 @@ Prototypes in Perl are a way of letting Perl know exactly what to expect for a g
 
 For the most part, prototypes are more trouble than they're worth. For one thing, Perl doesn't check prototypes for methods because that would require the ability to determine, at compile time, which class will handle the method. Because you can alter `@ISA` at runtime--you see the problem. The main reason, however, is that prototypes aren't very smart. If you specify `sub foo ($$$)`, you cannot pass it an array of three scalars (this is the problem with `vec()`). Instead, you have to say `foo( $x[0], $x[1], $x[2] )`, and that's just a pain.
 
-Prototypes *can* be very useful for one reason--the ability to pass subroutines in as the first argument. [`Test::Exception`](https://metacpan.org/pod/Test::Exception) uses this to excellent advantage:
+Prototypes *can* be very useful for one reason--the ability to pass subroutines in as the first argument. [`Test::Exception`]({{<mcpan "Test::Exception" >}}) uses this to excellent advantage:
 
     sub do_this_to (&;$) {
         my ($action, $name) = @_;
@@ -162,7 +162,7 @@ Using the `wantarray` built-in, a subroutine can determine its calling context. 
 
     check_context();                # prints 'Void context'
 
-For CPAN modules that implement or augment context awareness, look at [`Contextual::Return`](https://metacpan.org/pod/Contextual::Return), [`Sub::Context`](https://metacpan.org/pod/Sub::Context), and [`Return::Value`](https://metacpan.org/pod/Return::Value).
+For CPAN modules that implement or augment context awareness, look at [`Contextual::Return`]({{<mcpan "Contextual::Return" >}}), [`Sub::Context`]({{<mcpan "Sub::Context" >}}), and [`Return::Value`]({{<mcpan "Return::Value" >}}).
 
 Note: you can misuse context awareness heavily by having the subroutine do something completely different when called in scalar versus list context. Don't do that. A subroutine should be a single, easily identifiable unit of work. Not everyone understands all of the different permutations of context, including your standard Perl expert.
 

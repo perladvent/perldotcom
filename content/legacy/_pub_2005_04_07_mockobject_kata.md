@@ -22,7 +22,7 @@
 
 
 
-The last Perl Code Kata was on [DBD::Mock](https://metacpan.org/pod/DBD::Mock), a mock DBI driver which is useful for [testing Perl DBI applications](/pub/2005/02/10/database_kata.html). This Kata delves once again into the world of mock objects, this time using the more general [Test::MockObject](https://metacpan.org/pod/Test::MockObject) module.
+The last Perl Code Kata was on [DBD::Mock]({{<mcpan "DBD::Mock" >}}), a mock DBI driver which is useful for [testing Perl DBI applications](/pub/2005/02/10/database_kata.html). This Kata delves once again into the world of mock objects, this time using the more general [Test::MockObject]({{<mcpan "Test::MockObject" >}}) module.
 
 ### What are Mock Objects?
 
@@ -82,7 +82,7 @@ The example code for this kata illustrates as many points as possible about whic
         return $record->city();
     }
 
-This example code comes from a fictional online community software package. Many such sites offer user homepages which can display all sorts of user information. As an optional feature, the software can use the member's IP address along with the [Geo::IP](https://metacpan.org/pod/Geo::IP) module to determine the user's city. The reason this feature is optional is that while `Geo::IP` and the C library it uses are both free, the city data is not.
+This example code comes from a fictional online community software package. Many such sites offer user homepages which can display all sorts of user information. As an optional feature, the software can use the member's IP address along with the [Geo::IP]({{<mcpan "Geo::IP" >}}) module to determine the user's city. The reason this feature is optional is that while `Geo::IP` and the C library it uses are both free, the city data is not.
 
 The use cases suggest testing for the following scenarios:
 
@@ -195,7 +195,7 @@ I designed each use case to illustrate a different capability of `Test::MockObje
 
     This next use case illustrates the use of `Test::MockObject` to mock a dependency relationship, in particular the failure case where `Geo::IP` cannot find the specified database file.
 
-    `Geo::IP` follows the common Perl idiom of returning `undef` if the object constructor fails. The example code tests for this case and throws an exception if it comes up. Testing for this failure uses the `fake_module` method again to hijack `Geo::IP` and install a mocked version of its `open` method (the code also fakes the `GEOIP_STANDARD` constant here). The mocked `open` simply returns `undef` which will create the proper conditions to trigger the exception in the example code. The exception is then caught using the `throws_ok` method of the [Test::Exception](https://metacpan.org/pod/Test::Exception) module.
+    `Geo::IP` follows the common Perl idiom of returning `undef` if the object constructor fails. The example code tests for this case and throws an exception if it comes up. Testing for this failure uses the `fake_module` method again to hijack `Geo::IP` and install a mocked version of its `open` method (the code also fakes the `GEOIP_STANDARD` constant here). The mocked `open` simply returns `undef` which will create the proper conditions to trigger the exception in the example code. The exception is then caught using the `throws_ok` method of the [Test::Exception]({{<mcpan "Test::Exception" >}}) module.
 
     This example illustrates that it is still possible to mock objects even if your code is not in the position to pass in a mocked instance itself. Again, to test this without using `Test::MockObject` would require control of the outside environment (the `Geo::IP database` file), or in some way having control over where `Geo::IP` looks for the database file. While well-written and well-architected code would probably allow you to alter the database file path and therefore test this without using mock objects, the mock object version makes no such assumptions and therefore works the same in either case.
 

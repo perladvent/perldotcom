@@ -172,11 +172,11 @@ For `SELECT` statements, there are a variety of methods that can help out. Perha
     }
         
 
-There are many other DBI tricks, too many to go into here; for more information check out the [DBI documentation page](https://metacpan.org/pod/DBI), or the [DBI home page](http://dbi.perl.org/); there's also [Programming the Perl DBI](http://www.oreilly.com/catalog/perldbi/), which was co-authored by the creator of DBI.
+There are many other DBI tricks, too many to go into here; for more information check out the [DBI documentation page]({{<mcpan "DBI" >}}), or the [DBI home page](http://dbi.perl.org/); there's also [Programming the Perl DBI](http://www.oreilly.com/catalog/perldbi/), which was co-authored by the creator of DBI.
 
 ### <span id="where_to_from_here">Where to from Here?</span>
 
-These days, I actually don't write very much SQL; there are many more Perlish abstraction layers on top of SQL, such as Tony Bowden's [`Class::DBI`](/pub/2002/11/27/classdbi.html), the [`DBIx::RecordSet`](/pub/2001/02/dbix.html), [`DBIx::SearchBuilder`](https://metacpan.org/pod/DBIx::SearchBuilder) and many more.
+These days, I actually don't write very much SQL; there are many more Perlish abstraction layers on top of SQL, such as Tony Bowden's [`Class::DBI`](/pub/2002/11/27/classdbi.html), the [`DBIx::RecordSet`](/pub/2001/02/dbix.html), [`DBIx::SearchBuilder`]({{<mcpan "DBIx::SearchBuilder" >}}) and many more.
 
 Additionally, there are some very interesting things going on in the world of database servers -- [SQLite](http://www.hwaci.com/sw/sqlite/) is a very fast embedded SQL engine which doesn't require an external server process, and there are Perl bindings to that in the form of `DBD::SQLite`.
 

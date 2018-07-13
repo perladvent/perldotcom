@@ -24,7 +24,7 @@
 
 Over the years of doing various levels of web-based programming, I've come feel like Dante taking a trip through the nine circles of web programmer hell. There are certain things we must endure over and over, from project to project, that seem to take an exorbitant amount of coding to accomplish with little forward progress on the actual project itself. Some of these circles invariably include HTML forms, form validation code, time translation or formatting code, Unicode or encoding code, and, since the dot-com boom, shopping cart/checkout code.
 
-While the CPAN community has solved most of the problems quite nicely with modules like [Data::FormValidator](https://metacpan.org/pod/Data::FormValidator), [HTML::FillInForm](https://metacpan.org/pod/HTML::FillInForm), [DateTime](https://metacpan.org/pod/DateTime), and the various `FromForm`/`QuickForm`/`FormBuilder` modules, I still yearned for a lightweight, straightforward shopping cart module that didn't involve installed an entire CMS or B2B solution. Thus, Handel.
+While the CPAN community has solved most of the problems quite nicely with modules like [Data::FormValidator]({{<mcpan "Data::FormValidator" >}}), [HTML::FillInForm]({{<mcpan "HTML::FillInForm" >}}), [DateTime]({{<mcpan "DateTime" >}}), and the various `FromForm`/`QuickForm`/`FormBuilder` modules, I still yearned for a lightweight, straightforward shopping cart module that didn't involve installed an entire CMS or B2B solution. Thus, Handel.
 
 Later I will show you how to get a functional shopping cart up and running using no lines of code. You heard that correctly: no lines of code. Zero. None. Nada.
 
@@ -49,12 +49,12 @@ I also decided early on that shopping carts and checkout processes can't possibl
 Before you start, you need to have a few things installed from CPAN. These include:
 
 -   Perl 5.8.1+
--   [Handel](https://metacpan.org/pod/Handel) 0.26+
--   [Catalyst](https://metacpan.org/pod/Catalyst) 5.33+
--   [Catalyst::View::TT](https://metacpan.org/pod/Catalyst::View::TT)
--   [HTML::FillInForm](https://metacpan.org/pod/HTML::FillInForm) 1.04+
--   [Data::FormValidator](https://metacpan.org/pod/Data::FormValidator) 4.00+
--   [DBD::SQLite](https://metacpan.org/pod/DBD::SQLite)
+-   [Handel]({{<mcpan "Handel" >}}) 0.26+
+-   [Catalyst]({{<mcpan "Catalyst" >}}) 5.33+
+-   [Catalyst::View::TT]({{<mcpan "Catalyst::View::TT" >}})
+-   [HTML::FillInForm]({{<mcpan "HTML::FillInForm" >}}) 1.04+
+-   [Data::FormValidator]({{<mcpan "Data::FormValidator" >}}) 4.00+
+-   [DBD::SQLite]({{<mcpan "DBD::SQLite" >}})
 -   [`sqlite3`](http://www.sqlite.org/)
 
 *Perl 5.8.1 or greater? What about 5.6.x?* Yeah, sorry. While Handel runs on Perl 5.6.1 or greater, Catalyst requires 5.8.1 or newer. That's a good thing. Now upgrade your Perl version! :-)

@@ -65,7 +65,7 @@ This should spit data at you that looks like this:
 
 The data here is part of a standard under the [National Marine Electronics Association](http://www.nmea.org/) (NMEA). Most GPS receivers give data in this format. Notice all the commas? That indicates that the receiver doesn't have a good fix yet, probably because I took them indoors. The receiver will always try to send data, even if it's crummy data.
 
-This being Perl, there is already a CPAN module that knows how to parse that data: [GPS::NMEA](https://metacpan.org/pod/GPS::NMEA). Here it is in action:
+This being Perl, there is already a CPAN module that knows how to parse that data: [GPS::NMEA]({{<mcpan "GPS::NMEA" >}}). Here it is in action:
 
 ```perl
 use GPS::NMEA;

@@ -19,7 +19,7 @@
 }
 
 
-*It's hard to believe that when it comes to XML parsing CPAN hasn't already got you covered, but [XML::Dataset](https://metacpan.org/pod/XML::Dataset) is a new module that fills a useful void. XML::Dataset let's you declare a plaintext data collection schema, and then goes and extracts the data for you, super fast. Read on to see how it works.*
+*It's hard to believe that when it comes to XML parsing CPAN hasn't already got you covered, but [XML::Dataset]({{<mcpan "XML::Dataset" >}}) is a new module that fills a useful void. XML::Dataset let's you declare a plaintext data collection schema, and then goes and extracts the data for you, super fast. Read on to see how it works.*
 
 ### Requirements
 
@@ -68,7 +68,7 @@ p parse_using_profile($sample_data, $sample_data_profile);
 
 The code above declares a simple XML dataset ($sample\_data) and a data profile to extract the required data ($sample\_data\_profile). XML::Dataset requires every indented newline in the data profile to map to another nested level of the data set. Once we reach the data attributes we want to extract, we simply assign a dataset to them (dataset:colleagues).
 
-XML::Dataset exports the "parse\_using\_profile" function which extracts the data using our data profile and returns a Perl data structure. We use [Data::Printer](https://metacpan.org/pod/Data::Printer) to print out the results. Running this code we get this output:
+XML::Dataset exports the "parse\_using\_profile" function which extracts the data using our data profile and returns a Perl data structure. We use [Data::Printer]({{<mcpan "Data::Printer" >}}) to print out the results. Running this code we get this output:
 
 ```perl
 \ {
@@ -159,7 +159,7 @@ my $sitemap_data_profile
 p parse_using_profile($sitemap_data, $sitemap_data_profile);
 ```
 
-The code above downloads the PerlTricks.com sitemap using [HTTP::Tiny](https://metacpan.org/pod/HTTP::Tiny) and extracts every URL and last modified timestamp from the sitemap. Running the code, we get this output:
+The code above downloads the PerlTricks.com sitemap using [HTTP::Tiny]({{<mcpan "HTTP::Tiny" >}}) and extracts every URL and last modified timestamp from the sitemap. Running the code, we get this output:
 
 ```perl
 \ {
@@ -185,7 +185,7 @@ No problem! We could re-use that same program to download and parse any sitemap 
 
 ### Conclusion
 
-XML::Dataset is fantastic for extracting fixed data schemas from XML. The plaintext data profiles are so easy to use, a non-programmer could write them. XML::Dataset is also fast: under the hood it uses XML::LibXML (and a few optimizations) and could be adapted for well-formatted HTML. It has great [documentation](https://metacpan.org/pod/XML::Dataset) and offers some advanced features like partial dataset parse dispatching. Module author James Spurin deserves credit for producing a quality module and a welcome addition to CPAN's XML namespace.
+XML::Dataset is fantastic for extracting fixed data schemas from XML. The plaintext data profiles are so easy to use, a non-programmer could write them. XML::Dataset is also fast: under the hood it uses XML::LibXML (and a few optimizations) and could be adapted for well-formatted HTML. It has great [documentation]({{<mcpan "XML::Dataset" >}}) and offers some advanced features like partial dataset parse dispatching. Module author James Spurin deserves credit for producing a quality module and a welcome addition to CPAN's XML namespace.
 
 *Do you have a much-loved CPAN module that you'd like us to cover? Drop us an [email](mailto:perltricks.com@gmail.com)*
 

@@ -96,9 +96,9 @@ The rand function now uses an internal platform independent random number genera
 
 ### Deprecations
 
-[CGI](https://metacpan.org/pod/CGI) and its associated modules are being removed from core (Sawyer X [must](http://www.youtube.com/watch?v=jKOqtRMT85s) be happy).
+[CGI]({{<mcpan "CGI" >}}) and its associated modules are being removed from core (Sawyer X [must](http://www.youtube.com/watch?v=jKOqtRMT85s) be happy).
 
-[Module::Build](https://metacpan.org/pod/Module::Build) is also being removed from core. David Golden [blogged](http://www.dagolden.com/index.php/2140/paying-respect-to-modulebuild/) about this last year.
+[Module::Build]({{<mcpan "Module::Build" >}}) is also being removed from core. David Golden [blogged](http://www.dagolden.com/index.php/2140/paying-respect-to-modulebuild/) about this last year.
 
 Setting a non-integer reference value to the input record separator variable ("$/") will throw a fatal exception (but undef is still fine).
 

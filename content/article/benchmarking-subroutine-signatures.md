@@ -17,7 +17,7 @@
 }
 
 
-*Subroutine signatures will be released to the Perl core in just a few days. But how do they performance compared with traditional methods like direct variable assignment and the [Method::Signatures](https://metacpan.org/pod/Method::Signatures) module? I benchmarked all three with interesting results.*
+*Subroutine signatures will be released to the Perl core in just a few days. But how do they performance compared with traditional methods like direct variable assignment and the [Method::Signatures]({{<mcpan "Method::Signatures" >}}) module? I benchmarked all three with interesting results.*
 
 ### Background
 

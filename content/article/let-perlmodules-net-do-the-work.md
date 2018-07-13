@@ -9,9 +9,9 @@
     "categories": "cpan"
   }
 
-I created [Module::Extract::Use](https://www.metacpan.org/module/Module::Extract::Use) as a simple tool to list the modules a program uses, and I recently added some features to make it easier to create some input I could give to [Perlmodules.net](https://www.perlmodules.net) to create a feed of changes for those modules.
+I created [Module::Extract::Use]({{<mcpan "Module::Extract::Use" >}}) as a simple tool to list the modules a program uses, and I recently added some features to make it easier to create some input I could give to [Perlmodules.net](https://www.perlmodules.net) to create a feed of changes for those modules.
 
-Much of my day-to-day work involves helping people turn legacy stuff into something testable, distributable, and installable (I find that special sort of drudgery quite interesting because every mess is different).  Jonathan Yu worked with my [Module::Extract::Use](https://www.metacpan.org/module/Module::Extract::Use) to create the example program <i>examples/extract_modules</i> which I extended a bit. Here are some examples using the script on itself. The first example is for human inspection:
+Much of my day-to-day work involves helping people turn legacy stuff into something testable, distributable, and installable (I find that special sort of drudgery quite interesting because every mess is different).  Jonathan Yu worked with my [Module::Extract::Use]({{<mcpan "Module::Extract::Use" >}}) to create the example program <i>examples/extract_modules</i> which I extended a bit. Here are some examples using the script on itself. The first example is for human inspection:
 
     # print a verbose text listing
     $ extract_modules extract_modules
@@ -56,7 +56,7 @@ While I'm in there, I might as well add JSON output:
 
 If you want XML, tough. Well, I'll accept patches, actually, but maybe you could write a JSON-to-XML converter and chain some programs. Remember that Perl is a glue language!
 
-Note that this program can only detect explicitly declared namespaces in static `use` and `require` statements. You don't see the [Module::Extract::Use](https://www.metacpan.org/module/Module::Extract::Use) in the output because this program uses it implicitly. That's a rare situation that doesn't bother me that much, and it's something that I try to refactor out of code when I can.
+Note that this program can only detect explicitly declared namespaces in static `use` and `require` statements. You don't see the [Module::Extract::Use]({{<mcpan "Module::Extract::Use" >}}) in the output because this program uses it implicitly. That's a rare situation that doesn't bother me that much, and it's something that I try to refactor out of code when I can.
 
 One of my immediate uses is to install all of the dependencies from a standalone program:
 

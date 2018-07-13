@@ -17,7 +17,7 @@
 }
 
 
-The Perl module [CPAN::Uploader](https://metacpan.org/module/CPAN::Uploader) comes with a neat command line application called [cpan-upload](https://metacpan.org/module/RJBS/CPAN-Uploader-0.103004/bin/cpan-upload) which allows Perl module authors to upload to CPAN from the command line. This article describes how to install cpan-upload and use it.
+The Perl module [CPAN::Uploader]({{<mcpan "CPAN::Uploader" >}}) comes with a neat command line application called [cpan-upload]({{<mcpan "RJBS/CPAN-Uploader-0.103004/bin/cpan-upload" >}}) which allows Perl module authors to upload to CPAN from the command line. This article describes how to install cpan-upload and use it.
 
 To upload modules to CPAN you must have a registered [PAUSE](http://pause.perl.org/pause/query) account. Registration is free and an account is usually activated within 24 hours. Once you have a registered PAUSE account, install CPAN::Uploader via the command line:
 

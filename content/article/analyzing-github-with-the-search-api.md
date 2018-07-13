@@ -25,7 +25,7 @@ The Net::GitHub module provides a perly interface to GitHub's feature-rich API. 
 
 ### Setup
 
-Grab yourself a copy of [Net::GitHub](https://metacpan.org/pod/Net::GitHub) (make sure it's version 0.68 or higher). The CPAN Testers [results](http://matrix.cpantesters.org/?dist=Net-GitHub+0.68) show that it builds on all major platforms, including Windows. You can install it via from CPAN at the command line:
+Grab yourself a copy of [Net::GitHub]({{<mcpan "Net::GitHub" >}}) (make sure it's version 0.68 or higher). The CPAN Testers [results](http://matrix.cpantesters.org/?dist=Net-GitHub+0.68) show that it builds on all major platforms, including Windows. You can install it via from CPAN at the command line:
 
 ```perl
 $ cpan Net::GitHub
@@ -33,7 +33,7 @@ $ cpan Net::GitHub
 
 ### First steps
 
-First we need to create a search object. You can search GitHub anonymously up to 5 times per minute or if you authenticate, 20 times per minute. The module [documentation](https://metacpan.org/pod/Net::GitHub) shows examples of how to authenticate, so we'll proceed here unauthenticated.
+First we need to create a search object. You can search GitHub anonymously up to 5 times per minute or if you authenticate, 20 times per minute. The module [documentation]({{<mcpan "Net::GitHub" >}}) shows examples of how to authenticate, so we'll proceed here unauthenticated.
 
 ```perl
 use Net::GitHub::V3;
@@ -161,7 +161,7 @@ Perhaps as is to be expected, the results show shell programs dominating the Doc
 
 GitHub's search API supports more than just repo search. You can search issues, code and users as well. Check out the official GitHub search API [documentation](https://developer.github.com/v3/search/) for more examples.
 
-[Net::GitHub](https://metacpan.org/pod/Net::GitHub) provides an interface for far more than just search though. It's a full-featured API - you can literally manage your GitHub account via Perl code with Net::GitHub. The developer Fayland Lam has provided loads of documentation, and I found him helpful responsive to enquiries. Thanks Fayland!
+[Net::GitHub]({{<mcpan "Net::GitHub" >}}) provides an interface for far more than just search though. It's a full-featured API - you can literally manage your GitHub account via Perl code with Net::GitHub. The developer Fayland Lam has provided loads of documentation, and I found him helpful responsive to enquiries. Thanks Fayland!
 
 If you're looking for more than just search, you may also want to look at Ingy döt Net's awesome [git-hub](https://github.com/ingydotnet/git-hub), which provides the full power of GitHub at the command line.
 

@@ -39,7 +39,7 @@ mkdir ~/local
 
 ### Installing Image::Magick - don't use CPAN
 
-Although the [Image::Magick](https://metacpan.org/pod/Image::Magick) module is available on CPAN, installing it via CPAN is usually a fruitless task as the process croaks on make. Instead download the whole [ImageMagick tarball](http://www.imagemagick.org/download/ImageMagick.tar.gz). Once downloaded, navigate to the tarball's parent directory using the terminal and un-tar the archive with the following command
+Although the [Image::Magick]({{<mcpan "Image::Magick" >}}) module is available on CPAN, installing it via CPAN is usually a fruitless task as the process croaks on make. Instead download the whole [ImageMagick tarball](http://www.imagemagick.org/download/ImageMagick.tar.gz). Once downloaded, navigate to the tarball's parent directory using the terminal and un-tar the archive with the following command
 
 ```perl
 tar xvfz ImageMagick.tar.gz

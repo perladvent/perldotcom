@@ -46,7 +46,7 @@ Take this code:
         pod2usage(-exitstatus => 0);
     }
 
-This loads [Pod::Usage](https://metacpan.org/pod/Pod::Usage), even if `$help` is false. The following change won't help, though:
+This loads [Pod::Usage]({{<mcpan "Pod::Usage" >}}), even if `$help` is false. The following change won't help, though:
 
     # $help set from command-line option
     if ($help) {
@@ -62,7 +62,7 @@ This just gives the illusion that the program loads `Pod::Usage` only when neces
         Pod::Usage::pod2usage(-exitstatus => 0);
     }
 
-After these changes the situation had improved: the Perl version was only five times slower now. I pulled out the profiler. Sadly, most of the time still went to loading modules, especially [Net::FTP](https://metacpan.org/pod/Net::FTP). Of course, we *always* needed that.
+After these changes the situation had improved: the Perl version was only five times slower now. I pulled out the profiler. Sadly, most of the time still went to loading modules, especially [Net::FTP]({{<mcpan "Net::FTP" >}}). Of course, we *always* needed that.
 
 If you dig in, you realize that `Net::FTP` is not the only culprit. It loads other modules that in turn load other modules, and so on. Here is the complete list:
 

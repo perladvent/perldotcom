@@ -22,7 +22,7 @@ If you've ever tried to fit a large amount of text into a display area too narro
 
 Unicode characters, of course, may have properties which influence these rules.
 
-As you have come to expect from Perl, a module implements the Unicode Line Breaking Algorithm. Install [Unicode::LineBreak](https://metacpan.org/pod/Unicode::LineBreak). This module respects direct and indirect break points as well as the grapheme width of the string. Its basic use is simple:
+As you have come to expect from Perl, a module implements the Unicode Line Breaking Algorithm. Install [Unicode::LineBreak]({{<mcpan "Unicode::LineBreak" >}}). This module respects direct and indirect break points as well as the grapheme width of the string. Its basic use is simple:
 
      use Unicode::LineBreak;
      use charnames qw(:full);

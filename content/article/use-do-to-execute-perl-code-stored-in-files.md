@@ -47,7 +47,7 @@ use warnings;
 do 'print.txt';
 ```
 
-Using do requires fewer lines of code then the eval solution and there is no need to open a filehandle or use a module to slurp the file (such as [File::Slurp](https://metacpan.org/module/File::Slurp)). The do function also updates @INC and %INC, so it can be used to load modules which are then used later in the program (eval does not do this).
+Using do requires fewer lines of code then the eval solution and there is no need to open a filehandle or use a module to slurp the file (such as [File::Slurp]({{<mcpan "File::Slurp" >}})). The do function also updates @INC and %INC, so it can be used to load modules which are then used later in the program (eval does not do this).
 
 One scenario where the eval approach would be needed instead of do would be if the text file contained non-Perl code that required parsing before the file is ready to be executed.
 

@@ -16,7 +16,7 @@
 }
 
 
-Jeffrey Thalhammer, developer of Perl Critic is working on a [Pinto](https://metacpan.org/module/Pinto), an application for managing stand-alone repositories of Perl modules. He's seeking crowd funding to continue the development of Pinto. This looks a like a great opportunity to help Jeffrey and support community-driven Perl development.
+Jeffrey Thalhammer, developer of Perl Critic is working on a [Pinto]({{<mcpan "Pinto" >}}), an application for managing stand-alone repositories of Perl modules. He's seeking crowd funding to continue the development of Pinto. This looks a like a great opportunity to help Jeffrey and support community-driven Perl development.
 
 See [brian d foy's](http://blogs.perl.org/users/brian_d_foy/2013/04/crowd-funding-pinto.html) blog post for further detail and how to get involved.
 

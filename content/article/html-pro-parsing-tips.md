@@ -38,7 +38,7 @@ With recovery mode set to 1, the parser will still warn about parsing errors. To
 
 ### Tip 2: sanitize the input first with HTML::Scrubber
 
-Sometimes recovery mode alone is not enough - XML::LibXML will croak at the first whiff of HTML if there are two doctype declarations for example. In these situations, consider sanitizing the HTML with [HTML::Scrubber](https://metacpan.org/pod/HTML::Scrubber).
+Sometimes recovery mode alone is not enough - XML::LibXML will croak at the first whiff of HTML if there are two doctype declarations for example. In these situations, consider sanitizing the HTML with [HTML::Scrubber]({{<mcpan "HTML::Scrubber" >}}).
 
 HTML::Scrubber provides both whitelist and blacklist functions to include or exclude HTML tags and attributes. It's a powerful combination which allows you to create a custom filter to scrub the HTML that you want to parse.
 
@@ -72,7 +72,7 @@ Note the use of the "s" modifier in the regex to match multiline. Many HTML page
 
 ### Conclusion
 
-Hopefully these tips will make parsing HTML with XML::LibXML easier. My GitHub account has a web scraper [script](https://gist.github.com/sillymoose/998b9199007589199dce#file-get_swift_code-pl-L42) that uses some of these tips. If you're looking for an entirely different approach to parsing HTML, check out [XML::Rabbit](https://metacpan.org/pod/XML::Rabbit) and [HTML::TreeBuilder](https://metacpan.org/pod/HTML::TreeBuilder).
+Hopefully these tips will make parsing HTML with XML::LibXML easier. My GitHub account has a web scraper [script](https://gist.github.com/sillymoose/998b9199007589199dce#file-get_swift_code-pl-L42) that uses some of these tips. If you're looking for an entirely different approach to parsing HTML, check out [XML::Rabbit]({{<mcpan "XML::Rabbit" >}}) and [HTML::TreeBuilder]({{<mcpan "HTML::TreeBuilder" >}}).
 
 Enjoyed this article? Help us out and [tweet](https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F101%2F2014%2F7%2F10%2FHTML-pro-parsing-tips&text=HTML+pro-parsing+tips&tw_p=tweetbutton&url=http%3A%2F%2Fperltricks.com%2Farticle%2F101%2F2014%2F7%2F10%2FHTML-pro-parsing-tips&via=perltricks) about it!
 

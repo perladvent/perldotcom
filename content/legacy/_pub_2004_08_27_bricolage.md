@@ -119,11 +119,11 @@ Bricolage templates correspond to document categories and elements, so that one 
 The templates in Bricolage output channels can be implemented in one of three templating architectures: [Mason](http://www.masonhq.com/), [Template Toolkit](http://www.template-toolkit.org/ "Template Toolkit
     home"), or [HTML::Template](https://github.com/mpeters/html-template).
 
-Yes, that's right, not only do you have three different choices for templating in Bricolage, but they're all Perl-based! In addition to being able to provide a familiar templating environment to tens of thousands of Perl programmers worldwide, the templating solutions can leverage the full power of Perl to generate output for your documents. That power of course includes [CPAN](https://metacpan.org/), where you'll find modules to ease the generation of RSS (such as [XML::RSS](https://metacpan.org/pod/XML::RSS/) feeds, HTML, XML, [PDFs](https://metacpan.org/pod/PDFLib "PDFLib on
-    CPAN"), or even Excel files ([Spreadsheet::WriteExcel](https://metacpan.org/pod/Spreadsheet::WriteExcel/))!
+Yes, that's right, not only do you have three different choices for templating in Bricolage, but they're all Perl-based! In addition to being able to provide a familiar templating environment to tens of thousands of Perl programmers worldwide, the templating solutions can leverage the full power of Perl to generate output for your documents. That power of course includes [CPAN](https://metacpan.org/), where you'll find modules to ease the generation of RSS (such as [XML::RSS]({{<mcpan "XML::RSS/" >}}) feeds, HTML, XML, [PDFs]({{<mcpan "PDFLib "PDFLib on
+" >}}    CPAN"), or even Excel files ([Spreadsheet::WriteExcel]({{<mcpan "Spreadsheet::WriteExcel/" >}}))!
 
 Furthermore, Bricolage has a sub-classable templating architecture, which means that, with a little bit of work, you can add your own templating architecture. Anyone care to add support for [Embperl](http://perl.apache.org/embperl/), [Apache::ASP](http://www.apache-asp.org/ "Apache::ASP
-    home"), or [XSLT](https://metacpan.org/pod/XML::LibXSLT "XML::LibXSLT on CPAN")?
+    home"), or [XSLT]({{<mcpan "XML::LibXSLT "XML::LibXSLT on CPAN"" >}})?
 
 For more on Bricolage templating, watch for the fourth article in this series, "Mason Templating in Bricolage."
 

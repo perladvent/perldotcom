@@ -18,7 +18,7 @@
 }
 
 
-The [Kelly criterion](https://en.wikipedia.org/wiki/Kelly_criterion) is an equation for deriving the optimal fraction of a bankroll to place on a bet, given the probability and the betting odds. I read about it a few years ago in William Poundstone's page turner, [Fortune's Formula](http://www.amazon.com/Fortunes-Formula-Scientific-Betting-Casinos-ebook/dp/B000SBTWNC). To use the Kelly criterion in Perl code, you can used [Algorithm::Kelly](https://metacpan.org/pod/Algorithm::Kelly), a module I released last week.
+The [Kelly criterion](https://en.wikipedia.org/wiki/Kelly_criterion) is an equation for deriving the optimal fraction of a bankroll to place on a bet, given the probability and the betting odds. I read about it a few years ago in William Poundstone's page turner, [Fortune's Formula](http://www.amazon.com/Fortunes-Formula-Scientific-Betting-Casinos-ebook/dp/B000SBTWNC). To use the Kelly criterion in Perl code, you can used [Algorithm::Kelly]({{<mcpan "Algorithm::Kelly" >}}), a module I released last week.
 
 ### Using Algorithm::Kelly
 

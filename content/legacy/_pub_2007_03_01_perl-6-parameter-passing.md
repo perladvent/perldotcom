@@ -24,7 +24,7 @@
 
 
 
-Perl 6 is not finished, but you can already play with it. I hope this article will encourage you to try it. Begin by installing [Pugs](https://metacpan.org/pod/Pugs), a Perl 6 compiler implemented in Haskell. Note that you will also need Haskell (see directions in the Pugs *INSTALL* file for how to get it).
+Perl 6 is not finished, but you can already play with it. I hope this article will encourage you to try it. Begin by installing [Pugs]({{<mcpan "Pugs" >}}), a Perl 6 compiler implemented in Haskell. Note that you will also need Haskell (see directions in the Pugs *INSTALL* file for how to get it).
 
 Of course, Pugs is not finished. It couldn't be. The Perl 6 design is still in progress. However, Pugs still has many key features that are going to turn our favorite language into something even greater.
 
@@ -112,7 +112,7 @@ The module, *Newton.pm*, looks like this:
             return $guess;
         }
 
-Here begins the familiar package declaration borrowed from Perl 5. (In Perl 6 itself, `package` identifies Perl 5 source code. The [v6](https://metacpan.org/pod/v6) module lets you run some Perl 6 code in Perl 5 programs.) Immediately following is `use v6;`, just as in the original script.
+Here begins the familiar package declaration borrowed from Perl 5. (In Perl 6 itself, `package` identifies Perl 5 source code. The [v6]({{<mcpan "v6" >}}) module lets you run some Perl 6 code in Perl 5 programs.) Immediately following is `use v6;`, just as in the original script.
 
 Declaring subs in Perl 6 doesn't have to be any different than in Perl 5, but it should be. This one says it takes a numeric variable called `target`. Such genuine prototypes allow for Perl 6 to report compilation errors when you call a sub with the wrong arguments. That single step will move Perl 6 onto the list of possible languages for a lot of large-scale application development shops.
 

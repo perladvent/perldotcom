@@ -301,7 +301,7 @@ This output text shows the same resultant terms as produced by the first program
 
 From a package, you can create a Perl module to make the package fully reusable in an application. Also, you can modify our original test code into a series of module tests to show that the module works the same as the standalone package and the original program.
 
-I like to use the Perl module [Module::Starter](https://metacpan.org/pod/Module::Starter) to create a skeleton module for the package code. To start, install the `Module::Starter` module and its associated modules from CPAN, using the Perl Package Manager, or some other package manager. To see if you already have the `Module::Starter` module installed, type `perldoc Module::Starter` in a terminal window. If the man page does not appear, you probably do not have the module installed.
+I like to use the Perl module [Module::Starter]({{<mcpan "Module::Starter" >}}) to create a skeleton module for the package code. To start, install the `Module::Starter` module and its associated modules from CPAN, using the Perl Package Manager, or some other package manager. To see if you already have the `Module::Starter` module installed, type `perldoc Module::Starter` in a terminal window. If the man page does not appear, you probably do not have the module installed.
 
 Select a working directory to create the module directory. This can be the same directory that you have been using to develop your Perl program. Type the following command (though with your own name and email address):
 
@@ -352,7 +352,7 @@ After modifying *Resultant.pm*, you need to install the module to make it availa
 
     Once this is complete, the module will be installed in the directory.
 
-The final step in module development is to add tests to the *.t* file templates created in the module directory. The Perl distribution includes several built-in test modules, such as [Test::Simple](https://metacpan.org/pod/Test::Simple) and [Test::More](https://metacpan.org/pod/Test::More) to help test Perl subroutines and modules.
+The final step in module development is to add tests to the *.t* file templates created in the module directory. The Perl distribution includes several built-in test modules, such as [Test::Simple]({{<mcpan "Test::Simple" >}}) and [Test::More]({{<mcpan "Test::More" >}}) to help test Perl subroutines and modules.
 
 To test the module, open the file *Music-Resultant/t/00-load.t*. The initial text in this file is:
 
@@ -426,7 +426,7 @@ You should get the following results:
     The resultant is 3 2 1 3 1 2 3
     # Testing Music::Resultant 0.01, Perl 5.008006, perl
 
-That's not valid test output, so it needs a little bit of manipulation. To check the elements of a list using a testing function, install the [Test::Differences](https://metacpan.org/pod/Test::Differences) module and its associated modules from CPAN, using the Perl Package Manager, or some other package manager. To see if you already have the `Test::Differences` module installed, type `perldoc Test::Differences` in a terminal window. If the man page does not appear, you probably do not have the module installed.
+That's not valid test output, so it needs a little bit of manipulation. To check the elements of a list using a testing function, install the [Test::Differences]({{<mcpan "Test::Differences" >}}) module and its associated modules from CPAN, using the Perl Package Manager, or some other package manager. To see if you already have the `Test::Differences` module installed, type `perldoc Test::Differences` in a terminal window. If the man page does not appear, you probably do not have the module installed.
 
 Once that module is part of your Perl installation, change the number of tests from 4 to 5 on the `Test::More` statement line and add a following statement after the `use Test::More` statement:
 
@@ -464,6 +464,6 @@ Here are some other good resources on creating Perl modules:
 
 Here are some good resources for using Perl testing modules like `Test::Simple` and `Test::More`:
 
--   [Test::Tutorial](https://metacpan.org/pod/Test::Tutorial) gives the basics of using `Test:Simple` and `Test::More`.
+-   [Test::Tutorial]({{<mcpan "Test::Tutorial" >}}) gives the basics of using `Test:Simple` and `Test::More`.
 -   [An Introduction to Testing](/pub/2001/12/04/testing.html) presents the benefits of developing tests and code at the same time, and provides a variety of examples.
 

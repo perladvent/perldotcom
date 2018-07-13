@@ -41,7 +41,7 @@ perl program.pl | add-content /path/to/log.txt
 
 ### Perl solutions
 
-If a terminal redirect is not specific enough for your needs, you can use one of the following Perl solutions. All of the following solutions use [autodie](https://metacpan.org/pod/autodie) which removes the need for the classic "|| or die $!" syntax to be appended to every open statement in the code.
+If a terminal redirect is not specific enough for your needs, you can use one of the following Perl solutions. All of the following solutions use [autodie]({{<mcpan "autodie" >}}) which removes the need for the classic "|| or die $!" syntax to be appended to every open statement in the code.
 
 ### Redirect STDOUT using select
 

@@ -160,7 +160,7 @@ The grammar will call the matching action class method every time the token is e
 
 ### Grammars in Perl 5
 
-You can also write grammars in Perl 5. For a solution similar to the Perl 6 implementation, have a look at [Regexp::Grammars](https://metacpan.org/pod/Regexp::Grammars) or Ingy Döt Net's [Pegex](https://metacpan.org/pod/Pegex) distribution. For a different approach, check out chapter 1 of [Mastering Perl](http://www.masteringperl.org/) by brian d foy, which contains an example JSON grammar.
+You can also write grammars in Perl 5. For a solution similar to the Perl 6 implementation, have a look at [Regexp::Grammars]({{<mcpan "Regexp::Grammars" >}}) or Ingy Döt Net's [Pegex]({{<mcpan "Pegex" >}}) distribution. For a different approach, check out chapter 1 of [Mastering Perl](http://www.masteringperl.org/) by brian d foy, which contains an example JSON grammar.
 
 \* This isn't strictly correct - the entire name (colons included) is the identifier.
 

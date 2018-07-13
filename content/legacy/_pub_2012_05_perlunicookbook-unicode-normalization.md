@@ -18,7 +18,7 @@
 ℞ 27: Unicode normalization
 ---------------------------
 
-Prescription one reminded you to [always decompose and recompose Unicode data at the boundaries of your application](/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose.html). [Unicode::Normalize](https://metacpan.org/pod/Unicode::Normalize) can do much more for you. It supports multiple [Unicode Normalization Forms](http://www.unicode.org/reports/tr15/).
+Prescription one reminded you to [always decompose and recompose Unicode data at the boundaries of your application](/pub/2012/04/perl-unicode-cookbook-always-decompose-and-recompose.html). [Unicode::Normalize]({{<mcpan "Unicode::Normalize" >}}) can do much more for you. It supports multiple [Unicode Normalization Forms](http://www.unicode.org/reports/tr15/).
 
 Normalization, of course, takes Unicode data of arbitrary forms and canonicalizes it to a standard representation. (Where a composite character may be composed of multiple characters, normalized decomposition arranges those characters in a canonical order. Normalized composition combines those characters to a single composite character, where possible. Without this normalization, you can imagine the difficulty of determining whether one string is logically equivalent to another.)
 

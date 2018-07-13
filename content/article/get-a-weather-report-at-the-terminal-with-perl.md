@@ -21,7 +21,7 @@
 }
 
 
-Getting a weather forecast can be a chore; you have to navigate to the right website, close the banner ad, type in your location, click the right link, and *maybe* then you can see a forecast. I wanted a more convenient way and found one using [WWW::Wunderground::API](https://metacpan.org/pod/WWW::Wunderground::API). As the name suggests, the module provides a Perl interface to the Wunderground.com API. In this article I'll show you how to use it.
+Getting a weather forecast can be a chore; you have to navigate to the right website, close the banner ad, type in your location, click the right link, and *maybe* then you can see a forecast. I wanted a more convenient way and found one using [WWW::Wunderground::API]({{<mcpan "WWW::Wunderground::API" >}}). As the name suggests, the module provides a Perl interface to the Wunderground.com API. In this article I'll show you how to use it.
 
 ### Setup
 
@@ -177,7 +177,7 @@ Time      ℉   ℃   Rain %  Conditions
 
 ### Caching
 
-The [WWW::Wunderground::API](https://metacpan.org/pod/WWW::Wunderground::API) documentation shows how to use [Cache::FileCache](https://metacpan.org/pod/Cache::FileCache) to cache the weather results locally. When you setup the cache, you can specify an expiry parameter - until the cache expires the WWW::Wunderground::API will use the cached results instead of the Wunderground API. This prevents unnecessary API calls and makes the script faster:
+The [WWW::Wunderground::API]({{<mcpan "WWW::Wunderground::API" >}}) documentation shows how to use [Cache::FileCache]({{<mcpan "Cache::FileCache" >}}) to cache the weather results locally. When you setup the cache, you can specify an expiry parameter - until the cache expires the WWW::Wunderground::API will use the cached results instead of the Wunderground API. This prevents unnecessary API calls and makes the script faster:
 
 ```perl
 #!/usr/bin/env perl
@@ -227,7 +227,7 @@ Not much has changed in the code. The line `use Cache::FileCache;` imports the m
 
 ### Conclusion
 
-That's probably enough to get started, however there is more that could be done with this script. I could make the script more portable by using environment variables instead of the hard coded values for my API key and home location. Exception handling could better - checking for an internet connection before running the script, handling failed API calls more gracefully (for unknown locations for example). Finally, why have the user type in a location at all? We could use get the user's IP address and then geolocate them using the [Geo::IP](https://metacpan.org/pod/Geo::IP) module.
+That's probably enough to get started, however there is more that could be done with this script. I could make the script more portable by using environment variables instead of the hard coded values for my API key and home location. Exception handling could better - checking for an internet connection before running the script, handling failed API calls more gracefully (for unknown locations for example). Finally, why have the user type in a location at all? We could use get the user's IP address and then geolocate them using the [Geo::IP]({{<mcpan "Geo::IP" >}}) module.
 
 The Wunderground API provides a lot more than just a 24 hour forecast. Check out their API [documentation](http://www.wunderground.com/weather/api/d/docs).
 

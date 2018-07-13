@@ -25,7 +25,7 @@ The first task was to make a box. The Bodgery has a 50W laser cutter, so I start
 
 On the web server side, an account was created that had write access to a specific file. An ssh key was created and added to this account's `~/.ssh/authroized_keys` file.
 
-Using [Device::WebIO::RaspberryPi](https://metacpan.org/pod/Device::WebIO::RaspberryPi), you can query the status of GPIO pins, and also get a filehandle for reading the picture from the camera. The camera is implemented using "[rpicamsrc](https://github.com/thaytan/gst-rpicamsrc)", a plugin for [GStreamer](http://gstreamer.freedesktop.org/) that accesses the Raspberry Pi's camera module directly - which is great, because my previous attempts at getting the data using GStreamer's `v4lsrc` or other methods usually ended in frustration.
+Using [Device::WebIO::RaspberryPi]({{<mcpan "Device::WebIO::RaspberryPi" >}}), you can query the status of GPIO pins, and also get a filehandle for reading the picture from the camera. The camera is implemented using "[rpicamsrc](https://github.com/thaytan/gst-rpicamsrc)", a plugin for [GStreamer](http://gstreamer.freedesktop.org/) that accesses the Raspberry Pi's camera module directly - which is great, because my previous attempts at getting the data using GStreamer's `v4lsrc` or other methods usually ended in frustration.
 
 The basic boilerplate sets up pin 17 as input, and then sets the image width, height, and JPEG quality (between 0 and 100, higher is better quality, but larger file size).
 
@@ -37,7 +37,7 @@ $rpi->img_set_height( 0, 600 );
 $rpi->img_set_quality( 0, 70 );
 ```
 
-The next step is to have something that polls the input pin on a regular basis (once a second will do). There are many ways to do this, and I choose an [AnyEvent](https://metacpan.org/pod/AnyEvent) timer.
+The next step is to have something that polls the input pin on a regular basis (once a second will do). There are many ways to do this, and I choose an [AnyEvent]({{<mcpan "AnyEvent" >}}) timer.
 
 ```perl
 my $condvar = AnyEvent->condvar;
@@ -61,7 +61,7 @@ my $fh = $rpi->img_stream( 0, 'image/jpeg' );
 
 The method takes a channel number for the camera (if you have one camera, you have one channel) and a desired MIME type. The `img_allowed_content_types()` method will return a list of supported MIME types. On Device::WebIO::RaspberryPi, only `image/jpeg` is currently supported.
 
-Once you have the filehandle, use `scp` to upload it. A simple but crude method is to create a temporary file (with [File::Temp](https://metacpan.org/pod/File::Temp)) and then call `scp` as an external program:
+Once you have the filehandle, use `scp` to upload it. A simple but crude method is to create a temporary file (with [File::Temp]({{<mcpan "File::Temp" >}})) and then call `scp` as an external program:
 
 ```perl
 use File::Temp 'tempdir';
@@ -90,7 +90,7 @@ say "Executing: @scp_command" if DEBUG;
 unlink $tmp_filename;
 ```
 
-[Net::SCP](https://metacpan.org/pod/Net::SCP) is another way of going about this, although that just wraps the external command like is done above.
+[Net::SCP]({{<mcpan "Net::SCP" >}}) is another way of going about this, although that just wraps the external command like is done above.
 
 As an exercise to the reader, create a `tmpfs` (RAM disk) on your Raspberry Pi and have the temp file written there. 10MB should be enough. `File::Temp::tempfile()` can be passed a `DIR` parameter to write a file there. This avoids writing to the SD card, which is both slow and tends to wear it out prematurely.
 

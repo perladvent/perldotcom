@@ -103,7 +103,7 @@ by Shlomi Fish
 
 Often, programmers find a need to use print statements to output information to the screen, in order to help them analyze what went wrong in running the script. However, including these statements verbatim in the script is not such a good idea. If not promptly removed, these statements can have all kinds of side-effects: slowing down the script, destroying the correct format of its output (possibly ruining test-cases), littering the code, and confusing the user. It would be a better idea not to place them within the code in the first place. How, though, can you debug without debugging?
 
-Enter [Devel::LineTrace](https://metacpan.org/pod/Devel::LineTrace), a Perl module that can assign portions of code to execute at arbitrary lines within the code. That way, the programmer can add print statements in relevant places in the code without harming the program's integrity.
+Enter [Devel::LineTrace]({{<mcpan "Devel::LineTrace" >}}), a Perl module that can assign portions of code to execute at arbitrary lines within the code. That way, the programmer can add print statements in relevant places in the code without harming the program's integrity.
 
 #### Verifying That `use lib` Has Taken Effect
 
@@ -160,9 +160,9 @@ Nevertheless, it is a good solution for keeping those pesky `print` statements o
 
 by Mark Leighton Fisher
 
-What if you could test your program's use of the DBI just by creating a set of rules to guide the DBI's behavior—without touching a database (unless you want to)? That is the promise of [Test::MockDBI](https://metacpan.org/pod/Test::MockDBI), which by mocking-up the entire DBI API gives you unprecedented control over every aspect of the DBI's interface with your program.
+What if you could test your program's use of the DBI just by creating a set of rules to guide the DBI's behavior—without touching a database (unless you want to)? That is the promise of [Test::MockDBI]({{<mcpan "Test::MockDBI" >}}), which by mocking-up the entire DBI API gives you unprecedented control over every aspect of the DBI's interface with your program.
 
-`Test::MockDBI` uses [Test::MockObject::Extends](https://metacpan.org/pod/Test::MockObject::Extends) to mock all of the DBI transparently. The rest of the program knows nothing about using `Test::MockDBI`, making `Test::MockDBI` ideal for testing programs that you are taking over, because you only need to add the `Test::MockDBI` invocation code— you do not have to modify any of the other program code. (I have found this very handy as a consultant, as I often work on other people's code.)
+`Test::MockDBI` uses [Test::MockObject::Extends]({{<mcpan "Test::MockObject::Extends" >}}) to mock all of the DBI transparently. The rest of the program knows nothing about using `Test::MockDBI`, making `Test::MockDBI` ideal for testing programs that you are taking over, because you only need to add the `Test::MockDBI` invocation code— you do not have to modify any of the other program code. (I have found this very handy as a consultant, as I often work on other people's code.)
 
 Rules are invoked when the current SQL matches the rule's SQL pattern. For finer control, there is an optional numeric DBI testing type for each rule, so that a rule only fires when the SQL matches *and* the current DBI testing type is the specified DBI testing type. You can specify this numeric DBI testing type (a simple integer matching `/^\d+$/`) from the command line or through `Test::MockDBI::set_dbi_test_type()`. You can also set up rules to fail a transaction if a specific `DBI::bind_param()` parameter is a specific value. This means there are three types of conditions for `Test::MockDBI` rules:
 

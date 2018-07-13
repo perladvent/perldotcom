@@ -26,7 +26,7 @@ When you first fire up your editor and start writing a program, it's tempting to
 
 A search on CPAN reveals almost 200 different modules dedicated to option processing and handling configuration files. By anyone's standards that's quite a lot, certainly too many to evaluate each one.
 
-Luckily, you already have a great module right in front of you for handling options given on the command line: [`Getopt::Long`](https://metacpan.org/pod/Getopt::Long), which is a core module included as standard with Perl. This lets you use the standard double-dash style of option names:
+Luckily, you already have a great module right in front of you for handling options given on the command line: [`Getopt::Long`]({{<mcpan "Getopt::Long" >}}), which is a core module included as standard with Perl. This lets you use the standard double-dash style of option names:
 
     myscript --source-directory "/var/log/httpd" --verbose \ --username=JJ
 
@@ -208,7 +208,7 @@ When it comes to the format of a configuration file, there are a lot of choices,
 
 #### Getopt::ArgvFile to the Rescue
 
-Fortunately, someone out there in CPAN-land has the answer (you can always count on the Perl community to come up with innovative solutions). [`Getopt::ArgvFile`](https://metacpan.org/pod/Getopt::ArgvFile) tackles both of these problems, simplifying the file format and the programming interface in one fell swoop.
+Fortunately, someone out there in CPAN-land has the answer (you can always count on the Perl community to come up with innovative solutions). [`Getopt::ArgvFile`]({{<mcpan "Getopt::ArgvFile" >}}) tackles both of these problems, simplifying the file format and the programming interface in one fell swoop.
 
 To start with, the file format used by `Getopt::ArgvFile` is extremely easy for users to understand. Config settings are stored in a plain text file that holds exactly the same directives that a user would type on the command line. Instead of typing:
 
@@ -349,7 +349,7 @@ Here's an example that first loads a config file from the application bundle (if
 
     argvFile();  # Process @ARGV to load specified config files
 
-You can also use this technique together with [`File::HomeDir`](https://metacpan.org/pod/File::HomeDir) to access the user's application data directory in a cross-platform manner, so that the location of the config file conforms to the conventions set by the user's operating system.
+You can also use this technique together with [`File::HomeDir`]({{<mcpan "File::HomeDir" >}}) to access the user's application data directory in a cross-platform manner, so that the location of the config file conforms to the conventions set by the user's operating system.
 
 #### Summary
 

@@ -47,7 +47,7 @@ Which will display:
           last occurrence of SUBSTR in STR. If POSITION is specified,
           returns the last occurrence beginning at or before that position.
 
-Aha! This is all well and good, but what do you do if you can't remember the function name? Well you could use [B::Keywords](https://metacpan.org/pod/B::Keywords), but another way would be to check out `perlfunc` the Perl documentation on built-in functions. To read it, with perldoc just type:
+Aha! This is all well and good, but what do you do if you can't remember the function name? Well you could use [B::Keywords]({{<mcpan "B::Keywords" >}}), but another way would be to check out `perlfunc` the Perl documentation on built-in functions. To read it, with perldoc just type:
 
 ```perl
 $ perldoc perlfunc

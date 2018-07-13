@@ -53,7 +53,7 @@ print remainder(1, 10); # 0.1
 print remainder(9, 0);  # 0
 ```
 
-Alternatively looking to CPAN, the [Math::Decimal](https://metacpan.org/pod/Math::Decimal) module provides a "dec\_rem" subroutine (disclaimer - I have not tested it).
+Alternatively looking to CPAN, the [Math::Decimal]({{<mcpan "Math::Decimal" >}}) module provides a "dec\_rem" subroutine (disclaimer - I have not tested it).
 
 ###### Further reading
 

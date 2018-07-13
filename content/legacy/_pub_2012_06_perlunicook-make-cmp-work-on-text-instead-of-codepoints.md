@@ -28,7 +28,7 @@ Where you might write:
          $a->{NAME}  cmp  $b->{NAME}
      } @recs;
 
-... a Unicode-aware comparison should instead use [Unicode::Collate](https://metacpan.org/pod/Unicode::Collate):
+... a Unicode-aware comparison should instead use [Unicode::Collate]({{<mcpan "Unicode::Collate" >}}):
 
      my $coll = Unicode::Collate->new();
      for my $rec (@recs) {

@@ -16,7 +16,7 @@
 }
 
 
-A couple of recent presentations about Perl's security have focused on the [CGI module](http://www.metacpan.org/module/CGI) and [Bugzilla](https://www.bugzilla.org). David Farrell responded to these in [Netanel Rubin's Perl Jam circus](http://perltricks.com/article/netanel-rubins-perljam-circus/). There are much worse problems with Perl that we should think about.
+A couple of recent presentations about Perl's security have focused on the [CGI module]({{<mcpan "CGI" >}}) and [Bugzilla](https://www.bugzilla.org). David Farrell responded to these in [Netanel Rubin's Perl Jam circus](http://perltricks.com/article/netanel-rubins-perljam-circus/). There are much worse problems with Perl that we should think about.
 
 ### Perl's rounding problem
 

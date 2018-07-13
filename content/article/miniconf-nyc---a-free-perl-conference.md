@@ -32,7 +32,7 @@ If you have a hackathon project you'd like to work on, [email us](mailto:admin@m
 
 For training, in the morning we have brian d foy delivering his popular "Become a CPAN author in three hours" course. This is a great introductory course for aspiring CPAN contributors - learn how to create a Perl distribution, package it up and upload it to CPAN. Contributing to CPAN is one of the most fun and rewarding things a Perl developer can learn - once your distribution is on CPAN, **anyone** can use it and benefit from it - how cool is that? It's also interesting to get to know the Perl toolchain, and how systems like CPAN and PAUSE work. We currently have an afternoon training slot available.
 
-We're going to see the day out with lightning talks - always a fun affair. At the moment we're thinking the project teams can give a lightning talk to describe their progress for the day, but it might make sense to just have a more general lightning talk slot - if you want to give a lightning talk, [email us](mailto:admin@mini-conf.com). I'll probably give a talk on one of my dumber [modules](https://metacpan.org/pod/Cache::Reddit).
+We're going to see the day out with lightning talks - always a fun affair. At the moment we're thinking the project teams can give a lightning talk to describe their progress for the day, but it might make sense to just have a more general lightning talk slot - if you want to give a lightning talk, [email us](mailto:admin@mini-conf.com). I'll probably give a talk on one of my dumber [modules]({{<mcpan "Cache::Reddit" >}}).
 
 ### How to help
 

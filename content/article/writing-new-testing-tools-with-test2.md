@@ -55,7 +55,7 @@ sub skip_until {
 ```
 I declare a new function called `skip_until` which accepts a text reason to skip, a count of tests to skip and a date. This signature is the same as [skip](Test2::Tools::Basic::skip), with the extra date parameter (I don't love the parameter order but I figure it's better to remain similar to prior art).
 
-For the sake of brevity I've omitted the argument checking code and the date time logic to decide whether `$should_skip` is true or not. If it is, the main `if` block obtains the test context, and calls `skip` for the count of tests to skip. Next it calls `release` to free the test context ([important!](https://metacpan.org/pod/Test2::API::Context#CRITICAL-DETAILS)). Finally it calls `last` to exit the SKIP block that `skip_until` would be called from.
+For the sake of brevity I've omitted the argument checking code and the date time logic to decide whether `$should_skip` is true or not. If it is, the main `if` block obtains the test context, and calls `skip` for the count of tests to skip. Next it calls `release` to free the test context ([important!]({{<mcpan "Test2::API::Context#CRITICAL-DETAILS" >}})). Finally it calls `last` to exit the SKIP block that `skip_until` would be called from.
 
 Careful readers might notice that the use of `SKIP` means `$count` can be 1, and all tests within the skip block will still be skipped. This is the same as the Test2 behavior, in fact that code is almost identical to the Test2::Tools::Basic [source](https://metacpan.org/source/EXODIST/Test2-Suite-0.000114/lib/Test2/Tools/Basic.pm#L67).
 
@@ -84,7 +84,7 @@ And the tests will be skipped until the date is reached. Test2 makes writing new
 
 * {{< mcpan "Test2::Tools" >}} is the Test2 documentation for Test2 tools
 * For plugins see {{< mcpan "Test2::Plugin" >}}
-* {{< mcpan "Test2::API" >}} is used to get the test context object, see the context [cardinal rules](https://metacpan.org/pod/Test2::API::Context#CRITICAL-DETAILS)
+* {{< mcpan "Test2::API" >}} is used to get the test context object, see the context [cardinal rules]({{<mcpan "Test2::API::Context#CRITICAL-DETAILS" >}})
 * {{< mcpan "Test2::Tools::SkipUntil" >}}
 
 \

@@ -28,9 +28,9 @@ You may recall the [Perl.com article on another MVC web framework, Catalyst](/pu
 
 With the many [plugins available for CGI::Application](http://www.cgi-app.org/?Plugins) and Catalyst, both [frameworks offer many of the same features](http://cgiapp.erlbaum.net/cgi-bin/cgi-app/index.cgi?CatalystCompared).
 
-Both provide convenient methods to access many of the same underlying modules including [Data::FormValidator](http://www.summersault.com/community/weblog/2005/10/25/validating-web-forms-with-perl.html), [HTML::FillInForm](https://metacpan.org/pod/HTML::FillInForm) and templating systems such as [Template Toolkit](http://www.template-toolkit.org/) and [HTML::Template](http://html-template.sourceforge.net/).
+Both provide convenient methods to access many of the same underlying modules including [Data::FormValidator](http://www.summersault.com/community/weblog/2005/10/25/validating-web-forms-with-perl.html), [HTML::FillInForm]({{<mcpan "HTML::FillInForm" >}}) and templating systems such as [Template Toolkit](http://www.template-toolkit.org/) and [HTML::Template](http://html-template.sourceforge.net/).
 
-Both frameworks work in CGI and mod\_perl environments, although CGI::Application loads faster in CGI. Each one provides unique features to help with development and debugging. Catalyst includes a built-in web server for easy offline testing and development. CGI::Application provides a [persistent development pop-up window](https://metacpan.org/pod/CGI::Application::Plugin::DevPopup) that provides convenient reports on HTML validation, application performance, and more.
+Both frameworks work in CGI and mod\_perl environments, although CGI::Application loads faster in CGI. Each one provides unique features to help with development and debugging. Catalyst includes a built-in web server for easy offline testing and development. CGI::Application provides a [persistent development pop-up window]({{<mcpan "CGI::Application::Plugin::DevPopup" >}}) that provides convenient reports on HTML validation, application performance, and more.
 
 While CGI::Application and Catalyst share many of the same strengths, they also face the same challenge of attracting users and developers.
 
@@ -64,7 +64,7 @@ The built-in way to register a run mode typically involves calling `run_modes()`
      ...
     }
 
-With the [AutoRunmode plugin](https://metacpan.org/pod/CGI::Application::Plugin::AutoRunmode), it's now very easy to declare that a method is a "run mode" handling a CGI request rather than an internal function. The syntax is simply:
+With the [AutoRunmode plugin]({{<mcpan "CGI::Application::Plugin::AutoRunmode" >}}), it's now very easy to declare that a method is a "run mode" handling a CGI request rather than an internal function. The syntax is simply:
 
         sub my_run_mode : Runmode {
             my $self = shift;
@@ -85,7 +85,7 @@ A corresponding URL might look like:
 
     /cgi-bin/project/widget/view.cgi?widget_id=23
 
-[CGI::Application::Dispatch 2.0](https://metacpan.org/pod/release/WONKO/CGI-Application-Dispatch-2.00/lib/CGI/Application/Dispatch.pm) allows you to replace all of these instance scripts with a single dispatch script to produce much cleaner URLs. Such a dispatch script might look like:
+[CGI::Application::Dispatch 2.0]({{<mcpan "release/WONKO/CGI-Application-Dispatch-2.00/lib/CGI/Application/Dispatch.pm" >}}) allows you to replace all of these instance scripts with a single dispatch script to produce much cleaner URLs. Such a dispatch script might look like:
 
     #!/usr/bin/perl
     use CGI::Application::Dispatch;
@@ -134,12 +134,12 @@ To keep the code cleaner and consistent, it's now possible to generate template 
 
 #### Easy access to the application object from the template
 
-The [TT plugin](https://metacpan.org/pod/CGI::Application::Plugin::TT) introduced easy access to the CGI::Application object from the template, allowing easy constructions by using the `c` parameter to access the application object.
+The [TT plugin]({{<mcpan "CGI::Application::Plugin::TT" >}}) introduced easy access to the CGI::Application object from the template, allowing easy constructions by using the `c` parameter to access the application object.
 
     Hello [% c.session.param('username') || 'Anonymous User' %]
     <a href="[% c.query.self_url %]">Reload this page</a>
 
-Authors of open source web applications will surely appreciate the [AnyTemplate plugin](https://metacpan.org/pod/CGI::Application::Plugin::AnyTemplate), which allows you to use a single templating syntax in your code, and lets users choose the templating system that best integrates with their existing project. There was no ready-made way to do this in the past.
+Authors of open source web applications will surely appreciate the [AnyTemplate plugin]({{<mcpan "CGI::Application::Plugin::AnyTemplate" >}}), which allows you to use a single templating syntax in your code, and lets users choose the templating system that best integrates with their existing project. There was no ready-made way to do this in the past.
 
 Conveniently, HTML::Template and TT users can use a familiar syntax to drive AnyTemplate.
 
@@ -154,13 +154,13 @@ HTML::Template style:
     $template->param('foo' => 'bar');
     $template->output;
 
-A great example of this template abstraction is [CGI::Application::Search](https://metacpan.org/pod/CGI::Application::Search), a reusable application that integrates with the [Swish-E](http://swish-e.org.) search engine. Whether you prefer HTML::Template or Template Toolkit, it's easy to add this as a search solution for a larger project--even if the rest of your website does not use CGI::Application.
+A great example of this template abstraction is [CGI::Application::Search]({{<mcpan "CGI::Application::Search" >}}), a reusable application that integrates with the [Swish-E](http://swish-e.org.) search engine. Whether you prefer HTML::Template or Template Toolkit, it's easy to add this as a search solution for a larger project--even if the rest of your website does not use CGI::Application.
 
-CGI::Application also offers improved support for other output formats. The [Stream plugin](https://metacpan.org/pod/CGI::Application::Plugin::Stream) makes it a snap to stream a document to the user, such as a PDF or Excel file that is built on the fly. This saves the busy work of remembering the related details for unbuffered output, `binmode`, file chunking, and MIME types. That now takes basically one line of syntax:
+CGI::Application also offers improved support for other output formats. The [Stream plugin]({{<mcpan "CGI::Application::Plugin::Stream" >}}) makes it a snap to stream a document to the user, such as a PDF or Excel file that is built on the fly. This saves the busy work of remembering the related details for unbuffered output, `binmode`, file chunking, and MIME types. That now takes basically one line of syntax:
 
     $self->stream_file( $file );
 
-The [XSV plugin](https://metacpan.org/pod/CGI::Application::Plugin::Output::XSV) simplifies building CSV files. This tedium is now a single function call for simple cases:
+The [XSV plugin]({{<mcpan "CGI::Application::Plugin::Output::XSV" >}}) simplifies building CSV files. This tedium is now a single function call for simple cases:
 
       return $self->xsv_report_web({
         fields     => \@headers,
@@ -172,7 +172,7 @@ The [XSV plugin](https://metacpan.org/pod/CGI::Application::Plugin::Output::XSV)
 
 ### Lazier Than Ever
 
-One frequent feature you'll find in CGI::Application plugins is lazy loading. This means that loading and configuring the plugin often has little resource penalty. Take the [DBH plugin](https://metacpan.org/pod/CGI::Application::Plugin::DBH). It's convenient to configure the database handle once for a whole website project and then use the handle whenever you want.
+One frequent feature you'll find in CGI::Application plugins is lazy loading. This means that loading and configuring the plugin often has little resource penalty. Take the [DBH plugin]({{<mcpan "CGI::Application::Plugin::DBH" >}}). It's convenient to configure the database handle once for a whole website project and then use the handle whenever you want.
 
 Before this plugin arrived, it would be tempting to stuff the database handle into the `param` method to achieve a similar effect:
 
@@ -210,7 +210,7 @@ Then, whenever you need a database handle:
 
 Easy. `dbh_config()` will get called on every request, but it simply stores the configuration details. The database handle gets created only during calls to the `dbh()` method.
 
-Another notable lazy-loading plugin is the [Session plugin](https://metacpan.org/pod/CGI::Application::Plugin::Session), which provides easy access to a CGI::Session object. It further takes advantage of the CGI::Application framework by automatically setting the session cookie for you, so you don't have to deal with cookies unless you want to.
+Another notable lazy-loading plugin is the [Session plugin]({{<mcpan "CGI::Application::Plugin::Session" >}}), which provides easy access to a CGI::Session object. It further takes advantage of the CGI::Application framework by automatically setting the session cookie for you, so you don't have to deal with cookies unless you want to.
 
 ### Ready for High-Performance Environments
 
@@ -220,24 +220,24 @@ However, [CGI::Application is ready for high-performance applications](http://cg
 
 Often, code written for CGI::Application will run without changes under mod\_perl's `Apache::Registry` mode, as [1-800-Save-A-Pet.com](http://www.1-800-save-a-pet.com/) does.
 
-To squeeze a little more juice out of mod\_perl, there is an [Apache plugin](https://metacpan.org/pod/CGI::Application::Plugin::Apache), which uses `Apache::Request` instead of `CGI.pm`.
+To squeeze a little more juice out of mod\_perl, there is an [Apache plugin]({{<mcpan "CGI::Application::Plugin::Apache" >}}), which uses `Apache::Request` instead of `CGI.pm`.
 
-A current popular alternative for increasing performance is [FastCGI](http://www.fastcgi.com/). Use [CGI::Application::FastCGI](https://metacpan.org/pod/CGI::Application::FastCGI), and add, usually, just one line of code to make your application work in this environment.
+A current popular alternative for increasing performance is [FastCGI](http://www.fastcgi.com/). Use [CGI::Application::FastCGI]({{<mcpan "CGI::Application::FastCGI" >}}), and add, usually, just one line of code to make your application work in this environment.
 
 ### Easy Form Handling
 
-A lot of tedium can be involved in processing web forms. The first plugin, [ValidateRM](https://metacpan.org/pod/CGI::Application::Plugin::ValidateRM), helped with that.
+A lot of tedium can be involved in processing web forms. The first plugin, [ValidateRM]({{<mcpan "CGI::Application::Plugin::ValidateRM" >}}), helped with that.
 
     my $results =  $self->check_rm('display_form', '_form_profile' )
        || return $self->dfv_error_page;
 
-This simple syntax calls a [Data::FormValidator](https://metacpan.org/pod/Data::FormValidator) profile into action. If validation fails, the page with the original form is redisplayed with the previous values intact, and error messages appear next to each field that is missing or invalid.
+This simple syntax calls a [Data::FormValidator]({{<mcpan "Data::FormValidator" >}}) profile into action. If validation fails, the page with the original form is redisplayed with the previous values intact, and error messages appear next to each field that is missing or invalid.
 
-Fans of Data::FormValidator will appreciate an upcoming related module from the CGI::Application community: [JavaScript::DataFormValidator](https://metacpan.org/pod/JavaScript::DataFormValidator).
+Fans of Data::FormValidator will appreciate an upcoming related module from the CGI::Application community: [JavaScript::DataFormValidator]({{<mcpan "JavaScript::DataFormValidator" >}}).
 
 This module makes it easy to use the same Perl data structure to add an additional level of validation in JavaScript. I expect Catalyst and CGI::App users alike will be putting this to use.
 
-Finally, there's a new plugin to simplify filling in a web form from a database record. This is the [FillInForm plugin](https://metacpan.org/pod/CGI::Application::Plugin::FillInForm). The syntax is simple:
+Finally, there's a new plugin to simplify filling in a web form from a database record. This is the [FillInForm plugin]({{<mcpan "CGI::Application::Plugin::FillInForm" >}}). The syntax is simple:
 
        # fill in the HTML form from the query object
         $self->fill_form($html);
@@ -246,7 +246,7 @@ In part, this plugin solves [bug \#13913 in HTML::FillInForm](http://rt.cpan.org
 
 ### DevPopUp: A Unique Developer Tool
 
-CGI::Application offers a unique developer tool in the form of the [DevPopUp plugin](https://metacpan.org/pod/CGI::Application::Plugin::DevPopup). You can [see DevPopUp in action](http://oss.rhesa.com/scripts/dp.cgi) on Rhesa's demo site. (Make sure your pop-up blocker doesn't trap it!).
+CGI::Application offers a unique developer tool in the form of the [DevPopUp plugin]({{<mcpan "CGI::Application::Plugin::DevPopup" >}}). You can [see DevPopUp in action](http://oss.rhesa.com/scripts/dp.cgi) on Rhesa's demo site. (Make sure your pop-up blocker doesn't trap it!).
 
 The tool creates a persistent pop-up window that gives you feedback about each run mode as soon as it completes. *"What were the HTTP Headers? How long did it take? Was the resulting HTML valid?"*
 
@@ -254,11 +254,11 @@ The real kicker is that DevPopUp is itself pluggable, allowing other developers 
 
 ### Easier Error Messages with DebugScreen
 
-CGI::Application users in Japan recently brought us the [DebugScreen](https://metacpan.org/pod/CGI::Application::Plugin::DebugScreen) plugin. This is a welcome change from referencing the web server log to find the most recent line that needs debugging.
+CGI::Application users in Japan recently brought us the [DebugScreen]({{<mcpan "CGI::Application::Plugin::DebugScreen" >}}) plugin. This is a welcome change from referencing the web server log to find the most recent line that needs debugging.
 
 ### Hello, Web 2.0: AJAX Integration
 
-In another story of cross-pollination with Catalyst, CGI::Application integrates easily with the JavaScript [Prototype](http://prototype.conio.net/) library. Prototype provides easy access to plenty of interesting AJAX effects, such as auto-completing based on a lookup to the server. This uses a thin plugin-wrapping [HTML::Prototype](https://metacpan.org/pod/HTML::Prototype), which was written with Catalyst in mind.
+In another story of cross-pollination with Catalyst, CGI::Application integrates easily with the JavaScript [Prototype](http://prototype.conio.net/) library. Prototype provides easy access to plenty of interesting AJAX effects, such as auto-completing based on a lookup to the server. This uses a thin plugin-wrapping [HTML::Prototype]({{<mcpan "HTML::Prototype" >}}), which was written with Catalyst in mind.
 
 ### CGI::Application and Catalyst
 

@@ -76,7 +76,7 @@ When I'm programming in C and C++, I use Visual Studio. The best thing about usi
  Perl is my preferred programming language for writing quick tools, for example: uploading / downloading videos from YouTube, or parsing HTML pages. I'm incredibly fast at that and there are so many modules that can help - I wouldn't be able to be that productive in other languages.
 
 **Have you used any Perl code analysis tools like Perl::Critic ?**
- I have used [Perl::Critic](https://metacpan.org/pod/Perl::Critic) but I don't like it when someone criticizes my code! (even if it's from Damian Conway's Perl best practices book!) I just write sane code and apply most of the best practices. Other people usually don't have problems with my code.
+ I have used [Perl::Critic]({{<mcpan "Perl::Critic" >}}) but I don't like it when someone criticizes my code! (even if it's from Damian Conway's Perl best practices book!) I just write sane code and apply most of the best practices. Other people usually don't have problems with my code.
 
 > I have used Perl::Critic but I don't like it when someone criticizes my code
 
@@ -89,9 +89,9 @@ When I'm programming in C and C++, I use Visual Studio. The best thing about usi
 > I'm using Perl 5.18 and that's all thanks to Perlbrew.
 
 **What are your favourite Perl modules and tools?**
- I really like [Try::Tiny](https://metacpan.org/pod/Try::Tiny) for better exception handling, [File::Slurp](https://metacpan.org/pod/File::Slurp) for quickly working with files, [WWW::Mechanize](https://metacpan.org/pod/WWW::Mechanize) and [](https://metacpan.org/pod/HTML::TreeBuilder)HTML::TreeBuilder for scraping the web.
+ I really like [Try::Tiny]({{<mcpan "Try::Tiny" >}}) for better exception handling, [File::Slurp]({{<mcpan "File::Slurp" >}}) for quickly working with files, [WWW::Mechanize]({{<mcpan "WWW::Mechanize" >}}) and []({{<mcpan "HTML::TreeBuilder" >}})HTML::TreeBuilder for scraping the web.
 
-Talking about tools I also like [rxrx](https://metacpan.org/pod/Regexp::Debugger) by Damian Conway ([here's a demo at YAPC](http://www.youtube.com/watch?v=zcSFIUiMgAs)). It's this interactive regexp debugger. Another tool that I use is [ack](http://beyondgrep.com/) that's a better version of grep!
+Talking about tools I also like [rxrx]({{<mcpan "Regexp::Debugger" >}}) by Damian Conway ([here's a demo at YAPC](http://www.youtube.com/watch?v=zcSFIUiMgAs)). It's this interactive regexp debugger. Another tool that I use is [ack](http://beyondgrep.com/) that's a better version of grep!
 
 **And one last final question - what is it that you're doing in your profile picture? Making a cigarette?**
  Haha, no! I'm actually holding a piece of scotch tape. I was making a raft that day from empty bottles so I was taping them together. It turned out to be a really good raft and it worked. [Here's a photo.](%0Ahttp://www.flickr.com/photos/pkrumins/11391256906/)

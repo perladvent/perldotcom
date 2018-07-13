@@ -243,7 +243,7 @@ While there isn't a `bin()` function to match `hex()` and `oct()`, you can actua
 Whereas `my` declares lexical variables, [our](#item_our) declares global variables - it's a cleaner and hopefully more intuitive replacement for `use vars`.
 
 **<span id="item_File">File Globbing</span>**  
-The glob operator (`<*>` and `glob`) used to be processed by spawning a shell; that was problematic for operating systems that didn't have a standard shell, and anyway had the overhead of creating a new process. It's now implemented by calling the standard [File::Glob](https://metacpan.org/pod/File::Glob) module on demand.
+The glob operator (`<*>` and `glob`) used to be processed by spawning a shell; that was problematic for operating systems that didn't have a standard shell, and anyway had the overhead of creating a new process. It's now implemented by calling the standard [File::Glob]({{<mcpan "File::Glob" >}}) module on demand.
 
 **<span id="item_Bug">Bug Fixes</span>**  
 Most of the bugs, surprises and unpleasantries from 5.005 have been cleared up; recently there's been quite a blitz on the security of the utilities that come with Perl, safer handling of temporary files, and tons of work on debugger, but most of the work of the past year has been clearing up the issues that you've reported to perl5-porters in the interim. Keep them coming - it's only by reporting them that they get fixed.

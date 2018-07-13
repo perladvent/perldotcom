@@ -96,7 +96,7 @@ To decode UTF-8 bytes, we need to reverse the encoding process to get back to th
 
 Perl tries "to make the easy things easy, and the hard things possible" as the saying goes, but sometimes it makes easy things harder than they are in simpler languages like C. Binary data is one such area: Perl needs to be told to turn off its character features before you can safely work with the data.
 
-There are two ways to do that. The old, discouraged way is to use the [bytes pragma](https://metacpan.org/pod/bytes). The newer way is to use the [Encode](https://metacpan.org/pod/Encode#SYNOPSIS) module to encode the scalar as bytes and remove its UTF-8 flag. After that, Perl's functions will treat the scalar as a sequence of bytes instead of characters:
+There are two ways to do that. The old, discouraged way is to use the [bytes pragma]({{<mcpan "bytes" >}}). The newer way is to use the [Encode]({{<mcpan "Encode#SYNOPSIS" >}}) module to encode the scalar as bytes and remove its UTF-8 flag. After that, Perl's functions will treat the scalar as a sequence of bytes instead of characters:
 
 ```perl
 use Encode 'encode';
@@ -193,7 +193,7 @@ my $codepoint = bytes_to_codepoint('🗼');
 ### Notes
 
 1. This is a naive implementation - it doesn't handle UTF-16 reserved characters (U+D800..U+DFFF), noncharacters and only encodes/decodes one codepoint at a time.
-2. Take a look at [Unicode::UTF8](https://metacpan.org/pod/distribution/Unicode-UTF8/lib/Unicode/UTF8.pod) if you need a fast UTF-8 encoder and don't want to use Perl's builtin tools.
+2. Take a look at [Unicode::UTF8]({{<mcpan "distribution/Unicode-UTF8/lib/Unicode/UTF8.pod" >}}) if you need a fast UTF-8 encoder and don't want to use Perl's builtin tools.
 3. UTF-8 is by far the most popular Unicode encoding. It was created by Ken Thompson and Rob Pike in [just a few days](http://doc.cat-v.org/bell_labs/utf-8_history).
 4. Building your own UTF-8 encoder? Check out Markus Kuhn's [decoder test file](https://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt) which contains several difficult or edge case tests for UTF-8 decoding. Markus also wrote a comprehensive [UTF-8 and Unicode FAQ for Unix/Linux](https://www.cl.cam.ac.uk/~mgk25/unicode.html).
 

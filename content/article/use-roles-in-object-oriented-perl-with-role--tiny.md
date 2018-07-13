@@ -18,11 +18,11 @@
 }
 
 
-Roles are a label for a set of methods that a class provides. Similar to traits in Smalltalk or an interface in Java, adding a Perl role to a class is like adding a guarantee that the class will implement that role's API. Roles are an alternative to inheritance; instead of extending a class hierarchy through subclassing, a programmer composes a class using roles for what the class does. This article describes how by using the [Role::Tiny](https://metacpan.org/pod/Role::Tiny) module you can imbue native Perl object oriented code with roles.
+Roles are a label for a set of methods that a class provides. Similar to traits in Smalltalk or an interface in Java, adding a Perl role to a class is like adding a guarantee that the class will implement that role's API. Roles are an alternative to inheritance; instead of extending a class hierarchy through subclassing, a programmer composes a class using roles for what the class does. This article describes how by using the [Role::Tiny]({{<mcpan "Role::Tiny" >}}) module you can imbue native Perl object oriented code with roles.
 
 ### Install Role::Tiny
 
-In order to use the code examples in this article you'll need to install [Role::Tiny](https://metacpan.org/pod/Role::Tiny). You can install it via CPAN from the command line:
+In order to use the code examples in this article you'll need to install [Role::Tiny]({{<mcpan "Role::Tiny" >}}). You can install it via CPAN from the command line:
 
 ```perl
 cpan Role::Tiny
@@ -42,7 +42,7 @@ requires 'getArea';
 1;
 ```
 
-The code starts with the usual package declaration. By importing [Role::Tiny](https://metacpan.org/pod/Role::Tiny) with the use statement, we can automatically treat this module as a role by using its package name. The "requires" function adds a requirement that any class using this role must implement a 'getArea' method.
+The code starts with the usual package declaration. By importing [Role::Tiny]({{<mcpan "Role::Tiny" >}}) with the use statement, we can automatically treat this module as a role by using its package name. The "requires" function adds a requirement that any class using this role must implement a 'getArea' method.
 
 ### Using a role
 
@@ -139,7 +139,7 @@ perl -MPoint -we 'my $p = Point->new(5,5); print $p->does("Shape")'
 
 ### Conclusion
 
-Roles are a useful alternative to inheritance - they focus on what a class does rather than what it is. Using [Role::Tiny](https://metacpan.org/pod/Role::Tiny) is a nimble way to add roles to the existing Perl object oriented syntax without using an entire object system such as Moose.
+Roles are a useful alternative to inheritance - they focus on what a class does rather than what it is. Using [Role::Tiny]({{<mcpan "Role::Tiny" >}}) is a nimble way to add roles to the existing Perl object oriented syntax without using an entire object system such as Moose.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

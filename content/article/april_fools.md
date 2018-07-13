@@ -28,7 +28,7 @@ Rounding is a problem for people who really care about numbers and where slight 
 
 Perl's particular issue is its reliance on someone else making the decision. When I first starting teaching Perl, many of my students had experience with C. They knew the issues with their libc. `perl` defers many decisions on to that libc. This means that you can get different results with a different `perl`s. Perl may run virtually everywhere, but it doesn't guarantee you'll get the same answer everywhere.
 
-There is plenty of literature out there on different methods, and there are more than several methods. Just that fact shows that people don't agree on how it should work. If rounding might impact your results, you should be aware that you have many ways to deal with it. The [Math::Round](http://www.metacpan.org/module/Math::Round) handles most of them.
+There is plenty of literature out there on different methods, and there are more than several methods. Just that fact shows that people don't agree on how it should work. If rounding might impact your results, you should be aware that you have many ways to deal with it. The [Math::Round]({{<mcpan "Math::Round" >}}) handles most of them.
 
 #### The modulus of negative numbers
 
@@ -40,7 +40,7 @@ I didn't think that many people would take this section seriously since the modu
 
 The StackOverflow question [Perl: understanding modulo operation on negative numbers](https://stackoverflow.com/questions/20691861/perl-understanding-modulo-operation-on-negative-numbers-e-g-103/32090446#32090446) goes into more detail about Perl's behavior.
 
-If this matters for your application, you can implement your own modulo operation (perhaps in [Inline::C](http://www.metacpan.org/module/Inline::C)?) to do it exactly how you like to get the results you expect no matter where you run your program.
+If this matters for your application, you can implement your own modulo operation (perhaps in [Inline::C]({{<mcpan "Inline::C" >}})?) to do it exactly how you like to get the results you expect no matter where you run your program.
 
 #### Fake random numbers
 
@@ -50,9 +50,9 @@ For the odd homework assignment or selecting a unique value you haven't used yet
 
 Several modules provide an interface to better sources:
 
-* [Net::Random](http://www.metacpan.org/module/Net::Random) can connect to internet services that send back random numbers. You have to trust the internet though.
+* [Net::Random]({{<mcpan "Net::Random" >}}) can connect to internet services that send back random numbers. You have to trust the internet though.
 
-* [Crypt::Random](http://www.metacpan.org/module/Crypt::Random) connects to the local [/dev/random](http://man7.org/linux/man-pages/man4/random.4.html). That uses environmental noise to generate bytes. The /dev/urandom device might drop down to pseudo-randomness though. Neither is a good source for long sequences of numbers.
+* [Crypt::Random]({{<mcpan "Crypt::Random" >}}) connects to the local [/dev/random](http://man7.org/linux/man-pages/man4/random.4.html). That uses environmental noise to generate bytes. The /dev/urandom device might drop down to pseudo-randomness though. Neither is a good source for long sequences of numbers.
 
 * An [Entropy Key](http://www.entropykey.co.uk) is a small USB device that helps the _/dev/random_ device fill up its entropy sink. This allows you to read from the device more frequently without dropping into pseudorandomness.
 

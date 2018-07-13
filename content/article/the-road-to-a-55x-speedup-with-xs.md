@@ -22,11 +22,11 @@
 
 Lately my client has been concerned with improving their application speed, so naturally I started to think about XS, Perl's C macro language. With XS you can write C code and call it from Perl.
 
-To test the waters I wrote a simple URI encoder/decoder in C and with some trial-and-error managed to make [URI::Encode::XS](https://metacpan.org/pod/URI::Encode::XS), a module that used it. "This is easy!" I thought and excitedly typed out a benchmarking [script](https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench). I benchmarked my module against [URI::Escape](https://metacpan.org/pod/URI::Escape) a venerable but rather slow *pure-Perl* URI encoder/decoder. You can imagine how crestfallen I was when I read the benchmark results to find that all of my effort only netted a 20% speedup. I wondered if Perl's string routines are so fast they're hard to improve upon.
+To test the waters I wrote a simple URI encoder/decoder in C and with some trial-and-error managed to make [URI::Encode::XS]({{<mcpan "URI::Encode::XS" >}}), a module that used it. "This is easy!" I thought and excitedly typed out a benchmarking [script](https://github.com/dnmfarrell/URI-Encode-XS/blob/master/bench). I benchmarked my module against [URI::Escape]({{<mcpan "URI::Escape" >}}) a venerable but rather slow *pure-Perl* URI encoder/decoder. You can imagine how crestfallen I was when I read the benchmark results to find that all of my effort only netted a 20% speedup. I wondered if Perl's string routines are so fast they're hard to improve upon.
 
 ### Renewed hope
 
-Enter [URI::XSEscape](https://metacpan.org), a "quick and dirty" (the authors' words) XS implementation of URI::Escape. It was uploaded to CPAN last month. You can see the authors' [benchmarks](https://metacpan.org/pod/URI::XSEscape#BENCHMARKS) for yourself, but in my testing it appeared to be about 18.5 times faster than URI::Escape. That's not a misprint - on my laptop it encoded 2.75m strings per second, compared to 138k for URI::Escape. So how did they do it?
+Enter [URI::XSEscape](https://metacpan.org), a "quick and dirty" (the authors' words) XS implementation of URI::Escape. It was uploaded to CPAN last month. You can see the authors' [benchmarks]({{<mcpan "URI::XSEscape#BENCHMARKS" >}}) for yourself, but in my testing it appeared to be about 18.5 times faster than URI::Escape. That's not a misprint - on my laptop it encoded 2.75m strings per second, compared to 138k for URI::Escape. So how did they do it?
 
 First let's look at my naive C encode implementation:
 

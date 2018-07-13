@@ -19,7 +19,7 @@
 }
 
 
-Everyone wants to parse HTML, and many people reach for a regular expression to do that. Although you can [use a regex to parse HTML](http://stackoverflow.com/a/4234491/2766176), it's not as fun as my latest favorite way: [Mojo::DOM](http://www.metacpan.org/module/Mojo::DOM) with CSS3 selectors. I find this much easier than trying to remember XPATH and I get to play with Mojo.
+Everyone wants to parse HTML, and many people reach for a regular expression to do that. Although you can [use a regex to parse HTML](http://stackoverflow.com/a/4234491/2766176), it's not as fun as my latest favorite way: [Mojo::DOM]({{<mcpan "Mojo::DOM" >}}) with CSS3 selectors. I find this much easier than trying to remember XPATH and I get to play with Mojo.
 
 The DOM is the ["Document Object Model"](http://www.w3.org/DOM/). Something behind the scenes parses and organizes the information and allows me to query it with questions such as "find all the `a` tags inside a `div` tag", or "find all the tags of a particular class". I don't manipulate the text myself.
 
@@ -153,7 +153,7 @@ my @module_list = $dom
 print join "\n", @module_list;
 ```
 
-I can get even fancier. Instead of the distribution name with the version, I can break it up with [CPAN::DistnameInfo](http://www.metacpan.org/module/CPAN::DistnameInfo). I'll turn every found link into a tuple of name and version. Since that module wants to deal with a distribution filename, I tack on *.tar.gz* to make it work out:
+I can get even fancier. Instead of the distribution name with the version, I can break it up with [CPAN::DistnameInfo]({{<mcpan "CPAN::DistnameInfo" >}}). I'll turn every found link into a tuple of name and version. Since that module wants to deal with a distribution filename, I tack on *.tar.gz* to make it work out:
 
 ```perl
 use Data::Printer;
@@ -174,7 +174,7 @@ my @module_list = $dom
 p @module_list;
 ```
 
-The `each` extracts each element from the collection and returns it. I use [Data::Printer](https://metacpan.org/pod/Data::Printer) to display the array:
+The `each` extracts each element from the collection and returns it. I use [Data::Printer]({{<mcpan "Data::Printer" >}}) to display the array:
 
 ```perl
 [

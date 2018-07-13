@@ -42,7 +42,7 @@ Finally, select the "File" menu and "Export Audio" or "Export Multiple" if you h
 
 ### Automating the process
 
-One downside to this method is it is highly manual. One way to automate some of it is by using an Audacity's [chains](http://manual.audacityteam.org/man/Chains_-_for_batch_processing_and_effects_automation) feature. To script an audio recording process with Perl, the [Audio::PortAudio](https://metacpan.org/pod/Audio::PortAudio) module looks promising, for the capturing and saving of audio data at least.
+One downside to this method is it is highly manual. One way to automate some of it is by using an Audacity's [chains](http://manual.audacityteam.org/man/Chains_-_for_batch_processing_and_effects_automation) feature. To script an audio recording process with Perl, the [Audio::PortAudio]({{<mcpan "Audio::PortAudio" >}}) module looks promising, for the capturing and saving of audio data at least.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

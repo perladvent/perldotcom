@@ -51,65 +51,65 @@ One of my business partners reminded me of the Star Games idea. And there's hard
 
 Luckily CPAN came to the rescue as it has on basically every Perl project I've ever tackled. So I was able to not have to reinvent the wheel on basically any foundational level. Here's the list of Perl modules I used:
 
--   [Data::Validate::Email](https://metacpan.org/pod/Data::Validate::Email)
--   [Text::CSV\_XS](https://metacpan.org/pod/Text::CSV_XS)
--   [Log::Log4perl](https://metacpan.org/pod/Log::Log4perl)
--   [UUID::Tiny](https://metacpan.org/pod/UUID::Tiny)
--   [DateTime::Format::MySQL](https://metacpan.org/pod/DateTime::Format::MySQL)
--   [DBIx::Class::TimeStamp](https://metacpan.org/pod/DBIx::Class::TimeStamp)
--   [JSON::XS](https://metacpan.org/pod/JSON::XS)
--   [JSON](https://metacpan.org/pod/JSON)
--   [Config::JSON](https://metacpan.org/pod/Config::JSON)
--   [Starman](https://metacpan.org/pod/Starman)
--   [JSON::RPC::Dispatcher](https://metacpan.org/pod/JSON::RPC::Dispatcher)
--   [Log::Any::Adapter](https://metacpan.org/pod/Log::Any::Adapter)
--   [Log::Any::Adapter::Log4perl](https://metacpan.org/pod/Log::Any::Adapter::Log4perl)
--   [String::Random](https://metacpan.org/pod/String::Random)
--   [List::Util::WeightedChoice](https://metacpan.org/pod/List::Util::WeightedChoice)
--   [List::Util](https://metacpan.org/pod/List::Util)
--   [List::MoreUtils](https://metacpan.org/pod/List::MoreUtils)
--   [DateTime](https://metacpan.org/pod/DateTime)
--   [Regexp::Common](https://metacpan.org/pod/Regexp::Common)
--   [Pod::Simple::HTML](https://metacpan.org/pod/Pod::Simple::HTML)
--   [File::Copy](https://metacpan.org/pod/File::Copy)
--   [DateTime::Format::Duration](https://metacpan.org/pod/DateTime::Format::Duration)
--   [XML::FeedPP](https://metacpan.org/pod/XML::FeedPP)
--   [SOAP::Amazon::S3](https://metacpan.org/pod/SOAP::Amazon::S3)
--   [DBD::mysql](https://metacpan.org/pod/DBD::mysql)
--   [DBIx::Class](https://metacpan.org/pod/DBIx::Class)
--   [JSON::Any](https://metacpan.org/pod/JSON::Any)
--   [DBIx::Class::InflateColumn::Serializer](https://metacpan.org/pod/DBIx::Class::InflateColumn::Serializer)
--   [DBIx::Class::DynamicSubclass](https://metacpan.org/pod/DBIx::Class::DynamicSubclass)
--   [Memcached::libmemcached](https://metacpan.org/pod/Memcached::libmemcached)
--   [Server::Starter](https://metacpan.org/pod/Server::Starter)
--   [IO::Socket::SSL](https://metacpan.org/pod/IO::Socket::SSL)
--   [Net::Server::SS::PreFork](https://metacpan.org/pod/Net::Server::SS::PreFork)
--   [Email::Stuff](https://metacpan.org/pod/Email::Stuff)
--   [Facebook::Graph](https://metacpan.org/pod/Facebook::Graph)
--   [File::Path](https://metacpan.org/pod/File::Path)
--   [namespace::autoclean](https://metacpan.org/pod/namespace::autoclean)
--   [Clone](https://metacpan.org/pod/Clone)
--   [Plack::Middleware::CrossOrigin](https://metacpan.org/pod/Plack::Middleware::CrossOrigin)
--   [Net::Amazon::S3](https://metacpan.org/pod/Net::Amazon::S3)
+-   [Data::Validate::Email]({{<mcpan "Data::Validate::Email" >}})
+-   [Text::CSV\_XS]({{<mcpan "Text::CSV_XS" >}})
+-   [Log::Log4perl]({{<mcpan "Log::Log4perl" >}})
+-   [UUID::Tiny]({{<mcpan "UUID::Tiny" >}})
+-   [DateTime::Format::MySQL]({{<mcpan "DateTime::Format::MySQL" >}})
+-   [DBIx::Class::TimeStamp]({{<mcpan "DBIx::Class::TimeStamp" >}})
+-   [JSON::XS]({{<mcpan "JSON::XS" >}})
+-   [JSON]({{<mcpan "JSON" >}})
+-   [Config::JSON]({{<mcpan "Config::JSON" >}})
+-   [Starman]({{<mcpan "Starman" >}})
+-   [JSON::RPC::Dispatcher]({{<mcpan "JSON::RPC::Dispatcher" >}})
+-   [Log::Any::Adapter]({{<mcpan "Log::Any::Adapter" >}})
+-   [Log::Any::Adapter::Log4perl]({{<mcpan "Log::Any::Adapter::Log4perl" >}})
+-   [String::Random]({{<mcpan "String::Random" >}})
+-   [List::Util::WeightedChoice]({{<mcpan "List::Util::WeightedChoice" >}})
+-   [List::Util]({{<mcpan "List::Util" >}})
+-   [List::MoreUtils]({{<mcpan "List::MoreUtils" >}})
+-   [DateTime]({{<mcpan "DateTime" >}})
+-   [Regexp::Common]({{<mcpan "Regexp::Common" >}})
+-   [Pod::Simple::HTML]({{<mcpan "Pod::Simple::HTML" >}})
+-   [File::Copy]({{<mcpan "File::Copy" >}})
+-   [DateTime::Format::Duration]({{<mcpan "DateTime::Format::Duration" >}})
+-   [XML::FeedPP]({{<mcpan "XML::FeedPP" >}})
+-   [SOAP::Amazon::S3]({{<mcpan "SOAP::Amazon::S3" >}})
+-   [DBD::mysql]({{<mcpan "DBD::mysql" >}})
+-   [DBIx::Class]({{<mcpan "DBIx::Class" >}})
+-   [JSON::Any]({{<mcpan "JSON::Any" >}})
+-   [DBIx::Class::InflateColumn::Serializer]({{<mcpan "DBIx::Class::InflateColumn::Serializer" >}})
+-   [DBIx::Class::DynamicSubclass]({{<mcpan "DBIx::Class::DynamicSubclass" >}})
+-   [Memcached::libmemcached]({{<mcpan "Memcached::libmemcached" >}})
+-   [Server::Starter]({{<mcpan "Server::Starter" >}})
+-   [IO::Socket::SSL]({{<mcpan "IO::Socket::SSL" >}})
+-   [Net::Server::SS::PreFork]({{<mcpan "Net::Server::SS::PreFork" >}})
+-   [Email::Stuff]({{<mcpan "Email::Stuff" >}})
+-   [Facebook::Graph]({{<mcpan "Facebook::Graph" >}})
+-   [File::Path]({{<mcpan "File::Path" >}})
+-   [namespace::autoclean]({{<mcpan "namespace::autoclean" >}})
+-   [Clone]({{<mcpan "Clone" >}})
+-   [Plack::Middleware::CrossOrigin]({{<mcpan "Plack::Middleware::CrossOrigin" >}})
+-   [Net::Amazon::S3]({{<mcpan "Net::Amazon::S3" >}})
 
 When I first started development I was convinced that to be massively parallel I was going to have to go with an async server like Coro or POE, and a NoSQL database.
 
 I quickly realized that writing this system to be completely async was going to be a nightmare that would take more than double the time. Part of the problem was that while I was familiar with developing async applications, I had only done it on a small scale in the past. The other problem was that I kept running into modules I wanted to use that weren't async compatible. Ultimately I ditched the idea of going async within the first month.
 
-Unfortunately I wasn't so quick to ditch the idea of NoSQL. I started with MongoDB and CouchDB, but had trouble compiling them with the Perl bindings. I planned on hosting on [Amazon](http://aws.amazon.com./) at that point, so I decided to give SimpleDB a go. The downside there was that there were no decent Perl bindings for SimpleDB, that weren't entirely bare bones. So with that I created [SimpleDB::Class](https://metacpan.org/pod/SimpleDB::Class) (based loosely on [DBIx::Class](https://metacpan.org/pod/DBIx::Class)). The module works great. Unfortunately SimpleDB doesn't. It's super slow. So four months into development, with a whimper, I had to ditch my beloved [SimpleDB::Class](https://metacpan.org/pod/SimpleDB::Class) module. I'm glad I did. Development has been much faster and easier since then, and a good amount of thanks goes to [DBIx::Class](https://metacpan.org/pod/DBIx::Class) for that.
+Unfortunately I wasn't so quick to ditch the idea of NoSQL. I started with MongoDB and CouchDB, but had trouble compiling them with the Perl bindings. I planned on hosting on [Amazon](http://aws.amazon.com./) at that point, so I decided to give SimpleDB a go. The downside there was that there were no decent Perl bindings for SimpleDB, that weren't entirely bare bones. So with that I created [SimpleDB::Class]({{<mcpan "SimpleDB::Class" >}}) (based loosely on [DBIx::Class]({{<mcpan "DBIx::Class" >}})). The module works great. Unfortunately SimpleDB doesn't. It's super slow. So four months into development, with a whimper, I had to ditch my beloved [SimpleDB::Class]({{<mcpan "SimpleDB::Class" >}}) module. I'm glad I did. Development has been much faster and easier since then, and a good amount of thanks goes to [DBIx::Class]({{<mcpan "DBIx::Class" >}}) for that.
 
-[WWW::Facebook::API](https://metacpan.org/pod/WWW::Facebook::API) has been largely abandoned by its author. He told me he doesn't have time to maintain it anymore. And I was having a hard time getting it to work anyway. As luck would have it Facebook just announced their Graph API, so I decided to take on that project, and build a Perl wrapper around it. And [Facebook::Graph](https://metacpan.org/pod/Facebook::Graph) was born. This enabled me to allow Facebook users to Single Sign On into the web site, the game, and also interact with their accounts.
+[WWW::Facebook::API]({{<mcpan "WWW::Facebook::API" >}}) has been largely abandoned by its author. He told me he doesn't have time to maintain it anymore. And I was having a hard time getting it to work anyway. As luck would have it Facebook just announced their Graph API, so I decided to take on that project, and build a Perl wrapper around it. And [Facebook::Graph]({{<mcpan "Facebook::Graph" >}}) was born. This enabled me to allow Facebook users to Single Sign On into the web site, the game, and also interact with their accounts.
 
-About the only other non-game piece that I had to invent of any consequence was [JSON::RPC::Dispatcher](https://metacpan.org/pod/JSON::RPC::Dispatcher), which is a Plack enabled web service generator. There are some other JSON-RPC modules on CPAN, but for one reason or another I found them all completely insufficient. Mostly because of one or more of four reasons:
+About the only other non-game piece that I had to invent of any consequence was [JSON::RPC::Dispatcher]({{<mcpan "JSON::RPC::Dispatcher" >}}), which is a Plack enabled web service generator. There are some other JSON-RPC modules on CPAN, but for one reason or another I found them all completely insufficient. Mostly because of one or more of four reasons:
 
 1.  It didn't support JSON-RPC 2.0.
 2.  Its documentation was so poor that I couldn't make it work.
 3.  It made me write a ton of code to simply expose a web service.
 4.  It wasn't PSGI/Plack compatible.
 
-With [JSON::RPC::Dispatcher](https://metacpan.org/pod/JSON::RPC::Dispatcher), I can expose object-oriented code as web services with a single line of code.
+With [JSON::RPC::Dispatcher]({{<mcpan "JSON::RPC::Dispatcher" >}}), I can expose object-oriented code as web services with a single line of code.
 
-I'm not very happy with the Perl modules that are out there for S3 right now. Right now we're using a combination of [SOAP::Amazon::S3](https://metacpan.org/pod/SOAP::Amazon::S3), and [Net::Amazon::S3](https://metacpan.org/pod/Net::Amazon::S3), and neither are particularly good, at least for our purposes. They both work, but only for fairly basic purposes. Sometime in the near future I'll either take on a massive overhaul of one of those modules, or write my own from scratch. Which remains to be seen depending on how open the authors of those modules are to patches.
+I'm not very happy with the Perl modules that are out there for S3 right now. Right now we're using a combination of [SOAP::Amazon::S3]({{<mcpan "SOAP::Amazon::S3" >}}), and [Net::Amazon::S3]({{<mcpan "Net::Amazon::S3" >}}), and neither are particularly good, at least for our purposes. They both work, but only for fairly basic purposes. Sometime in the near future I'll either take on a massive overhaul of one of those modules, or write my own from scratch. Which remains to be seen depending on how open the authors of those modules are to patches.
 
 **What did you need from SimpleDB besides more speed?**
 
@@ -148,9 +148,9 @@ I say all of this to make the point that if a particular new technology doesn't 
 The basic software architecture looks like:
 
 [![basic architecture of The Lacuna Expanse](/images/_pub_2010_10_colonizing-the-lacuna-expanse-with-perl/arch_small.png)](/media/_pub_2010_10_colonizing-the-lacuna-expanse-with-perl/arch.png)
-Basically per server configurable game rules go into various [Config::JSON](https://metacpan.org/pod/Config::JSON) config files. [DBIx::Class](https://metacpan.org/pod/DBIx::Class) and MySQL handle all of the game data storage and querying. Memcached sits off to the side and handles lock contentions, limit contentions, session management, and other server coordination communication. Unfortunately, not much can actually be cached due to the dynamic nature of the game, unless I was willing to cache basically everything, which I'm not. And all the static stuff, like images, JavaScript, and CSS files get served up from CloudFront. We also push our RSS feeds and other semi-static game content out to S3.
+Basically per server configurable game rules go into various [Config::JSON]({{<mcpan "Config::JSON" >}}) config files. [DBIx::Class]({{<mcpan "DBIx::Class" >}}) and MySQL handle all of the game data storage and querying. Memcached sits off to the side and handles lock contentions, limit contentions, session management, and other server coordination communication. Unfortunately, not much can actually be cached due to the dynamic nature of the game, unless I was willing to cache basically everything, which I'm not. And all the static stuff, like images, JavaScript, and CSS files get served up from CloudFront. We also push our RSS feeds and other semi-static game content out to S3.
 
-The game engine itself is basically an MVC setup built with Moose. [DBIx::Class](https://metacpan.org/pod/DBIx::Class) and [Config::JSON](https://metacpan.org/pod/Config::JSON) act as the model. Some custom Moose objects tied to [Memcached::libmemcached](https://metacpan.org/pod/Memcached::libmemcached) act as the controller handling session management, privileges, etc. And [JSON::RPC::Dispatcher](https://metacpan.org/pod/JSON::RPC::Dispatcher) acts as the view.
+The game engine itself is basically an MVC setup built with Moose. [DBIx::Class]({{<mcpan "DBIx::Class" >}}) and [Config::JSON]({{<mcpan "Config::JSON" >}}) act as the model. Some custom Moose objects tied to [Memcached::libmemcached]({{<mcpan "Memcached::libmemcached" >}}) act as the controller handling session management, privileges, etc. And [JSON::RPC::Dispatcher]({{<mcpan "JSON::RPC::Dispatcher" >}}) acts as the view.
 
 The basic server architecture looks like this:
 
@@ -173,7 +173,7 @@ We basically have a strategy meeting every 2 weeks at a local pub, where we disc
 
 We manage all of our code and content through various public and private github repositories. We share documents and art mockups using [Dropbox](http://dropbox.com/).
 
-I publish all the JSON-RPC APIs out using POD (nicely formatted using [Pod::Simple::HTML](https://metacpan.org/pod/Pod::Simple::HTML)) to our play testers server, which is what the client guys develop against. And then ultimately once vetted and implemented by our client guys, the APIs are pushed out to the public server here at <http://us1.lacunaexpanse.com/api/>.
+I publish all the JSON-RPC APIs out using POD (nicely formatted using [Pod::Simple::HTML]({{<mcpan "Pod::Simple::HTML" >}})) to our play testers server, which is what the client guys develop against. And then ultimately once vetted and implemented by our client guys, the APIs are pushed out to the public server here at <http://us1.lacunaexpanse.com/api/>.
 
 What little project management and coordination we need is handled by me emailing back and forth.
 

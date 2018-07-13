@@ -83,7 +83,7 @@ while (my $path = $iter->())
 done_testing;
 ```
 
-Here I use [Path::Tiny](https://metacpan.org/pod/Path::Tiny) to iterate through the files in `lib`. Instead of passing module names, I pass the filepath to `require_ok`. Now this compile test is dynamic, it will always pick up any new modules added or removed from the codebase. Nice!
+Here I use [Path::Tiny]({{<mcpan "Path::Tiny" >}}) to iterate through the files in `lib`. Instead of passing module names, I pass the filepath to `require_ok`. Now this compile test is dynamic, it will always pick up any new modules added or removed from the codebase. Nice!
 
 ### Require warnings
 
@@ -128,9 +128,9 @@ done_testing;
 
 ### Additional thoughts
 
-Another way to write compile tests is using [Class::Load](https://metacpan.org/pod/Class::Load) to do the module importing. It has a several useful functions for dynamically loading modules.
+Another way to write compile tests is using [Class::Load]({{<mcpan "Class::Load" >}}) to do the module importing. It has a several useful functions for dynamically loading modules.
 
-Compile tests are an interesting class of test. They're an implementation of the axiom: "the codebase should always compile". Depending on the application, there are other axioms you can test for. For example with a web application, every admin URL should only be accessible to authenticated and authorized users. So you could write a dynamic test that enumerates every admin URL and attempts to fetch it unauthorized (the test fails if any request is successful). For testing Catalyst web applications, you might find my module [Catalyst::Plugin::ActionPaths](https://metacpan.org/pod/Catalyst::Plugin::ActionPaths) useful. Testing axioms usually has a high reward for little or no maintenance cost. Seek them out!
+Compile tests are an interesting class of test. They're an implementation of the axiom: "the codebase should always compile". Depending on the application, there are other axioms you can test for. For example with a web application, every admin URL should only be accessible to authenticated and authorized users. So you could write a dynamic test that enumerates every admin URL and attempts to fetch it unauthorized (the test fails if any request is successful). For testing Catalyst web applications, you might find my module [Catalyst::Plugin::ActionPaths]({{<mcpan "Catalyst::Plugin::ActionPaths" >}}) useful. Testing axioms usually has a high reward for little or no maintenance cost. Seek them out!
 
 If you ever need to suppress a particular warning, in newer versions of Perl the warnings pragma [documentation](http://perldoc.perl.org/warnings.html) lists all of the types of warnings it recognizes. This is especially useful when using experimental features like [subroutine signatures](http://perltricks.com/article/72/2014/2/24/Perl-levels-up-with-native-subroutine-signatures). You can read it for your version of Perl at the command line with:
 

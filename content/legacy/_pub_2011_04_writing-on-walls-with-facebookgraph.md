@@ -21,7 +21,7 @@
 
 
 
-In my first article about [Facebook::Graph](https://metacpan.org/pod/Facebook::Graph), I showed you how to [use Facebook as an authentication mechanism for your site](/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html). This time let me show you how to build on that authentication to post something to a user's Facebook wall.
+In my first article about [Facebook::Graph]({{<mcpan "Facebook::Graph" >}}), I showed you how to [use Facebook as an authentication mechanism for your site](/pub/2011/03/facebook-authentication-with-perl-and-facebookgraph.html). This time let me show you how to build on that authentication to post something to a user's Facebook wall.
 
 First things first. The application needs additional permissions from the user. The previous app requested only basic rights to view the most basic of information about the user. Any app that wants to post to auser's wall needs to ask the user for permission to post to their wall. Replace the existing login method with:
 
@@ -85,6 +85,6 @@ You can see the `offline_access` permission in addition to `publish_stream` this
         redirect '/';
     };
 
-In addition to storing the `access_token` in a Dancer session, the code also stores it in a database table for future reference (using [Dancer::Plugin::Database](https://metacpan.org/pod/Dancer::Plugin::Database), which is a wrapper around [DBI](https://metacpan.org/pod/DBI)). This sort of thing can be good for other reasons too. For example, Facebook recommends caching data that you fetch from it for faster response times. If you want to display the user's name on every page, it's much faster to pull it out of the local database based upon the access token you have in your Dancer session than it is to request it from Facebook again.
+In addition to storing the `access_token` in a Dancer session, the code also stores it in a database table for future reference (using [Dancer::Plugin::Database]({{<mcpan "Dancer::Plugin::Database" >}}), which is a wrapper around [DBI]({{<mcpan "DBI" >}})). This sort of thing can be good for other reasons too. For example, Facebook recommends caching data that you fetch from it for faster response times. If you want to display the user's name on every page, it's much faster to pull it out of the local database based upon the access token you have in your Dancer session than it is to request it from Facebook again.
 
 As you can see, `Facebook::Graph` makes it quite easy to post to Facebook on behalf of your users. Stay tuned for Part III, where I'll show you how to publish calendar events and RSVP to them.

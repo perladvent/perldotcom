@@ -22,7 +22,7 @@
 
 ### Requirements
 
-Warning, this script has a lot of dependencies. To use it, you'll need to be running GNOME 3, have Irssi and install [Gtk3::Notify](https://metacpan.org/pod/Gtk3::Notify). There is an open [issue](https://rt.cpan.org/Public/Bug/Display.html?id=96108) on the Gtk3::Notify tests, so you'll have to force install it at the command line:
+Warning, this script has a lot of dependencies. To use it, you'll need to be running GNOME 3, have Irssi and install [Gtk3::Notify]({{<mcpan "Gtk3::Notify" >}}). There is an open [issue](https://rt.cpan.org/Public/Bug/Display.html?id=96108) on the Gtk3::Notify tests, so you'll have to force install it at the command line:
 
 ```perl
 $ cpan -fi Gtk3::Notify

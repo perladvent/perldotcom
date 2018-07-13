@@ -123,9 +123,9 @@ Running the above code on an Apache or Nginx access log gives these results:
 
 ### A multicore Mojolicous web app - Justin Hawkins and Mario Roy
 
-Yes you read that right - Justin and Mario's submission was a parallel processing [Mojolicious](https://metacpan.org/pod/Mojolicious) web app. The proof-of-concept app calculates the MD5 hash of all files in a directory. It combines Mojolicious's non-blocking web loop with Mario's MCE module (a PerlTricks favourite) to distribute the processing across all available cores on the host machine.
+Yes you read that right - Justin and Mario's submission was a parallel processing [Mojolicious]({{<mcpan "Mojolicious" >}}) web app. The proof-of-concept app calculates the MD5 hash of all files in a directory. It combines Mojolicious's non-blocking web loop with Mario's MCE module (a PerlTricks favourite) to distribute the processing across all available cores on the host machine.
 
-To try out the app, you'll need to install the [Mojolicious::Lite](https://metacpan.org/pod/Mojolicious::Lite) module, which you can get from CPAN. Just open a terminal and enter:
+To try out the app, you'll need to install the [Mojolicious::Lite]({{<mcpan "Mojolicious::Lite" >}}) module, which you can get from CPAN. Just open a terminal and enter:
 
 ```perl
 $ cpan Mojolicious::Lite

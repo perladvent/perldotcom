@@ -24,7 +24,7 @@
 
 The Singleton is such a popular pattern it is sometimes called an anti-pattern as the legitimate cases to use it are relatively rare. Consider using the Singleton when one of the following needs arises:
 
--   You have a single resource that needs to be reused across several different parts of a system. A logger is a good example of this ([Log::log4perl](https://metacpan.org/pod/Log::Log4perl) implements the Singleton pattern).
+-   You have a single resource that needs to be reused across several different parts of a system. A logger is a good example of this ([Log::log4perl]({{<mcpan "Log::Log4perl" >}}) implements the Singleton pattern).
 -   You need to ensure only one instance exists as the class cannot perform correctly if there is more than one instance of it (e.g. a file system, a game loop).
 -   You need a singleton as a component of another design pattern (Abstract Factory, Builder, Prototype)
 

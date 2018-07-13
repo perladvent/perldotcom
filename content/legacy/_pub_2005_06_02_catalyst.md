@@ -46,7 +46,7 @@ We planned Catalyst as an enterprise-level framework, able to handle a significa
 
 *Components*
 
-Catalyst has many prebuilt components and plugins for common modules and tasks. For example, there are `View` classes available for Template Toolkit, HTML::Template, Mason, Petal, and PSP. Plugins are available for dozens of applications and functions, including [Data::FormValidator](https://metacpan.org/pod/Data::FormValidator), authentication based on LDAP or [Class::DBI](https://metacpan.org/pod/Class::DBI), several caching modules, [HTML::FillInForm](https://metacpan.org/pod/HTML::FillInForm), and XML-RPC.
+Catalyst has many prebuilt components and plugins for common modules and tasks. For example, there are `View` classes available for Template Toolkit, HTML::Template, Mason, Petal, and PSP. Plugins are available for dozens of applications and functions, including [Data::FormValidator]({{<mcpan "Data::FormValidator" >}}), authentication based on LDAP or [Class::DBI]({{<mcpan "Class::DBI" >}}), several caching modules, [HTML::FillInForm]({{<mcpan "HTML::FillInForm" >}}), and XML-RPC.
 
 Catalyst supports component auto-discovery; if you put a component in the correct place, Catalyst will find and load it automagically. Just place a Catalog controller in */AppName/Controller/Catalog.pm* (or, in practice, in the shortened */AppName/C/Catalog.pm*); there's no need to `use` each item. You can also declare plugins in the application class with short names, so that:
 
@@ -75,7 +75,7 @@ Helper scripts, generated with Template Toolkit, are available for the main appl
 
 ##### Flexibility
 
-Catalyst allows you to use multiple models, views, and controllers--not just as an option when setting up an application, but as a totally flexible part of an application's flow. You can mix and match different elements within the same application or even within the same method. Want to use `Class::DBI` for your database storage and LDAP for authentication? You can have two models. Want to use Template Toolkit for web display and [PDF::Template](https://metacpan.org/pod/PDF::Template) for print output? No problem. Catalyst uses a simple building-block approach to its add-ins: if you want to use a component, you say so, and if you don't say so, Catalyst won't use it. With so many components and plugins available, based on CPAN modules, it's easy to use what you want, but you don't have to use something you don't need. Catalyst features advanced URL-to-action dispatching. There are multiple ways to map a URL to an action (that is, a Catalyst method), depending on your requirements. First, there is literal dispatching, which will match a specific path:
+Catalyst allows you to use multiple models, views, and controllers--not just as an option when setting up an application, but as a totally flexible part of an application's flow. You can mix and match different elements within the same application or even within the same method. Want to use `Class::DBI` for your database storage and LDAP for authentication? You can have two models. Want to use Template Toolkit for web display and [PDF::Template]({{<mcpan "PDF::Template" >}}) for print output? No problem. Catalyst uses a simple building-block approach to its add-ins: if you want to use a component, you say so, and if you don't say so, Catalyst won't use it. With so many components and plugins available, based on CPAN modules, it's easy to use what you want, but you don't have to use something you don't need. Catalyst features advanced URL-to-action dispatching. There are multiple ways to map a URL to an action (that is, a Catalyst method), depending on your requirements. First, there is literal dispatching, which will match a specific path:
     package MyApp::C::Quux;
 
     # matches only http://localhost:3000/foo/bar/yada
@@ -151,12 +151,12 @@ Remember that from the Catalyst perspective, Ajax is just a case of sending more
 
 Catalyst has a relatively large number of requirements; most, however, are easy to install, along with their dependencies, from CPAN. The following list should take care of everything you need for this project:
 
--   [Catalyst](https://metacpan.org/pod/Catalyst)
--   [Catalyst::Model::CDBI](https://metacpan.org/pod/Catalyst::Model::CDBI)
--   [Class::DBI::SQLite](https://metacpan.org/pod/Class::DBI::SQLite)
--   [Catalyst::View::TT](https://metacpan.org/pod/Catalyst::View::TT)
--   [Catalyst::Plugin::Textile](https://metacpan.org/pod/Catalyst::Plugin::Textile)
--   [Catalyst::Plugin::Prototype](https://metacpan.org/pod/Catalyst::Plugin::Prototype)
+-   [Catalyst]({{<mcpan "Catalyst" >}})
+-   [Catalyst::Model::CDBI]({{<mcpan "Catalyst::Model::CDBI" >}})
+-   [Class::DBI::SQLite]({{<mcpan "Class::DBI::SQLite" >}})
+-   [Catalyst::View::TT]({{<mcpan "Catalyst::View::TT" >}})
+-   [Catalyst::Plugin::Textile]({{<mcpan "Catalyst::Plugin::Textile" >}})
+-   [Catalyst::Plugin::Prototype]({{<mcpan "Catalyst::Plugin::Prototype" >}})
 -   [SQLite](http://www.sqlite.org/) (the binary, not the Perl module)
 
 #### Generate the Application Skeleton
@@ -352,6 +352,6 @@ Enjoy your new Catalyst-powered Ajax wiki!
 
 ### Resources
 
-For more information, see the Catalyst documentation, in particular the [Catalyst::Manual::Intro module](https://metacpan.org/pod/Catalyst::Manual::Intro), which gives a thorough introduction to the framework. There are two [Catalyst mailing lists](http://lists.rawmode.org/mailman/listinfo), a general list and a developer list. The best place to discuss Catalyst, though, is the *\#catalyst* IRC channel at [irc.perl.org](http://irc.perl.org). The [Catalyst home page](http://catalyst.perl.org/) is currently just a collection of a few links, but we will extend it in the near future.
+For more information, see the Catalyst documentation, in particular the [Catalyst::Manual::Intro module]({{<mcpan "Catalyst::Manual::Intro" >}}), which gives a thorough introduction to the framework. There are two [Catalyst mailing lists](http://lists.rawmode.org/mailman/listinfo), a general list and a developer list. The best place to discuss Catalyst, though, is the *\#catalyst* IRC channel at [irc.perl.org](http://irc.perl.org). The [Catalyst home page](http://catalyst.perl.org/) is currently just a collection of a few links, but we will extend it in the near future.
 
 Thanks to Catalyst lead developer Sebastian Riedel for help with this article and, of course, for Catalyst itself.
