@@ -92,6 +92,10 @@ The other thing to know is article subheadings are size `h3`. So use the followi
 
 The article metadata like author, title and date are contained in the front matter and not needed in the article markdown body.
 
+Create links to CPAN modules with the `mcpan` macro:
+
+	[Business::ISBN]({{<mcpan "Business::ISBN" >}})
+
 Internal references to other articles can be created using [relref](https://gohugo.io/extras/crossreferences/). So to link to the article "save space with bit arrays":
 
     [save-space-with-bit-arrays]({{< relref "save-space-with-bit-arrays.md" >}})
