@@ -38,7 +38,7 @@ One of Perl's most useful features is the idea of tainting. If you enable taint 
 
 The [CGI::Untaint]({{<mcpan "CGI::Untaint" >}}) module family makes this process much easier for web programs — which often need the most taint protection. There are modules to untaint dates, email addresses, and credit card numbers.
 
-Recently, I wrote [CGI::Untaint::boolean]{{<mcpan "CGI::Untaint::boolean" >}}) to untaint data that comes from checkboxes in web forms. It's a simple module, taking fewer than 20 lines of sparse code that untaints any incoming data and translates a form value of `on` into a true value and anything else (including a non-existent parameter) into false.
+Recently, I wrote [CGI::Untaint::boolean]({{<mcpan "CGI::Untaint::boolean" >}}) to untaint data that comes from checkboxes in web forms. It's a simple module, taking fewer than 20 lines of sparse code that untaints any incoming data and translates a form value of `on` into a true value and anything else (including a non-existent parameter) into false.
 
 Writing the tests proved to be slightly more difficult. How could I make sure that the incoming parameter provided to the module was tainted properly? How could I make sure that the module untaints it properly?
 
@@ -67,7 +67,7 @@ Given the code for CGI::Untaint::boolean, how would you write the tests?
 
 Your code should check that it passes in a tainted value and that it receives an untainted value. You should also verify that the resulting value, when extracted from the handler, is not tainted, no matter its previous status.
 
-Write using one of Perl's core test modules. I prefer [Test::Simple]({{<mcpan "Test::Simple" >}}) and [Test::More]({{<mcpan "CGI::Untaint::boolean" >), but if you must use [Test]({{<mcpan "Test" >}}), go ahead. Assume that [Test::Harness]({{<mcpan "Test::Harness" >}}) will honor the `-T` flag passed on the command line.
+Write using one of Perl's core test modules. I prefer [Test::Simple]({{<mcpan "Test::Simple" >}}) and [Test::More]({{<mcpan "CGI::Untaint::boolean" >}}), but if you must use [Test]({{<mcpan "Test" >}}), go ahead. Assume that [Test::Harness]({{<mcpan "Test::Harness" >}}) will honor the `-T` flag passed on the command line.
 
 Don't read the tests that come with CGI::Untaint::boolean unless you're really stuck. The next section has a further explanation of that technique. For best results, spend at least 30 minutes working through the kata on your own before looking at the hints.
 
