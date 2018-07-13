@@ -27,7 +27,7 @@ Both David and I looked for things that other people weren't doing, and we both 
 
 We wanted to list things which other people might do if they were looking to make a name for themselves in the community. That's different than mere participation. They need to make something that's virtually synonymous with their names. That's how they can build their résumés. Every project needs a spiritual center and chief motivator to keep things going.
 
-I still remember Graham Barr demonstrating [CPAN Search](http://search.cpan.org) for me at a long ago Perl conference. It was groundbreaking; we didn't have anything like that yet. Younger Perl programmers probably have never been without it and didn't realize how big a leap it was from browsing directories.
+I still remember Graham Barr demonstrating CPAN Search (subsumed into [MetaCPAN](https://metacpan.org) in June 2018) for me at a long ago Perl conference. It was groundbreaking; we didn't have anything like that yet. Younger Perl programmers probably have never been without it and didn't realize how big a leap it was from browsing directories.
 
 Before JJ Allen set up [perldoc.perl.org](https://perldoc.perl.org), Carlos Ramirez had Perldoc.com (since defunct). Before those sites, there were isolated ways to get the Perl docs in HTML, but Carlos somehow leapt ahead of all of them to create an integrated solution. Fortunately, JJ Allen took the idea further when Carlos disappeared.
 

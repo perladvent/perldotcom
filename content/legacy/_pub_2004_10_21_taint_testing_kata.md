@@ -36,9 +36,9 @@ Why give examples in the context of testing? First, to promote the idea of writi
 
 One of Perl's most useful features is the idea of tainting. If you enable taint mode, Perl will mark every piece of data that comes from an insecure source, such as insecure input, with a taint flag. If you want to use a piece of tainted data in a potentially dangerous way, you must untaint the data by verifying it.
 
-The [CGI::Untaint](http://aspn.activestate.com/ASPN/CodeDoc/CGI-Untaint/CGI/Untaint.html) module family makes this process much easier for web programs — which often need the most taint protection. There are modules to untaint dates, email addresses, and credit card numbers.
+The [CGI::Untaint]({{<mcpan "CGI::Untaint" >}}) module family makes this process much easier for web programs — which often need the most taint protection. There are modules to untaint dates, email addresses, and credit card numbers.
 
-Recently, I wrote [CGI::Untaint::boolean](http://www.cpan.org/modules/by-module/CGI/CGI-Untaint-boolean-0.11.readme) to untaint data that comes from checkboxes in web forms. It's a simple module, taking fewer than 20 lines of sparse code that untaints any incoming data and translates a form value of `on` into a true value and anything else (including a non-existent parameter) into false.
+Recently, I wrote [CGI::Untaint::boolean]{{<mcpan "CGI::Untaint::boolean" >}}) to untaint data that comes from checkboxes in web forms. It's a simple module, taking fewer than 20 lines of sparse code that untaints any incoming data and translates a form value of `on` into a true value and anything else (including a non-existent parameter) into false.
 
 Writing the tests proved to be slightly more difficult. How could I make sure that the incoming parameter provided to the module was tainted properly? How could I make sure that the module untaints it properly?
 
