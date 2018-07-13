@@ -47,7 +47,7 @@ We will use [wget](http://www.wget.org) to examine a sample HTTP request:
      Host: www.perl.org
      Accept: */*
      Connection: Keep-Alive
-     
+
      ---request end---
      HTTP/1.1 200 OK
      Date: Tue, 13 Aug 2002 18:12:23 GMT
@@ -57,7 +57,7 @@ We will use [wget](http://www.wget.org) to examine a sample HTTP request:
      Keep-Alive: timeout=15, max=100
      Connection: Keep-Alive
      Content-Type: text/html; charset=ISO-8859-1
-     
+
      <... data downloaded to a file by wget...>
 
 There's a lot of things we don't care about in a simple server - so lets boil it down to the guts.
@@ -76,7 +76,7 @@ Response:
 
      HTTP/1.1 200 OK
      Content-Type: text/html;
-     
+
      <data>
 
 The first line is the status response. It includes the HTTP protocol version supported by the server, followed by the [status code](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10) and a short text string defining the status.
@@ -107,17 +107,17 @@ A good place to start looking for client/server information is in the [perlipc](
      #!/usr/bin/perl -w
      use IO::Socket;
      use Net::hostent;              # for OO version of gethostbyaddr
-     
+
      $PORT = 9000;                  # pick something not in use
-     
+
      $server = IO::Socket::INET->new( Proto     => 'tcp',
                                       LocalPort => $PORT,
                                       Listen    => SOMAXCONN,
                                       Reuse     => 1);
-                                      
+
      die "can't setup server" unless $server;
      print "[Server $0 accepting clients at http://localhost:$PORT/]\n";
-     
+
      while ($client = $server->accept()) {
        $client->autoflush(1);
        print $client "Welcome to $0; type help for command list.\n";
@@ -146,18 +146,18 @@ That's not a HTTP server by any stretch of the imagination, but with a different
 
      while ($client = $server->accept()) {
        $client->autoflush(1);
-       
+
        my $request = <$client>;
        if ($request =~ m|^GET /(.+) HTTP/1.[01]|) {
           if (-e $1) {
            print $client "HTTP/1.0 200 OK\nContent-Type: text/html\n\n";
            open(my $f,"<$1");
-           while(<$f>) { print $client $_ }; 
+           while(<$f>) { print $client $_ };
           } else {
            print $client "HTTP/1.0 404 FILE NOT FOUND\n";
            print $client "Content-Type: text/plain\n\n";
            print $client "file $1 not found\n";
-          }      
+          }
        } else {
          print $client "HTTP/1.0 400 BAD REQUEST\n";
          print $client "Content-Type: text/plain\n\n
@@ -260,10 +260,10 @@ It is outside the scope of this article to cover graph operations, but I've name
 <!-- -->
 
      my $graph = do_something_and_build_a_graph();
-     
+
      while ($client = $server->accept()) {
        $client->autoflush(1);
-       
+
        my $request = <$client>;
        if ($request =~ m|^GET /(.+)\.(html|gif) HTTP/1.[01]|) {
           if ($graph->has_node($1)) {
@@ -276,7 +276,7 @@ It is outside the scope of this article to cover graph operations, but I've name
            print $client "HTTP/1.0 404 NODE NOT FOUND\n";
            print $client "Content-Type: text/plain\n\n";
            print $client "node $1 not found\n";
-          }      
+          }
        } else {
          print $client "HTTP/1.0 400 BAD REQUEST\n";
          print $client "Content-Type: text/plain\n\n
@@ -284,19 +284,19 @@ It is outside the scope of this article to cover graph operations, but I've name
        }
        close $client;
      }
-     
+
      sub send_html {
         my ($client, $node) = @_;
-        
+
         my $subgraph = $graph->subgraph( $node, 2, 2 );
-        
+
         my $csimap = $subgraph->as_csimap( "graphmap" );
         my $time = scalar localtime;
-        
+
         print $client "HTTP/1.0 200 OK\nContent-Type: text/html\n\n";
-        
+
         print $client<<"EOF";
-        
+
         <HTML>
          <HEAD>
           <TITLE>Graph centered on $node</TITLE>
@@ -309,25 +309,25 @@ It is outside the scope of this article to cover graph operations, but I've name
          <SMALL>Page generated at $time</SMALL>
          </BODY>
         </HTML>
-      
+
       EOF
          ;
-         
+
       }
-      
+
      sub send_gif {
         my ($client, $node) = @_;
-        
+
         my $subgraph = $graph->subgraph( $node, 2, 2 );
-        
+
         my $gif = $subgraph->as_gif();
-        
+
         print $client "HTTP/1.0 200 OK\nContent-Type: text/gif\n\n";
-        
+
         print $client $gif;
-        
-      }     
-        
+
+      }
+
     And that's it!  We have created a dynamic graph browser.
 
 I will admit that we glossed over some of the HTML and Client Side Imagemap details -- because they're tangential to the issue of embedding a Web server into a tool. An embedded Web server is like merging the Web server, cgi script and source of the data into one program -- sometimes the best way to build one is to start with a standard CGI script and use that.
@@ -395,10 +395,10 @@ For quick and dirty servers, HTTP::Daemon is probably easier to use. Here's an e
      use HTTP::Daemon;
      use HTTP::Status;
      use Pod::Simple::HTML;
-     
+
      my $file = shift;
      die "File $file not found" unless -e $file;
-     
+
      my $d = HTTP::Daemon->new || die;
      print "Please contact me at: <URL:", $d->url, ">\n";
      while (my $c = $d->accept) {

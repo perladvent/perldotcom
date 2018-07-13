@@ -53,7 +53,7 @@ The class assignment also required students to code a choice of elevator algorit
 
 When you run the simulator you'll see output like:
 
-      $ ./elevator.pl 
+      $ ./elevator.pl
       Elevator 0 stopped at floor 0.
       Elevator 1 stopped at floor 0.
       Elevator 2 stopped at floor 0.
@@ -121,13 +121,13 @@ The building state is initialized in the `init_building()` function.
       # initialize building state
       sub init_building {
           # set all indicators to 0 to start the simulation
-          for my $floor (0 .. $NUM_FLOORS - 1) {       
+          for my $floor (0 .. $NUM_FLOORS - 1) {
               $BUTTON[$floor] = 0;
               for my $elevator (0 .. $NUM_ELEVATORS - 1) {
                   $PANEL{"$elevator.$floor"} = 0;
                   $DOOR{"$elevator.$floor"}  = 0;
               }
-          }   
+          }
       }
 
 The buttons on each floor are set to 0 to indicate that they are \`\`off.'' When a person wants to summon the elevator to a floor they will set the button for that floor to 1 (`$BUTTON[$floor] = 1`).For each elevator there are a set of panel buttons and a set of doors, one for each floor. These are all cleared to 0 at the start of the simulation. When an elevator reaches a floor it will open the door by setting the appropriate item in `%DOOR` to 1 (`$DOOR{"$elevator.$floor"} = 1`). Similarly, people tell the elevators where to go by setting entries in `%PANEL` to 1 (`$PANEL{"$elevator.$floor"} = 1`).
@@ -145,7 +145,7 @@ After calling `init_building()` to initialize the shared building state variable
           our @elevators;
           for (0 .. $NUM_ELEVATORS - 1) {
               # pass each elevator thread a unique elevator id
-              push @elevators, threads->new(\&Elevator::run, 
+              push @elevators, threads->new(\&Elevator::run,
                                             id => $_);
           }
       }
@@ -163,7 +163,7 @@ After the elevators are created the simulation is ready to send in people with t
               # pass each person thread a unique person id and a random
               # destination
               push @people, threads->new(\&Person::run,
-                                         id   => $_, 
+                                         id   => $_,
                                          dest => int(rand($NUM_FLOORS - 2)) + 1);
 
               # pause if we've launched enough people this second
@@ -261,7 +261,7 @@ The other states, for going up and going down, are handled similarly:
           if ($self->{state} != GOING_UP) {
               print "Elevator $id going up to floor $self->{dest}.\n";
               $self->{state} = GOING_UP;
-              $self->close_door; 
+              $self->close_door;
           }
 
           # travel to next floor up
@@ -273,7 +273,7 @@ The other states, for going up and going down, are handled similarly:
           if ($self->{state} != GOING_DOWN) {
               print "Elevator $id going down to floor $self->{dest}.\n";
               $self->{state} = GOING_DOWN;
-              $self->close_door; 
+              $self->close_door;
           }
 
           # travel to next floor down

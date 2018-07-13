@@ -64,7 +64,7 @@ This wants to match the start of the string, any amount of stuff that's not a ne
 
 But instead, we could use the `/m` modifier. Let's see what happens if we do that:
 
-         % perl -e 'print $1 if "This is my\nmulti-line string" =~ /^(.*)$/m' 
+         % perl -e 'print $1 if "This is my\nmulti-line string" =~ /^(.*)$/m'
          This is my
 
 Aha! This time, we've changed the meanings of the anchors - instead of matching just the start and end of the string, they now match the start of any line in the string.
@@ -114,13 +114,13 @@ You would expect this to match, and without `/x`, it does match. Phew. With `/x`
 
 How can this conceivably be useful? Well, for a start, by removing the meaning of white space inside a regular expression, we can use whitespace at will; this is particularly useful to help us space out complicated expressions. The rather unpleasant
 
-        ($postcode) = 
-            ($address =~ 
+        ($postcode) =
+            ($address =~
         /([A-Z]{1,2}\d{1,3}[ \t]+\d{1,2}[A-Z][A-Z]|[A-Z][A-Z][\t ]+\d{5})/);
 
 becomes the slightly more managable
 
-        ($postcode) = 
+        ($postcode) =
             ($address =~
         /(
               [A-Z]{1,2}\d{1,3} [ \t]+ \d{1,2} [A-Z][A-Z]
@@ -131,19 +131,19 @@ Without `/x`, we would be looking for literal spaces, tabs and carriage returns 
 
 Another advantage of using `/x` is that it allows us to add comments to our regular expression, helping to make the example above even more maintainable:
 
-        ($postcode) = 
+        ($postcode) =
             ($address =~
         /(
             # UK Postcode:
               [A-Z]{1,2} # Post town
-              \d{1,3}    # Area 
-              [ \t]+ 
+              \d{1,3}    # Area
+              [ \t]+
               \d{1,2}    # Region
               [A-Z][A-Z] # Street part
-            | 
+            |
             # US Postcode:
               [A-Z][A-Z]   # State
-              [\t ]+ 
+              [\t ]+
               \d{5}        # ZIP+5
         )/x);
 
@@ -154,13 +154,13 @@ Of course, to make it still tidier, we can put regular expression components int
         my $space     = '[ \t]+';
         my $region    = '\d{1,2}';
         my $street    = '[A-Z][A-Z]';
-        
+
         my $uk_postcode = "$post_town $area $space $region $street";
         ...
 
 Because variables are interpolated inside regular expressions:
 
-        ($postcode) = 
+        ($postcode) =
             ($address =~ /($uk_postcode|$us_postcode)/x);
 
 Perl 5.6.0 introduced the ability to package up regular expressions into variables using the `qr//` operator. This acts just like `q//` except that it follows the quoting, escaping and interpolation rules of the regular expression match operator. In our example above, we had to use single quotes for the \`\`basic'' components, and then double quotes to get the interpolation when we wanted to string them all together into `$uk_postcode`. Now, we can use the same `qr//` operator for all the parts of our regular expression:
@@ -170,7 +170,7 @@ Perl 5.6.0 introduced the ability to package up regular expressions into variabl
         my $space     = qr/[ \t]+/;
         my $region    = qr/\d{1,2}/;
         my $street    = qr/[A-Z][A-Z]/;
-       
+
     And we can also add modifiers to parts of a quoted regular expression:
 
         my $uk_postcode = qr/$post_town $area $space $region $street/x;
@@ -205,9 +205,9 @@ Regular expressions aren't **really** meant for recursive solutions either, but 
 
         $paren = qr/
           \(
-            ( 
+            (
                [^()]+  # Not parens
-             | 
+             |
                $paren  # Another balanced group
             )*
           \)
@@ -219,9 +219,9 @@ That's OK. We can tell the expression not to interpolate the `$paren` quite yet 
 
         $paren = qr/
           \(
-            ( 
+            (
                [^()]+  # Not parens
-             | 
+             |
                (??{ $paren })  # Another balanced group (not interpolated yet)
             )*
           \)
