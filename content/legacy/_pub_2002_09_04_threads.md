@@ -516,7 +516,7 @@ The reason for this is that by calling `srand()` in the main thread I set the ra
 Perl comes with copious threading documentation. You can read these docs by following the links below or by using the `perldoc` program that comes with Perl.
 
 -   [elevator.pl](/media/_pub_2002_09_04_threads/elevator.pl) - Sample code from this article.
--   perlthrtut (<http://perldoc.com/perl5.8.0/pod/perlthrtut.html>) - a threading tutorial
--   threads (<http://perldoc.com/perl5.8.0/lib/threads.html>) - the reference for the threads module
--   threads::shared (<http://perldoc.com/perl5.8.0/lib/threads/shared.html>) -the reference for the threads::shared module
+-   [perlthrtut](https://perldoc.perl.org/perlthrtut.html) - a threading tutorial
+-   [threads]({{<mcpan "threads" >}}) - the reference for the threads module
+-   [threads::shared]({{<mcpan "threads::shared" >}}) -the reference for the threads::shared module
 

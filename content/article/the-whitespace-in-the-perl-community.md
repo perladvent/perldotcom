@@ -29,7 +29,7 @@ We wanted to list things which other people might do if they were looking to mak
 
 I still remember Graham Barr demonstrating [CPAN Search](http://search.cpan.org) for me at a long ago Perl conference. It was groundbreaking; we didn't have anything like that yet. Younger Perl programmers probably have never been without it and didn't realize how big a leap it was from browsing directories.
 
-Before JJ Allen set up [perldoc.perl.org](http://perldoc.perl.org), Carlos Ramirez had [Perldoc.com](http://www.perldoc.com). Before those sites, there were isolated ways to get the Perl docs in HTML, but Carlos somehow leapt ahead of all of them to create an integrated solution. Fortunately, JJ Allen took the idea further when Carlos disappeared.
+Before JJ Allen set up [perldoc.perl.org](https://perldoc.perl.org), Carlos Ramirez had Perldoc.com (since defunct). Before those sites, there were isolated ways to get the Perl docs in HTML, but Carlos somehow leapt ahead of all of them to create an integrated solution. Fortunately, JJ Allen took the idea further when Carlos disappeared.
 
 Not every successful project is a completely new idea. Sometimes it's an older idea done better. Gabor Szabo started [Perl Weekly](http://perlweekly.com) to curate the internet activity of the Perl community. He discovers what's worth reading so the rest of the community doesn't need to spend too much time away from [kitten videos](https://www.youtube.com/results?search_query=kitten+videos) and coding. Other people have tried the same thing, but Gabor's advantage is his perseverance.
 
