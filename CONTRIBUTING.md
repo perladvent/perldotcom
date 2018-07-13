@@ -111,7 +111,7 @@ If the above command fails due to missing Perl dependencies, you can install
 them via `cpanm`. Run the following command before re-running the command
 above:
 
-    $cpanm --installdeps .
+    $ cpanm --installdeps .
 
 The `author` value is a key used to find the author data in the `data/author` directory. If this is your first article, you'll need to create an author entry too. Here's mine (`data/author/david-farrell.json`):
 
@@ -130,7 +130,7 @@ Viewing Your Draft Article
 --------------------------
 It's all well and good drafting an article in Markdown, but it only comes to life when you can see how it looks in a browser on Perl.com. You can do that by running a local version of the site on your computer. To do that you'll need to install [Hugo](http://gohugo.io). **Warning** package managers' versions of hugo are often very out of date, you're usually better off with a pre-compiled binary. The site is tested against v0.31.1 and higher
 
-Now fork this repo. Clone your fork: 
+Now fork this repo. Clone your fork:
 
     $ git clone https://github.com/$github_username/perldotcom
     $ cd perldotcom
