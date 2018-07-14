@@ -66,11 +66,11 @@ POE components provide an abstract api to service-like POE sessions. Rather than
         sub start {
             $poe_kernel->alias_set(__PACKAGE__);
         }
-        
-        
+
+
         ####
-        
-        
+
+
         #!/usr/bin/perl
         use POE;
         use POE::Component::MyService;
@@ -124,7 +124,7 @@ Many wheels handle incoming and outgoing data. They exist to help the user get d
         sub new {
             # ...
         }
-        
+
         sub put {
             # ...
         }
@@ -174,4 +174,4 @@ The use of `Time::HiRes` before importing `POE` causes POE to use `Time::HiRes`'
 
 POE is a flexible application framework appropriate for long-running large-scale perl applications. It provides standard interfaces for task abstraction and forces the coder to think about their software in smaller, more maintainable chunks.
 
-POE is available on CPAN (<{{<mcpan "POE>" >}}) and has a rich, community-maintained website (<http://poe.perl.org>).
+[POE is available on CPAN](<{{<mcpan "POE" >}}) and has a rich, community-maintained website (<http://poe.perl.org>).

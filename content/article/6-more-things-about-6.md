@@ -88,7 +88,7 @@ Now the exception takes over and the `CATCH` block handles it. There's a strack 
 
 I love that this lets me decide how to check the error. I've always thought that the various syntaxes for `try` (in any language) bullied their ways into the language and took over the source code.
 
-And, I'm sufficiently besotted with this idea of object-oriented programming that I have a Perl 5 module that does a similar thing: [ReturnValue]({{<mcpan "release/BDFOY/ReturnValue-0.10_01/lib/ReturnValue.pm" >}}). I use that to return values where the caller can determine what happened by calling methods on the result.
+And, I'm sufficiently besotted with this idea of object-oriented programming that I have a Perl 5 module that does a similar thing: [ReturnValue]({{<mcpan "ReturnValue" >}}). I use that to return values where the caller can determine what happened by calling methods on the result.
 
 ### Resumable Exceptions
 

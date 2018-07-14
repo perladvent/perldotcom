@@ -59,7 +59,7 @@
 ### Math, Science & Language
 
 -   Generate random, normally distributed numbers with [Math::Random::Normal::Leva]({{<mcpan "Math::Random::Normal::Leva" >}})
--   Related, [Rand::Urandom]({{<mcpan "Rand::Urandom%20" >}})will generate better pseudo random numbers
+-   Related, [Rand::Urandom]({{<mcpan "Rand::Urandom" >}})will generate better pseudo random numbers
 -   Do efficient fuzzy matching with [Tree::BK]({{<mcpan "Tree::BK" >}})
 -   [Rstats]({{<mcpan "Rstats" >}}) exports R functions, an interesting alternative to Statistics::R. Next step, Inline::R!
 

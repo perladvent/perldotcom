@@ -101,9 +101,9 @@ Rather than proving this by watching our memory grow though, we can demonstrate 
 
     package CircObj;
     sub new { bless {}, shift }
-    sub parent { my $self = shift; @_ ? $self->{parent} = 
+    sub parent { my $self = shift; @_ ? $self->{parent} =
         shift : $self->{parent} }
-    sub child { my $self = shift; @_ ? $self->{child} = 
+    sub child { my $self = shift; @_ ? $self->{child} =
         shift : $self->{child} }
     sub DESTROY { warn("CircObj::DESTROY\n") }
 
@@ -145,18 +145,18 @@ A common way to "fix" this problem is to use a manual destructor -- a method or 
 
 ### <span id="Fixing Circular References - with Perl 5.6+">Fixing Circular References - with Perl 5.6+</span>
 
-Perl 5.6.0 introduced a new feature to "fix" all of the problems with circular references. This feature is called *weakrefs*. The basic idea is to flag a reference as *weakened*, so as to not include it in the reference counting. In order to use weakrefs, you need to install the [Scalar::Util]({{<mcpan "release/GBARR/Scalar-List-Utils-1.0701/lib/Scalar/Util.pm" >}}) module (which is included with Perl 5.8.0). It is simple to use. Let's see what happens with our example above:
+Perl 5.6.0 introduced a new feature to "fix" all of the problems with circular references. This feature is called *weakrefs*. The basic idea is to flag a reference as *weakened*, so as to not include it in the reference counting. In order to use weakrefs, you need to install the [Scalar::Util]({{<mcpan "Scalar::Util" >}}) module (which is included with Perl 5.8.0). It is simple to use. Let's see what happens with our example above:
 
     package CircObj;
       use Scalar::Util qw(weaken);
       sub new { bless {}, shift }
-      sub parent { my $self = shift; @_ ? weaken($self->{parent} = 
+      sub parent { my $self = shift; @_ ? weaken($self->{parent} =
            shift) : $self->{parent} }
-      sub child { my $self = shift; @_ ? $self->{child} = 
-           shift : $self->{child} 
+      sub child { my $self = shift; @_ ? $self->{child} =
+           shift : $self->{child}
       }
       sub DESTROY { warn("CircObj::DESTROY\n") }
-      
+
       for (1..1) {
         my $parent = CircObj->new;
          my $child = CircObj->new;
@@ -208,9 +208,9 @@ And we can use that as follows:
 
     use ProxyObject;
     use Time::localtime;
-    my $time = localtime();  
+    my $time = localtime();
     ### Create a localtime object
-    my $proxy = ProxyObject->new($time);  
+    my $proxy = ProxyObject->new($time);
     ### Create a proxy to that object
     print $time->hour, " is the same as ", $proxy->hour, "\n";
 
@@ -224,9 +224,9 @@ So, this all looks very interesting, but you're probably wondering how that help
 
     package CircObj;
     sub new { bless {}, shift }
-    sub parent { my $self = shift; @_ ? $self->{parent} = 
+    sub parent { my $self = shift; @_ ? $self->{parent} =
          shift : $self->{parent} }
-    sub child { my $self = shift; @_ ? $self->{child} = 
+    sub child { my $self = shift; @_ ? $self->{child} =
          shift : $self->{child} }
     sub DESTROY { warn("CircObj::DESTROY\n") }
 
@@ -258,7 +258,7 @@ So we have made some progress; the DESTROY method on our `$parent` variable is n
       my $self = shift;
       warn("CircObj::DESTROY\n");
       if ($self->{child}) {
-        $self->{child}->parent(undef); 
+        $self->{child}->parent(undef);
         # set child's parent to undef, breaking the loop
       }
     }
@@ -284,7 +284,7 @@ Another problem is that every property access now needs to go through method cal
 
 What we can now do (in true Blue Peter fashion) is create a module that has totally transparent weak-references support on Perl 5.6, while still allowing garbage collection on lower Perl versions. This is a little more complex than the scenario above, but here's how it works. First, we create a base class that our complex data-structure classes can subclass:
 
-    # base class for all circular reffing classes 
+    # base class for all circular reffing classes
     # rename this before use
     package BaseClass;
     use strict;

@@ -121,7 +121,7 @@ The next feature, which goes along with `n`, is `s`, for single-stepping *into* 
 
       DB<4> s
     TWiki::initialize(/usr/share/perl5/TWiki.pm:333):
-    333:        my ( $thePathInfo, $theRemoteUser, $theTopic, 
+    333:        my ( $thePathInfo, $theRemoteUser, $theTopic,
                                    $theUrl, $theQuery ) = @_;
 
 The description line has changed, showing that you're in a new package, function, and file. Press Enter; note that `s` also repeats with Enter. Three more repeats will get you two levels deeper:
@@ -134,18 +134,18 @@ The description line has changed, showing that you're in a new package, function
     490:        setupLocale();
       DB<4>
     TWiki::setupLocale(/usr/share/perl5/TWiki.pm:515):
-    515:        $siteCharset = 'ISO-8859-1';        
+    515:        $siteCharset = 'ISO-8859-1';
                    # Default values if locale mis-configured
       DB<4>
 
 Now you are deep inside the TWiki module. Imagine tracking this program execution by hand; it would be considerably more tedious. Instead, you have the sometimes challenging task of figuring out where the program has taken you. Fortunately, the debugger has tools for making this easier. Note that the indenting isn't any judge of the execution depth; to find that, use `T` for trace:
 
       DB<1> T
-    . = TWiki::setupLocale() called from file 
+    . = TWiki::setupLocale() called from file
         `/usr/share/perl5/TWiki.pm' line 490
-    . = TWiki::basicInitialize() called from file 
+    . = TWiki::basicInitialize() called from file
         `/usr/share/perl5/TWiki.pm' line 336
-    @ = TWiki::initialize('', undef, undef, 'http://localhost/view', 
+    @ = TWiki::initialize('', undef, undef, 'http://localhost/view',
         ref(CGI)) called from file `view' line 45
 
 The backtrace has the following format: the first character is the calling context; `.`, `$`, and `@` signify void, scalar, and list contexts respectively. Next is function name, including the arguments passed, if any. Finally comes the calling filename and line number. These lines go from deepest to shallowest execution depth.
@@ -168,7 +168,7 @@ Use `r` again twice, to get back to the top. Now it's clear that `initialize()` 
     2  '/cgi-bin/twiki'
     3  'guest'
     4  '/var/lib/twiki/data'
-    main::(view:49):        TWiki::UI::View::view( $webName, 
+    main::(view:49):        TWiki::UI::View::view( $webName,
                                 $topic, $userName, $query );
 
 If you were tracking the initialization routine, you might remind yourself what the caller was doing with the command `-` to show the calling line again; but that's not necessary now, so continue!
@@ -184,18 +184,18 @@ As you can see, you've switched modules again, into *TWiki.pm*. Take a look arou
 
       DB<3> l
     2559==>     if( ! @publicWebList ) {
-    2560            # build public web list, e.g. exclude hidden 
+    2560            # build public web list, e.g. exclude hidden
                     # webs, but include current web
     2561:           my @list = &TWiki::Store::getAllWebs( "" );
     2562:           my $item = "";
     2563:           my $hidden = "";
     2564:           foreach $item ( @list ) {
-    2565:               $hidden = 
+    2565:               $hidden =
       &TWiki::Prefs::getPreferencesValue( "NOSEARCHALL", $item );
-    2566                # exclude topics that are hidden or start 
+    2566                # exclude topics that are hidden or start
                         # with . or _ unless current web
-    2567:               if( ( $item eq $TWiki::webName  ) || 
-                            ( ( ! $hidden ) && ( $item =~ 
+    2567:               if( ( $item eq $TWiki::webName  ) ||
+                            ( ( ! $hidden ) && ( $item =~
                                           /^[^\.\_]/ ) ) ) {
     2568:                   push( @publicWebList, $item );
 
@@ -228,10 +228,7 @@ This article has barely scratched the surface of the debugger's capabilities; it
 
 ### References: Introductory Debugger Information Online
 
-[The Perl Debugger. Linux Journal. March 2005, 73-76](http://www.linuxjournal.com/article/7581/)
-
-[perldoc perldebtut]({{<mcpan "distribution/perl/pod/perldebtut.pod" >}})
-
-[perldoc perldebug]({{<mcpan "distribution/perl/pod/perldebug.pod" >}})
-
-[Perl Debugger Quick Reference](/pub/2004/11/24/debugger_ref.html)
+* [The Perl Debugger. Linux Journal. March 2005, 73-76](http://www.linuxjournal.com/article/7581/)
+* [perldebtut]({{<perldoc "perldebtut" >}})
+* [perldebug]({{<perldoc "perldebug" >}})
+* [Perl Debugger Quick Reference](/pub/2004/11/24/debugger_ref.html)

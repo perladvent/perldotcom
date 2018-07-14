@@ -36,7 +36,7 @@ Module author Graham Ollis has also [blogged](http://blogs.perl.org/users/graham
 -   Easily share files over HTTP with [charon]({{<mcpan "charon" >}})
 -   [App::PerlXLock]({{<mcpan "App::PerlXLock" >}}) will lock the screen when run. Requires X11
 -   Need to serve a directory over HTTP? Check out [App::SimpleHTTPServer]({{<mcpan "App::SimpleHTTPServer" >}})
--   [App::SpeedTest]({{<mcpan "App::SpeedTest%20" >}})is cool command line utility for testing connection speeds
+-   [App::SpeedTest]({{<mcpan "App::SpeedTest" >}})is cool command line utility for testing connection speeds
 -   It comes with warnings but [Google::Tasks]({{<mcpan "Google::Tasks" >}}) looks like a useful API
 
 ### Config & DevOps

@@ -37,7 +37,7 @@ $ cpan Dist::Zilla \
 If you're installing Dist::Zilla consider using [cpanminus]({{<mcpan "App::cpanminus" >}}) instead, with no tests for a much faster install:
 
 ```perl
-$ cpanm --notest Dist::Zilla \ 
+$ cpanm --notest Dist::Zilla \
   Dist::Zilla::Plugin::ReadmeAnyFromPod \
   Dist::Zilla::Plugin::CopyFilesFromBuild
 ```
@@ -47,7 +47,7 @@ $ cpanm --notest Dist::Zilla \
 Ryan's module [Dist::Zilla::Plugin::ReadmeAnyFromPod]({{<mcpan "Dist::Zilla::Plugin::ReadmeAnyFromPod" >}}) can generate a readme automatically, in any common format. It uses the Pod text from the main modules in the distribution. I use it to create my GitHub readme files in Pod, by adding the following text to my `dist.ini`.
 
     [ReadmeAnyFromPod]
-    type = pod 
+    type = pod
     filename = README.pod
     location = root
 
@@ -85,7 +85,7 @@ To get around this issue, I used [Dist::Zilla::Plugin::CopyFilesFromBuild]({{<mc
 Here's a `dist.ini` from a [repo](https://github.com/dnmfarrell/Settlers-Game) of mine that uses the code in this article. As certain directives are required in order, it can be useful to see the entire context:
 
     name    = Settlers-Game
-    author  = David Farrell 
+    author  = David Farrell
     license = FreeBSD
     copyright_holder = David Farrell
     copyright_year   = 2015
@@ -137,7 +137,7 @@ $ cpan Dist::Zilla::Plugin::Clean \
 
 Ok it's not *all* gravy. The copy file method has one downside: it overwrites the copied files every time they're generated. This isn't an issue for me; the commit diff only shows the changed lines, but some people may not like it.
 
-For more information on Dist::Zilla, check out the official [documentation](http://dzil.org/tutorial/contents.html). For a completely different approach to releasing code to CPAN, you may like[Module::Release]({{<mcpan "%20Module::Release" >}}). Oh and if you find yourself in a new development environment, needing to install dependencies for a local module, David Golden has a useful [post](http://www.dagolden.com/index.php/1528/five-ways-to-install-modules-prereqs-by-hand/) that includes five different ways to do it.
+For more information on Dist::Zilla, check out the official [documentation](http://dzil.org/tutorial/contents.html). For a completely different approach to releasing code to CPAN, you may like [Module::Release]({{<mcpan "Module::Release" >}}). Oh and if you find yourself in a new development environment, needing to install dependencies for a local module, David Golden has a useful [post](http://www.dagolden.com/index.php/1528/five-ways-to-install-modules-prereqs-by-hand/) that includes five different ways to do it.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

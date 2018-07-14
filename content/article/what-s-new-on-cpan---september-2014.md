@@ -32,7 +32,7 @@
 
 ### Apps
 
--   [cpan-outdated-coro]({{<mcpan "cpan-outdated-coro%20" >}})is a faster version of the useful cpan-outdated app
+-   [cpan-outdated-coro]({{<mcpan "cpan-outdated-coro" >}}) is a faster version of the useful cpan-outdated app
 -   Easily get the directory of an installed Perl module with [pmdir]({{<mcpan "pmdir" >}}) e.g:
      `$ cd $( pmdir Moose )`
 -   [App::sslmaker]({{<mcpan "App::sslmaker" >}}) helps you create your own SSL certificates
@@ -78,7 +78,7 @@
 -   New user agents! [LWP::Simple::REST]({{<mcpan "LWP::Simple::REST" >}}) exports RESTful request methods for LWP and [Net::HTTP::Client]({{<mcpan "Net::HTTP::Client" >}}) is a lightweight user agent in the vein of HTTP::Tiny
 -   Conveniently create and verify secure messages using [PBKDF2::Tiny]({{<mcpan "PBKDF2::Tiny" >}})
 -   Find out your IP address with [WWW::IP]({{<mcpan "WWW::IP" >}}) (*disclaimer - I am the module author*)
--   [WebService::Client]({{<mcpan "WebService::Client%20" >}}) is a role that makes it easy to quickly churn out a web service client
+-   [WebService::Client]({{<mcpan "WebService::Client" >}}) is a role that makes it easy to quickly churn out a web service client
 
 ### Testing & Exceptions
 

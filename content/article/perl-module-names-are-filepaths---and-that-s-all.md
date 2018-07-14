@@ -115,7 +115,7 @@ Tada! Works like a charm.
 
 ### Toolchain issues
 
-So now I have a distribution with a module containing a different package name, how well does it work with the CPAN toolchain? I've uploaded the distribution to CPAN, and you can view it on [metacpan]({{<mcpan "release/DFARRELL/ACME-Foo-Bar-0.02/lib/ACME/Foo/Bar.pm" >}}), and its CPAN Testers [results](http://www.cpantesters.org/distro/A/ACME-Foo-Bar.html?oncpan=1&distmat=1&version=0.02&grade=2) are looking good.
+So now I have a distribution with a module containing a different package name, how well does it work with the CPAN toolchain? I've uploaded the distribution to CPAN, and you can view it on [metacpan]({{<mcpan "ACME::Foo::Bar" >}}), and its CPAN Testers [results](http://www.cpantesters.org/distro/A/ACME-Foo-Bar.html?oncpan=1&distmat=1&version=0.02&grade=2) are looking good.
 
 There is one big issue though: the PAUSE indexer. PAUSE is the server which maintains CPAN data and its packages [list](https://cpan.metacpan.org/modules/02packages.details.txt) is an index mapping package names to distributions. The indexer requires that a distribution has a module with a matching package name in it. This makes sense as it discourages users from uploading conflicting package names into different distributions.
 

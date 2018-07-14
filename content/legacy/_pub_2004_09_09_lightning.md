@@ -43,7 +43,7 @@ For example, we want to render the string `Hello Léon`&gt; into our HTML docume
 This can be done automatically by Perl in numerous ways, e.g. with **HTML::Entities**:
 
       use HTML::Entities;
-      
+
       my $string = "Hello $name";
       encode_entity($string);
 
@@ -68,7 +68,7 @@ In the end I decided to write **Test::DoubleEncodedEntities**, a **Test::Builder
       use LWP::Simple qw(get);
       use Test::More tests => 2;
       use Test::DoubleEncodedEntities;
-      
+
       my $page = get "http://testserver/index.html";
       ok($page, "got page okay");
       ok_dee($page, "check for double encoded entities")
@@ -108,7 +108,7 @@ With the script configured and run, you'll have your own personal CPAN sitting o
 
 Alternately, just edit your CPAN::Config or CPANPLUS::Config.
 
-The only problem left with mini-CPAN is that it was so hard to find. It's been such a fantastic addition to my toolbox that I feel slighted, having spent two years oblivious to its existence. To help others avoid this pain, I've tweaked the script, shoved its guts into a module, and stuck it onto CPAN. Just by installing <a href="{{<mcpan "CPAN%3A%3AMini" class="podlinkpod">CPAN::Mini</a>, you can have `minicpan` dropped into place and ready to go:
+The only problem left with mini-CPAN is that it was so hard to find. It's been such a fantastic addition to my toolbox that I feel slighted, having spent two years oblivious to its existence. To help others avoid this pain, I've tweaked the script, shoved its guts into a module, and stuck it onto CPAN. Just by installing [CPAN::Mini]({{<mcpan "CPAN::Mini" >}}), you can have `minicpan` dropped into place and ready to go:
 " >}}
      minicpan -r http://your.favorite.mirror/of/cpan -l /home/japh/minicpan
 

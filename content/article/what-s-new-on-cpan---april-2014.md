@@ -29,7 +29,7 @@
 -   [Alien::pdf2json]({{<mcpan "Alien::pdf2json" >}}) installs pdf2json which can also convert PDFs to XML
 -   Keep two instances of Music Player Daemon in sync with [App::MPDSync]({{<mcpan "App::MPDSync" >}})
 -   Augment your code review process with [Git::Code::Review]({{<mcpan "Git::Code::Review" >}}) (tutorial [here]({{<mcpan "Git::Code::Review::Tutorial" >}}))
--   Analyze the results of the du command with [App::Du::Analyze]({{<mcpan "distribution/App-Du-Analyze/bin/analyze-du" >}})
+-   Analyze the results of the du command with [App::Du::Analyze]({{<mcpan "App::Du::Analyze" >}})
 
 ### Data
 

@@ -214,6 +214,6 @@ you have enough to get started writing your own XS code.
 ### References
 
 - This documentation and code is on CPAN ({{< mcpan "XS::Tutorial" >}})
-- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp]({{<mcpan "distribution/ExtUtils-ParseXS/lib/ExtUtils/xsubpp" >}})
+- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp]({{<perldoc "xsubpp" >}})
 - [perlapi](http://perldoc.perl.org/perlapi.html) lists the C macros used to interact with Perl data structures (and the interpreter)
 - The [stdint.h](http://pubs.opengroup.org/onlinepubs/009695399/basedefs/stdint.h.html) C library provides sets of portable integer types

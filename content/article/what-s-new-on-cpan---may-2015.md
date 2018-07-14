@@ -67,7 +67,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 -   [Acme::AutoloadAll]({{<mcpan "Acme::AutoloadAll" >}}) exports all subroutines from every loaded module by injecting an autoload function into them. Crazy!
 -   Keep your Dzil GitHub credentials in one place with [Dist::Zilla::Stash::GitHub]({{<mcpan "Dist::Zilla::Stash::GitHub" >}})
 -   [Data::Object::Prototype]({{<mcpan "Data::Object::Prototype" >}}) makes prototype-style programming easy. Interesting approach
--   Create application locks based on files or sockets with[JIP::LockFile]({{<mcpan "%20JIP::LockFile" >}}) and [JIP::LockSocket]({{<mcpan "JIP::LockSocket" >}})
+-   Create application locks based on files or sockets with[JIP::LockFile]({{<mcpan "JIP::LockFile" >}}) and [JIP::LockSocket]({{<mcpan "JIP::LockSocket" >}})
 -   [List::Slice]({{<mcpan "List::Slice" >}}) provides head and tail functions for lists, plays nicely with functions that output lists like `map` and `grep`
 -   Declare compile-time and class-safe constants with [pluskeys]({{<mcpan "pluskeys" >}})
 

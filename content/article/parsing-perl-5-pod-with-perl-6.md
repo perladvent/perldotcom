@@ -220,9 +220,9 @@ Pod::Perl5::ToHTML::PerlTricks is Pod::Perl5::ToHTML
   }
   method metacpan ($match)
   {
-    self.add_to_buffer('paragraph', 
-      $match.Str => 
-"<a href="{{<mcpan "/{$match<name>.Str}">{$match<name>.Str}</a>"" >}});
+    self.add_to_buffer('paragraph',
+      $match.Str =>
+"<a href="{$match<name>.Str}">{$match<name>.Str}</a>"" >);
   }
 }
 ```

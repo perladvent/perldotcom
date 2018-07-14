@@ -68,7 +68,7 @@ Finally the "settings" link let's you update the stack name, description and tar
 
 ### Installing modules from your Stratopan stack
 
-To install modules from Stratopan you'll need [cpanm]({{<mcpan "release/MIYAGAWA/App-cpanminus-1.7001/bin/cpanm" >}}). You can install this via cpan from the terminal:
+To install modules from Stratopan you'll need [cpanm](https://cpanmin.us). You can install this via cpan from the terminal:
 
 ```perl
 cpan App::cpanminus
@@ -81,7 +81,7 @@ Once cpanm has installed, open one of your stacks on Stratopan and copy the stac
 At the terminal type "cpanm --mirror-only --mirror " and paste your copied stack URL and enter one or more module names that you wish to install. For example to install [WWW::CheckHTML]({{<mcpan "WWW::CheckHTML" >}}) from my master stack:
 
 ```perl
-cpanm --mirror-only --mirror 
+cpanm --mirror-only --mirror
 https://stratopan.com/sillymoose/WebStuff/master WWW::CheckHTML
 ```
 

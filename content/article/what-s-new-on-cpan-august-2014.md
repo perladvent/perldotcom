@@ -80,7 +80,7 @@
 
 ### Object Oriented
 
--   [Gloom]({{<mcpan "distribution/Gloom/lib/Gloom.pod'" >}}) is a dependency-free new OO library released a couple of months back
+-   [Gloom]({{<mcpan "Gloom" >}}) is a dependency-free new OO library released a couple of months back
 -   Anonymous objects are an intriguing idea: [Object::Anon]({{<mcpan "Object::Anon" >}}) is an embryonic implementation, the author is looking for feedback
 
 ### Testing & Exceptions

@@ -22,7 +22,7 @@
 
 If you need to write object oriented Perl code with no dependencies, then you need to use the old school Perl syntax. This article describes the main features of old school object oriented Perl including class declaration, constructors, destructors, methods, attributes, accessors and inheritance.
 
-If you want to write object oriented Perl code using modern Perl tools, consider using [Moose]({{<mcpan "ETHER/Moose-2.0802/lib/Moose.pm" >}}) for a feature rich implementation including type checking, roles and accessor methods. An alternative is [Moo]({{<mcpan "Moo" >}}) which provides a speedy, minimalist implementation of the Moose syntax, without the sugar (or the overhead) of Moose.
+If you want to write object oriented Perl code using modern Perl tools, consider using [Moose]({{<mcpan "Moose" >}}) for a feature rich implementation including type checking, roles and accessor methods. An alternative is [Moo]({{<mcpan "Moo" >}}) which provides a speedy, minimalist implementation of the Moose syntax, without the sugar (or the overhead) of Moose.
 
 ### Classes
 
@@ -104,18 +104,18 @@ Let's review the key lines: 'use feature qw/say/;' enables the say function whic
 At the moment Shape.pm is quite rigid; every Shape object we use will have the same color, length and width values. We can increase the flexibility of the Shape class by accepting arguments that set the values of color, length and width attributes. Let's modify the Shape.pm constructor accordingly:
 
 ```perl
-package Shape; 
- 
-sub new { 
-    my ($class, $args) = @_; 
-    my $self = { 
-        color  => $args->{color}, 
-        length => $args->{length}, 
-        width  => $args->{width}, 
-    }; 
-    return bless $self, $class; 
-}           
-        
+package Shape;
+
+sub new {
+    my ($class, $args) = @_;
+    my $self = {
+        color  => $args->{color},
+        length => $args->{length},
+        width  => $args->{width},
+    };
+    return bless $self, $class;
+}
+
 1;
 ```
 
@@ -241,7 +241,7 @@ use strict;
 use warnings;
 use feature qw/say/;
 use Shape;
-    
+
 # pass color, length and width arguments to the constructor
 my $red_shape = Shape->new({
                 color => 'red',
@@ -294,17 +294,17 @@ use strict;
 use warnings;
 use feature qw/say/;
 use Shape;
-    
+
 # pass color argument to the constructor
 my $shape = Shape->new({
                 color => 'red',
             });
-    
+
 # print the shape color using get_color method
 say $shape->get_color;
 
 # set the shape color to blue
-$shape->set_color('blue'); 
+$shape->set_color('blue');
 
 # print the shape color using get_color method
 say $shape->get_color;
@@ -339,23 +339,23 @@ sub get_area {
 
 sub get_color {
     my $self = shift;
-    return $self->{color}; 
+    return $self->{color};
 }
 
 sub set_color {
     my ($self, $color) = @_;
-    $self->{color} = $color; 
+    $self->{color} = $color;
 }
 
 sub _set_datetime {
     my $self = shift;
     my $t = localtime;
-    $self->{datetime} = $t->datetime; 
+    $self->{datetime} = $t->datetime;
 }
 
 sub get_datetime {
     my $self = shift;
-    return $self->{datetime}; 
+    return $self->{datetime};
 }
 
 1;
@@ -408,23 +408,23 @@ sub get_area {
 
 sub get_color {
     my $self = shift;
-    return $self->{color}; 
+    return $self->{color};
 }
 
 sub set_color {
     my ($self, $color) = @_;
-    $self->{color} = $color; 
+    $self->{color} = $color;
 }
 
 sub _set_datetime {
     my $self = shift;
     my $t = localtime;
-    $self->{datetime} = $t->datetime; 
+    $self->{datetime} = $t->datetime;
 }
 
 sub get_datetime {
     my $self = shift;
-    return $self->{datetime}; 
+    return $self->{datetime};
 }
 
 1;

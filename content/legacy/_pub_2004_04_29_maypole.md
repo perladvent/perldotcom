@@ -295,7 +295,7 @@ Done! We've taken a user from logging in, adding goods to the cart, credit card 
 
 ### <span id="Registering_a_User">Registering a User</span>
 
-We have to find a way to sign a user up. This is actually not that hard, particularly since we can use the example of [Flox]({{<mcpan "release/SIMON/Maypole-1.7/doc/Flox.pod" >}}) in the Maypole manual. First, we'll add a "register" link to our login template:
+We have to find a way to sign a user up. This is actually not that hard, particularly since we can use the example of [Flox]({{<mcpan "Maypole::Manual::Flox" >}}) in the Maypole manual. First, we'll add a "register" link to our login template:
 
       <P>New user? <A HREF="/user/register">Sign up!</A></P>
 

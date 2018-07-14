@@ -421,7 +421,7 @@ That is all there is to it. No hash checking, no header manipulations, no back f
 
 ### Don't Forget the Tests!
 
-Of course, no module would be complete without a test suite, and the [Apache-Test]({{<mcpan "Apache-Test" >}}) framework introduced [last time](/pub/2003/05/22/testing.html) gives us all the tools we need to write a complete set of tests.
+Of course, no module would be complete without a test suite, and the [Apache-Test]({{<mcpan "Apache::Test" >}}) framework introduced [last time](/pub/2003/05/22/testing.html) gives us all the tools we need to write a complete set of tests.
 
 For the most part, the tests for Apache::AuthenHook are not that different from those presented before. LWP supports Digest authentication natively, so all our test scripts really need to do is make a request to a protected URI and let LWP do all the work. Here is a snippet from one of the tests.
 

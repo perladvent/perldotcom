@@ -31,7 +31,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 ### APIs & Apps
 * [CPAN::Upload::Tiny]({{<mcpan "CPAN::Upload::Tiny" >}}) a tiny CPAN uploader
 * Fetch streamable URLs from radio-station websites using [IHeartRadio::Streams]({{<mcpan "IHeartRadio::Streams" >}})
-* kritika.io is a code quality service for Perl, use its API with [App::Kritika]({{<mcpan "distribution/App-Kritika/script/kritika" >}})
+* kritika.io is a code quality service for Perl, use its API with [App::Kritika]({{<mcpan "App::Kritika" >}})
 * Access the Megaport API with [Megaport]({{<mcpan "Megaport" >}})
 * Use the Money Over IP v2 API (Brazilian) with [Net::Moip::V2]({{<mcpan "Net::Moip::V2" >}})
 * [Net::Zendesk]({{<mcpan "Net::Zendesk" >}}) is a thin and lightweight interface for Zendesk's API

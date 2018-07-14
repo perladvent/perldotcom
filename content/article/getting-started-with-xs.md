@@ -299,7 +299,7 @@ This will delete all the build files and reset the working directory to normal.
 
 - This article and code are on CPAN as [XS::Tutorial::One]({{<mcpan "XS::Tutorial::One" >}})
 - XS Mechanics by Steven W. McDougall is my second favorite :) XS [tutorial](http://world.std.com/~swmcd/steven/perl/pm/xs/intro/)
-- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp]({{<mcpan "distribution/ExtUtils-ParseXS/lib/ExtUtils/xsubpp" >}})
+- [perlxs](http://perldoc.perl.org/perlxs.html) defines the keywords recognized by [xsubpp]({{<perldoc "xsubpp" >}})
 - [perlapi](http://perldoc.perl.org/perlapi.html) : C macros used to interact with Perl data structures (and the interpreter)
 - The [stdlib.h](http://pubs.opengroup.org/onlinepubs/9699919799/) man page defines the C standard library functions and types
 - For writing Makefile.PL files: ExtUtils::MakeMaker [docs]({{<mcpan "ExtUtils::MakeMaker" >}}) are invaluable

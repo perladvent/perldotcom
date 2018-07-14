@@ -21,7 +21,7 @@
 }
 
 
-Some Perl modules have specific C library dependencies that need to be met or else they won't install. These issues can be tricky to solve as CPAN is not able to automatically install or report on non-Perl dependencies and Google isn't good at returning useful results for these types of issues ([Net::SSLeay]({{<mcpan "MIKEM/Net-SSLeay-1.54/lib/Net/SSLeay.pod" >}}) is a common example of a tricky module to install). Usually you will only find out about missing dependencies when trying to install the module, as the install will fail. What you need to do at this point is **identify** and **install** the missing C libraries.
+Some Perl modules have specific C library dependencies that need to be met or else they won't install. These issues can be tricky to solve as CPAN is not able to automatically install or report on non-Perl dependencies and Google isn't good at returning useful results for these types of issues ([Net::SSLeay]({{<mcpan "Net::SSLeay" >}}) is a common example of a tricky module to install). Usually you will only find out about missing dependencies when trying to install the module, as the install will fail. What you need to do at this point is **identify** and **install** the missing C libraries.
 
 ### Identifying C Library dependencies
 
@@ -30,7 +30,7 @@ Here are some places to check for dependencies:
 -   **Install error message** - scan the command line output from the failed install: often Perl developers will write specific error messages that indicate the missing C library.
 -   **Module documentation** - check the main POD page for the module on [metacpan](https://metacpan.org/) it may indicate which C libraries are required.
 -   **Distribution files** - check the README and INSTALL files that come with the distribution for the module you are trying to install. If available they will be in the root directory of the tarball. You can browse these files online at [metacpan](https://metacpan.org/) by searching for the module, then clicking the 'browse' link on the module's main page.
--   **Search your package manager** - look at the technologies and keywords associated with the module. For example [Net::SSLeay]({{<mcpan "MIKEM/Net-SSLeay-1.54/lib/Net/SSLeay.pod" >}}) probably has something to do with SSL, so search for Perl-related SSL packages (example below).
+-   **Search your package manager** - look at the technologies and keywords associated with the module. For example [Net::SSLeay]({{<mcpan "Net::SSLeay" >}}) probably has something to do with SSL, so search for Perl-related SSL packages (example below).
 
 ### Installing C library dependencies
 

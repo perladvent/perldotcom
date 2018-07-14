@@ -85,7 +85,7 @@ A corresponding URL might look like:
 
     /cgi-bin/project/widget/view.cgi?widget_id=23
 
-[CGI::Application::Dispatch 2.0]({{<mcpan "release/WONKO/CGI-Application-Dispatch-2.00/lib/CGI/Application/Dispatch.pm" >}}) allows you to replace all of these instance scripts with a single dispatch script to produce much cleaner URLs. Such a dispatch script might look like:
+[CGI::Application::Dispatch 2.0]({{<mcpan "CGI::Application::Dispatch" >}}) allows you to replace all of these instance scripts with a single dispatch script to produce much cleaner URLs. Such a dispatch script might look like:
 
     #!/usr/bin/perl
     use CGI::Application::Dispatch;

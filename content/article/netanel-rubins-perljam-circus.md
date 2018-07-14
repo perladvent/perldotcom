@@ -91,7 +91,7 @@ sub test {
 
 Aside from the fact that Netanel's code contains a big error which means it would never work, the claim that every other Perl project is coded in this way is preposterous. [Dist::Zilla]({{<mcpan "Dist::Zilla" >}}) is a popular Perl project with over 20,000 lines of code. Can you guess how frequently Dist::Zilla uses the construct Netanel describes? A quick grep of the code shows zero instances. Bugzilla was developed in 1998, it is not an example of [Modern Perl](http://modernperlbooks.com/books/modern_perl_2014/index.html).
 
-Regarding CGI.pm, I can't say it better than the official [documentation]({{<mcpan "CGI#CGI.pm-HAS-BEEN-REMOVED-FROM-THE-PERL-CORE" >}}):
+Regarding CGI.pm, I can't say it better than the official [documentation]({{<mcpan "CGI" >}}):
 
 > CGI.pm HAS BEEN REMOVED FROM THE PERL CORE
 >
@@ -116,7 +116,7 @@ The funny thing is Perl is improving all the time. Every year there is a major r
 
 Instead of waiting for a major release milestone, the Perl development team can fix critical security issues in a minor release if needed (for example see [5.16.3](http://perldoc.perl.org/perl5163delta.html)).
 
-Perl also has a strong toolchain for evaluating Perl code. [Perl::Critic]({{<mcpan "distribution/Perl-Critic/bin/perlcritic" >}}) is a linter that reviews Perl code against recommended coding practices. There is even a [policy]({{<mcpan "Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection" >}}) to check for potential SQL injection vulnerabilities.
+Perl also has a strong toolchain for evaluating Perl code. [Perl::Critic]({{<mcpan "Perl::Critic" >}}) is a linter that reviews Perl code against recommended coding practices. There is even a [policy]({{<mcpan "Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection" >}}) to check for potential SQL injection vulnerabilities.
 
 ### Conclusion
 > You can't always live in the fear of not knowing what data type you are trying to handle ... not trusting your hashes, not trusting your arrays, what's next, not trusting your own code?

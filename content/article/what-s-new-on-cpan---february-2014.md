@@ -31,7 +31,7 @@
 ### Apps
 
 -   Buid static web sites with [App::Dapper]({{<mcpan "App::Dapper" >}})
--   Prettify JSON, YAML and Perl data and translate into other languages with [pretty]({{<mcpan "distribution/App-pretty/bin/pretty" >}})
+-   Prettify JSON, YAML and Perl data and translate into other languages with [pretty]({{<mcpan "App::pretty" >}})
 
 ### Bots
 

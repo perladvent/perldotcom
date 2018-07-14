@@ -32,7 +32,7 @@ Perl application dependencies grow rapidly. This is because every time you impor
 
 ### Rapid Deployment
 
-Deploying this stack to a fresh environment couldn't be easier. We can use [cpanm]({{<mcpan "release/MIYAGAWA/App-cpanminus-1.7001/bin/cpanm" >}}) to read our Makefile.PL and recursively install our application dependencies, using Stratopan as the source. In the terminal we navigate to the root application directory and enter:
+Deploying this stack to a fresh environment couldn't be easier. We can use [cpanm]({{<mcpan "App::cpanminus" >}}) to read our Makefile.PL and recursively install our application dependencies, using Stratopan as the source. In the terminal we navigate to the root application directory and enter:
 
 ```perl
 $ cpanm -n --installdeps --mirror-only --mirror https://stratopan.com/sillymoose/WebStuff/perltricks .

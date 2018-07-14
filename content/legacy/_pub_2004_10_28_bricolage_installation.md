@@ -85,11 +85,11 @@ Expat
 Bricolage uses the [XML::Parser]({{<mcpan "XML::Parser" >}}) Perl module, which in turn requires the Expat XML parser library. Most Unix systems have a version of Expat installed already, but if you need it, install it from the [Expat home page](https://libexpat.github.io "The Expat XML Parser").
 
 CPAN Modules
-Bricolage uses a very large number of CPAN modules. Most of those required in turn require still more modules. For the most part, we recommend that you let the Bricolage installer install the required modules. It will determine which modules you need and install them using the `CPAN` module. If you want to get ahead of the game, use the `CPAN` module to install them yourself, first. The easiest way to do it is to install [Bundle::Bricolage]({{<mcpan "Bundle::Bricolage/" >}}). This module bundles up all of the required modules so that `CPAN` will install them for you:
+Bricolage uses a very large number of CPAN modules. Most of those required in turn require still more modules. For the most part, we recommend that you let the Bricolage installer install the required modules. It will determine which modules you need and install them using the `CPAN` module. If you want to get ahead of the game, use the `CPAN` module to install them yourself, first. The easiest way to do it is to install [Bundle::Bricolage]({{<mcpan "Bundle::Bricolage" >}}). This module bundles up all of the required modules so that `CPAN` will install them for you:
 
     % perl -MCPAN -e 'install Bundle::Bricolage'
 
-There are also several optional modules. Install these all in one command by using the [Bundle::BricolagePlus]({{<mcpan "Bundle::BricolagePlus/ "Bundle::BricolagePlus on CPAN"" >}}) module:
+There are also several optional modules. Install these all in one command by using the [Bundle::BricolagePlus]({{<mcpan "Bundle::BricolagePlus" >}}) module:
 
     % perl -MCPAN -e 'install Bundle::BricolagePlus'
 

@@ -22,7 +22,7 @@
 
 ### Tech Specs
 
-The comparison was between [Catalyst 5.90062]({{<mcpan "release/JJNAPIORK/Catalyst-Runtime-5.90062/lib/Catalyst/Runtime.pm" >}}) and [Dancer2 0.14](https://metacpan.org/release/XSAWYERX/Dancer2-0.140000). For local tests the machine used was a 2011 MacBook Air running Fedora 19 and Perl 5.16.3.
+The comparison was between [Catalyst 5.90062](https://metacpan.org/release/JJNAPIORK/Catalyst-Runtime-5.90062/lib/Catalyst/Runtime.pm) and [Dancer2 0.14](https://metacpan.org/release/XSAWYERX/Dancer2-0.140000). For local tests the machine used was a 2011 MacBook Air running Fedora 19 and Perl 5.16.3.
 
 ### Number of Dependencies
 

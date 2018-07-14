@@ -26,7 +26,7 @@
 
 ### APIs & Apps
 
--   Easily setup a TCP proxy server for analyzing web traffic with [App::tcpproxy]({{<mcpan "tcpproxy.pl" >}})
+-   Easily setup a TCP proxy server for analyzing web traffic with [App::tcpproxy]({{<mcpan "App::tcpproxy" >}})
 -   [App::Prove::Watch]({{<mcpan "App::Prove::Watch" >}}) runs your unit tests every time your code changes
 -   Monitor Bitcoin prices from several sources using [Finance::Bitcoin::Feed]({{<mcpan "Finance::Bitcoin::Feed" >}})
 -   [Net::Tesco]({{<mcpan "Net::Tesco" >}}) provides a Perly API for Tesco, one of the World's largest retailers

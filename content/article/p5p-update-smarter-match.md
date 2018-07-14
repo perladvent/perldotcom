@@ -17,7 +17,7 @@ On December 20th, 2017, we released Perl 5.27.7, which included a massive change
 
 Smartmatch has a long history. It was introduced in 5.10 back in December 2007 and significantly revised in 5.10.1. It was a good idea, but ended up causing more harm than good to the point it was deemed unreliable.
 
-In an unprecedented step, it was marked as "experimental" in Perl 5.18.0, released in May 2013. Here is the mention of this in [Perldelta]({{<mcpan "release/RJBS/perl-5.18.1/pod/perl5180delta.pod#The-smartmatch-family-of-features-are-now-experimental" >}}):
+In an unprecedented step, it was marked as "experimental" in Perl 5.18.0, released in May 2013. Here is the mention of this in [perldelta]({{<perldoc "perl5180delta" >}}):
 
 > Smartmatch, added in v5.10.0 and significantly revised in v5.10.1, has been a regular point of complaint. Although there are some ways in which it is useful, it has also proven problematic and confusing for both users and implementors of Perl. There have been some proposals on how to best address the problem. It is clear that smartmatch is almost certainly either going to change or go away in the future. Relying on its current behavior is not recommended.
 >

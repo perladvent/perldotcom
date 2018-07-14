@@ -57,7 +57,7 @@ There are several bits to Ajax:
 
 ### Ajax and Perl: `CGI::Ajax`
 
-You could spend a lot of time figuring out all the pieces of JavaScript on the client side and Perl on the server side in order to work out how to use Ajax in your code. However, this is Perl; we like to be a bit lazy. Thankfully, there's already a module on CPAN to take the pain out of it: [CGI::Ajax]({{<mcpan "CGI::Ajax/" >}}).
+You could spend a lot of time figuring out all the pieces of JavaScript on the client side and Perl on the server side in order to work out how to use Ajax in your code. However, this is Perl; we like to be a bit lazy. Thankfully, there's already a module on CPAN to take the pain out of it: [CGI::Ajax]({{<mcpan "CGI::Ajax" >}}).
 
 `CGI::Ajax` provides a small bit of infrastructure for your CGI programs. You tell it about some of your functions and it sets up JavaScript to call them and return the results to your page. You don't need to worry about writing the JavaScript to do this, because `CGI::Ajax` takes care of it. All you have to do is add some JavaScript calls to the functions defined in your script and let `CGI::Ajax` deal with the plumbing.
 

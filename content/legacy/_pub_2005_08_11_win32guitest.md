@@ -37,7 +37,7 @@ Windows has many libraries that help you automate such things, but do the applic
 
 ### What You Need
 
-You need a working installation of Perl, with Perl/Tk included. I recommend [ActiveState](http://www.activestate.com/)'s ActivePerl. You also need the [Win32::GuiTest]({{<mcpan "Win32::GuiTest/" >}}) module. Install it from the CPAN or, ideally, through PPM.
+You need a working installation of Perl, with Perl/Tk included. I recommend [ActiveState](http://www.activestate.com/)'s ActivePerl. You also need the [Win32::GuiTest]({{<mcpan "Win32::GuiTest" >}}) module. Install it from the CPAN or, ideally, through PPM.
 
 ### Example Code
 
@@ -239,15 +239,15 @@ The trick is that the code can still push it using the mouse! Having the button 
 
     sub click_on_the_middle_of_window {
         my $window = shift;
-     
+
         print "* Moving the mouse over the window id: $window\n";
-     
+
         my ( $left, $top, $right, $bottom ) = GetWindowRect($window);
-     
+
         MouseMoveAbsPix( ( $right + $left ) / 2, ( $top + $bottom ) / 2 );
-     
+
         sleep(1);
-     
+
         print "* Left Clicking on the window id: $window\n";
         SendMouse("{LeftClick}");
         sleep(1);

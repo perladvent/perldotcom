@@ -347,7 +347,7 @@ There are plenty of other features that our little web application would benefit
 ### See Also
 
 -   [Class::DBI]({{<mcpan "Class::DBI" >}})
--   [The Template Toolkit]({{<mcpan "The Template Toolkit" >}})
+-   [The Template Toolkit]({{<mcpan "Template::Toolkit" >}})
 -   [Search::InvertedIndex]({{<mcpan "Search::InvertedIndex" >}})
 -   [Text::DoubleMetaphone]({{<mcpan "Text::DoubleMetaphone" >}})
 

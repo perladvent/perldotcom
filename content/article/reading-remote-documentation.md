@@ -15,7 +15,7 @@ When I need to read Perl documentation, I use [perldoc]({{< relref "hello-perldo
 
 ### Pod::Cpandoc
 
-Sometimes I need to check the documentation of a module I don't have installed on my machine, and in those cases, `perldoc` can't help me. Instead I could use {{< mcpan "Pod::Cpandoc" "cpandoc" >}}, as it behaves like perldoc, but it will fetch remote documentation if the module is not installed on your system.
+Sometimes I need to check the documentation of a module I don't have installed on my machine, and in those cases, `perldoc` can't help me. Instead I could use [cpandoc]({{< mcpan "Pod::Cpandoc">}}), as it behaves like perldoc, but it will fetch remote documentation if the module is not installed on your system.
 
     $ cpandoc Foo::Bar
     # displays Foo::Bar pod in pager app
@@ -32,8 +32,8 @@ After having performed this routine more times than I'd like to admit, I finally
 
 ```bash
 #!/bin/sh
-URL="{{<mcpan "$1"
-" >}}
+URL="https://metacpan.org/pod/$1"
+
 if [[ "$OSTYPE" == "linux-gnu"  ]]; then
   xdg-open "$URL" &>/dev/null
 elif [[ "$OSTYPE" == "darwin"*  ]]; then

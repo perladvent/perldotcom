@@ -35,7 +35,7 @@ The Rapi::FS distribution does many things well: it performs a useful purpose, i
 ### APIs & Apps
 
 -   [App::GitWorkspaceScanner]({{<mcpan "App::GitWorkspaceScanner" >}}) looks useful, it detects and reports on Git repositories with local changes.
--   Looking for a command line JSON converter? Check out [json-to]({{<mcpan "json-to" >}})
+-   Looking for a command line JSON converter? Check out [json-to]({{<mcpan "App::JSON::to" >}})
 -   [App::PureProxy]({{<mcpan "App::PureProxy" >}}) is a simple proxy server written in Perl
 -   Retrieve US Census Bureau geo data using [Geo::USCensus::Geocoding]({{<mcpan "Geo::USCensus::Geocoding" >}})
 -   [App::VirtPerl]({{<mcpan "App::VirtPerl" >}}) lets you use multiple versions of Perl modules with a single Perl install
