@@ -110,7 +110,7 @@ For an example of a real-world Perl app created with App::FatPacker, check out o
 
 [PP]({{<mcpan "pp" >}}) is another Perl tool that can create stand-alone Perl apps. It also supports XS module dependencies (unlike App::FatPacker).
 
-Of course you can also distribute an application via CPAN, where you have the flexibility of including the dependent modules in your application's inc directory, or include the modules as dependencies in the makefile, and let CPAN install them for you - this is also more disk space efficient. Perl applications on CPAN place the app in the application's bin directory and use "EXE\_FILES" directive in the makefile to install the app to the Perl bin directory. If you're interested in this approach, check out the [Module::Starter source](https://metacpan.org/source/XSAWYERX/Module-Starter-1.62) as a good example to copy from.
+Of course you can also distribute an application via CPAN, where you have the flexibility of including the dependent modules in your application's inc directory, or include the modules as dependencies in the makefile, and let CPAN install them for you - this is also more disk space efficient. Perl applications on CPAN place the app in the application's bin directory and use "EXE\_FILES" directive in the makefile to install the app to the Perl bin directory. If you're interested in this approach, check out the [Module::Starter source]({{<mcpan "Module::Starter" >}}) as a good example to copy from.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

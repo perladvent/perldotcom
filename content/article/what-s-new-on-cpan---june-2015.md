@@ -32,7 +32,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 
 [Class::Storage]({{<mcpan "Class::Storage" >}}) is a module for serializing blessed references (objects). Once serialized, an object can be transmitted via JSON, XML, YAML or saved in a data store. Serializing objects can also make IPC easier: coroutines, threads and other processes can pass text but blessed references are often an issue.
 
-Module author Peter Valdemar Mørch has pulled together excellent documentation. A welcome addition to CPAN, check out the acknowledgements [section]({{<mcpan "Class::Storage#ACKNOWLEDGEMENTS" >}}) for some interesting background on the module. For an alternative approach, you might be interested in [Object::Serializer]({{<mcpan "Object::Serializer" >}}). For non-readable serializers, checkout [Storable]({{<mcpan "Storable" >}}) and the newer and faster [Sereal]({{<mcpan "Sereal" >}}).
+Module author Peter Valdemar Mørch has pulled together excellent documentation. A welcome addition to CPAN, check out the [acknowledgements section]({{<mcpan "Class::Storage#ACKNOWLEDGEMENTS" >}}) for some interesting background on the module. For an alternative approach, you might be interested in [Object::Serializer]({{<mcpan "Object::Serializer" >}}). For non-readable serializers, checkout [Storable]({{<mcpan "Storable" >}}) and the newer and faster [Sereal]({{<mcpan "Sereal" >}}).
 
 **Important** - when working with object serializers like Class::Storage, only deserialize trusted data, as malicious code can be injected into the data, and when the data is deserialized, the code will be executed automatically. See for example this bug [report](https://rt.cpan.org/Public/Bug/Display.html?id=105772) (*Thanks to Reini Urban for the reminder*).
 

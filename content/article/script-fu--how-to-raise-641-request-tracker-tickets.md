@@ -55,9 +55,9 @@ scan_directory('.');
 
 sub scan_directory
 {
-  my ($dir) = @_; 
+  my ($dir) = @_;
 
-  opendir(my $dh, "$dir") or die $!; 
+  opendir(my $dh, "$dir") or die $!;
 
   while (readdir $dh)
   {
@@ -66,27 +66,27 @@ sub scan_directory
     next if $newpath !~ qr/^\.\/S/ || -l $newpath;
 
     if (-d $newpath && $newpath !~ /\.$/)
-    {   
+    {
       scan_directory($newpath);
-    }   
+    }
     elsif (-f $newpath)
-    {   
+    {
       open my $file, '<', $newpath or die "failed to open $newpath $!\n";
-      my $line_num = 1;· 
+      my $line_num = 1;·
       while (<$file>)
-      {   
+      {
         chomp;
         if (/^#\?rakudo.+?(?:skip|todo)((?:(?!RT).)+)$/)
         {
           my $subject = sprintf "Roast rakudo skip/todo test:%s line:%s reason:%s",
-            $newpath, $line_num, $1; 
+            $newpath, $line_num, $1;
 
          $subject =~ s/"//g;
 
           my $response = `rt create -t ticket set subject="$subject" queue=perl6 priority=0`;
           if ($response =~ /([0-9]+)/)
           {
-            printf "%s RT#:%s\n", $subject, $1; 
+            printf "%s RT#:%s\n", $subject, $1;
           }
           else
           {
@@ -94,9 +94,9 @@ sub scan_directory
           }
         }
         $line_num++;
-      }   
+      }
       close $file;
-    }   
+    }
   }
 }
 ```
@@ -113,7 +113,7 @@ The script then extracts the RT ticket number from the `$response`, and prints o
 
 ### A quick note on configuring RT CLI
 
-Configuring and using the RT command line client is simple, but finding out how to do it can be a hard - most of the sources I looked at were out of date, and the RT CPAN [namespace](https://metacpan.org/search?q=RT&size=20) has so many burned-out carcasses that Mad Max would be comfortable there. To use the command line client, first install RT::Client::CLI:
+Configuring and using the RT command line client is simple, but finding out how to do it can be a hard - most of the sources I looked at were out of date, and the [RT CPAN namespace](https://metacpan.org/search?q=RT&size=20) has so many burned-out carcasses that Mad Max would be comfortable there. To use the command line client, first install RT::Client::CLI:
 
 ```perl
 $ cpan RT::Client::CLI
@@ -148,22 +148,22 @@ while (my $line = <$tickets>)
     my $counter = 1;
     my @lines;
     while (my $line = <$file>)
-    {   
+    {
       if ($counter == $line_num)
-      {   
+      {
         chomp $line;
         $line =~ s/('|")\s*$/ RT #$ticket_num$1\n/;
-      }   
+      }
       push @lines, $line;
       $counter++;
-    }   
+    }
     close $file;
 
     open my $output_file, '>', $filename or die "failed to open $filename $!\n";
     for (@lines)
-    {   
-      print $output_file $_; 
-    }   
+    {
+      print $output_file $_;
+    }
     close $output_file;
   }
   else

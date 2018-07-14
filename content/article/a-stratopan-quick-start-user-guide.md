@@ -68,7 +68,7 @@ Finally the "settings" link let's you update the stack name, description and tar
 
 ### Installing modules from your Stratopan stack
 
-To install modules from Stratopan you'll need [cpanm](https://cpanmin.us). You can install this via cpan from the terminal:
+To install modules from Stratopan you'll need [cpanm]({{<mcpan "App::cpanminus" >}}). You can install this via cpan from the terminal:
 
 ```perl
 cpan App::cpanminus
