@@ -255,6 +255,9 @@ $loop_ids{'url'} = Mojo::IOLoop->recurring(
 						};
 					$Seen{$job->url}{code} = $code // 999;
 					push $Seen{$job->url}{files}->@*, $job->file;
+					$Seen{$job->url}{parse_time} = $job->parse_time;
+					$Seen{$job->url}{fetch_time} = $job->fetch_time;
+					$Seen{$job->url}{response_time} = $job->response_time;
 					say sprintf "%3d %6.3fs %s",
 						$Seen{$job->url}{code},
 						tv_interval( $job->fetch_time, $job->response_time ),
@@ -279,11 +282,20 @@ $loop_ids{'url'} = Mojo::IOLoop->recurring(
 Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
 if( $report ) {
+	state $rc = require List::Util;
 	say "=== Start Report ===";
 	foreach my $url ( sort { $Seen{$a}{code} <=> $Seen{$b}{code} } keys %Seen ) {
 		next if $Seen{$url}{code} == 200;
 		printf "%3d %s %s\n", $Seen{$url}{code}, $url, $Seen{$url}{location} // '';
 		}
+
+	my $grand_response_time = List::Util::sum(
+		map { tv_interval( $Seen{$_}->@{qw(fetch_time response_time)} ) }
+		keys %Seen
+		);
+
+	say sprintf "Grand fetch time: %.2f seconds", $grand_response_time;
+
 	say "=== End Report ===";
 	}
 
