@@ -1,0 +1,318 @@
+#!/Users/brian/bin/perls/perl-latest
+use v5.28;
+use feature qw(signatures);
+no warnings qw(experimental::signatures);
+
+use Getopt::Long;
+use Mojo::IOLoop;
+use Mojo::UserAgent;
+use Time::HiRes qw(tv_interval gettimeofday);
+
+=head1 NAME
+
+check_links - check the HTML links in the docs
+
+=head1 SYNOPSIS
+
+	# guess based on extension
+	% perl check_links file1.html file2.md
+
+	# treat all files as markdown files regardless of type or extension
+	% perl check_links --markdown file1.md ...
+
+	# treat all files as HTML files regardless of type or extension
+	% perl check_links --html file1.html ...
+
+	# add a report of bad links at the end
+	% perl check_links --report file1.html file2.md
+
+	# add a report of bad links at the end
+	% perl check_links --verbose file1.html file2.md
+
+=head1 DESCRIPTION
+
+Go through the files named on the command line, extract their web links,
+then fetch them. Record the HTTP status. Output a report.
+
+=head2 Command-line options
+
+=over 4
+
+=item --elapsed
+
+Report the total elapsed run time (default: Off)
+
+=item --html
+
+Treat all files at HTML
+
+=item --json [FILE]
+
+Output a JSON report
+
+=item --markdown
+
+Treat all files as Markdown
+
+=item --max N
+
+The maximum number of concurrent requests (default: 4)
+
+=item --report
+
+Show a consoldated report of bad links at the end (default: Off)
+
+=item --verbose
+
+Output extra progress information (default: Off)
+
+=back
+
+=head1 TO DO
+
+=over 4
+
+=item Needs to handle relative URLs
+
+<meta property="og:url" content="https://www.perl.com/..." />
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright 2018 brian d foy C<< <bdfoy@cpan.org> >>.
+
+=head1 LICENSE
+
+You can use this under the terms of the Artistic License 2.0.
+
+=cut
+
+my $ua = Mojo::UserAgent->new;
+
+my %connections;
+$connections{max}    = 4;
+$connections{active} = 0;
+
+my $verbose                  = 0;
+my $elapsed                  = 0;
+my $report                   = 0;
+my $json_report              = undef;
+my $always_treat_as_markdown = 0;
+my $always_treat_as_html     = 0;
+
+GetOptions(
+	"max=i"       => \ $connections{max},    # numeric
+	"verbose"     => \ $verbose,
+	"elapsed"     => \ $elapsed,
+	"report"      => \ $report,
+	"json_report=s" => \ $json_report,
+	"markdown"    => \ $always_treat_as_markdown,
+	"html"        => \ $always_treat_as_html,
+	) or die "Error in command line arguments\n";
+
+if( $always_treat_as_html and $always_treat_as_markdown ) {
+	die "Cannot specify --html and --markdown at the same time\n";
+	}
+
+package Channel {
+	sub new      ( $class )         { bless { queue => [], open => 1 }, $class }
+	sub _queue   ( $self )          { $self->{queue}                   }
+
+	sub emit     ( $self, @items )  { push   $self->_queue->@*, @items }
+	sub receive  ( $self )          { shift  $self->_queue->@*         }
+	sub poll     ( $self )          { scalar $self->_queue->@*         }
+	sub close    ( $self )          { $self->{open} = 0                }
+	sub list     ( $self )          { $self->_queue->@*                }
+
+	sub is_empty  ( $self )         { 0 == scalar $self->_queue->@*    }
+	sub is_closed ( $self )         { ! $self->is_open                 }
+	sub is_open   ( $self )         {   $self->{open}                  }
+	}
+
+package Job {
+	use Time::HiRes qw(gettimeofday);
+
+	sub new  ( $class, $file, $url ) {
+		my $self = bless [ $file, $url ], $class;
+		$self->set_parse_time;
+		$self;
+		}
+
+	sub file ( $self ) { $self->[0] }
+	sub url  ( $self ) { $self->[1] }
+
+	sub parse_time     ( $self ) { $self->[2] }
+	sub set_parse_time ( $self ) { $self->_set_time(2) }
+
+	sub fetch_time     ( $self ) { $self->[3] }
+	sub set_fetch_time ( $self ) { $self->_set_time(3) }
+
+	sub response_time     ( $self ) { $self->[4] }
+	sub set_response_time ( $self ) { $self->_set_time(4) }
+
+	sub _set_time ( $self, $index ) { $self->[$index] = [gettimeofday] }
+	}
+
+sub verbose ( @messages ) {
+	return unless $verbose;
+	say STDERR '||| ', join "\n||| ", @messages;
+	}
+
+my %Seen;
+my %loop_ids = ();
+my $channel = Channel->new;
+
+$loop_ids{'file_reader'} = Mojo::IOLoop->recurring(
+    0 => sub {
+    	unless( @ARGV ) {
+    		verbose( "No more files! Removing" );
+    		$channel->close;
+    		Mojo::IOLoop->remove( $loop_ids{'file_reader'} );
+    		return;
+    		}
+
+    	my $file = shift @ARGV;
+     	verbose( "Trying file: $file" );
+
+		my $code_ref = do {
+			   if( $always_treat_as_html )     { \&links_from_html     }
+			elsif( $always_treat_as_markdown ) { \&links_from_markdown }
+			elsif( $file =~ m/\.md\z/ )        { \&links_from_markdown }
+			elsif( $file =~ m/\.html\z/ )      { \&links_from_html     }
+			else { warn "Don't know how to treat file '$file'\n"; sub {} }
+			};
+
+		$code_ref->( $file, $channel );
+		},
+	);
+
+sub links_from_html ( $file, $channel ) {
+	state $rc1 = require Mojo::DOM;
+	state $rc  = require Mojo::File;
+	state $rc2 = require Mojo::URL;
+
+	my $data = Mojo::File->new( $file )->slurp;
+	my $dom = Mojo::DOM->new( $data );
+	my $base = do {
+		my $c1 = $dom->find( 'base' )->map( attr => 'href' );
+		my $c2 = $dom->find( 'meta[property="og:url"]' )->map( attr => 'content' );
+		my $base = eval { $c1->[0] // $c2->[0] };
+		Mojo::URL->new( $base );
+		};
+
+	$dom
+		->find( 'a' )
+		->map( attr => 'href' )
+		->each( sub {
+			my $url = Mojo::URL->new( $_ );
+			$url->base( $base ) unless $url->is_abs;
+			my $job = Job->new( $file, $url );
+			$channel->emit( $job ) if $url->is_abs;
+			} );
+	}
+
+sub links_from_markdown ( $file, $channel ) {
+	open my $fh, '<:utf8', $file;
+	while( <$fh> ) {
+		my @links = m{\[.+?\]\((http.+?)(?:\s|\))}gi;
+		if( @links ) {
+			$channel->emit(
+				map  { Job->new( $file, $_ ) }
+				grep { /\Ahttps?:/i }
+				@links
+				);
+			}
+		}
+	close $fh;
+	}
+
+$loop_ids{'status'} = Mojo::IOLoop->recurring(
+	10 => sub {
+    	verbose( "Channel has " . $channel->poll . " items" );
+		}
+	);
+
+$loop_ids{'url'} = Mojo::IOLoop->recurring(
+    0 => sub {
+    	if( my $count = $channel->poll ) {
+			my $new_connections = $connections{max} - $connections{active};
+			foreach ( 1 .. $new_connections ) {
+				my $job = $channel->receive;
+				$connections{active}++;
+
+				$job->set_fetch_time;
+				$ua->get( $job->url, sub ( $ua, $tx ) {
+					$job->set_response_time;
+					$connections{active}--;
+					my $code = eval {
+						if( $tx->result->is_redirect ) {
+							my $location = $tx->result->headers->header( 'Location' );
+							$Seen{$job->url}{location} = $location;
+							}
+
+						$tx->result->code;
+						};
+					$Seen{$job->url}{code} = $code // 999;
+					push $Seen{$job->url}{files}->@*, $job->file;
+					say sprintf "%3d %6.3fs %s",
+						$Seen{$job->url}{code},
+						tv_interval( $job->fetch_time, $job->response_time ),
+						$job->url;
+					}
+					);
+				}
+    		}
+    	elsif( $channel->is_closed )  {
+    		verbose( "No more URLs! Removing" );
+    		Mojo::IOLoop->remove( $loop_ids{'url'} );
+     		Mojo::IOLoop->remove( $loop_ids{'status'} );
+   			return;
+    		}
+    	else {
+    		verbose( "Waiting on items" ) ;
+    		sleep 1;
+    		}
+    	}
+	);
+
+Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+if( $report ) {
+	say "=== Start Report ===";
+	foreach my $url ( sort { $Seen{$a}{code} <=> $Seen{$b}{code} } keys %Seen ) {
+		next if $Seen{$url}{code} == 200;
+		printf "%3d %s %s\n", $Seen{$url}{code}, $url, $Seen{$url}{location} // '';
+		}
+	say "=== End Report ===";
+	}
+
+if( defined $json_report ) {
+	state $rc = require Mojo::JSON;
+
+	my $fh;
+	unless( $json_report ne '-' and open $fh, '>:raw', $json_report ) {
+		warn "Could not save JSON to '$json_report': $!\n";
+		return;
+		}
+
+	$fh = \*STDOUT if $json_report eq '-';
+
+	my %Failed =
+		map {
+			my %hash = $Seen{$_}->%{ qw(files code location) };
+			$_ => \%hash;
+			}
+		grep { $Seen{$_}{code} != 200 }
+		keys %Seen;
+
+	my $json = Mojo::JSON::encode_json( \%Failed );
+	say { $fh } $json;
+	}
+
+my $t0;
+BEGIN { $t0 = [gettimeofday] }
+END   {
+	my $elapsed = tv_interval ( $t0, [gettimeofday]);
+	say "||| Total run time: $elapsed seconds" if $elapsed;
+	}
