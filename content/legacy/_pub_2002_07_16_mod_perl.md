@@ -34,18 +34,18 @@ The code inside the subroutine does an arithmetic and a numeric comparison of tw
       use Benchmark;
       use diagnostics;
       use strict;
-      
+
       my $count = 50000;
-      
+
       disable diagnostics;
       my $t1 = timeit($count,\&test_code);
-      
+
       enable  diagnostics;
       my $t2 = timeit($count,\&test_code);
-      
+
       print "Off: ",timestr($t1),"\n";
       print "On : ",timestr($t2),"\n";
-      
+
       sub test_code{
         my ($a,$b) = qw(foo bar);
         my $c;
@@ -95,7 +95,7 @@ Run it with the profiler enabled, and then create the profiling stastics with th
 
       % perl -d:DProf diagnostics.pl
       % dprofpp
-      
+
       Total Elapsed Time = 0.342236 Seconds
         User+System Time = 0.335420 Seconds
       Exclusive Times
@@ -332,12 +332,12 @@ Here are the code examples and the numbers:
 After executing each script in single server mode (-X) the results are:
 
 1.    Totals: 1966 bytes | 27 OPs
-          
+
           handler 1514 bytes | 27 OPs
           exit     116 bytes |  0 OPs
 
 2.    Totals: 4710 bytes | 19 OPs
-          
+
           handler  1117 bytes | 19 OPs
           basefont  120 bytes |  0 OPs
           frameset  120 bytes |  0 OPs
@@ -401,26 +401,10 @@ Note that you shouldn't use `Apache::Status` module on production server as it a
 =======================================
 
 -   The mod\_perl site's URL: <http://perl.apache.org>
--   `Devel::DProf`
-
-    <{{<mcpan "Devel::DProf>
-" >}}
--   `Apache::DProf`
-
-    <{{<mcpan "Apache::DProf>
-" >}}
--   `Apache::VMonitor`
-
-    <{{<mcpan "Apache::VMonitor>
-" >}}
--   `GTop`
-
-    <{{<mcpan "GTop>
-" >}}
+-   [Devel::DProf]({{<mcpan "Devel::DProf" >}})
+-   [Apache::DProf]({{<mcpan "Apache::DProf" >}})
+-   [Apache::VMonitor]({{<mcpan "Apache::VMonitor" >}})
+-   [GTop]({{<mcpan "GTop" >}})
     The home of the C library: <http://www.home-of-linux.org/gnome/libgtop/>
-
--   `BSD::Resource`
-
-    <{{<mcpan "BSD::Resource>
-" >}}
+-   [BSD::Resource]({{<mcpan "BSD::Resource" >}})
 

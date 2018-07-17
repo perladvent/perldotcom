@@ -147,10 +147,10 @@ The data tags still contain tags and entities. If you don't want the tags and en
       my $tables = get_tables($URL);
       my $modules = $tables->[4];    # 5th table holds module data
       foreach my $r (@{ $modules->{rows} }) {
-        my ($module_name, $module_link, $status, $description) = 
+        my ($module_name, $module_link, $status, $description) =
             parse_module_row($r, $URL);
         print "$module_name <$module_link>\n\t$status\n\t$description\n\n";
-      } 
+      }
       sub get_tables {
         my $URL = shift;
         my $page = get($URL);
@@ -176,8 +176,8 @@ The data tags still contain tags and entities. If you don't want the tags and en
 
 #### See Also
 
-The documentation for the CPAN module HTML::TableContentParser; <{{<mcpan "HTML::TableContentParser>
-" >}}
+The documentation for the CPAN module [HTML::TableContentParser]({{<mcpan "HTML::TableContentParser" >}})
+
 ### Sample Recipe: Templating with HTML::Mason
 
 ### Problem

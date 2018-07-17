@@ -35,7 +35,7 @@ The results are:
 
       Document Path:          /perl/access/access.cgi
       Document Length:        16 bytes
-      
+
       Concurrency Level:      10
       Time taken for tests:   1.683 seconds
       Complete requests:      100
@@ -44,7 +44,7 @@ The results are:
       HTML transferred:       1600 bytes
       Requests per second:    59.42
       Transfer rate:          9.57 kb/s received
-      
+
       Connnection Times (ms)
                     min   avg   max
       Connect:        0    29   101
@@ -148,8 +148,8 @@ gives us:
          NR   NC    RPS     comment
       ------------------------------------------------
          10   10    3.33    # not a reliable figure
-        100   10    3.94    
-       1000   10    4.62    
+        100   10    3.94
+       1000   10    4.62
        1000   50    4.09
 
 **Conclusions:** Here I wanted to show that when the application is slow (not due to perl loading, code compilation and execution, but limited by some external operation) it almost does not matter what load we place on the server. The RPS (Requests per second) is almost the same. Given that all the requests have been served, you have the ability to queue the clients, but be aware that anything that goes into the queue means a waiting client and a client (browser) that might time out!
@@ -165,7 +165,7 @@ Now we will benchmark the same script without using the mysql (code limited by p
          NR   NC      RPS   comment
       ------------------------------------------------
          10   10    26.95   # not a reliable figure
-        100   10    30.88   
+        100   10    30.88
        1000   10    29.31
        1000   50    28.01
        1000  100    29.74
@@ -181,7 +181,7 @@ Now we will use the server to its full capacity, by keeping all `MaxClients` cli
       StartServers          50
       MaxClients            50
       MaxRequestsPerChild 5000
-      
+
          NR   NC      RPS   comment
       ------------------------------------------------
         100   10    32.05
@@ -199,11 +199,11 @@ Now we will change `MaxClients` and watch the results: Let's reduce `MaxClients`
       StartServers          10
       MaxClients            10
       MaxRequestsPerChild 5000
-      
+
          NR   NC      RPS   comment
       ------------------------------------------------
          10   10    23.87   # not a reliable figure
-        100   10    32.64 
+        100   10    32.64
        1000   10    32.82
        1000   50    30.43
        1000  100    25.68
@@ -221,7 +221,7 @@ Now we will start drastically to reduce `MaxRequestsPerChild`:
 
          NR   NC    MRPC     RPS    comment
       ------------------------------------------------
-        100   10      10    5.77 
+        100   10      10    5.77
         100   10       5    3.32
        1000   50      20    8.92
        1000   50      10    5.47
@@ -236,7 +236,7 @@ Here are the numbers of this run with mod\_cgi, for comparison:
       MaxSpareServers       16
       StartServers          10
       MaxClients            50
-      
+
          NR   NC    RPS     comment
       ------------------------------------------------
         100   10    1.12
@@ -324,5 +324,4 @@ Another approach is to use the `Apache::SizeLimit` or the `Apache::GTopLimit` mo
 =======================================
 
 -   The mod\_perl site's URL: <http://perl.apache.org/>
--   `Apache::GTopLimit` <{{<mcpan "Apache::GTopLimit>
-" >}}
+-   [Apache::GTopLimit]({{<mcpan "Apache::GTopLimit" >}})

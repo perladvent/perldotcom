@@ -389,6 +389,5 @@ will the operating system actually `exec()` a copy of `/bin/sh` to parse your co
 ### <span id="references">References</span>
 
 -   The `mod_perl` site's URL: <http://perl.apache.org/>
--   `Apache-SubProcess` <{{<mcpan "Apache::SubProcess>
-" >}}-   `Storable` <{{<mcpan "Storable>
-" >}}
+-   [Apache-SubProcess]({{<mcpan "Apache::SubProcess" >}})
+-   [Storable]({{<mcpan "Storable" >}})

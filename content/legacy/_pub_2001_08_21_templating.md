@@ -289,8 +289,8 @@ One thing to note about the session and state management in this system is that 
 
 ### <span id="text::template">Text::Template</span>
 
-<{{<mcpan "Text::Template>
-" >}}
+[Text::Template]({{<mcpan "Text::Template" >}})
+
 This module has become the de facto standard general purpose templating module on CPAN. It has an easy interface and thorough documentation. The examples in the docs show a pipeline execution style, but it's easy to write a mod\_perl handler that directly invokes templates, allowing a callback style. The module uses in-line Perl. It has the ability to run the in-line code in a Safe compartment, in case you are concerned about mistakes in the code crashing your server.
 
 The module relies on creative uses of in-line code to provide things that people usually expect from templating tools, like includes. This can be good or bad. For example, to include a file you could just call Text::Template::fill\_in\_file(filename). However, you'll have to specify the complete file path and nothing will stop you from using /etc/passwd as the file to be included. Most of the fancier templating tools have concepts like include paths, which allow you to specify a list of directories to search for included files. You could write a subroutine that works this way, and make it available in your template's namespace, but it's not built in.
@@ -339,8 +339,8 @@ The TT distribution also includes a script called ttree, which allows for proces
 
 ### <span id="html::template">HTML::Template</span>
 
-<{{<mcpan "HTML::Template>
-" >}}
+[HTML::Template]({{<mcpan "HTML::Template" >}})
+
 HTML::Template is a popular module among those looking to use a mini-language rather than in-line Perl. It uses a simple set of tags that allow looping (even on nested data structures) and conditionals in addition to basic value insertion. The tags are intentionally styled to look like HTML tags, which may be useful for some situations.
 
 As the documentation says, it \`\`does just one thing and it does quickly and carefully'' -- there is no attempt to add application features like form-handling or session tracking. The module follows a pipeline execution style. Parsed templates are stored in a Perl data structure that can be cached in any combination of memory, shared memory (using IPC::SharedCache) and disk. The documentation is complete and well-written, with plenty of examples.
@@ -375,14 +375,14 @@ XPP is an in-line Perl system that compiles to bytecode. Although it is a perfec
 
 ### <span id="eperl">ePerl</span>
 
-<{{<mcpan "Apache::ePerl>
-" >}}
+[Apache::ePerl]({{<mcpan "Apache::ePerl" >}})
+
 Possibly the first module to embed Perl code in a text or HTML file, ePerl is still a viable option in the form of Apache::ePerl. It caches compiled bytecode in memory to achieve solid performance, and some people find it refreshingly simple to use.
 
 ### <span id="cgi::fasttemplate">CGI::FastTemplate</span>
 
-<{{<mcpan "CGI::FastTemplate>
-" >}}
+[CGI::FastTemplate]({{<mcpan "CGI::FastTemplate" >}})
+
 This module takes a minimalistic approach to templating, which makes it unusually well-suited to use in CGI programs. It parses templates with a single regular expression and does not support anything in templates beyond simple variable interpolation. Loops are handled by including the output of other templates. Unfortunately, this leads to a Perl coding style that is more confusing than most, and a proliferation of template files. However, some people swear by this dirt-simple approach.
 
 <span id="performance">Performance</span>

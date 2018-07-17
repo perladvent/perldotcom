@@ -71,12 +71,12 @@ The `-M5.012` flag *does* enable strictures and new language features.
 
 While Perl itself did not have a Y2K problem, many programs written in Perl made assumptions that produced apparent Y2K problems. Unfortunately, Perl's time handling relies on system libraries, and many of those systems exhaust their available capabilities when dealing with dates and times in the year 2038. (Developers who think they have decades to solve this problem should consider financial instruments such as 30-year mortgages.)
 
-Perl 5.12 extends support for time and date handling in the core `localtime` and `gmtime` functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as [Time::y2038]({{<mcpan "Time::y2038").
+Perl 5.12 extends support for time and date handling in the core `localtime` and `gmtime` functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as [Time::y2038]({{<mcpan "Time::y2038" >}}).
 
 **Core Support for Language Mutation Extensions**
 -------------------------------------------------
 
-[Devel::Declare]({{<mcpan "Devel::Declare" }}) is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. [signatures]({{<mcpan "signatures" >}}) and [MooseX::Declare]({{<mcpan "MooseX::Declare" >}}) are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
+[Devel::Declare]({{<mcpan "Devel::Declare" >}}) is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. [signatures]({{<mcpan "signatures" >}}) and [MooseX::Declare]({{<mcpan "MooseX::Declare" >}}) are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
 " >}}
 Unlike source filters, they compose together well and don't interfere with external code.
 

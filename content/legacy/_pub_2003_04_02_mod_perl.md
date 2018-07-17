@@ -323,18 +323,9 @@ The following snapshots show an example of the report about one mod\_perl proces
 
     <http://perl.apache.org>
 
--   `Time::HiRes`
-
-    <{{<mcpan "Time::HiRes>
-" >}}
--   `Apache::Scoreboard`
-
-    <{{<mcpan "Apache::Scoreboard>
-" >}}
--   `GTop`
-
-    <{{<mcpan "GTop>
-" >}}
+-   [Time::HiRes]({{<mcpan "Time::HiRes" >}})
+-   [Apache::Scoreboard]({{<mcpan "Apache::Scoreboard" >}})
+-   [GTop]({{<mcpan "GTop" >}})
     `GTop` relies in turn on libgtop library not available for all platforms
 
 

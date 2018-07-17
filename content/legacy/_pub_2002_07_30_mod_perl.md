@@ -368,20 +368,10 @@ Also it's obvious that in your case it's possible that the process size will be 
 ### <span id="references">References</span>
 
 -   The mod\_perl site's URL: <http://perl.apache.org/>
--   `GTop`
-
-    <{{<mcpan "GTop>
-" >}}
-    `GTop` relies in turn on libgtop library not available for all platforms
+-   [GTop]({{<mcpan "GTop" >}}) relies in turn on libgtop library not available for all platforms
 
     Visit <http://home-of-linux.org/gnome/libgtop/> for more information
 
--   `Apache::Peek`
-
-    <{{<mcpan "Apache::Peek>
-" >}}
--   `Devel::Peek`
-
-    <{{<mcpan "Devel::Peek>
-" >}}
+-   [Apache::Peek]({{<mcpan "Apache::Peek" >}})
+-   [Devel::Peek]({{<mcpan "Devel::Peek" >}})
 

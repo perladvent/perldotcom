@@ -224,7 +224,7 @@ The first subcomponent called is `SELF:.sub_gal_list`. As the name suggests, it 
 
         <h3>Sub <% @dir_list == 1 ? "Gallery" : "Galleries" %></h3>
         <% $table %>
-      
+
         <%init>
           @dir_list = grep { -d $_ } @dir_list;
           return unless @dir_list;
@@ -288,11 +288,11 @@ The next subcomponent called by our top-level component is `.photo_list`, which 
           $_ = $m->scomp('SELF:.thumb_view',file => $_, page => $page)
             for @dir_list;
           my @files = group \@dir_list, cols => $wrap;
-          
+
           my $pages  = int( @files / $rows );
              $pages += 1 if $pages < ( @files / $rows );
           @files = splice @files, $rows * ($page - 1), $rows;
-          
+
           my $table = HTML::Table->new(-data => \@files);
         </%init>
       </%method>
@@ -468,5 +468,5 @@ As an aside, that image was originally much larger, but I really wanted it to be
 
 We've just created a photo gallery that takes all the hard work out of maintaining photo galleries. There's no need to pre-generate HTML or thumbnails. There's no web application interface so you don't have to change ownership of your gallery directory to the same user that Apache runs as. Using Mason's built-in caching, photo galleries are nearly as fast as accessing the data directly from the file system. Well, at least on the second request. Our galleries have paging and infinite sub-galleries. Most importantly, using Mason to its full potential has given us a fully customizable, very tiny web application that can be dropped into any existing web site or framework.
 
-In fact, this code is the majority of the *faceplant* project. The source code can be downloaded from <{{<mcpan "faceplant>. *faceplant* implements a few more features and is a bit more customizable. As such, its code is an excellent follow-up to this article. Go forth, now, and plant thy face on the Internet!
+In fact, this code is the majority of the *faceplant* project. The source code can be downloaded from [faceplant on MetaCPAN]({{<mcpan "faceplant" >}}). *faceplant* implements a few more features and is a bit more customizable. As such, its code is an excellent follow-up to this article. Go forth, now, and plant thy face on the Internet!
 " >}}

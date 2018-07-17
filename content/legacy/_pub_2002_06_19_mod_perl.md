@@ -41,7 +41,7 @@ An example of the `Benchmark.pm` module usage:
       benchmark.pl
       ------------
       use Benchmark;
-      
+
       timethis (1_000,
        sub {
         my $x = 100;
@@ -65,18 +65,18 @@ If you want to get the benchmark results in microseconds, then you will have to 
 Here are the numbers from Michael Parker's mod\_perl presentation at the Perl Conference (Aug, 98). The script is a standard hits counter, but it logs the counts into a mysql relational DataBase:
 
         Benchmark: timing 100 iterations of cgi, perl...  [rate 1:28]
-        
-        cgi: 56 secs ( 0.33 usr 0.28 sys = 0.61 cpu) 
-        perl: 2 secs ( 0.31 usr 0.27 sys = 0.58 cpu) 
-        
+
+        cgi: 56 secs ( 0.33 usr 0.28 sys = 0.61 cpu)
+        perl: 2 secs ( 0.31 usr 0.27 sys = 0.58 cpu)
+
         Benchmark: timing 1000 iterations of cgi,perl...  [rate 1:21]
-         
-        cgi: 567 secs ( 3.27 usr 2.83 sys = 6.10 cpu) 
-        perl: 26 secs ( 3.11 usr 2.53 sys = 5.64 cpu)      
-        
+
+        cgi: 567 secs ( 3.27 usr 2.83 sys = 6.10 cpu)
+        perl: 26 secs ( 3.11 usr 2.53 sys = 5.64 cpu)
+
         Benchmark: timing 10000 iterations of cgi, perl   [rate 1:21]
-         
-        cgi: 6494 secs (34.87 usr 26.68 sys = 61.55 cpu) 
+
+        cgi: 6494 secs (34.87 usr 26.68 sys = 61.55 cpu)
         perl: 299 secs (32.51 usr 23.98 sys = 56.49 cpu)
 
 We don't know what server configurations were used for these tests, but I guess the numbers speak for themselves.
@@ -95,7 +95,7 @@ The results are:
 
       Document Path:          /perl/test.pl
       Document Length:        319 bytes
-      
+
       Concurrency Level:      10
       Time taken for tests:   0.715 seconds
       Complete requests:      100
@@ -104,7 +104,7 @@ The results are:
       HTML transferred:       31900 bytes
       Requests per second:    139.86
       Transfer rate:          84.90 kb/s received
-      
+
       Connection Times (ms)
                     min   avg   max
       Connect:        0     0     3
@@ -129,22 +129,22 @@ This command causes httperf to use the Web server on the host with IP name `host
 The timeout option defines the number of seconds that the client is willing to wait to hear back from the server. If this timeout expires, then the tool considers the corresponding call to have failed. Note that with a total of 27,000 connections and a rate of 150 per second, the total test duration will be approximately 180 seconds (27,000/150), independently of what load the server can actually sustain. Here is a result that one might get:
 
          Total: connections 27000 requests 26701 replies 26701 test-duration 179.996 s
-        
+
          Connection rate: 150.0 conn/s (6.7 ms/conn, <=47 concurrent connections)
          Connection time [ms]: min 1.1 avg 5.0 max 315.0 median 2.5 stddev 13.0
          Connection time [ms]: connect 0.3
-         
+
          Request rate: 148.3 req/s (6.7 ms/req)
          Request size [B]: 72.0
-         
+
          Reply rate [replies/s]: min 139.8 avg 148.3 max 150.3 stddev 2.7 (36 samples)
          Reply time [ms]: response 4.6 transfer 0.0
          Reply size [B]: header 222.0 content 1024.0 footer 0.0 (total 1246.0)
          Reply status: 1xx=0 2xx=26701 3xx=0 4xx=0 5xx=0
-         
+
          CPU time [s]: user 55.31 system 124.41 (user 30.7% system 69.1% total 99.8%)
          Net I/O: 190.9 KB/s (1.6*10^6 bps)
-         
+
          Errors: total 299 client-timo 299 socket-timo 0 connrefused 0 connreset 0
          Errors: fd-unavail 0 addrunavail 0 ftab-full 0 other 0
 
@@ -199,32 +199,32 @@ Sample output:
 And the code:
 
       #!/usr/bin/perl -w
-      
+
       use LWP::Parallel::UserAgent;
       use Time::HiRes qw(gettimeofday tv_interval);
       use strict;
-      
+
       ###
       # Configuration
       ###
-      
-      my $nof_parallel_connections = 10; 
-      my $nof_requests_total = 100; 
+
+      my $nof_parallel_connections = 10;
+      my $nof_requests_total = 100;
       my $timeout = 10;
       my @urls = (
                 'http://www.example.com/perl/faq_manager/faq_manager.pl',
                 'http://www.example.com/perl/access/access.cgi',
                );
-      
-      
+
+
       ##################################################
       # Derived Class for latency timing
       ##################################################
-      
+
       package MyParallelAgent;
       @MyParallelAgent::ISA = qw(LWP::Parallel::UserAgent);
       use strict;
-      
+
       ###
       # Is called when connection is opened
       ###
@@ -232,7 +232,7 @@ And the code:
         my ($self, $request, $response, $entry) = @_;
         $self->{__start_times}->{$entry} = [Time::HiRes::gettimeofday];
       }
-      
+
       ###
       # Are called when connection is closed
       ###
@@ -241,18 +241,18 @@ And the code:
         my $start = $self->{__start_times}->{$entry};
         $self->{__latency_total} += Time::HiRes::tv_interval($start);
       }
-      
+
       sub on_failure {
         on_return(@_);  # Same procedure
       }
-      
+
       ###
       # Access function for new instance var
       ###
       sub get_latency_total {
         return shift->{__latency_total};
       }
-      
+
       ##################################################
       package main;
       ##################################################
@@ -263,7 +263,7 @@ And the code:
       $ua->agent("pounder/1.0");
       $ua->max_req($nof_parallel_connections);
       $ua->redirect(0);    # No redirects
-      
+
       ###
       # Register all requests
       ###
@@ -273,21 +273,21 @@ And the code:
           $ua->register($request);
         }
       }
-      
+
       ###
       # Launch processes and check time
       ###
       my $start_time = [gettimeofday];
       my $results = $ua->wait($timeout);
       my $total_time = tv_interval($start_time);
-      
+
       ###
       # Requests all done, check results
       ###
-      
+
       my $succeeded     = 0;
       my %errors = ();
-      
+
       foreach my $entry (values %$results) {
         my $response = $entry->response();
         if($response->is_success()) {
@@ -298,17 +298,17 @@ And the code:
           $errors{$response->message}++;
         }
       }
-      
+
       ###
-      # Format errors if any from %errors 
+      # Format errors if any from %errors
       ###
       my $errors = join(',', map "$_ ($errors{$_})", keys %errors);
       $errors = "NONE" unless $errors;
-      
+
       ###
       # Format results
       ###
-      
+
       #@urls = map {($_,".")} @urls;
       my @P = (
             "URL(s)"          => join("\n\t\t ", @urls),
@@ -318,13 +318,13 @@ And the code:
                                        $succeeded * 100 / $nof_requests_total),
             "Errors"          => $errors,
             "Total Time"      => sprintf("%.2f secs\n", $total_time),
-            "Throughput"      => sprintf("%.2f Requests/sec\n", 
+            "Throughput"      => sprintf("%.2f Requests/sec\n",
                                        $nof_requests_total / $total_time),
-            "Latency"         => sprintf("%.2f secs/Request", 
-                                       ($ua->get_latency_total() || 0) / 
+            "Latency"         => sprintf("%.2f secs/Request",
+                                       ($ua->get_latency_total() || 0) /
                                        $nof_requests_total),
            );
-      
+
       my ($left, $right);
       ###
       # Print out statistics
@@ -333,7 +333,7 @@ And the code:
       @<<<<<<<<<<<<<<< @*
       "$left:",        $right
       .
-      
+
       while(($left, $right) = splice(@P, 0, 2)) {
         write;
       }
@@ -366,9 +366,7 @@ The `Apache::Timeit` package is a part of the *Apache-Perl-contrib* files collec
     <http://www.acme.com/software/http_load/>
 -   Apache-Perl-contrib package
     <http://perl.apache.org/dist/contrib/>
--   `Time::HiRes`
-    <{{<mcpan "Time::HiRes>
-" >}}    and `Benchmark` is a part of the Core Perl
+-   [Time::HiRes]({{<mcpan "Time::HiRes" >}}) and [Benchmark]({{<mcpan "Benchmark" >}}) is a part of the Core Perl
 -   `LWP` (libwww-perl)
     <https://metacpan.org/release/libwww-perl>
 
