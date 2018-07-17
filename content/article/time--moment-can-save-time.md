@@ -92,12 +92,12 @@ my $dtf_string ='2014-02-01T13:01:37-05:00';
 my $time_moment = sub {
     my $tm = Time::Moment->from_string( $dtf_string );
     my $tm2 = $tm->plus_days( 1 );
-    
+
     my $now = Time::Moment->now;
-    
+
     my $comparison = $now > $tm2;
     };
-        
+
 my $datetime = sub {
     my $w3c = DateTime::Format::W3CDTF->new;
     my $dt = $w3c->parse_datetime( $dtf_string );
@@ -123,7 +123,7 @@ Benchmark::cmpthese( -10, {
 
 If my problem is within the limits of [Time::Moment]({{<mcpan "Time::Moment" >}}) (and, who ever needs more than 640k?), I can get big wins. When that no longer applies, with a little work I can switch to [DateTime]({{<mcpan "DateTime" >}}). Either way, you might want to wipe the memory of your droids.
 
-*Cover image [©](http://creativecommons.org/licenses/by-nc/2.5/) [XKCD](http://xkcd.com/1179/)*
+*Cover image [©](https://creativecommons.org/licenses/by-nc/2.5/) [XKCD](http://xkcd.com/1179/)*
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

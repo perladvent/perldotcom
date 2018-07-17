@@ -25,7 +25,7 @@ Consider the case where I want to change the current working directory temporari
 sub do_some_work {
   state $dir = '/usr/local/etc';
   chdir $dir or die "Could not change to $dir! $!";
-  
+
   ...; # do some work
 }
 ```
@@ -39,15 +39,15 @@ use Cwd qw(getcwd);
 
 sub do_some_work {
   state $dir = '/usr/local/etc';
-  
+
   my $old_directory = getcwd();
   chdir $dir or die "Could not change to $dir! $!";
-  
+
   ...; # do some work
-  
-  chdir $old_directory 
+
+  chdir $old_directory
     or die "Could not change back to $old_directory! $!";
-    
+
   return $value;
 }
 ```
@@ -74,14 +74,14 @@ say "Finally, the directory is ", getcwd();
 
 sub do_some_work {
   state $dir = '/usr/local/etc';
-  
+
   my $old_directory = getcwd();
-  scope_guard { 
+  scope_guard {
     say "Guard thinks old directory is $old_directory";
     chdir $old_directory;
   };
   chdir $dir or die "Could not change to $dir! $!";
-  
+
   say "At the end of do_some_work(), the directory is ", getcwd();
 }
 ```
@@ -118,17 +118,17 @@ say "Finally, the directory is ", getcwd();
 
 sub do_some_work {
   state $dir = '/usr/local/etc';
-  
+
   my $guard = make_guard( getcwd() );
   chdir $dir or die "Could not change to $dir! $!";
-  
+
   say "At the end of do_some_work(), the directory is ", getcwd();
 }
 
 sub make_guard ( $old_directory ) {
   return guard {
     say "Guard thinks old directory is $old_directory";
-    chdir $old_directory;  
+    chdir $old_directory;
   };
 }
 ```
@@ -143,7 +143,7 @@ Here's a bonus trick and one of the reasons I wanted to show the subroutine sign
 sub make_guard ( $old_directory = getcwd() ) {
   return guard {
     say "Guard thinks old directory is $old_directory";
-    chdir $old_directory;  
+    chdir $old_directory;
     };
 }
 ```
@@ -156,7 +156,7 @@ my $guard = make_guard();
 
 There are other tricks I can employ with M. I can define multiple `scope_guard`s. In that case, they execute in reverse order of their definition (like `END` blocks). With a guard object, I can cancel the guard if I decide I don't want it any longer.
 
-*Cover image [©](http://creativecommons.org/licenses/by/4.0/) [Kenny Loule](https://www.flickr.com/photos/kwl/4229954645/in/photolist-7rMC9v-pWeFtB-dyGDSJ-4MTKCZ-9KGfvt-2Vmh2z-isiLE-a8wfzo-a8wdRy-nP4HU4-pMmELA-ebn2Yf-fR1AiY-6pwAvQ-oZC6iQ-eiAHKH-KaYMr-7ur9cv-eex2Ee-aJRH8P-nAD84h-nB5gYR-fFiErQ-6Y7HDp-dzKZh2-7xKM96-63dow9-6YbKFs-6nwuvh-6jFGwT-gDJYEc-bvwwma-7dKehm-8s7yHZ-8s7yjr-hNorq7-66hCWL-cLiZjq-7dKeYQ-9f4UgQ-nB5fP6-c6w6dU-7VSAhE-nAkYD2-gDKEpJ-iegmK-fFiE61-dd5mRC-64joJH-64CuGq)*
+*Cover image [©](https://creativecommons.org/licenses/by/4.0/) [Kenny Loule](https://www.flickr.com/photos/kwl/4229954645/in/photolist-7rMC9v-pWeFtB-dyGDSJ-4MTKCZ-9KGfvt-2Vmh2z-isiLE-a8wfzo-a8wdRy-nP4HU4-pMmELA-ebn2Yf-fR1AiY-6pwAvQ-oZC6iQ-eiAHKH-KaYMr-7ur9cv-eex2Ee-aJRH8P-nAD84h-nB5gYR-fFiErQ-6Y7HDp-dzKZh2-7xKM96-63dow9-6YbKFs-6nwuvh-6jFGwT-gDJYEc-bvwwma-7dKehm-8s7yHZ-8s7yjr-hNorq7-66hCWL-cLiZjq-7dKeYQ-9f4UgQ-nB5fP6-c6w6dU-7VSAhE-nAkYD2-gDKEpJ-iegmK-fFiE61-dd5mRC-64joJH-64CuGq)*
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

@@ -111,7 +111,7 @@ The safest way to handle Shellshock on a vulnerable system is to patch Bash to t
 
 **Correction:** *removed erroneous description of $SHELL as it is the current user's default login shell, not the default shell. Removed reference to .bashrc as Bash will only process .bashrc during interactive shell startup. 2014-09-27*
 
-*Cover image Ebola virus particles [©](http://creativecommons.org/licenses/by/4.0/) [NIAID](https://www.flickr.com/photos/niaid/8425030684/in/photolist-dQuu6J-o15Y5n-oq5wzY-oD1uxC-oq68Cn-8r1Hp8-oDe3A2-oDe3za-dPiDp3-ossh3B-2j1bum-jQvxq9-oq59Z4-oq5muj-omJEd1-omJzrD-4JZtfw-aronSf-8GSyC4-68Zxqv-9y7vkf-dPzNiw-5WLSVq-6hZDW8-nds12g-5Wtkeh-6hNQv2-6irCWw-6iQKwC-bS1gap-Jx5bZ-bjfWK2-bjfWiv-dQSzhC-6iUKSo-6ik4Ki-6i3YrM-cXXqXy-64vTm8-cCwK63-8LVkQh-sxxGP-dTpMUd-Dj4uW-6mhvwX-6iGBED-9rwqiP-8R5WMy-9yXaMc-6isfVm)*
+*Cover image Ebola virus particles [©](https://creativecommons.org/licenses/by/4.0/) [NIAID](https://www.flickr.com/photos/niaid/8425030684/in/photolist-dQuu6J-o15Y5n-oq5wzY-oD1uxC-oq68Cn-8r1Hp8-oDe3A2-oDe3za-dPiDp3-ossh3B-2j1bum-jQvxq9-oq59Z4-oq5muj-omJEd1-omJzrD-4JZtfw-aronSf-8GSyC4-68Zxqv-9y7vkf-dPzNiw-5WLSVq-6hZDW8-nds12g-5Wtkeh-6hNQv2-6irCWw-6iQKwC-bS1gap-Jx5bZ-bjfWK2-bjfWiv-dQSzhC-6iUKSo-6ik4Ki-6i3YrM-cXXqXy-64vTm8-cCwK63-8LVkQh-sxxGP-dTpMUd-Dj4uW-6mhvwX-6iGBED-9rwqiP-8R5WMy-9yXaMc-6isfVm)*
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

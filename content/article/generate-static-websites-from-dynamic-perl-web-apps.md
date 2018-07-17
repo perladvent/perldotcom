@@ -111,7 +111,7 @@ A few things I've found whilst using Wallflower:
 
 Whether you prefer developing applications with Catalyst, Dancer or Mojolicious, Wallflower is a useful tool that can be incorporated into your development and deployment process. For further examples of Wallflower in action, check out the [tutorial]({{<mcpan "Wallflower::Tutorial" >}}) and advent calendar [entry](http://www.perladvent.org/2012/2012-12-22.html) by Wallflower creator Philippe Bruhat (BooK).
 
-*Cover image [©](http://creativecommons.org/licenses/by/4.0/) [Ruth Hartnup](https://www.flickr.com/photos/ruthanddave/9432335346/in/photolist-9YgULK-6CwkPH-m68vYZ-4P7TsV-4Pc9dL-7UqEXc-8rbEQq-mPFbgf-Hw6fU-2JcQ24-7ZdMJc-5q1xn5-fnvbFu-fpNhu5-bY6j7J-6HC9cQ-7Y666Z-4RGjZ5-c5bJ5A-5Ma2Kx-7UshUJ-buamir-qLy2D-26mzb-nUfKdk-818aoT-4ne9U5-azaNvR-c7Ztsj-sbu9W-4hrgcG-8r8yrv-hdmVrd-a72iqb-4Kebyi-aEpfqd-6cdRLZ-7iqNqm-6XsteA-b8crZZ-ubPgJ-8pBxDZ-6R63RH-6AnSCX-byKj2-8b97G8-d6X7B-dddPtT-6pUqhf-ejhHg3|)*
+*Cover image [©](https://creativecommons.org/licenses/by/4.0/) [Ruth Hartnup](https://www.flickr.com/photos/ruthanddave/9432335346/in/photolist-9YgULK-6CwkPH-m68vYZ-4P7TsV-4Pc9dL-7UqEXc-8rbEQq-mPFbgf-Hw6fU-2JcQ24-7ZdMJc-5q1xn5-fnvbFu-fpNhu5-bY6j7J-6HC9cQ-7Y666Z-4RGjZ5-c5bJ5A-5Ma2Kx-7UshUJ-buamir-qLy2D-26mzb-nUfKdk-818aoT-4ne9U5-azaNvR-c7Ztsj-sbu9W-4hrgcG-8r8yrv-hdmVrd-a72iqb-4Kebyi-aEpfqd-6cdRLZ-7iqNqm-6XsteA-b8crZZ-ubPgJ-8pBxDZ-6R63RH-6AnSCX-byKj2-8b97G8-d6X7B-dddPtT-6pUqhf-ejhHg3|)*
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

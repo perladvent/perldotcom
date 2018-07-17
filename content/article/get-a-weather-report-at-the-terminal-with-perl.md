@@ -73,43 +73,43 @@ In the script I use code\>binmode to switch the standard output to UTF8 mode. Th
 
 ```perl
 $ weather
-Time      ℉   ℃   Rain %  Conditions          
-11:00 PM  69  21       3  Partly Cloudy                 
-12:00 AM  69  21       3  Partly Cloudy                 
- 1:00 AM  69  21       8  Partly Cloudy                 
- 2:00 AM  69  21       9  Mostly Cloudy                 
- 3:00 AM  69  21       8  Mostly Cloudy                 
- 4:00 AM  69  21       5  Mostly Cloudy                 
- 5:00 AM  69  21       5  Overcast                      
- 6:00 AM  69  21       4  Overcast                      
- 7:00 AM  69  21       4  Mostly Cloudy                 
- 8:00 AM  70  21       4  Mostly Cloudy                 
- 9:00 AM  72  22       3  Mostly Cloudy                 
-10:00 AM  74  23       2  Mostly Cloudy                 
-11:00 AM  77  25       2  Mostly Cloudy                 
-12:00 PM  80  27       2  Mostly Cloudy                 
- 1:00 PM  82  28       1  Mostly Cloudy                 
- 2:00 PM  84  29       7  Overcast                      
- 3:00 PM  84  29      46  Chance of a Thunderstorm      
- 4:00 PM  84  29      52  Chance of a Thunderstorm      
- 5:00 PM  82  28      56  Chance of a Thunderstorm      
- 6:00 PM  82  28      45  Chance of a Thunderstorm      
- 7:00 PM  81  27      50  Chance of a Thunderstorm      
- 8:00 PM  80  27      39  Chance of a Thunderstorm      
- 9:00 PM  78  26      32  Chance of a Thunderstorm      
-10:00 PM  77  25      38  Chance of a Thunderstorm      
-11:00 PM  74  23       6  Partly Cloudy                 
-12:00 AM  71  22       3  Clear                         
- 1:00 AM  69  21       3  Clear                         
- 2:00 AM  67  19       2  Partly Cloudy                 
- 3:00 AM  65  18       2  Clear                         
- 4:00 AM  64  18       2  Clear                         
- 5:00 AM  62  17       2  Clear                         
- 6:00 AM  61  16       2  Clear                         
- 7:00 AM  60  16       2  Clear                         
- 8:00 AM  60  16       2  Clear                         
- 9:00 AM  62  17       1  Clear                         
-10:00 AM  64  18       0  Clear  
+Time      ℉   ℃   Rain %  Conditions
+11:00 PM  69  21       3  Partly Cloudy
+12:00 AM  69  21       3  Partly Cloudy
+ 1:00 AM  69  21       8  Partly Cloudy
+ 2:00 AM  69  21       9  Mostly Cloudy
+ 3:00 AM  69  21       8  Mostly Cloudy
+ 4:00 AM  69  21       5  Mostly Cloudy
+ 5:00 AM  69  21       5  Overcast
+ 6:00 AM  69  21       4  Overcast
+ 7:00 AM  69  21       4  Mostly Cloudy
+ 8:00 AM  70  21       4  Mostly Cloudy
+ 9:00 AM  72  22       3  Mostly Cloudy
+10:00 AM  74  23       2  Mostly Cloudy
+11:00 AM  77  25       2  Mostly Cloudy
+12:00 PM  80  27       2  Mostly Cloudy
+ 1:00 PM  82  28       1  Mostly Cloudy
+ 2:00 PM  84  29       7  Overcast
+ 3:00 PM  84  29      46  Chance of a Thunderstorm
+ 4:00 PM  84  29      52  Chance of a Thunderstorm
+ 5:00 PM  82  28      56  Chance of a Thunderstorm
+ 6:00 PM  82  28      45  Chance of a Thunderstorm
+ 7:00 PM  81  27      50  Chance of a Thunderstorm
+ 8:00 PM  80  27      39  Chance of a Thunderstorm
+ 9:00 PM  78  26      32  Chance of a Thunderstorm
+10:00 PM  77  25      38  Chance of a Thunderstorm
+11:00 PM  74  23       6  Partly Cloudy
+12:00 AM  71  22       3  Clear
+ 1:00 AM  69  21       3  Clear
+ 2:00 AM  67  19       2  Partly Cloudy
+ 3:00 AM  65  18       2  Clear
+ 4:00 AM  64  18       2  Clear
+ 5:00 AM  62  17       2  Clear
+ 6:00 AM  61  16       2  Clear
+ 7:00 AM  60  16       2  Clear
+ 8:00 AM  60  16       2  Clear
+ 9:00 AM  62  17       1  Clear
+10:00 AM  64  18       0  Clear
 ```
 
 The results show an hourly forecast with the temperature in Fahrenheit and Celsius, the probability of rain and an overall description. As I do most of my work from the terminal, this is much more convenient than using the browser and there are no ads!
@@ -163,15 +163,15 @@ I've updated the code to store a default location called `$home_location`. I the
 ```perl
 $ weather
 Enter city or zip code (New York City, NY): London, UK
-Time      ℉   ℃   Rain %  Conditions          
- 4:00 AM  50  10       4  Clear                         
- 5:00 AM  50  10       4  Clear                         
- 6:00 AM  49   9       4  Clear                         
- 7:00 AM  49   9       4  Clear                         
- 8:00 AM  52  11       4  Clear                         
- 9:00 AM  55  13       4  Clear                         
-10:00 AM  59  15       4  Clear                         
-11:00 AM  62  17       3  Clear                         
+Time      ℉   ℃   Rain %  Conditions
+ 4:00 AM  50  10       4  Clear
+ 5:00 AM  50  10       4  Clear
+ 6:00 AM  49   9       4  Clear
+ 7:00 AM  49   9       4  Clear
+ 8:00 AM  52  11       4  Clear
+ 9:00 AM  55  13       4  Clear
+10:00 AM  59  15       4  Clear
+11:00 AM  62  17       3  Clear
 ...
 ```
 
@@ -231,7 +231,7 @@ That's probably enough to get started, however there is more that could be done 
 
 The Wunderground API provides a lot more than just a 24 hour forecast. Check out their API [documentation](http://www.wunderground.com/weather/api/d/docs).
 
-*Cover image [©](http://creativecommons.org/licenses/by/4.0/) [NASA Goddard Space Flight Center](https://www.flickr.com/photos/gsfc/5598148465/in/photolist-9wFYv8-kYwXMt-bsoJ2F-epZCJW-51zsz5-4xqurW-dQW1WX-ntLbig-47NhYw-8ha98x-gKjXSn-iGqBL8-fkVu7f-3bs6Hv-9C5Gp9-dfRRoo-ab4NaA-5nNgKY-hkfRe6-hSmCX2-97fCju-8fqUzR-e6xj8j-943upK-CaRbr-5sSeXx-6yuU9E-4adC2H-9YWWVQ-dK9bTn-piUN9-8NP9b5-8hdo8u-8xGTYN-mG2TTk-bmH4rF-7A8s15-97GPeg-fxsEhK-a1cDq-nMWvny-7xTFh6-ow6uvp-i7yjhS-82v13J-6DmEYb-c6BXa-5eCgsS-bo1p2k-nytJYo/)*
+*Cover image [©](https://creativecommons.org/licenses/by/4.0/) [NASA Goddard Space Flight Center](https://www.flickr.com/photos/gsfc/5598148465/in/photolist-9wFYv8-kYwXMt-bsoJ2F-epZCJW-51zsz5-4xqurW-dQW1WX-ntLbig-47NhYw-8ha98x-gKjXSn-iGqBL8-fkVu7f-3bs6Hv-9C5Gp9-dfRRoo-ab4NaA-5nNgKY-hkfRe6-hSmCX2-97fCju-8fqUzR-e6xj8j-943upK-CaRbr-5sSeXx-6yuU9E-4adC2H-9YWWVQ-dK9bTn-piUN9-8NP9b5-8hdo8u-8xGTYN-mG2TTk-bmH4rF-7A8s15-97GPeg-fxsEhK-a1cDq-nMWvny-7xTFh6-ow6uvp-i7yjhS-82v13J-6DmEYb-c6BXa-5eCgsS-bo1p2k-nytJYo/)*
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

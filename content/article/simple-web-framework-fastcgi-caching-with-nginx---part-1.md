@@ -62,7 +62,7 @@ fastcgi_cache_path  /var/nginx/cache levels=1:2
                     keys_zone=fcgi_cache:50m
                     inactive=60m;
 fastcgi_cache_key "$scheme$request_method$host$request_uri";
-fastcgi_buffers 256 4k; 
+fastcgi_buffers 256 4k;
 ```
 
 This code specifies the cache directory, zone name, cache key and buffers (see the [manual](http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html) for details). The code should be outside your server declaration. Within your server declaration, add:
@@ -91,7 +91,7 @@ server {
         fastcgi_pass unix:/tmp/perltricks.socket;
         include /etc/nginx/fastcgi.conf;
         fastcgi_param SCRIPT_NAME /;
-    }   
+    }
 }
 ```
 
@@ -115,7 +115,7 @@ All of the major Perl web frameworks support FastCGI server caching. It's easy t
 
 Enjoyed this article? Help us out and [retweet](https://twitter.com/intent/tweet?original_referer=http%3A%2F%2Fperltricks.com%2Farticle%2F76%2F2014%2F3%2F11%2FSimple-web-framework-FastCGI-caching-with-nginx-part-1&text=Simple+web+framework+FastCGI+caching+with+nginx+-+part+1&tw_p=tweetbutton&url=http%3A%2F%2Fperltricks.com%2Farticle%2F76%2F2014%2F3%2F11%2FSimple-web-framework-FastCGI-caching-with-nginx-part-1&via=perltricks) it!
 
-*Cover picture © David Hoshor licensed via [Creative Commons](http://creativecommons.org/licenses/by/2.0/). The picture has been digitally enhanced.*
+*Cover picture © David Hoshor licensed via [Creative Commons](https://creativecommons.org/licenses/by/2.0/). The picture has been digitally enhanced.*
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*
