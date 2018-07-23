@@ -148,6 +148,8 @@ I'm planning on getting feedback from P5P on this change: implementation-wise, I
 
 Whilst this change is relatively safe - modules are free to continue to return a true value if they want to, I worry that it's not useful enough to warrant being a feature. I struggle to imagine users of 5.30 next year eagerly adding this feature to their code. Maybe it's not worth changing?
 
+Yet another way it could be implemented is to deprecate the exception: "Foo.pm did not return a true value. WARNING This behavior is deprecated and will be removed in a future version of Perl". This would have the advantage of not adding a new feature (more code, version complexity), and giving users of the feature advanced warning of its removal. And when the behavior is removed it would result in *less* code in the Perl source, which seems like a win to me.
+
 Working with the Perl source can be intimidating: it's a large collection of advanced C code, which leans heavily on macros. The source's conventions can be opaque too: function, macro and variable names often follow a logical, but unintuitive naming format. Previously I've found myself unpacking a macro declaration to find it contains ... another macro, and another macro inside that one and so on. It's easy to forget the context and get lost in the code.
 
 Sometimes I've had to literally write out call chains on paper to keep track. But it is incredibly satisfying to change Perl's behavior to suit your tastes. Imagine with that power, what would *you* change? It might not be an easy road, but things of value rarely come easily, and if nothing else you might learn more about how Perl works internally, and pick up some new C programming tricks along the way.
