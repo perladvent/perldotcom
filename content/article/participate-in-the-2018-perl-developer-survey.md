@@ -16,7 +16,7 @@ In case you missed it: the Built in Perl 2018 [developer survey](http://blog.bui
 * 84% of respondees have been programming in Perl for over 5 years
 * 21% were working remotely
 * 46% were interested in or had already tried Perl 6
-* 25% use the {{< mcpan "Mojolicious" >}} web framework with {{< mcpan "Dancer" >}} and {{< mcpan "Catalyst" >}} both around 19%
+* 25% use the [Mojolicious]({{< mcpan "Mojolicious" >}}) web framework with [Dancer]({{< mcpan "Dancer" >}}) and [Catalyst]({{<mcpan "Catalyst" >}}) both around 19%
 * Vim was the most popular text editor at 43%, followed by Emacs at 16%
 
 I wonder what the stats will show this year, for fun here are a few predictions from me:

@@ -42,7 +42,7 @@ Now you need to fork and clone the Github repository you were assigned for the P
 
 #### 4: Run Docker
 
-I have prepared a docker [image](https://github.com/kyzn/perlbrew-prc-dockerimage) which comes with the latest stable version of Perl (5.26.1), {{< mcpan "App::perlbrew" "perlbrew" >}}, {{< mcpan "App::cpanminus" "cpanm" >}} and {{< mcpan "Dist::Zilla" "dzil" >}}, all pre-installed.
+I have prepared a docker [image](https://github.com/kyzn/perlbrew-prc-dockerimage) which comes with the latest stable version of Perl (5.26.1), [perlbrew]({{<mcpan "App::perlbrew">}}), [cpanm]({{<mcpan "App::cpanminus">}}) and [dzil]({{<mcpan "Dist::Zilla" >}}), all pre-installed.
 
 Here's how I would run docker on the repo I cloned in step 3:
 
@@ -110,7 +110,7 @@ To make sure switch worked, check your Perl version in the terminal:
 
 #### 3: Install cpanm
 
-This is a {{< mcpan "App::cpanminus" "script" >}} that will help you install CPAN modules. There already is a client installed, called `cpan`. But, `cpan` requires configuration and is more verbose and slower than `cpanm`.
+This is a [script]({{<mcpan "App::cpanminus">}}) that will help you install CPAN modules. There already is a client installed, called `cpan`. But, `cpan` requires configuration and is more verbose and slower than `cpanm`.
 
     $ perlbrew install-cpanm
 
@@ -122,7 +122,7 @@ If the terminal displays any matching output, it worked.
 
 #### 4: Install dzil
 
-Many CPAN authors use {{< mcpan "Dist::Zilla" "dzil" >}} to build and release their modules. The chances of your PRC assignment having a dist.ini file (dzil configuration) are high.
+Many CPAN authors use [dzil]({{<mcpan "Dist::Zilla" >}}) to build and release their modules. The chances of your PRC assignment having a dist.ini file (dzil configuration) are high.
 
 First you need to install a non-Perl dependency, openssl. On macOS:
 

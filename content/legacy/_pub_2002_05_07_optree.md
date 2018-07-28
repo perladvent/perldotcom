@@ -23,13 +23,13 @@ So you're a Perl master. You've got XS sorted. You know how the internals work. 
 
 This month, we look at the Perl op tree. Every Perl program is compiled into an internal representation before it is executed. Functions, subroutine calls, variable accesses, control structures, and all that makes up a Perl program, are converted into a series of different fundamental operations (*ops*) and these ops are strung together into a tree data structure.
 
-For more on the different types of ops available, how they fit together, and how to manipulate them with the {{< mcpan "B" >}} compiler module, look at the [Perl 5 internals tutorial](https://web.archive.org/web/20050205214309/http://www.netthink.co.uk:80/downloads/internals/). Right now, though, we're going to take things a step further.
+For more on the different types of ops available, how they fit together, and how to manipulate them with the [B]({{<mcpan "B" >}}) compiler module, look at the [Perl 5 internals tutorial](https://web.archive.org/web/20050205214309/http://www.netthink.co.uk:80/downloads/internals/). Right now, though, we're going to take things a step further.
 
 ### <span id="b and beyond with b::utils">B and Beyond With B::Utils</span>
 
 The `B` module allows us to get at a wealth of information about an op, but it can become incredibly frustrating to know which op you want to deal with, and to perform simple manipulation on a range of ops. It also offers limited functionality for navigating around the op tree, meaning that you need to hold onto a load of additional state about which op is where. This gets complicated quickly. Finally, it's not easy to get at the op trees for particular subroutines, or indeed, all subroutines both named and anonymous.
 
-{{< mcpan "B::Utils" >}} was created at the request of Michael Schwern to address these issues. It offers much more high-level functionality for navigating through the tree, such as the ability to move "upward" or "backward", to return the old name of an op that has currently been optimized away, to get a list of the op's children, and so on. It can return arrays of anonymous subroutines, and hashes of subroutine op roots and starts. It also contains functions for walking through the op tree from various starting points in various orders, optionally filtering out ops that don't match certain conditions; while performing actions on ops, `B::Utils` provides `carp` and `croak` routines which perform error reporting from the point of view of the original source code.
+[B::Utils]({{<mcpan "B::Utils" >}}) was created at the request of Michael Schwern to address these issues. It offers much more high-level functionality for navigating through the tree, such as the ability to move "upward" or "backward", to return the old name of an op that has currently been optimized away, to get a list of the op's children, and so on. It can return arrays of anonymous subroutines, and hashes of subroutine op roots and starts. It also contains functions for walking through the op tree from various starting points in various orders, optionally filtering out ops that don't match certain conditions; while performing actions on ops, `B::Utils` provides `carp` and `croak` routines which perform error reporting from the point of view of the original source code.
 
 But one of the most useful functions provided by `B::Utils` is the `opgrep` routine. This allows you to filter a series of ops based on a pattern that represents their attributes and their position in a tree. The major advantage over doing it yourself is that `opgrep` takes care of making sure that the attributes are present before testing them - the seasoned `B` user is likely to be accustomed to the carnage that results from accidentally trying to call `name` on a `B::NULL` object.
 
@@ -56,8 +56,8 @@ walkallops_filtered(
                       name => "exec",
                       next => {
                          name    => "nextstate",
-                         sibling => { 
-                                       name => [qw(! exit warn die)] 
+                         sibling => {
+                                       name => [qw(! exit warn die)]
                                     }
                               }
                   }, @_)},
@@ -72,7 +72,7 @@ walkallops_filtered(
 
 So, what can we do with all this? The answer is, of course, "anything we want". If you can mess about with the op tree, then you have complete control over Perl's operation. Let's take an example.
 
-Damian Conway recently released the {{< mcpan "Acme::Don't" >}} module, which doesn't do anything:
+Damian Conway recently released the [Acme::Don't]({{<mcpan "Acme::Don't" >}}) module, which doesn't do anything:
 
 ```
 don't { print "Something\n" }

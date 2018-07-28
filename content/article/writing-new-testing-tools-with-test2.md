@@ -14,7 +14,7 @@
    "date" : "2018-06-12T15:26:40"
 }
 
-Perl has had great testing tools for a long time, but {{< mcpan "Test2" >}} is the single biggest improvement to Perl testing in years. One of my favorite Test2 features is how easy it is to extend it with new tools, and today I'll show you how I wrote my first tool.
+Perl has had great testing tools for a long time, but [Test2]({{< mcpan "Test2" >}}) is the single biggest improvement to Perl testing in years. One of my favorite Test2 features is how easy it is to extend it with new tools, and today I'll show you how I wrote my first tool.
 
 ### Dealing with known test failures
 
@@ -26,11 +26,11 @@ I decided what I needed was a `skip_until` function that would skip the test unt
 
 ### Test2 terminology: plugins vs tools
 
-In Test2, a "plugin" is a package which overrides the behavior of existing Test2 features, whereas a "tool" is a package which provides new functions. In this case I was creating a new testing function which didn't already exist, so I needed to write a {{< mcpan "Test2::Tools" "tool" >}}.
+In Test2, a "plugin" is a package which overrides the behavior of existing Test2 features, whereas a "tool" is a package which provides new functions. In this case I was creating a new testing function which didn't already exist, so I needed to write a [Test2::Tools]({{< mcpan "Test2::Tools">}}).
 
 ### Test2::API context
 
-{{< mcpan "Test2::API" >}} provides the `context` function to access the test context during runtime. The context object provides common test methods like `pass`, `fail` and `skip` etc, which let's you add custom test behavior. Here's how I use it to skip tests:
+[Test2::API]({{<mcpan "Test2::API" >}}) provides the `context` function to access the test context during runtime. The context object provides common test methods like `pass`, `fail` and `skip` etc, which let's you add custom test behavior. Here's how I use it to skip tests:
 
 ```perl
 package Test2::Tools::SkipUntil;
@@ -82,10 +82,10 @@ And the tests will be skipped until the date is reached. Test2 makes writing new
 
 ### References
 
-* {{< mcpan "Test2::Tools" >}} is the Test2 documentation for Test2 tools
-* For plugins see {{< mcpan "Test2::Plugin" >}}
-* {{< mcpan "Test2::API" >}} is used to get the test context object, see the context [cardinal rules]({{<mcpan "Test2::API::Context#CRITICAL-DETAILS" >}})
-* {{< mcpan "Test2::Tools::SkipUntil" >}}
+* [Test2::Tools]({{<mcpan "Test2::Tools" >}}) is the Test2 documentation for Test2 tools
+* For plugins see [Test2::Plugin]({{< mcpan "Test2::Plugin" >}})
+* [Test2::API]({{<mcpan "Test2::API" >}}) is used to get the test context object, see the context [cardinal rules]({{<mcpan "Test2::API::Context#CRITICAL-DETAILS" >}})
+* [Test2::Tools::SkipUntil]({{< mcpan "Test2::Tools::SkipUntil" >}})
 
 \
 Cover image via [pixabay](https://pixabay.com/p-762486/).

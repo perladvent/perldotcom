@@ -60,7 +60,7 @@ I also believe that this will make the controller classes more encapsulated and 
 **Granularity**
 ---------------
 
-I like the way Catalyst structures your web related code into controller classes. This is a step forward from the {{<mcpan "CGI::Application" >}} way of packing everything into one class. I have no hard data to support my impression, but the granularity of packing a few related pages into one controller class feels just about right. It gives room for expansion by adding new classes and dividing existing ones, and it does not clutter the application code with several nearly empty classes. This is a very important feature. I copied this design wholeheartedly in WebNano.
+I like the way Catalyst structures your web related code into controller classes. This is a step forward from the [CGI::Application]({{<mcpan "CGI::Application" >}}) way of packing everything into one class. I have no hard data to support my impression, but the granularity of packing a few related pages into one controller class feels just about right. It gives room for expansion by adding new classes and dividing existing ones, and it does not clutter the application code with several nearly empty classes. This is a very important feature. I copied this design wholeheartedly in WebNano.
 
 **Experiments with inheritance and overriding**
 -----------------------------------------------

@@ -174,4 +174,4 @@ The use of `Time::HiRes` before importing `POE` causes POE to use `Time::HiRes`'
 
 POE is a flexible application framework appropriate for long-running large-scale perl applications. It provides standard interfaces for task abstraction and forces the coder to think about their software in smaller, more maintainable chunks.
 
-[POE is available on CPAN](<{{<mcpan "POE" >}}) and has a rich, community-maintained website (<http://poe.perl.org>).
+[POE is available on CPAN]({{<mcpan "POE" >}}) and has a rich, community-maintained website (<http://poe.perl.org>).

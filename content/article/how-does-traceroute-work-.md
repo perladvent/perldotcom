@@ -30,7 +30,7 @@ However some routers may block certain ports by firewall, hence using TCP on por
 
 ### Traceroute with Perl
 
-The module {{< mcpan "Net::Traceroute::PurePerl" >}} implements the traceroute functionality in Perl. I installed the module from CPAN and ran it on the Perl.com domain using this one liner:
+The module [Net::Traceroute::PurePerl]({{<mcpan "Net::Traceroute::PurePerl" >}}) implements the traceroute functionality in Perl. I installed the module from CPAN and ran it on the Perl.com domain using this one liner:
 
     $ sudo $(which perl) -MNet::Traceroute::PurePerl -wE \
       'my $n=Net::Traceroute::PurePerl->new(host=>"perl.com");$n->traceroute();$n->pretty_print'
@@ -71,4 +71,4 @@ traceroute to perl.com (207.171.7.45), 30 hops max, 40 byte packets
 
 The first entry is my wifi router. I'm guessing the second is my modem, which did not respond (hence the asterisks). You can see the succession of IP addresses for each router (technically, interface) that responded to the packets. The 18th entry is the last hop because Perl.com (207.171.7.45) sits on the same network (207.171.0.0/18).
 
-{{< mcpan "Net::Traceroute::PurePerl" >}} currently lacks IPv6 support, and hasn't been updated in a while. The documentation lists IPv6 as a todo item, so if you're interested in traceroute programming, this might be a good opportunity to send a patch. If the author doesn't respond, you can always fork the distribution!
+[Net::Traceroute::PurePerl]({{<mcpan "Net::Traceroute::PurePerl" >}}) currently lacks IPv6 support, and hasn't been updated in a while. The documentation lists IPv6 as a todo item, so if you're interested in traceroute programming, this might be a good opportunity to send a patch. If the author doesn't respond, you can always fork the distribution!

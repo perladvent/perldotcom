@@ -64,7 +64,7 @@ However XS offers another way to do it by using the `BOOT` keyword. Any C code i
 
     BOOT:
     printf("We're starting up!\n");
-    
+
 
 The boot section is terminated by the first empty line after the keyword.
 
@@ -144,7 +144,7 @@ This function returns false if the scalar contains data that is not downgrade-ab
 ### References
 
 - Parts [one]({{< relref "getting-started-with-xs.md" >}}) and [two]({{< relref "writing-your-own-xs-functions.md" >}}) in this series contain the background information necessary to understand this one
-- This series is also on {{< mcpan "XS::Tutorial" "CPAN" >}} complete with all the code
+- This series is also on CPAN ([XS::Tutorial]({{<mcpan "XS::Tutorial">}})) complete with all the code
 - The [BOOT](https://perldoc.perl.org/perlxs.html#The-BOOT%3a-Keyword) keyword
 - Tied variable [functions](https://perldoc.perl.org/perlapi.html#Magical-Functions) and the [magic virtual table](https://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables)
 - [Perl UTF-8 functions](https://perldoc.perl.org/perlapi.html#Unicode-Support)
