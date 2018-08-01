@@ -1,6 +1,6 @@
 
   {
-    "title"       : "How to become CPAN contributor",
+    "title"       : "How to become a CPAN contributor",
     "authors"     : ["mohammad-anwar"],
     "date"        : "2018-05-13T20:46:28",
     "tags"        : ["cpan","github","kwalitee"],
