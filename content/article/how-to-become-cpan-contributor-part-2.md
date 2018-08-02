@@ -11,7 +11,7 @@
     "categories"  : "cpan"
   }
 
-In the previous [article]({{< relref "how-to-become-cpan-contributor.md" >}}) I described some typical issues that are good for first time CPAN contributors to tackle. In this article, I will go through the nitty-gritty of fixing issues, and some gotchas to watch out for.
+In the previous [article]({{< relref "how-to-become-cpan-contributor.md" >}}) I described some typical issues that are good for first time CPAN contributors to tackle. In this article, I will go through the nitty-gritty of fixing issues, and some gotchas to watch out for. If you're not familiar with the differences between a Perl distribution, module and package, check out this [guide]({{< relref "perl-distributions--modules--packages-explained.md" >}}).
 
 ### Missing license meta name
 
