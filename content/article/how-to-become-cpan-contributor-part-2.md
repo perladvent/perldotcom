@@ -2,9 +2,9 @@
   {
     "title"       : "How to become a CPAN contributor - part 2",
     "authors"     : ["mohammad-anwar"],
-    "date"        : "2018-07-31T19:20:00",
+    "date"        : "2018-08-01T20:20:00",
     "tags"        : ["cpan","github","kwalitee", "dist-zilla", "module-build", "extutils-makemaker"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "How to fix common problems and what to watch out for",
