@@ -39,7 +39,7 @@ copyright_holder = Mohammad S Anwar
 
 If you are adding a software license to a distribution, [Software::License]({{<mcpan "Software::License" >}}) is a good resource which has many different types of Open Source licenses.
 
-One thing to check for is whether the distribution repository has a Meta.yml file or not. If it does, adding the license meta name to the build script may cause the build process to warn: "Invalid LICENSE value ...". This happens because the Meta.yml already contains a license value of "unknown", which conflicts with the build script. The solution here is to delete the MeTA.yml file and build the distribution, adding the newly-generated META.yml back into the repository.
+One thing to check for is whether the distribution repository has a META.yml file or not. If it does, adding the license meta name to the build script may cause the build process to warn: "Invalid LICENSE value ...". This happens because the META.yml already contains a license value of "unknown", which conflicts with the build script. The solution here is to delete the META.yml file and build the distribution, adding the newly-generated META.yml back into the repository.
 
 You might be thinking, why would you keep META.yml in the project repository as it can be easily generated? I agree it's probably a mistake, but keep in mind your intent is to add the license meta and nothing else. The author might have a good reason for keeping the META.yml file around. One approach would be to discuss with the author if it is good idea to drop it completely.
 
@@ -64,7 +64,6 @@ Sometimes, you will find a distribution missing the META.json file. Recently, I 
 
 There is an easy solution to this problem: just add `[MetaJSON]` to the dist.ini file, and Dist::Zilla will generate it during the build process.
 
-Sometimes I have come across distributions using [Module::Build]({{<mcpan "Module::Build" >}}) or [Module::Install]({{<mcpan "Module::Install" >}}) as the build script and missing the META.json. In these cases I've had no luck at all creating the META.json. I would love to know if there is any way to generate a META.json using either of the above distribution builders - maybe they need a patch?
 
 ### Missing a minimum Perl version
 
