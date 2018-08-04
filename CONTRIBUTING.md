@@ -3,42 +3,13 @@ Contributing
 
 Interested in writing an article for Perl.com? Perhaps you want to get the word out about your new startup, provide a tutorial on your favorite module, or have community news to share. This document is for you.
 
+Don't know what to write about? See our [article](https://www.perl.com/article/how-to-find-a-programming-topic-to-write-about/) on how to find a topic.
+
+Our [Style Guide](STYLE-GUIDE.md) describes our writing conventions, rules and has tips to make your articles better.
+
 Technology
 ----------
 The website is built with [Hugo](http://gohugo.io). You can run a local version of the site by following these [instructions](#viewing-your-draft-article).
-
-Style Guide
-===========
-This section is intended to guide Perl.com authors in producing articles that are consistent with the aims of the website. None of this is set in stone - great writing should always prevail.
-
-Goal
-----
-We aspire to reasoned, insightful, professional writing with a lighthearted bent.
-
-Topics of interest
-------------------
-- Anything Perl related: news, events, tutorials, community
-- Non-Perl programming subjects: version control, hosting, sysadmin, search
-- Open Source tools and techniques
-
-Looking for an idea for an article? Our bread and butter is: "here is something cool you can do with Perl". Start there.
-
-Politics / Tone
----------------
-- We are pro: Perl, Open Source and free software
-- No rants or "hit pieces"
-- Reasoned criticism is fine
-
-Language
---------
-- American English
-- 300-1,000 words per article
-- Simple English (use [hemingway](http://www.hemingwayapp.com/) to help)
-- Articles can begin with an italicized introductory paragraph
-- Prefer the first-person
-- We are "Perl.com"
-- You can use "we" to refer to Perl.com, the staff, our point of view etc.
-- When referring to Perl modules for the first time provide a link to the module on [metacpan](https://metacpan.org/)
 
 Markup
 ------
