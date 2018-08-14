@@ -4,7 +4,7 @@
    "categories" : "tutorials",
    "date" : "2018-03-26T21:40:37",
    "thumbnail" : "/images/how-to-find-a-programming-topic-to-write-about/thumb_typing-at-laptop.jpg",
-   "tags" : ["writing"],
+   "tags" : ["writing", "contributing"],
    "description" : "Writing is easier when you know the goal",
    "authors" : [
       "david-farrell"
