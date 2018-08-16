@@ -14,6 +14,9 @@
 
 One thing I hear a lot when encouraging others to write about programming is "I don't know what to write about", and I agree it can hard to write anything when you're not sure what to say. So before you open your text editor and stare at the blank screen hoping for inspiration, let me share with you some lines of investigation for picking a topic to write about.
 
+**N.B.** we've recently created a desired articles [list](https://github.com/tpf/perldotcom/projects/1), and we're looking for writers. Have a look at the list of issues and if you see one you'd like to write, respond on the issue to volunteer to write the article.
+
+
 ### Articles as stories
 
 As humans [stories resonate](http://time.com/5043166/storytelling-evolution/) with us. So tell a story about some experience you had. It could be about a conference you visited, a module on CPAN that saved your bacon one time, or this weird bug you found (and submitted a patch for!). I often find inspiration for new topics at work.
