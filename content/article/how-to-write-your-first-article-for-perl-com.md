@@ -1,7 +1,7 @@
 {
    "categories" : "tutorial",
    "description" : "Our tools make it easier than you might think",
-   "draft" : true,
+   "draft" : false,
    "date" : "2018-08-16T07:28:49",
    "authors" : [
       "david-farrell"
@@ -10,7 +10,7 @@
    "image" : "/images/how-to-write-your-first-article-for-perl-com/woman-writing.jpg",
    "title" : "How to write your first article for Perl.com",
    "tags" : [
-      "contributing"
+      "writing", "contributing", "perldotcom"
    ]
 }
 
