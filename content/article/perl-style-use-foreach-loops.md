@@ -12,7 +12,7 @@
   }
 
 
-A [foreach](https://perldoc.perl.org/perlsyn.html#Foreach-Loops) runs a block of code for each element of a list. No big whoop, but Tom Christiansen's [FMTEYEWTK article](https://www.perl.com/doc/FMTEYEWTK/style/slide22.html/) (Far More Than Everything You Ever Wanted to Know) continues to be one of the most popular on Perl.com so we thought we'd see what's happened in 20 years. I expand on his brief slide that's part of his longer presentation then add a new but experimental feature at the end.
+A [foreach](https://perldoc.perl.org/perlsyn.html#Foreach-Loops) runs a block of code for each element of a list. No big whoop, "perl foreach" continues to be one of the most popular on Google searches for the language. so we thought we'd see what's happened in 20 years. I expand on his brief slide that's part of his longer presentation then add a new but experimental feature at the end.
 
 ## Going through a list
 
