@@ -1,13 +1,13 @@
 
   {
-    "title"       : "Perl Style: Use foreach() Loops",
-    "authors"     : ["brian d foy"],
-    "date"        : "2018-09-01T12:57:47",
-    "tags"        : ["foreach", "refaliasing" ],
+    "title"       : "Perl foreach loops",
+    "authors"     : ["brian-d-foy"],
+    "date"        : "2018-09-21T08:57:47",
+    "tags"        : ["foreach", "refaliasing"],
     "draft"       : true,
     "image"       : "",
     "thumbnail"   : "",
-    "description" : "",
+    "description" : "The basics, the gotchas and advanced techniques",
     "categories"  : "syntax"
   }
 
