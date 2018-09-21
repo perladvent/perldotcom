@@ -125,8 +125,8 @@ my $direction = 'north-east';
 unshift @compass_points, $direction;
 # @compass_points contains: north-east, north, east, south and west
 
-my $west = pop @compass; 
-push @compass, $new_direction; # put $west back
+my $west = pop @compass_points; 
+push @compass_points, $new_direction; # put $west back
 ```
 
 ### Check an array is null or undefined
