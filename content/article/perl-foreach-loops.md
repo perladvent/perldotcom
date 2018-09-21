@@ -12,7 +12,7 @@
   }
 
 
-A [foreach](https://perldoc.perl.org/perlsyn.html#Foreach-Loops) loop runs a block of code for each element of a list. No big whoop, "perl foreach" continues to be one of the most popular on Google searches for the language. So we thought we'd see what's happened in 20 years. I expand on Tom Christiansen's [slide](https://www.perl.com/doc/FMTEYEWTK/style/slide22.html/) that's part of his longer presentation then add a new but experimental feature at the end.
+A [foreach](https://perldoc.perl.org/perlsyn.html#Foreach-Loops) loop runs a block of code for each element of a list. No big whoop, "perl foreach" continues to be one of the most popular on Google searches for the language. So we thought we'd see what's happened in 20 years. I expand on Tom Christiansen's [slide](https://www.perl.com/doc/FMTEYEWTK/style/slide22.html/) that's part of his longer presentation then add a new but experimental feature at the end. If you want more, there's plenty to read in [perlsyn](https://perldoc.perl.org/perlsyn.html) or my book [Learning Perl](https://www.learning-perl.com).
 
 ## Going through a list
 
@@ -162,6 +162,115 @@ The output shows the aliasing effect and that the original value is restored aft
 	$number is 7
 	After: Original value
 
+## Controlling
+
+There are three keywords that let you control the operation of the `foreach` (and other looping structures): `last`, `next`, and `redo`.
+
+The `last` stops the current iteration. It's as if you immediately go past the last statement in the block then breaks out of the loop. It does not look at the next item. You often use this with a postfix conditional:
+
+```perl
+foreach $number ( 0 .. 5 ) {
+	say "Starting $number";
+	last if $number > 3;
+	say "\$number is $number";
+	say "Ending $number";
+	}
+say 'Past the loop';
+```
+
+You start the block for element `3` but end the loop there and continue the program after the loop:
+
+	Starting 0
+	$number is 0
+	Ending 0
+	Starting 1
+	$number is 1
+	Ending 1
+	Starting 2
+	$number is 2
+	Ending 2
+	Starting 3
+	Past the loop
+
+The `next` stops the current iteration and moves on to the next one. This makes it easy to skip elements that you don't want to process:
+
+```perl
+foreach my $number ( 0 .. 5 ) {
+	say "Starting $number";
+	next if $number % 2;
+	say "\$number is $number";
+	say "Ending $number";
+	}
+```
+
+The output shows that you run the block with each element but only the even numbers make it past the `next`:
+
+	Starting 0
+	$number is 0
+	Ending 0
+	Starting 1
+	Starting 2
+	$number is 2
+	Ending 2
+	Starting 3
+	Starting 4
+	$number is 4
+	Ending 4
+	Starting 5
+
+The `redo` restarts the current iteration of a block. You can use it with a `foreach` although it's more commonly used with looping structures that aren't meant to go through a list of items.
+
+Here's an example where you want to get three "good" lines of input. You iterate through the number of lines that you want and read standard input each time. If you get a blank line, you restart the same loop with
+
+```perl
+my $lines_needed = 3;
+my @lines;
+foreach my $animal ( 1 .. $lines_needed ) {
+	chomp( my $line = <STDIN> );
+	redo if $line =~ /\A \s* \z/x;  # skip "blank" lines
+	push @lines, $line;
+	}
+
+say "Lines are:\n\t", join "\n\t", @lines;
+```
+
+The output shows that the loop effectively ignore the blank lines and goes back to the top of the loop. It does not use the next item in the list though. After getting a blank line when it tries to read the second line, it tries the second line again:
+
+	Reading line 1
+	First line
+	Reading line 2
+
+	Reading line 2
+
+	Reading line 2
+	Second line
+	Reading line 3
+
+	Reading line 3
+
+	Reading line 3
+	Third line
+	Lines are:
+		First line
+		Second line
+		Third line
+
+That's not very Perly though but this is an article about `foreach`. A better style might be to read lines with `while` to the point that `@lines` is large enough:
+
+```perl
+my $lines_needed = 3;
+my @lines;
+while( <STDIN> ) {
+	next if /\A \s* \z/x;
+	chomp;
+	push @lines, $_;
+	last if @lines == $lines_needed;
+	}
+say "Lines are:\n\t", join "\n\t", @lines;
+```
+
+There's more that you can do with these. The work with labels and nested loops. You can read more about them in [perlsyn](https://perldoc.perl.org/perlsyn.html) or [Learning Perl](https://www.learning-perl.com).
+
 ## A common file-reading gotcha
 
 Since `foreach` goes through each element of a list, some people reach for it when they want to go through each line in a file:
@@ -264,7 +373,7 @@ The output is the same in both programs:
 	Monty
 	Aliasing via reference is experimental at ...
 
-There's a warning from the experimental feature. It might change or even disappear according to [Perl's feature policy](https://perldoc.perl.org/perlpolicy.html). You can turn it off by disabling the warning:
+There's a warning from this experimental feature (and, all such features). The feature might change or even disappear according to [Perl's feature policy](https://perldoc.perl.org/perlpolicy.html). Disable the warning if you are comfortable with that:
 
 ```perl
 no warnings qw(experimental::refaliasing);
