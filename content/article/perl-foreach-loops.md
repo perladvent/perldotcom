@@ -11,7 +11,7 @@
       "loop",
       "refaliasing"
    ],
-   "draft" : true,
+   "draft" : false,
    "title" : "Perl foreach loops",
    "thumbnail" : "/images/perl-foreach-loops/thumb_blackboard-foreach.png"
 }
