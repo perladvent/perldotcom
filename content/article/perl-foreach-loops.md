@@ -1,15 +1,20 @@
-
-  {
-    "title"       : "Perl foreach loops",
-    "authors"     : ["brian-d-foy"],
-    "date"        : "2018-09-21T08:57:47",
-    "tags"        : ["foreach", "refaliasing"],
-    "draft"       : true,
-    "image"       : "",
-    "thumbnail"   : "",
-    "description" : "The basics, the gotchas and advanced techniques",
-    "categories"  : "syntax"
-  }
+{
+   "description" : "The basics, the gotchas and advanced techniques",
+   "authors" : [
+      "brian-d-foy"
+   ],
+   "categories" : "syntax",
+   "image" : "/images/perl-foreach-loops/blackboard-foreach.png",
+   "date" : "2018-09-23T09:57:47",
+   "tags" : [
+      "foreach",
+      "loop",
+      "refaliasing"
+   ],
+   "draft" : true,
+   "title" : "Perl foreach loops",
+   "thumbnail" : "/images/perl-foreach-loops/thumb_blackboard-foreach.png"
+}
 
 
 A [foreach](https://perldoc.perl.org/perlsyn.html#Foreach-Loops) loop runs a block of code for each element of a list. No big whoop, "perl foreach" continues to be one of the most popular on Google searches for the language. So we thought we'd see what's happened in 20 years. I expand on Tom Christiansen's [slide](https://www.perl.com/doc/FMTEYEWTK/style/slide22.html/) that's part of his longer presentation then add a new but experimental feature at the end. If you want more, there's plenty to read in [perlsyn](https://perldoc.perl.org/perlsyn.html) or my book [Learning Perl](https://www.learning-perl.com).
