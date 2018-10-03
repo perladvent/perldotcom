@@ -47,13 +47,13 @@ Please test it out thoroughly, run your favourite bugs through it and see if the
 
 Both Alan and I have been doing some work with profilers recently, and looking at `perl`'s hotspots. They seem to have been in surprising places; Alan found a lot of time was spent setting up and destroying objects, and also dealing with `sigsetjmp`; these are all things that Ilya looked at last week, but Alan said he only saw a 6% speedup with Ilya's patches, which was a little less than we were expecting.
 
-Nick suggested a couple of optimizations, including the rearrangement of `pp_hot.c`. This might cause people to wonder what the whole business about `pp_hot.c` is, anyway. "PP code" are the functions in perl which implement the interpreter's operations: as a simplification, they're the source code to things like `print` and `+`. They're called "PP code" because most of their work consists of Pushing and Popping things on and off the argument stack. The idea behind `pp_hot.c` is that all the frequently used functionality goes in that one file, which means that the object code can be cached by the processor. At least, that's what we hope will happen. So, we need to check that the functions we have in there actually are the most frequently used operations, which means we need to periodically profile and reorganise it. However, since processor caches vary wildly between machines, it's very hard to do the cache tuning accurately. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg01052.html)
+Nick suggested a couple of optimizations, including the rearrangement of `pp_hot.c`. This might cause people to wonder what the whole business about `pp_hot.c` is, anyway. "PP code" are the functions in perl which implement the interpreter's operations: as a simplification, they're the source code to things like `print` and `+`. They're called "PP code" because most of their work consists of Pushing and Popping things on and off the argument stack. The idea behind `pp_hot.c` is that all the frequently used functionality goes in that one file, which means that the object code can be cached by the processor. At least, that's what we hope will happen. So, we need to check that the functions we have in there actually are the most frequently used operations, which means we need to periodically profile and reorganise it. However, since processor caches vary wildly between machines, it's very hard to do the cache tuning accurately. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg01052.html)
 
 ### <span id="solaris_and_sockets">Solaris and Sockets</span>
 
 Stephen Potter brought up an old bug related to sockets on Solaris, which Alan diagnosed as a change in Solaris' behaviour with respect to restarting interrupted system calls - specifically, the restarting of `accept()` and `connect()` after a child signal was caught. While this wasn't a bug in Perl, per se, it raised the question of how to shield the user from this sort of operating system change. Things like POSIX don't specify whether or not system calls should be restarted, so it's all down, essentially, to tradition. To make things worse, when the system call was interrupted, `IO::Socket` hadn't been catching the error, and carried on working, which created a dead filehandle - this in turn generated "bad filehandle" errors instead of "interrupted system call" errors, masking the true problem. And maybe `IO::Socket` should restart the interrupted operation as well, since that's usually what people want.
 
-Either way, a fix to `IO::Socket` is needed, which nobody seems to have come up with yet. If you want to do this, you'll want to [read the whole thread.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg01160.html)
+Either way, a fix to `IO::Socket` is needed, which nobody seems to have come up with yet. If you want to do this, you'll want to [read the whole thread.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg01160.html)
 
 ### <span id="strtoul">strtoul</span>
 
@@ -101,7 +101,7 @@ Jarkko has a task for someone:
 
 > Here's a little something that someone might consider doing over the holiday season, a nice way to get to know UTF-8 if someone feels the urge or interest to do so.
 
-If that's you, see [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg01192.html)
+If that's you, see [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg01192.html)
 
 #### <span id="use_constant_updates">use constant Updates</span>
 

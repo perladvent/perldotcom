@@ -33,7 +33,7 @@ Please send corrections and additions to `perl-thisweek-YYYYMM@simon-cozens.org`
 
 ### <span id="Object_creation_and_destruction">Object creation and destruction</span>
 
-Ilya came up with [another startling patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg00800.html) this week, but this one was a little more complex: he estimates, however, that it "decreases the overhead of creation/destruction of objects 3-4 times". It does this by applying the same "handler" mechanism that operator overloading uses to `DESTROY` methods. He also says that "other handlers can be easily done the same way", which (I think) means that similar speed-ups are possible in `BEGIN` and `END` blocks.
+Ilya came up with [another startling patch](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg00800.html) this week, but this one was a little more complex: he estimates, however, that it "decreases the overhead of creation/destruction of objects 3-4 times". It does this by applying the same "handler" mechanism that operator overloading uses to `DESTROY` methods. He also says that "other handlers can be easily done the same way", which (I think) means that similar speed-ups are possible in `BEGIN` and `END` blocks.
 
 ### <span id="More_cool_PerlIO_stuff">More cool PerlIO stuff</span>
 
@@ -58,11 +58,11 @@ While he hasn't coded this yet, it shouldn't be very difficult, and would be a n
 
 Jarkko pointed out that there was a problem in the bug process, in that bugs can very easily be forgotten about without a trace, and there's no feedback between us and the bug reporter. We obviously want to fix this, so there's communication with the reporter, and so we make sure that every bug is dealt with and doesn't get forgotten.
 
-Richard Foley suggested sending out a reminder of open bugs to the bug admins and p5p; there was then some wonderful set theory mathematics about which categories of currently open bugs we should start the ball rolling with and how many there were. This process will definitely happen with bugs submitted from now on, though. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg00274.html)
+Richard Foley suggested sending out a reminder of open bugs to the bug admins and p5p; there was then some wonderful set theory mathematics about which categories of currently open bugs we should start the ball rolling with and how many there were. This process will definitely happen with bugs submitted from now on, though. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg00274.html)
 
 ### <span id="UV_Preserving_Arithmetic">UV Preserving Arithmetic</span>
 
-Nicholas Clark's great work with UV/IV preserving arithmetic (You know, so that `$a=3; $b=5; $a + $b` results in an IV, not an NV) seems to have collapsed around his feet. It seemed like everything was going well, after a couple of 70-odd K patches starting [this thread](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg00499.html) managed to get the whole thing working quickly and accurately, but then Jarkko discovered it was giving nasty results on some platforms. Helmut Jarausch found it [failing on Irix](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg00800.html), and Jarkko was having it cause strange problems on Digital Unix. The patches have been pulled out of the repository temporarily, and Nick is reportedly looking for access to "something slightly more esoteric than FreeBSD".
+Nicholas Clark's great work with UV/IV preserving arithmetic (You know, so that `$a=3; $b=5; $a + $b` results in an IV, not an NV) seems to have collapsed around his feet. It seemed like everything was going well, after a couple of 70-odd K patches starting [this thread](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg00499.html) managed to get the whole thing working quickly and accurately, but then Jarkko discovered it was giving nasty results on some platforms. Helmut Jarausch found it [failing on Irix](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg00800.html), and Jarkko was having it cause strange problems on Digital Unix. The patches have been pulled out of the repository temporarily, and Nick is reportedly looking for access to "something slightly more esoteric than FreeBSD".
 
 STOP PRESS! This from Nick:
 
@@ -80,7 +80,7 @@ Well, Tels did it, and produced `Pod::Checker::Code`; initially, it checked the 
 
         =back
 
-I don't think anything was actually decided; check the [rest of the thread](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg00640.html) for details.
+I don't think anything was actually decided; check the [rest of the thread](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg00640.html) for details.
 
 ### <span id="Precedence">Precedence</span>
 
@@ -107,13 +107,13 @@ Now, we all know that if you do things with multiple side-effects at the same ti
 >
 > If not, it's a bug, or we'd better have a \_good\_ explanation.
 
-Various people disagreed; it's not just a question of side-effects, but also a question of the order of evaluation of operands. C leaves the order of evaluation undefined, but do we want Perl to go this way? Nicholas Clark maintained that keeping the order undefined allows for flexibility in the implementation: if we promise a certain evaluation order, but then someone comes up with a huge speed increase hack which jiggles the evaluation order, we can't use it. John Peacock summed it up rather differently: "Doctor, it hurts when I do this!". [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg00443.html)
+Various people disagreed; it's not just a question of side-effects, but also a question of the order of evaluation of operands. C leaves the order of evaluation undefined, but do we want Perl to go this way? Nicholas Clark maintained that keeping the order undefined allows for flexibility in the implementation: if we promise a certain evaluation order, but then someone comes up with a huge speed increase hack which jiggles the evaluation order, we can't use it. John Peacock summed it up rather differently: "Doctor, it hurts when I do this!". [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg00443.html)
 
 ### <span id="Reminder_about_the_FAQ">Reminder about the FAQ</span>
 
 Daniel Stutz asked how to get the latest development sources, (Answer: read perlhack, it tells you - well, the perlhack in the latest development sources does...) and also complained that "it's very hard to find information about P5P". Various people pointed out that P5P is mentioned in the first part of the Perl FAQ, and I finally remembered to post the FAQ.
 
-Do you know about the P5P FAQ? You should. Email `perl5-porters-faq@perl.org` for a copy, or read it [here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg00835.html)
+Do you know about the P5P FAQ? You should. Email `perl5-porters-faq@perl.org` for a copy, or read it [here.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg00835.html)
 
 ### <span id="Various">Various</span>
 

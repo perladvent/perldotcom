@@ -59,7 +59,7 @@ prints `10` instead of `210`. Whoops. Simon Cozens provided a patch. 5.6.1 anybo
 
 John Holdsworth added more features to pack\] to better support Sun's XDR (external data representation) formats, which is something I haven't looked at since about 1990. His change also supports `?` as a length specifier, saying that the length can be found in the data. Ilya found fault with this; he thinks it is not general enough.
 
-[Interested parties might like to read more](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00900.html)
+[Interested parties might like to read more](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00900.html)
 
 For me this discussion is reminiscent of a long discussion from last year in which Ilya wanted to introduce a feature that would make data self-unpacking; it would carry its own template with it.
 
@@ -69,7 +69,7 @@ For me this discussion is reminiscent of a long discussion from last year in whi
 
 Barrie Slaymaker posted a really interesting module that combines `open3`, `select` and , `waitpid`. This is something we've needed for a long time. Everyone should check out this thread.
 
-[Full details, including man page](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00980.html)
+[Full details, including man page](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00980.html)
 
 Discussion about the user interface followed for about 25 messages.
 
@@ -79,7 +79,7 @@ I submitted a little patch to add a new diagnostic message, and Ron Kimball poin
 
 I re-alphabetized the whole thing with a different (and more consistent) alphabetic scheme.
 
-[Novus Ordo Seclorum](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00891.html)
+[Novus Ordo Seclorum](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00891.html)
 
 ### <span id="Poor_Diagnosis_of_[sort]_Errors">Poor Diagnosis of `sort` Errors</span>
 
@@ -110,7 +110,7 @@ Randal pointed out that the `File::Glob` man page, which is the default globber 
 
 You can't use the overload mechanism to overload assignment, but you can use the `tie` mechanism. Jeff Pinyan posted an example module that wraps up overloaded assignment semantics for a module. Damian replied that he has a paper about that. Discussion went offlist.
 
-[Jeff's Idea](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00892.html)
+[Jeff's Idea](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00892.html)
 
 ### <span id="POSIX_Character_Classes">POSIX Character Classes</span>
 

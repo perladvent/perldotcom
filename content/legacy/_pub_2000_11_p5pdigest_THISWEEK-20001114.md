@@ -54,7 +54,7 @@ Kurt Starsinic pointed out that there were times when you do want to test, for e
 
 ### <span id="Threads_and_POSIX">Threads and POSIX</span>
 
-Kurt was indulging in bug archaeology and turned up something spooky relating to signals and threads. He asked for an explanation of how the signal model changes between nonthreaded and threaded Perl, which Dan Sugalski [duly provided](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00356.html). The rest of that thread (ho, ho) is worth reading, if you're interested in how threads work with Perl.
+Kurt was indulging in bug archaeology and turned up something spooky relating to signals and threads. He asked for an explanation of how the signal model changes between nonthreaded and threaded Perl, which Dan Sugalski [duly provided](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00356.html). The rest of that thread (ho, ho) is worth reading, if you're interested in how threads work with Perl.
 
 ### <span id="PerlIO">PerlIO</span>
 
@@ -79,7 +79,7 @@ Robin Barker found that PerlIO-over- `stdio` breaks large file support; Nick fou
 
 Nicholas Clark did some work on `IO::Handle` and some other IO calls, and found that the return values weren't particularly intuitive; Perl was reporting the raw return values from `stdio` rather than true or false. This becomes problematic, of course, when the IO model isn't `stdio`. He produced some fixes for `ungetc` and `getpos`, and he also noted that if we're using `sfio` then we shouldn't treat `sftell` as if it were `ftell`, as there's yet another return value inconsistency.
 
-Nicholas also came up with a ["dumb shell"](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00604.html)to allow a shell with a per-process current directory on systems that don't have one, which should make dealing with subdirectories during building easier, and might also help with cross-compiling Perl.
+Nicholas also came up with a ["dumb shell"](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00604.html)to allow a shell with a per-process current directory on systems that don't have one, which should make dealing with subdirectories during building easier, and might also help with cross-compiling Perl.
 
 Nick Ing-Simmons also asked
 
@@ -87,7 +87,7 @@ Nick Ing-Simmons also asked
 >
 > This means knowing what it "should" look like to perl5
 
-There followed a useful discussion of the proposed API; [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00390.html)
+There followed a useful discussion of the proposed API; [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00390.html)
 
 It was also determined that one should open a file containing Latin data as follows:
 
@@ -97,7 +97,7 @@ and that Perl programs dealing with data in Japanese are implicity permitted to 
 
 ### <span id="READMESolaris">README.Solaris</span>
 
-Andy Dougherty produced a README.Solaris, which Jarkko, Russ, Alan and many others looked over and improved; later on, he produced a final version to be integrated, along with some other Solaris fixes. This was applied to the tree, and then some people picked over it a little more. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00559.html)
+Andy Dougherty produced a README.Solaris, which Jarkko, Russ, Alan and many others looked over and improved; later on, he produced a final version to be integrated, along with some other Solaris fixes. This was applied to the tree, and then some people picked over it a little more. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00559.html)
 
 ### <span id="Locales">Locales</span>
 
@@ -123,7 +123,7 @@ Tim Jenness pointed out that the LaTeX translator already deals with `=head3` an
 
 Since last week, I concentrated on things that nobody fixed, this time we'll have a whirlwind tour of things that people did get fixed.
 
-The [VMS and Cygwin flock fix](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00271.html) we mentioned last week were implemented, thanks to Craig Berry and Andy Dougherty.
+The [VMS and Cygwin flock fix](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00271.html) we mentioned last week were implemented, thanks to Craig Berry and Andy Dougherty.
 
 Eric Fifer brought the Cygwin port up to date with Cygwin 1.1.5. (Great work as ever, Eric!)
 

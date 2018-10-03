@@ -40,7 +40,7 @@ The real outcome of this was a patch by Casey to convert the standard module tem
 
 ### <span id="Charnames">Charnames</span>
 
-[This patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg01394.html) from Ilya took me a while to get my head around, but now I have and I think it's beautiful. When doing Unicode testing and entering Unicode data without a Unicode editor, we have to resort to things like
+[This patch](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg01394.html) from Ilya took me a while to get my head around, but now I have and I think it's beautiful. When doing Unicode testing and entering Unicode data without a Unicode editor, we have to resort to things like
 
         $x =
         "\x{395}\x{3CD}\x{3B1}\x{3B3}\x{3B3}\x{3B5}\x{3BB}\x{3CA}\x{3B1}";
@@ -96,7 +96,7 @@ Ilya produced a patch for `xsubpp` that allows the `OUT` and `IN_OUT` keywords; 
 
 These are somewhat confusing, but here's my understanding of what they do: A parameter in a C function marked `OUTLIST` will have its value at the end of the function added to the list of return values to Perl. A parameter labeled `IN_OUT` will be read from a Perl variable at the beginning of the C function, and the value of the C variable at the end of the C function will be put back into the Perl variable. In effect, `IN_OUT` gives you a pointer to write through, which is "tied" to a Perl variable. \[IN\_OUTLIST\] does the same, but instead of writing the value back to the Perl variable, it goes onto the list of return values.
 
-An `OUT` value is set to the return value of the C function - I think. [Decide for yourself.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg01402.html)
+An `OUT` value is set to the return value of the C function - I think. [Decide for yourself.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg01402.html)
 
 ### <span id="perlipc_examples_buggy">Perlipc Examples Buggy</span>
 
@@ -131,7 +131,7 @@ This causes a syntax error:
 
 This is because Perl assumes that `-f` is a file-test operator, and wonders what it's doing next to a variable with no binary operator in the middle. Some people, including Jarkko, thought that was silly; if I define a sub `f`, Perl should know that I'm trying to call that subroutine.
 
-This naturally applies not just for the file tests, but any other operators that look like functions, such as `y` and `s`. Several solutions were proposed, such as forcing Perl to use the subroutine, or outlawing subroutines with "reserved" names. In the end, Jarkko produced a patch for the file tests that spits out a warning in the above case - I think the `y`, `m`, and other cases are still on the loose. [The whole thread](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-12/msg01574.html) (36 messages) is worth reading, if only so you can get an idea of what nefarious things Perl porters get up to when syntax goes bad.
+This naturally applies not just for the file tests, but any other operators that look like functions, such as `y` and `s`. Several solutions were proposed, such as forcing Perl to use the subroutine, or outlawing subroutines with "reserved" names. In the end, Jarkko produced a patch for the file tests that spits out a warning in the above case - I think the `y`, `m`, and other cases are still on the loose. [The whole thread](https://www.nntp.perl.org/group/perl.perl5.porters/2000/12/msg01574.html) (36 messages) is worth reading, if only so you can get an idea of what nefarious things Perl porters get up to when syntax goes bad.
 
 ### <span id="Lvalue_subs">Lvalue subs</span>
 

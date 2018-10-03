@@ -70,7 +70,7 @@ Of course, MacPerl doesn't have `kill` so [Chris](http://simon-cozens.org/writin
 
 ### <span id="Various">Various</span>
 
-Benjamin Sugars was at it again. He fixed a bug in `socket` which leaked file descriptors, wrote a test suite for `Cwd`, joined the bug admin team, patched up `B::Terse` and `File::*` to be warnings-happy, produced another version of his XS `Cwd` module. He didn't document [references in `@INC`](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01780.html), though, so he doesn't get the gold star.
+Benjamin Sugars was at it again. He fixed a bug in `socket` which leaked file descriptors, wrote a test suite for `Cwd`, joined the bug admin team, patched up `B::Terse` and `File::*` to be warnings-happy, produced another version of his XS `Cwd` module. He didn't document [references in `@INC`](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg01780.html), though, so he doesn't get the gold star.
 
 I zapped `OPpRUNTIME`, a flag that was set but never tested!
 

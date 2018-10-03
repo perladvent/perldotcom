@@ -64,7 +64,7 @@ Andrew McNaughton found that `Charnames` didn't produce UTF8-encoded strings on 
 
 ### <span id="PerlIO_again">PerlIO (again)</span>
 
-Nick's sterling work on PerlIO continues, and this week he raised the question of where to store the defaults that `use open` sets; currently, there are four bits set in the CV, two for input and two for output. However, since this only gives you four states, it's not exactly extensible to user-defined disciplines. The suggestion from Sarathy was to use the same area used by the lexical warnings pragma. The whole thread contains a good discussion about how the semantics of PerlIO disciplines will pad out. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00780.html)
+Nick's sterling work on PerlIO continues, and this week he raised the question of where to store the defaults that `use open` sets; currently, there are four bits set in the CV, two for input and two for output. However, since this only gives you four states, it's not exactly extensible to user-defined disciplines. The suggestion from Sarathy was to use the same area used by the lexical warnings pragma. The whole thread contains a good discussion about how the semantics of PerlIO disciplines will pad out. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00780.html)
 
 ### <span id="head3_again">=head3 (again)</span>
 
@@ -72,13 +72,13 @@ Casey Tweten's unstinting drive to make POD support `=head3` and further levels 
 
 ### <span id="New_subspm">New subs.pm</span>
 
-Jeff Pinyan put forward a new [version of subs.pm](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00822.html) which is supposed to deal with pre-declaring prototypes and attributes. It needed a little smoothing out, but it's looking quite good now.
+Jeff Pinyan put forward a new [version of subs.pm](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00822.html) which is supposed to deal with pre-declaring prototypes and attributes. It needed a little smoothing out, but it's looking quite good now.
 
 ### <span id="Congratulations">Congratulations</span>
 
 Two sets of congratulations are in order this week. First, to the dedicated team of bug squashers; there are now less than 1,000 open bugs in Perl, and none of those is considered fatal.
 
-Congratulations are also due to Perl hacker Mark Fisher, who just become a daddy. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00934.html)
+Congratulations are also due to Perl hacker Mark Fisher, who just become a daddy. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00934.html)
 
 ### <span id="Various">Various</span>
 

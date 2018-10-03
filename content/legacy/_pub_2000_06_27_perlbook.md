@@ -31,7 +31,7 @@ The first test is by no means an acid test. It's a hint, and that's all. But goo
 
 Perl encourages co-operation. We've got a huge repository of code, the Comprehensive Perl Archive Network, which enables people to share their code with the world. If someone's a really good Perl programmer, it's highly likely they'll have come across a problem, abstracted the solution into a module, and uploaded it for the benefit of others. So, check out CPAN; you can search for the author's CPAN directory at [MetaCPAN](https://metacpan.org) and see what they've submitted, if anything. If they've got a directory on CPAN, then you can download their code and have a look at it. Is it documented? Is the documentation clear and easy to read? Does the code pass the other tests here?
 
-Another way people make a name for themselves in the Perl world is to get involved with the development of Perl itself, in which case they'll be posting to the [perl5-porters mailing](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/). Have a look at their posts, and see what sort of attitude they take about Perl.
+Another way people make a name for themselves in the Perl world is to get involved with the development of Perl itself, in which case they'll be posting to the [perl5-porters mailing](https://www.nntp.perl.org/group/perl.perl5.porters/). Have a look at their posts, and see what sort of attitude they take about Perl.
 
 Thankfully, not everyone's a core developer, and -- don't get me wrong -- not being a developer is by no means an indication of not knowing Perl. However, if they do appear on perl5-porters posting intelligent stuff, this should be points in their favour.
 

@@ -53,17 +53,17 @@ Rick Delaney had a patch which makes the "add-assign" method (instead of the "ad
 >
 > Someone could even implement an overloaded `+=` that's supposed to warn when the lefthand operand is undef. :)
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg00959.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg00959.html)
 
 ### <span id="More_Big_Unicode_Wars">More Big Unicode Wars</span>
 
 Most of this week's (many) messages were taken up in various debates about the state of Unicode handling and how the Unicode semantics should work. I'm obviously too involved in the whole thing to give you an objective summary of what went on, but I can point you at the highlights and the starts of the threads.
 
-One of the Unicode threads started [here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01091.html), and eventually, let to some agreement between myself, Nick Ing-Simmons, Ilya and Jarkko, which is a feat in itself; we decided that the model for Unicode on EBCDIC will look like [this](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01259.html). (Incidentally, thanks to Morgan Stanley Dean Witter, who've promised me a day's hacking time on their mainframes, this might even be implemented soon.)
+One of the Unicode threads started [here](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg01091.html), and eventually, let to some agreement between myself, Nick Ing-Simmons, Ilya and Jarkko, which is a feat in itself; we decided that the model for Unicode on EBCDIC will look like [this](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg01259.html). (Incidentally, thanks to Morgan Stanley Dean Witter, who've promised me a day's hacking time on their mainframes, this might even be implemented soon.)
 
-Another of the threads started [here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01369.html) with Karsten Sperling attempting to nail down the semantics of Unicode handling. Most of the ensuing discussion was a mixture of boring language-lawyering and acrimony. Karsten also found some interesting bugs related to character ranges on EBCDIC, which everyone swore had been fixed years ago, but still seem to remain.
+Another of the threads started [here](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg01369.html) with Karsten Sperling attempting to nail down the semantics of Unicode handling. Most of the ensuing discussion was a mixture of boring language-lawyering and acrimony. Karsten also found some interesting bugs related to character ranges on EBCDIC, which everyone swore had been fixed years ago, but still seem to remain.
 
-Nick Ing-Simmons posted a well thought-out and informative list and discussion of the [remaining conflicts](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01563.html) between our Unicode implementation and the Camel III's discussion of what should happen.
+Nick Ing-Simmons posted a well thought-out and informative list and discussion of the [remaining conflicts](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg01563.html) between our Unicode implementation and the Camel III's discussion of what should happen.
 
 Unintentional irony of the week award goes to Ilya, for breathtakingly accusing Jarkko of "unnecessarily obfuscating" the regular expression engine.
 

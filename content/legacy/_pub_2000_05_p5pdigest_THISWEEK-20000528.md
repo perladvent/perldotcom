@@ -63,11 +63,11 @@ and putting the regex match into an `eval` block. (Did you get that? It first tr
 
 Ben suggested that the regex engine could have a hook in it that would call an alternative regex engine, handing it the string to be matched and the current position, and the subengine would return a value saying how far it had matched up to; this would facilitate trying out alternative implementations or new features.
 
-Ilya spent some time discussion new features he thought might be useful. [One such message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg01056.html)
+Ilya spent some time discussion new features he thought might be useful. [One such message.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg01056.html)
 
 When Ilya mentioned SNOBOL is went into SNOBOL-berserk mode and posted a twelve-page excerpt from the SNOBOL book about SNOBOL pattern-matching optimizations, which was not particularly relevant to the rest of the discussion.
 
-[Root of this thread](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00853.html)
+[Root of this thread](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00853.html)
 
 ### <span id="Perl_in_the_News">Perl in the News</span>
 
@@ -120,7 +120,7 @@ Sarathy said that he thought this should have appened two years ago, so I provid
 
 if you have warnings enabled.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00850.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00850.html)
 
 [This article has a detailed explanation of the history of this error message.](http://www.plover.com/~mjd/perl/at-error.html)
 

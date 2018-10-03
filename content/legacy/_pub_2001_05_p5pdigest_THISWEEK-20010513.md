@@ -31,7 +31,7 @@ Very soon, I will have some rather important exams; in order for me to concentra
 
 I started the week by posting a commentary on the three todo files, `perltodo.pod`, `Todo` and `Todo-5.6`. The ensuing discussion helped to weed out the items that had already been done, or that people didn't actually want anyway, or were no longer appropriate. It also raised the possibility of some kind of regexp engine BOF at TPC: either a tag-team bug-fixing effort, or a talk by people such as Jarkko and Hugo.
 
-The important outcome of this is that we now have a [Grand Unified Todo List](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-05/msg01108.html), which means there are a lot of things that you can do! And, of course, we found out where the phrase "Danger, Will Robinson!" comes from, thanks to Walt Mankowski:
+The important outcome of this is that we now have a [Grand Unified Todo List](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-05/msg01108.html), which means there are a lot of things that you can do! And, of course, we found out where the phrase "Danger, Will Robinson!" comes from, thanks to Walt Mankowski:
 
 > Lost in Space was a campy 1960's American scifi series about a family which was, umm, lost in space. At least once an episode the family's young son Will would get into some sort of trouble (usually due to his friendship with the evil stow-away Dr. Smith) and the family's robot would flail his arms about and yell "Danger, Will Robinson! Danger!"
 
@@ -91,7 +91,7 @@ Nick also pointed out that PerlIO did manage to arrange the signal despatch at t
 > The transition from 5.005\_03 to 5.6.0 was a Major release The transition from 5.6.0 to 5.6.1 was a Minor release The current development track is the 5.7.X series The next Major release will be 5.8.0
 
 [Andy Dougherty](http://simon-cozens.org/writings/whos-who.html#DOUGHERTY) explained that Perl uses the `xs_apiversion` config variable to find modules which are "binary compatible" with the current Perl. Alan noted that Perl's "binary compatibility" assumes that everyone has the source and a compiler, whereas Solaris' "binary compatibility" means that SunOS 4 executables run on 64-bit Solaris.
-Andy also explained how to [distribute non-core modules with Perl](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-05/msg00841.html) without getting fried by upgrades.
+Andy also explained how to [distribute non-core modules with Perl](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-05/msg00841.html) without getting fried by upgrades.
 
 Alan also bemoaned the problem that if Sun ships a Perl compiled with its own compilers, users who only have `gcc` won't be able to build external modules properly; he hacked up a solution whereby " `gccperl`" would see the right configuration.
 

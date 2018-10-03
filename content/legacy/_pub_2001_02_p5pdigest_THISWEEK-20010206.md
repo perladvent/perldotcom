@@ -39,7 +39,7 @@ And, of course, well done to Jarkko and Sarathy for putting this one together.
 
 ### <span id="MacPerl">MacPerl</span>
 
-I forgot to mention this last week, but it's important enough for me to mention it this week: Chris Nandor has taken over the MacPerl pumpkin. If you have a Mac and you want to run Perl on it, (or even better, help move MacPerl up to 5.6.1) then you really ought to read Chris' [State of MacPerl](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01724.html) posting.
+I forgot to mention this last week, but it's important enough for me to mention it this week: Chris Nandor has taken over the MacPerl pumpkin. If you have a Mac and you want to run Perl on it, (or even better, help move MacPerl up to 5.6.1) then you really ought to read Chris' [State of MacPerl](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01724.html) posting.
 
 ### <span id="select_on_Win32">select() on Win32</span>
 

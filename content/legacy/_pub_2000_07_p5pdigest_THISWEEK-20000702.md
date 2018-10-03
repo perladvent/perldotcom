@@ -49,19 +49,19 @@ Please send corrections and additions to `mjd-perl-thisweek-YYYYMM@plover.com` w
 
 Simon continues to generate Unicode patches.
 
-[Patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00634.html)
+[Patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00634.html)
 
-[More tests.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00650.html)
+[More tests.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00650.html)
 
-[Patch and request for help.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00696.html)
+[Patch and request for help.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00696.html)
 
-[Patch that fixes concatenation operator.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00747.html)
+[Patch that fixes concatenation operator.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00747.html)
 
-[Torture tests.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00023.html)
+[Torture tests.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00023.html)
 
 #### <span id="Unicode_Handling_HOWTO">Unicode Handling HOWTO</span>
 
-Simon wrote a clear and amusing summary of what Unicode is and how to deal with it. If you've been puzzled by all this unicode stuff, you should certainly [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00004.html)
+Simon wrote a clear and amusing summary of what Unicode is and how to deal with it. If you've been puzzled by all this unicode stuff, you should certainly [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00004.html)
 
 #### <span id="Unicode_Regex_Matching">Unicode Regex Matching</span>
 
@@ -147,11 +147,11 @@ Jan Dubois pointed out that this will break existing code that has a compile-tim
 
 More persuasively, he pointed out that under such a circumstance, `my Foo $x = Foo->new` would not work either, because the `Foo` on the right would be interpreted as a constant instead of as a class name.
 
-[Andreas' explanation of why he wants this feature](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00668.html)
+[Andreas' explanation of why he wants this feature](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00668.html)
 
 Doug then submitted an updated updated patch that enables `my Foo:: $x` as well.
 
-[Final patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00687.html)
+[Final patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00687.html)
 
 ### <span id="cfgperl">`cfgperl`</span>
 
@@ -159,39 +159,39 @@ Last week I sent aggrieved email to a number of people asking what `cfgperl` was
 
 Jarkko answered me in some detail in email, and then posted to p5p to explain the real situation. `cfgperl` is simply the name for Jarkko's *private* copy of the source, to which he applies patches that he deems worthy. It got ahead of the main repository because Sarathy was resting last month.
 
-[Jarkko's full details.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00742.html)
+[Jarkko's full details.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00742.html)
 
 ### <span id="Missing_Methods">Missing Methods</span>
 
 Richard Soderberg responded to my call for a patch for this (see [last week's discussion](/pub/2000/06/p5pdigest/THISWEEK-20000625.html#Missing_Methods)) and produced one. Thank you very much, Richard!
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00009.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00009.html)
 
 ### <span id="Signals_on_Windows">Signals on Windows</span>
 
 Sarathy said that signals really couldn't be emulated properly under Windows, but that people keep complaining about it anyway. So he put in a patch that tries to register the signal handler anyway, I guess in hopes of stopping them from complaining.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00740.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00740.html)
 
 ### <span id="New_File::Spec">New `File::Spec`</span>
 
 Barrie Slaymaker submitted a set of changes to the `File::Spec` suite.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00700.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00700.html)
 
-[More patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00007.html)
+[More patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00007.html)
 
 ### <span id="Another_depressing_regex_engine_bug">Another depressing regex engine bug</span>
 
 This can result in backreference variables being set incorrectly when they should be undef. Apparently state is not always restored properly on backtracking.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00012.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00012.html)
 
 ### <span id="s_Appears_to_be_Slower">`s///` Appears to be Slower</span>
 
 Perl Lindquist reported an example of `s///` that runs much slower in 5.6.0 than in 5.004\_03. The regex is bad, so that you would expect a quadratic search, but Mike Guy reported that in fact Perl was doing a cubic search.
 
-[Mike's analysis and shorter test case](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00702.html)
+[Mike's analysis and shorter test case](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00702.html)
 
 ### <span id="perlforcepod">`perlforce.pod`</span>
 
@@ -199,7 +199,7 @@ Simon claims that this document is three years old and that he was only sending 
 
 It is a document about how to use the Perforce repository in which the master copies of the Perl sources reside.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00022.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00022.html)
 
 ### <span id="\_prototype_now_works">`\&` prototype now works</span>
 
@@ -209,19 +209,19 @@ Larry sent a patch that permits a function to have `\&` in its prototype. It app
 
 The sequence `\_` in a regex now elicits a warning where it didn't before. Dominic Dunlop tracked down the patch that introduced this and pointed out that it needs to be documented (in `perldelta` and possibly `perldiag`) and probably also needs a test case. But nobody stepped up. Here's an easy opportunity for someone to contribute a doc patch.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00667.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00667.html)
 
 ### <span id="More_Bug_Bounty">More Bug Bounty</span>
 
 Dominic Dunlop reported an interesting bug in the new `printf "%v"` specifier. The bug is probably not too difficult to investigate and fix, because it is probably localized to a small part of Perl that does not deal woo much with Perl's special data structures. So it is a good thing for a beginner to work on. Drop me a note if you are interested and if you need help figuring out where to start.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00721.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00721.html)
 
 ### <span id="sprintf_tests">`sprintf` tests</span>
 
 Dominic also sent a patch that added 188 new tests to `t/op/sprintf.t`.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00720.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00720.html)
 
 ### <span id="Regression_Tests_and_@INC_setting">Regression Tests and `@INC` setting</span>
 

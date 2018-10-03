@@ -40,7 +40,7 @@ Please send corrections and additions to `mjd-perl-thisweek-YYYYMM@plover.com` w
 
 Last week a discussion started about how to put version information into modules in a standard way, and Sam Tregar suggested that there be a convention that the version information and other module interface information be stored in the POD documents. Discussion on this continued. I should probably have mentioned it in the pervious report.
 
-[Sam's message](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00506.html)
+[Sam's message](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00506.html)
 
 ### <span id="SVs_by_Default">SVs by Default</span>
 

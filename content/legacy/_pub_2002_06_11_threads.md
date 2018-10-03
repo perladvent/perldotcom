@@ -175,7 +175,7 @@ In fact, this is very like the code that has been added to `Test::Builder` to ma
          ok 2
          ok 3
 
-which is exactly what the end user would expect. All in all this is a rather small change for this 1291 line module, we change roughly 15 lines in a non intrusive way, the documentation and testcase code makes up most of the patch. The full patch is at <http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2002-06/msg00816.html>
+which is exactly what the end user would expect. All in all this is a rather small change for this 1291 line module, we change roughly 15 lines in a non intrusive way, the documentation and testcase code makes up most of the patch. The full patch is at <https://www.nntp.perl.org/group/perl.perl5.porters/2002/06/msg00816.html>
 
 ### <span id="altering_perls_behavior_to_be_threadsafe,_ex::threads::cwd">Altering Perls behavior to be thread-safe, ex::threads::cwd</span>
 

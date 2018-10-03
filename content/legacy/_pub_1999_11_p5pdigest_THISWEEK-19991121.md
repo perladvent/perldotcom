@@ -57,7 +57,7 @@ Please send corrections and additions to `mjd-perl-thisweek-YYYYMM@plover.com` w
 
 ### <span id="XSLoaderpm">`XSLoader.pm`</span>
 
-Ilya contributed a new module, `XSLoader`, which is a cut-down version of `Dynaloader`. It uses less memory and has a simpler interface. He patched the standard dynamically-loaded modules to use `XSLoader` instead of `DynaLoader`. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00585.html)
+Ilya contributed a new module, `XSLoader`, which is a cut-down version of `Dynaloader`. It uses less memory and has a simpler interface. He patched the standard dynamically-loaded modules to use `XSLoader` instead of `DynaLoader`. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00585.html)
 
 ### <span id="Threads">Threads</span>
 
@@ -109,7 +109,7 @@ Mike Guy pointed out, and others concurred, that the correct solution here is fo
 
 ### <span id="Threading_and_Regexes">Threading and Regexes</span>
 
-A few weeks ago Rob Cunningham reported that he and Brian Mancuso at MIT were working on fixing regexes under threaded Perl. On Friday, Brian wrote in with his patch. Ilya did not like it because it indirects the match variables through a global variable rather than through the pads (which is the right approach), and because he thinks the MIT solution will be slow. Rob replied that they need it to work now, and it is more important for it to work than for it to work speedily. [Sarathy's reply to the patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00853.html)
+A few weeks ago Rob Cunningham reported that he and Brian Mancuso at MIT were working on fixing regexes under threaded Perl. On Friday, Brian wrote in with his patch. Ilya did not like it because it indirects the match variables through a global variable rather than through the pads (which is the right approach), and because he thinks the MIT solution will be slow. Rob replied that they need it to work now, and it is more important for it to work than for it to work speedily. [Sarathy's reply to the patch](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00853.html)
 
 is probably the most illuminating. Rob said that they probably don't have time to do it the right way.
 
@@ -123,13 +123,13 @@ Suppose you have a CGI program that wants to evaluate some user code in a safe c
 
 ( [Earlier summary](/pub/1999/10/p5pdigest/THISWEEK-19991017.html#prepare))
 
-Following [Sarathy's earlier request](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg00356.html), Ilya reworked his earlier `PREPARE` patch so that invocation of `PREPARE` methods is enabled by a compile-time pragma.
+Following [Sarathy's earlier request](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg00356.html), Ilya reworked his earlier `PREPARE` patch so that invocation of `PREPARE` methods is enabled by a compile-time pragma.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00882.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00882.html)
 
 ### <span id="Marshalling_Modules">Marshalling Modules</span>
 
-David Muir Sharnoff has some module which, like `MLDBM`, needs to talk to an unknown marshalling module such as `Storable` or `Freezethaw`. [Last week](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00567.html), he noted that `MLDBM` contained a lot of code that informed it about how to talk to these various serializers. David suggested that authors of marshalling modules try to adhere to a common intereface.
+David Muir Sharnoff has some module which, like `MLDBM`, needs to talk to an unknown marshalling module such as `Storable` or `Freezethaw`. [Last week](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00567.html), he noted that `MLDBM` contained a lot of code that informed it about how to talk to these various serializers. David suggested that authors of marshalling modules try to adhere to a common intereface.
 
 Raphael Manfredi, one of the authors of `MLDBM`, said that this would be unlikely, since the various marshalling modules have different interfaces for a good reason, namely that they do not all do the same thing. For example, `Storable` has an `nstore` method that guarantees network byte order. But byte order is totally irrelevant to the representation used by `Data::Dumper`.
 
@@ -137,7 +137,7 @@ David then suggested that someone extract the serializer-interface code from `ML
 
 ### <span id="Local_Address_in_LWP">Local Address in `LWP`</span>
 
-[A few weeks ago](/pub/1999/10/p5pdigest/THISWEEK-19991031.html) Gisle Aas suggested having `IO::Socket` pay attention to the `LocalAddr` environment variable. This week, [Graham explained why this would be a bad idea](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00577.html).
+[A few weeks ago](/pub/1999/10/p5pdigest/THISWEEK-19991031.html) Gisle Aas suggested having `IO::Socket` pay attention to the `LocalAddr` environment variable. This week, [Graham explained why this would be a bad idea](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00577.html).
 
 ### <span id="localizing_select_and_chdir">`local()`izing `select()` and `chdir()`</span>
 
@@ -204,9 +204,9 @@ Tom Christiansen suggested a `no scope` pragma, which would \`erase' one set of 
 
 And the `no scope` declarations would upscope the effectof the `use integer` pragma so that its effect continued to the end of the file.
 
-Larry had [many interesting things to say about this](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00866.html); the most straightforward was that something like `use comppad` should just upstack declarations all the way to the top of whatever code was currently being compiled.
+Larry had [many interesting things to say about this](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00866.html); the most straightforward was that something like `use comppad` should just upstack declarations all the way to the top of whatever code was currently being compiled.
 
-[Ilya said](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00873.html) that that behavior was already available to any module that uses the hints variables `$^H` or `%^H`.
+[Ilya said](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00873.html) that that behavior was already available to any module that uses the hints variables `$^H` or `%^H`.
 
 ### <span id="croak_confounds_eval">`croak` confounds `eval`</span>
 

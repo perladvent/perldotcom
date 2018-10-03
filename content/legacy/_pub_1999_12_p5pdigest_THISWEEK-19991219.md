@@ -44,35 +44,35 @@ Please send corrections and additions to `mjd-perl-thisweek-YYYYMM@plover.com` w
 
 ### <span id="More_5005_63_Results">More 5.005\_63 Results</span>
 
-[Sarathy's Announcement](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00250.html) includes a list of changes and a substantial TODO list for 5.005\_64.
+[Sarathy's Announcement](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00250.html) includes a list of changes and a substantial TODO list for 5.005\_64.
 
 There was the usual collection of bug reports that follows a new release, mostly concerning compilation and configuration issues.
 
 ### <span id="^H_and_^H">`$^H` and `%^H`</span>
 
 Stéphane Payrard complained that even though `%^H` is mentioned in `perldiag`, it is not described in `perlvar`. Ilya protested that you cannot get that diagnostic unless you actually use `%^H`, in which case he assumes that you understand the diagnostic.
-Nevertheless, he provided [doc patches](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00371.html) that discuss `$^H` and `%^H` in `perlvar`. I deem this patch Important Reading for Perl Expert Wanna-Bes.
+Nevertheless, he provided [doc patches](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00371.html) that discuss `$^H` and `%^H` in `perlvar`. I deem this patch Important Reading for Perl Expert Wanna-Bes.
 
 ### <span id="Perl_RPMs">Perl RPMs</span>
 
-[Johann Vromans supplied an RPM for Perl 5.005\_63.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00336.html)
+[Johann Vromans supplied an RPM for Perl 5.005\_63.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00336.html)
 
 Elaine Ashton suggested sending it to Red Hat, and this sparked a discussion about whether it was a good idea to widely advertise the existence of an RPM for an experimental development release of Perl---the fear was that beginners would come along and grab the RPM and install a development version of Perl on their systems, and then be puzzled and upset when it didn't work.
 
 Sarathy said that he would distribute the RPM with future development releases, so that the people who test the Perl development releases could test the RPM also.
 
-In the course of this, someone named Pixel said that he or she make a \`hackperl package for Linux-Mandrake'. I don't know what this is, but People using Mandrake might be interested to [read the message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00415.html)
+In the course of this, someone named Pixel said that he or she make a \`hackperl package for Linux-Mandrake'. I don't know what this is, but People using Mandrake might be interested to [read the message.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00415.html)
 
 Another interesting sideline: Randy J. Ray mentioned that he had tried to make the RPM C library into a Perl module, but had not been successful, because `h2xs` cannot parse `rpm.h`. Perhaps someone else would like to take a look at this.
 
-Bennett Todd worked on an automatic RPM packager for Perl modules. [Details are here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00424.html) Andy Dougherty advised caution:
+Bennett Todd worked on an automatic RPM packager for Perl modules. [Details are here.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00424.html) Andy Dougherty advised caution:
 
 > **Andy:** It would indeed be far nicer to have helpful feedback and discussions from various "vendors" *before* everything is set in stone to make sure we do something reasonable and don't have folks feel they are continually fighting a system.
 > I'd be happy to discuss such issues with anyone interested.
 
 There was a rather long discussion, most of thish I did not follow, since I am not very familiar with RPMs. People who use Red Hat systems might find it illuminating.
 
-The discussion included a sidetrack about support for version number literals in Perl 5.6. You will be able to write `v5.3.40` and it will be compiled as if you had written `"\x{5}\x{3}\x{28}"` instead; this means that (for example) `v5.3.40 lt v5.29.12` is true. [The root of this part of the discussion is here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00460.html)
+The discussion included a sidetrack about support for version number literals in Perl 5.6. You will be able to write `v5.3.40` and it will be compiled as if you had written `"\x{5}\x{3}\x{28}"` instead; this means that (for example) `v5.3.40 lt v5.29.12` is true. [The root of this part of the discussion is here.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00460.html)
 
 ### <span id="Development_Continues_on_Ilyas_Patches">Development Continues on Ilya's Patches</span>
 
@@ -80,11 +80,11 @@ This is getting to be my favorite part of the report, because even if the rest o
 
 #### <span id="Change_to_xsubpp">Change to `xsubpp`</span>
 
-[Last week](/pub/1999/12/p5pdigest/THISWEEK-19991212.html#Change_to_xsubpp), Sarathy declined to put in Ilya's improvement to `xsubpp` unless he also provided a way to turn it off. [Ilya did this.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00359.html) There is now an environment variable that will turn it off.
+[Last week](/pub/1999/12/p5pdigest/THISWEEK-19991212.html#Change_to_xsubpp), Sarathy declined to put in Ilya's improvement to `xsubpp` unless he also provided a way to turn it off. [Ilya did this.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00359.html) There is now an environment variable that will turn it off.
 
 ### <span id="Closed_Filhandle_in_Signal_Handler">Closed Filhandle in Signal Handler</span>
 
-[Thomas Stromberg reported an interesting bug.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00364.html) He has a filehandle through which he is writing to a pipe. A `close` on this filehandle waits for the command on the other end of the pipe to terminate. While his program is doing this, it gets an alarm signal. Tom wants to terminate the program and clean up. If he simply returns from the signal handler, the `close` call is restarted and the program hangs again. So he tries closing the filehandle in the signal handler; this make Perl dump core.
+[Thomas Stromberg reported an interesting bug.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00364.html) He has a filehandle through which he is writing to a pipe. A `close` on this filehandle waits for the command on the other end of the pipe to terminate. While his program is doing this, it gets an alarm signal. Tom wants to terminate the program and clean up. If he simply returns from the signal handler, the `close` call is restarted and the program hangs again. So he tries closing the filehandle in the signal handler; this make Perl dump core.
 
 He supplied a sample test program, but there was no discussion, perhaps because the sample program uses `/bin/pax` on the other end of the pipe, or perhaps because everyone knows that Perl signal handlers are hopeless. In any case, I was able to demonstrate the problem by changing `/bin/pax` to `sleep 10`.
 
@@ -120,7 +120,7 @@ Robin Barker tracked down the problem. The variable that held the missing `z` ch
 
 And now you know why we have regression tests.
 
-Robin submitted a [very interesting patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00456.html) which enables `printf` format checking throughout the Perl code. he turned up a number of potential problems.
+Robin submitted a [very interesting patch](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00456.html) which enables `printf` format checking throughout the Perl code. he turned up a number of potential problems.
 
 ### <span id="The_Trivial_Test">The Trivial Test</span>
 
@@ -142,7 +142,7 @@ Michael Schwern posted a list of *eighty* standard modules that do not set `$VER
 
 > **Sarathy:** What we really need is a mechanism to attach meta-information about a module (in the form of structured pod/XML, for instance). If done correctly, this would allow modules to "publish" their interfaces for run time type-discovery and other COM/CORBA-like functionality.
 
-[Simon Cozens reported that CTAN is doing something like this.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00494.html)
+[Simon Cozens reported that CTAN is doing something like this.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00494.html)
 
 In the course of this, Ask Bjørn Hansen mentioned something I thought was very valuable and should be better known: The `CPAN.pm` module has a `wh` command. Try it.
 
@@ -157,11 +157,11 @@ This prints 100, because the string `"0"` is autoincremented until its length is
 
 ### <span id="Array::Virtual">`Array::Virtual`</span>
 
-Tim Bunce forwarded a message from Andrew Ford, who is working on an `Array::Virtual` module that will let him tie a Perl array to a very sparse memory-mapped array of numbers. Most of the discussion apparently went on in the modules mailing list. This module as been on the module list in the \`idea' stage for a long time. There was some discussion about the appropriate calling interface for it. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00458.html)
+Tim Bunce forwarded a message from Andrew Ford, who is working on an `Array::Virtual` module that will let him tie a Perl array to a very sparse memory-mapped array of numbers. Most of the discussion apparently went on in the modules mailing list. This module as been on the module list in the \`idea' stage for a long time. There was some discussion about the appropriate calling interface for it. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00458.html)
 
 ### <span id="Reloading_Modules_that_use_fields">Reloading Modules that `use fields`</span>
 
-Apparently this doesn't work--- `fields.pm` tries to insert the field names into the `%FIELDS` array twice. [John Tobey provided a patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00446.html)
+Apparently this doesn't work--- `fields.pm` tries to insert the field names into the `%FIELDS` array twice. [John Tobey provided a patch.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00446.html)
 
 However, there was no discussion.
 

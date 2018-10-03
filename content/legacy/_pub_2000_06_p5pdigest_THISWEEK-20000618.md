@@ -56,7 +56,7 @@ instead. Doug found that the method calls did get much faster---in some cases fa
 
 A lot of work remains to be done here. Doug's patch does not actually speed up method calls; it replaces method calls with regular subroutine calls. It would be good to see some work done on actually making method calls faster.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00441.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00441.html)
 
 ### <span id="More_Attempts_to_Make_B::Bytecode_Faster">More Attempts to Make `B::Bytecode` Faster</span>
 
@@ -78,7 +78,7 @@ It didn't work; the decompression overhead made the compressed bytecode files ev
 
 Nicholas' message contained many other interesting details about bytecodes.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00403.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00403.html)
 
 ### <span id="Byte_Order_Marks_Continue">Byte-Order Marks Continue</span>
 
@@ -99,7 +99,7 @@ Apparently Simon later posted a different revision that was simpler and used `te
 
 Last month Joey Hess reported a bug in Perl's slurping; it was reading line by line and it shouldn't have been.
 
-[Original report and test case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00746.html)
+[Original report and test case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00746.html)
 
 Nobody has investigated this yet, and Sarathy said that was a pity, which I think whould be interpreted as a hint that someone should have a look at it.
 
@@ -107,19 +107,19 @@ Nobody has investigated this yet, and Sarathy said that was a pity, which I thin
 
 Olaf Flebbe posted some enhancements to his port for EPOC, which is an OS for palmtops and mobile phones. (See `README.epoc` in the Perl distribution for more details.)
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00364.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00364.html)
 
 ### <span id="READMEhpux">`README.hpux`</span>
 
 Jeff Okamoto contributed a new one.
 
-[Here it is.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00381.html)
+[Here it is.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00381.html)
 
 ### <span id="Paths_in_MacPerl">Paths in MacPerl</span>
 
 Last week Peter Prymmer contributed a large patch that attempts to make the test suite work better on Macintoshes by replacing a lot of Unix-style pathnames like `'../lib'` with constructions of the form `($^O eq 'MacOS') ? '::lib:' : '../lib'`. This sparked a discussion about better ways to approach this problem. Chris Nandor suggested a `paths.pl` file which the suite could retquire that would set up the path strings correctly. He pointed out that if this library were in the same directory as the script that required it, the `require` would work on any platform. He also said that having native support for path translations was probably a bad idea. (This would mean that `require 'foo/bar.pm'` would actually load `foo:bar.pm`, which is the 'right thing' unless what you actually wanted was to require a file named `foo/bar.pm`.)
 
-[Matthias reported on what he actually does do in MacPerl.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00325.html)
+[Matthias reported on what he actually does do in MacPerl.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00325.html)
 
 It appeared that the issue about what to do about the test suite went unresolved. I do not know yet if Peter's big patch went in.
 
@@ -127,7 +127,7 @@ It appeared that the issue about what to do about the test suite went unresolved
 
 Last week Rocco Caputo reported that his blessed coderefs were not being `DESTROY`ed, even at interpreter shutdown time. Nick Ing-Simmons produced an explanation. I suppose it could be called a feature.
 
-[The explanation.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00340.html)
+[The explanation.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00340.html)
 
 ### <span id="Extensions_required_for_regression_tests">Extensions required for regression tests</span>
 
@@ -139,7 +139,7 @@ For example, the `io/openpid.t` test file wants to use the `Fcntl` module; if yo
 
 The problem with Eudora mangling patch files turns out to be more complicated than I originally reported. If you use Eudora, you should probably read the following discussion.
 
-[Eudora discussion.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00290.html)
+[Eudora discussion.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00290.html)
 
 ### <span id="crypt_docs">`crypt` docs</span>
 

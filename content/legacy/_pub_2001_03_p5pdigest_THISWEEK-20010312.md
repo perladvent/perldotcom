@@ -45,7 +45,7 @@ I also complained that
 
 was getting mangled by some parsers which didn't correctly restore boldface after the code section. The example I gave, `pod2man`, seemed to be due to a buggy set of roff macros.
 
-Rob Napier came up with some [truly excellent](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-03/msg00365.html) suggestions about the future of POD and how to make it more intuitive, and Russ tried to shoo people onto the [pod-people mailing list](http://lists.perl.org/showlist.cgi?name=pod-people) for further discussion of what changes should be made.
+Rob Napier came up with some [truly excellent](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-03/msg00365.html) suggestions about the future of POD and how to make it more intuitive, and Russ tried to shoo people onto the [pod-people mailing list](http://lists.perl.org/showlist.cgi?name=pod-people) for further discussion of what changes should be made.
 
 ### <span id="Patching_perlyy">Patching perly.y</span>
 
@@ -77,9 +77,9 @@ Vinh Lam reminded us that `perlxstut` is incomplete. Examples 6, 7, 8, and 9 are
 
 ### <span id="EBCDIC_and_Unicode">EBCDIC and Unicode</span>
 
-With the assistance of Merijn Broeren and Morgan Stanley Dean Witter, I gained access to an EBCDIC mainframe and spent a happy day sanitizing the Unicode support on EBCDIC machines. As usual, there was some small argument over semantics, but the major change was that EBCDIC should be converted to ASCII before being upgraded to UTF8, and converted back to EBCDIC on degradation. [Peter Prymmer](http://simon-cozens.org/writings/whos-who.html#PRYMMER) seemed happy enough with what we'd been doing, and the patch went in. The patch, and its discussion, can be found [here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-03/msg00441.html).
+With the assistance of Merijn Broeren and Morgan Stanley Dean Witter, I gained access to an EBCDIC mainframe and spent a happy day sanitizing the Unicode support on EBCDIC machines. As usual, there was some small argument over semantics, but the major change was that EBCDIC should be converted to ASCII before being upgraded to UTF8, and converted back to EBCDIC on degradation. [Peter Prymmer](http://simon-cozens.org/writings/whos-who.html#PRYMMER) seemed happy enough with what we'd been doing, and the patch went in. The patch, and its discussion, can be found [here](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-03/msg00441.html).
 
-If you don't want to read the whole business, this is the important bit: much of the Unicode discussion this week centered on the vexed question of "What are v-strings for?". [Here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-03/msg00549.html) is the definitive answer from Larry.
+If you don't want to read the whole business, this is the important bit: much of the Unicode discussion this week centered on the vexed question of "What are v-strings for?". [Here](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-03/msg00549.html) is the definitive answer from Larry.
 
 ### <span id="PERL_DL_NONLAZY">PERL\_DL\_NONLAZY</span>
 

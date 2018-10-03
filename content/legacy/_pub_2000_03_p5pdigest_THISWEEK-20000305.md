@@ -44,9 +44,9 @@ Please send corrections and additions to `mjd-perl-thisweek-YYYYMM@plover.com` w
 
 Since last time, Perl has had three beta releases and now stands at version 5.5.670.
 
-[Announcement for version 5.5.670](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-03/msg00082.html)
+[Announcement for version 5.5.670](https://www.nntp.perl.org/group/perl.perl5.porters/2000/03/msg00082.html)
 
-[Announcement for version 5.5.660](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-02/msg01319.html)
+[Announcement for version 5.5.660](https://www.nntp.perl.org/group/perl.perl5.porters/2000/02/msg01319.html)
 
 In the wake of this, list traffic is very high with various small bug reports and configuration problems.
 
@@ -59,7 +59,7 @@ Paul asked whether it would be a good idea to allow modules to be able to regist
             use Fred;
             use warnings 'Fred';
 
-to turn on the warnings that were special to the `Fred` module. Paul asked for comments from the list about this. [Original message](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-03/msg00440.html)
+to turn on the warnings that were special to the `Fred` module. Paul asked for comments from the list about this. [Original message](https://www.nntp.perl.org/group/perl.perl5.porters/2000/03/msg00440.html)
 
 There was a lot of interesting discussion of this. Paul said that he had thought about making it possible for a module to define its own *hierarchy* of warnings, but that that seemed like overkill. Ron Kimball suggested that `use warnings 'Fred'` or `no warnings 'Fred'` might enable or disable warnings from module `Fred` regardless of whether or not `Fred` had registed its own warning category. Paul said he had considered this, but that it would suggest to people that doing `use warnings 'Some::Module'` would necessarily do something useful, when in fact `Some::Module` might not issue any warnings at all.
 
@@ -75,7 +75,7 @@ Changes went into `Pod::Man`, `Pod::Parser` and `Pod::HTML` to support this. Rob
 
 Tom Christiansen posted a \`Request for Hero' to fix the parts of the Perl distribution that write files to `/tmp` in an unsafe way, laying themselves open to race condition exploits and soforth. A typical problem is that `/tmp` is world-writable, so a malicious person could remove the temporary file and replace it with a new one before the program notices. Worse, if the superuser is running the program, a malicious user might remove the temporary file and replace it with a symbolic link to the password file; when the program updates what it thinks is the temporary file, it is really updating the password file.
 
-Tom listed several utilities that may have these problems, including `perlcc`, `perldoc`, `perlbug`, and `s2p` although he also said that none of these bugs were actually in the core. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-03/msg00498.html)
+Tom listed several utilities that may have these problems, including `perlcc`, `perldoc`, `perlbug`, and `s2p` although he also said that none of these bugs were actually in the core. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/03/msg00498.html)
 
 Tom called for a core `File::Temp` module that would encapsulate safe temporary file creation functions.
 
@@ -105,7 +105,7 @@ Way back in October, Ilya had an idea for making `pack` and `unpack` capable of 
 
 > **Ilya:** There were some initial objections due tomisunderstanding of the posted example: people thought that theexamples of serialization I initially posted for illustrationwere the **only** ways to serialize data.
 
-[Ilya's recent message](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-03/msg00392.html)
+[Ilya's recent message](https://www.nntp.perl.org/group/perl.perl5.porters/2000/03/msg00392.html)
 
 is probably worth reading, but skip the rest of the thread. It was a waste of time even before the tail end of this thread was sucked into the flame zone.
 

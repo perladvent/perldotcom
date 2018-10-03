@@ -48,7 +48,7 @@ Discussion continued on what meanings to assign to certain patterns on DOSISH sy
 <span id="Doh::Year_and_Y2K_warnings">`D'oh::Year` and Y2K warnings</span>
 --------------------------------------------------------------------------
 
-Michael Schwern felt that the Y2K warnings in Perl are too little too late. (Too little: 5.005\_62 warns if you try to concatenate a number with the string `"19"`. Too late: Look! It is November of 1999.) He submitted a module, tentatively named `D'oh::Year`, which follows this strategy: It overrides the `localtime` and `gmtime` functions so that they return a year value that looks like a number but is actually an overloaded object. When this object is concatenated with any of the strings `"19"`, `"20"`, or `"200"` or has any of several other suspicious operations performed on it, it issues a warning. It does this without any core patches. It is available from [Michael's web site](http://www.pobox.com/~schwern/src/) and probably also from CPAN. (This idea was originally suggested by Andrew Langmead.) [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01532.html)
+Michael Schwern felt that the Y2K warnings in Perl are too little too late. (Too little: 5.005\_62 warns if you try to concatenate a number with the string `"19"`. Too late: Look! It is November of 1999.) He submitted a module, tentatively named `D'oh::Year`, which follows this strategy: It overrides the `localtime` and `gmtime` functions so that they return a year value that looks like a number but is actually an overloaded object. When this object is concatenated with any of the strings `"19"`, `"20"`, or `"200"` or has any of several other suspicious operations performed on it, it issues a warning. It does this without any core patches. It is available from [Michael's web site](http://www.pobox.com/~schwern/src/) and probably also from CPAN. (This idea was originally suggested by Andrew Langmead.) [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01532.html)
 
 Sarathy said that he would not include it in the standard distribution, except perhaps as part of `B::Lint`.
 
@@ -71,7 +71,7 @@ Basically, the problem is that certain properties of regexes are attached to the
 
      tryme('abc');
 
-`tryme` is invoked three times, and you would expect each invocation to have a separate pattern match with separate backreference variables. There is no reason to expect the value of `$1` to be changed by the function call, so you would expect the two `print` statements in the function to print the same thing each time the function was invoked, so that you would get `abccba`. But instead, the backreference variables are attached to the regex match operator, and that operator is shared among all calls to the subroutine. This means that a later call to `tryme` overwrites the `$1` of the earlier call, and the output is `abcccc`. Ugh. The threading problem is similar: Two threads can trample on one anothers backreference variables for the same match operator. [I had complained about a related problem](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1998-01/msg02163.html) almost two years ago, and it was well-known then.
+`tryme` is invoked three times, and you would expect each invocation to have a separate pattern match with separate backreference variables. There is no reason to expect the value of `$1` to be changed by the function call, so you would expect the two `print` statements in the function to print the same thing each time the function was invoked, so that you would get `abccba`. But instead, the backreference variables are attached to the regex match operator, and that operator is shared among all calls to the subroutine. This means that a later call to `tryme` overwrites the `$1` of the earlier call, and the output is `abcccc`. Ugh. The threading problem is similar: Two threads can trample on one anothers backreference variables for the same match operator. [I had complained about a related problem](https://www.nntp.perl.org/group/perl.perl5.porters/1998/01/msg02163.html) almost two years ago, and it was well-known then.
 
 Sarathy expressed sadness that this problem has gone unfixed for so long. The correct fix is for the op node to store an offset into the pad, which is private to each instance of a function invocation and is not shared between calls to the same function or between threads. Then the pad will have the pointer to the backreference variables or whatever.
 
@@ -80,7 +80,7 @@ I wrote to the MIT folks to ask what exactly they were doing, but they did not r
 <span id="Change_to_xsubpp">Change to `xsubpp`</span>
 -----------------------------------------------------
 
-Ilya submitted a [patch to `xsubpp`](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00088.html) which will change the value return semantics of XSUBs to be more efficient. It needs wide testing because almost all XSUBs will be affected.
+Ilya submitted a [patch to `xsubpp`](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00088.html) which will change the value return semantics of XSUBs to be more efficient. It needs wide testing because almost all XSUBs will be affected.
 
 <span id="utf8_Needs_a_New_Pumpking">`utf8` Needs a New Pumpking</span>
 -----------------------------------------------------------------------
@@ -102,12 +102,12 @@ Simon Cozens submitted a patch that would issue a warning on `grep` and `map` in
 <span id="Data::Dumper_and_Regexp_objects">`Data::Dumper` and `Regexp` objects</span>
 -------------------------------------------------------------------------------------
 
-Michael Fowler submitted a [patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00030.html) to make `Data::Dumper` work on `Regexp` objects. (Those are the ones generated by the `qr//` operator.) There was some discussion of problems with these kinds of objects: They're hard to recognize; they stringize in a strange way so that, unlike other sorts of references, you can't be sure you can tell them apart by looking at the strinigzed versions; and so on. Sarathy said he was uncomfortable with the implementation of the `Regexp` objects, and that they should be more like regular objects so that they would be easier to understand and so that they coul be dealt with just like other objects. Larry agreed, and added that exceptions and filehandles should work that way too. However, there was no specific proposal about what should be done.
+Michael Fowler submitted a [patch](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00030.html) to make `Data::Dumper` work on `Regexp` objects. (Those are the ones generated by the `qr//` operator.) There was some discussion of problems with these kinds of objects: They're hard to recognize; they stringize in a strange way so that, unlike other sorts of references, you can't be sure you can tell them apart by looking at the strinigzed versions; and so on. Sarathy said he was uncomfortable with the implementation of the `Regexp` objects, and that they should be more like regular objects so that they would be easier to understand and so that they coul be dealt with just like other objects. Larry agreed, and added that exceptions and filehandles should work that way too. However, there was no specific proposal about what should be done.
 
 <span id="sort_improvements">`sort` improvements</span>
 -------------------------------------------------------
 
-Peter Haworth improved his patch to allow XSUBs to be used as sort comparator functions. If the comparator is prototyped as `($$)`, then the list elements are passed normally, in `@_`, instead of as `$a` and `$b`. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00049.html)
+Peter Haworth improved his patch to allow XSUBs to be used as sort comparator functions. If the comparator is prototyped as `($$)`, then the list elements are passed normally, in `@_`, instead of as `$a` and `$b`. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00049.html)
 
 <span id="IPv6_and_Socketpm">IPv6 and `Socket.pm`</span>
 --------------------------------------------------------
@@ -130,7 +130,7 @@ Apparently on most non-unix Perl systems, if you invoke `system 1, foo`, it runs
 
 Sarathy said it would be better to have a modular interface to that functionality, and he did not want to propagate this hack to any more systems. \`\`The concept is portable, but the incantation is not. What it needs is some Perl code to smooth it over.''
 
-Jenda Krynicky pointed out the enhancement he proposed to `Shell.pm` last week would be easy to extend to support this cleanly. [In case you forgot.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01339.html)
+Jenda Krynicky pointed out the enhancement he proposed to `Shell.pm` last week would be easy to extend to support this cleanly. [In case you forgot.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01339.html)
 
 <span id="MacPerl_Error_Messages">MacPerl Error Messages</span>
 ---------------------------------------------------------------
@@ -151,12 +151,12 @@ because some Mac programming tool can parse the other form and open the file aut
 
 More discussion of Ilya's proposed `t` template for the `pack` and `unpack` functions.
 
-Last week Joshua Pritikin asked why not just use `Storable`; Ilya pointed out that different kinds of marshalling code is useful under different circumstances, and `Storable` is not useful, for example, if you are trying to marshal data to be passed as an argument to a command. However, you could use his new `pack` template to marshal data into a string, pass it as a command argument, and have the command unpack it with `unpack 't'` on the other end. [Ilya's explanation of the usefulness of `pack 't'`.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00077.html)
+Last week Joshua Pritikin asked why not just use `Storable`; Ilya pointed out that different kinds of marshalling code is useful under different circumstances, and `Storable` is not useful, for example, if you are trying to marshal data to be passed as an argument to a command. However, you could use his new `pack` template to marshal data into a string, pass it as a command argument, and have the command unpack it with `unpack 't'` on the other end. [Ilya's explanation of the usefulness of `pack 't'`.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00077.html)
 
 <span id="New_perlthread_man_page">New `perlthread` man page</span>
 -------------------------------------------------------------------
 
-[Dan Sugalski updated his proposed `perlthread` man page.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01511.html)
+[Dan Sugalski updated his proposed `perlthread` man page.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01511.html)
 
 <span id="Big_Files">Big Files</span>
 -------------------------------------
@@ -186,7 +186,7 @@ Then there was a digression: Nat Torknigton suggested that if `$/` was set to a 
 
 Several people got very excited about this, but Sarathy pointed out that it would be more straightforward to just override `CORE::GLOBAL::readline()`, and that he did not want to provide more than one way to do something that hardly anyone ever wants to do anyway.
 
-But Larry expanded on the general idea, saying that there should be a general, lightweight way to insert various kinds of read and write disciplines into an I/O stream. The most important uses for this would involve having the I/O operators convert from UTF-8 to national character sets transparently, and vice versa. [**Larry:** \`\`This is something we have to make easy in Perl. Not just possible.''](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00254.html)
+But Larry expanded on the general idea, saying that there should be a general, lightweight way to insert various kinds of read and write disciplines into an I/O stream. The most important uses for this would involve having the I/O operators convert from UTF-8 to national character sets transparently, and vice versa. [**Larry:** \`\`This is something we have to make easy in Perl. Not just possible.''](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00254.html)
 
 <span id="Perl_56_New__Feature_List">Perl 5.6 New Feature List</span>
 ---------------------------------------------------------------------

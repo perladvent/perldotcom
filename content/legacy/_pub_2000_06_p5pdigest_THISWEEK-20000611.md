@@ -45,7 +45,7 @@ Unicode files may begin with the special Unicode character U+FEFF. That is so th
 
 Tim Burlowski saved a Perl program file with the UTF8 encoding under windows, and when he tried to run the script, Perl complained about the initial U+FEFF. ( `Unrecognized character \xEF...`, because U+FEFF encodes to `"\xEF\xBB\xBF"` under UTF-8.) Tim asked if Perl shouldn't know to ignore this. Sarathy agreed, and Simon provided a patch, which also enables Perl to read a UTF-16-encoded source code file.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00193.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00193.html)
 
 ### <span id="Magic_Auto_Decrement">Magic Auto-Decrement</span>
 
@@ -57,7 +57,7 @@ There was a lot of idle discussion, and no patch, so probably nobody really care
 
 Richard Foley coughed up a lot of bug reports that had gotten lost somehow. So there was a lot of miscellaneous stuff. Some of the bug reports related to configuration errors, and some were genuine. Some attracted patches, others did not. It seemed to me that this batch of bug reoprts contained more than the usual number of weird oddities. For example:
 
-[Weird oddity.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00182.html)
+[Weird oddity.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00182.html)
 
 Some of the non-oddities that remain unfixed follow. In an attempt to encourage more people to try to fix bugs, I tried here to select some bugs that seemed not too difficult to solve. So if you have ever wanted to become a Perl core hacker and you wanted a not-too-hard task to start on, the following bugs might be good things to work on.
 
@@ -67,33 +67,33 @@ If you are interested in trying to fix one of these, and you need help, or you d
 
 Here is a bug that makes Perl dump core. Sarathy reduced Wolfgang Laun's small test case to a very small test case.
 
-[Test Case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00145.html)
+[Test Case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00145.html)
 
-[Another Test Case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00262.html)
+[Another Test Case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00262.html)
 
 #### <span id="Core_Dump_II">Core Dump II</span>
 
 Here is another core dump, this one on an improper pseudohash reference.
 
-[Test Case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00126.html)
+[Test Case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00126.html)
 
 #### <span id="Class::Struct_objects_misbehave_with__gt;isa">`Class::Struct` objects misbehave with -&gt;isa()</span>
 
 If `$foo` is a `Class:Struct` object, and you call `->isa('UNIVERSAL')` on it, you get the correct answer (true) the first time, and the wrong answer (false) on subsequent calls.
 
-[Test Case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00191.html)
+[Test Case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00191.html)
 
 #### <span id="Data::Dumper_Weirdness">`Data::Dumper` Weirdness</span>
 
 Victor Insogna got weird output from `Data::Dumper`. The test cae is very simple but it's not entirely clear to me whether the bug is in `Data::Dumper` itself or if Perl is actually constructing a bizarre value.
 
-[Test Case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00214.html)
+[Test Case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00214.html)
 
 #### <span id="Blessed_coderefs_never_DESTROYed">Blessed coderefs never `DESTROY`ed</span>
 
 Rocco Caputo reported that if you bless a coderef into a package with a destructor function, the destructor is never called, not even at program termination.
 
-[Test Case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00276.html)
+[Test Case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00276.html)
 
 #### <span id="Code_compiled_incorrectly">Code compiled incorrectly</span>
 
@@ -117,7 +117,7 @@ into
 
 Peter Prymmer sent a big patch that attempts to make the test suite work better on Macintoshes by replacing a lot of Unix-style pathnames like `'../lib'` with constructions of the form `($^O eq 'MacOS') ? '::lib:' : '../lib'`.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00258.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00258.html)
 
 ### <span id="Why__is_not_ignored_in_comments_in_x_constructions">Why `/` is not ignored in comments in `/.../x` constructions</span>
 

@@ -83,7 +83,7 @@ Calle Dybedahl explained that it was the usual case of GNU versus the world:
 
 > For paths longer than 100 characters, there are two incompatible standards for tar archives: GNU tar and the rest of the world. If you have such paths and built the archive with GNU tar, you must have GNU tar to unpack it.
 
-Great, thought Sarathy - but we don't use any paths over 100 characters. It turned out that there were at least three different problems intersecting here: firstly, Mike's download was busted. Second, Solaris' tar is busted, but a patch has been issued, and thirdly, there are two different standards for tars - [Alan](http://simon-cozens.org/writings/whos-who.html#BURLISON) explained it [beautifully](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-04/msg00527.html).
+Great, thought Sarathy - but we don't use any paths over 100 characters. It turned out that there were at least three different problems intersecting here: firstly, Mike's download was busted. Second, Solaris' tar is busted, but a patch has been issued, and thirdly, there are two different standards for tars - [Alan](http://simon-cozens.org/writings/whos-who.html#BURLISON) explained it [beautifully](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-04/msg00527.html).
 
 ### <span id="NetPing_and_the_stream_protocol">Net::Ping and the "stream" protocol</span>
 
@@ -107,7 +107,7 @@ Jonathan Stowe found some horrible bugs in SCO's `NaN` handling - `NaN` compares
 
 Vadim Konovalov found a problem with the `-f` operator in Cygwin - it interprets `-f "foo"` as `-f "foo" || -f "foo.exe"`. Urgh. Mike Giroux explained that it made some sense - programs on Windows want to execute `foo.exe` by saying just `foo`. Fair enough, but Vadim pointed out that there's code in `win32/win32.c` to work around this for Borland's C compiler, so this could be extended to Cygwin.
 
-Robin Houston continued his conquest of `B::*`. His changes were [numerous](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-04/msg00641.html).
+Robin Houston continued his conquest of `B::*`. His changes were [numerous](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-04/msg00641.html).
 
 Jarkko has suggested that he wants to integrate `Time::HiRes` into 5.7.2 - after some time, the maintainer of the module was tracked down and subdued. There'll be a lot more about new module integration next week.
 
