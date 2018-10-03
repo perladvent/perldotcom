@@ -98,7 +98,7 @@ foreach (@weather_elements) {
 }
 ```
 
-The for / foreach loop also accepts a list instead of an array:
+The `for` / `foreach` loop also accepts a list instead of an array:
 
 ```perl
 use feature qw/say/;
@@ -120,7 +120,7 @@ for (1..6) {
 
 ### for loop functions: redo, next and last
 
-Perl provides several functions which can be used to control the for loop iterations. **redo** instructs Perl to re-run the current iteration. Let's modify the lottery numbers example above to redo the loop if we generate an unlucky number 13.
+Perl provides several functions which can be used to control the for loop iterations. `redo` instructs Perl to re-run the current iteration. Let's modify the lottery numbers example above to redo the loop if we generate an unlucky number 13.
 
 ```perl
 for (1..6) {
@@ -130,9 +130,9 @@ for (1..6) {
 }
 ```
 
-In the example above, if a number 13 is generated, the redo function will restart the iteration and the code will never reach the say $number statement.
+In the example above, if a number 13 is generated, the `redo` function will restart the iteration and the code will never reach the say `$number` statement.
 
-The **next** function stops the current iteration and moves to the next iteration. This can be useful when we have additional processing that we want to be done only for certain elements. For example if we were surveying a group of people about their education, it only makes sense to ask what school the person attended, if they have a degree:
+The `next` function stops the current iteration and moves to the next iteration. This can be useful when we have additional processing that we want to be done only for certain elements. For example if we were surveying a group of people about their education, it only makes sense to ask what school the person attended, if they have a degree:
 
 ```perl
 use feature qw/say/;
@@ -152,7 +152,7 @@ for (1..5){
 }
 ```
 
-The **last** function allows the current iteration to finish and then exits loop entirely. This is often used when doing pattern matching as once a match has been found, there is no need to check other possibilities:
+The `last` function allows the current iteration to finish and then exits loop entirely. This is often used when doing pattern matching as once a match has been found, there is no need to check other possibilities:
 
 ```perl
 my $variable_type = '$scalar';
