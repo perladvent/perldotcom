@@ -35,9 +35,9 @@ These plans are subject to change, but the monthly releases have gone well, and 
 **Improved Package Version Syntax**
 -----------------------------------
 
-In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable `$VERSION`. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as [ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}) and [Module::Build]({{<mcpan "Module::Build" >}}) have to perform several contortions to parse them with any degree of accuracy. David Golden's [Version Numbers Should Be Boring](http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/" >}}) gives copious detail on how to do version numbers right, if you can't use 5.12.
+In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable `$VERSION`. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as [ExtUtils::MakeMaker](https://metacpan.org/pod/ExtUtils::MakeMaker) and [Module::Build](https://metacpan.org/pod/Module::Build) have to perform several contortions to parse them with any degree of accuracy. David Golden's [Version Numbers Should Be Boring](http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/) gives copious detail on how to do version numbers right, if you can't use 5.12.
 
-An addition to the core [version]({{<mcpan "version" >}}) module enables a feature called "strict version numbers", where these numbers conform to a few guidelines. The most important rule is that version numbers must be standard numbers with one decimal point (`1.23`" >}}) *or* version strings (`v1.234.5`).
+An addition to the core [version](https://metacpan.org/pod/version) module enables a feature called "strict version numbers", where these numbers conform to a few guidelines. The most important rule is that version numbers must be standard numbers with one decimal point (`1.23`) *or* version strings (`v1.234.5`).
 
 You may only use strict version numbers with the new package version syntax:
 
@@ -51,14 +51,14 @@ Internally, Perl will parse these the same way as it does:
 
         use Perl::Improved v1.23.45;
 
-... which is a benefit for consistency. As well, toolchain utilities can find and parse these version numbers with little effort, thanks in no small part to a canonical set of version number parsing regular expressions now found in [version]({{<mcpan "version" >}}).
-" >}}
+... which is a benefit for consistency. As well, toolchain utilities can find and parse these version numbers with little effort, thanks in no small part to a canonical set of version number parsing regular expressions now found in [version](https://metacpan.org/pod/version).
+
 Sadly, there's currently no mechanism by which to add this syntax to 5.10, but in a couple of years this may be the preferred way of specifying version numbers in Perl 5.
 
 **Strictures by Default**
 -------------------------
 
-Several CPAN modules enable features such as [strict]({{<mcpan "strict" >}}) when you use them, including [Moose]({{<mcpan "Moose" >}}), [perl5i]({{<mcpan "perl5i" >}}), [Modern::Perl]({{<mcpan "Modern::Perl" >}}), [Dancer]({{<mcpan "Dancer" >}}), and [Mojolicious]({{<mcpan "Mojolicious" >}}). Perl 5.12 also enables strictures when it encounters `use 5.012;`, along with other new language syntax features such as the `say` and `given`/`when` keywords.
+Several CPAN modules enable features such as [strict](https://metacpan.org/pod/strict) when you use them, including [Moose](https://metacpan.org/pod/Moose), [perl5i](https://metacpan.org/pod/perl5i), [Modern::Perl](https://metacpan.org/pod/Modern::Perl), [Dancer](https://metacpan.org/pod/Dancer), and [Mojolicious](https://metacpan.org/pod/Mojolicious). Perl 5.12 also enables strictures when it encounters `use 5.012;`, along with other new language syntax features such as the `say` and `given`/`when` keywords.
 
 `use 5.012` does *not* enable warnings.
 
@@ -71,13 +71,13 @@ The `-M5.012` flag *does* enable strictures and new language features.
 
 While Perl itself did not have a Y2K problem, many programs written in Perl made assumptions that produced apparent Y2K problems. Unfortunately, Perl's time handling relies on system libraries, and many of those systems exhaust their available capabilities when dealing with dates and times in the year 2038. (Developers who think they have decades to solve this problem should consider financial instruments such as 30-year mortgages.)
 
-Perl 5.12 extends support for time and date handling in the core `localtime` and `gmtime` functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as [Time::y2038]({{<mcpan "Time::y2038" >}}).
+Perl 5.12 extends support for time and date handling in the core `localtime` and `gmtime` functions to manage dates beyond 2038 without overflow or truncation problems. Replacement libraries for earlier versions of Perl are available from the CPAN as [Time::y2038](https://metacpan.org/pod/Time::y2038).
 
 **Core Support for Language Mutation Extensions**
 -------------------------------------------------
 
-[Devel::Declare]({{<mcpan "Devel::Declare" >}}) is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. [signatures]({{<mcpan "signatures" >}}) and [MooseX::Declare]({{<mcpan "MooseX::Declare" >}}) are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
-" >}}
+[Devel::Declare](https://metacpan.org/pod/Devel::Declare) is the basis for a handful of CPAN distributions which add new features to Perl 5 without the drawbacks of source filters. [signatures](https://metacpan.org/pod/signatures) and [MooseX::Declare](https://metacpan.org/pod/MooseX::Declare) are two prime examples; they simplify common tasks in a very Perlish way and demonstrate how a few syntactic additions can remove a lot of repetitive code.
+
 Unlike source filters, they compose together well and don't interfere with external code.
 
 `Devel::Declare` works by hijacking part of the Perl 5 parsing process. Though this has required poking in Perl's internals, Perl 5.12 includes a few APIs to make this behavior cleaner and better supported. In other words, it's not only *okay* for `Devel::Declare` to exist, but it's *important* that it exist and work and continue to work.
@@ -91,8 +91,8 @@ Perl 5 development makes a priority of supporting syntactic constructs found in 
 
 You may still disable deprecated warnings with `no warnings 'deprecated';`--they're still lexical warnings--but now these deprecations will be more obvious to developers who upgrade to and test their existing code against new releases of Perl 5.
 
-Deprecations do not necessarily imply any timeframe for removal of the deprecated feature, except as otherwise expressed explicitly in the appropriate release delta. See [perl5120delta]({{<perldoc "perl5120delta" >}}) for more details about specific deprecations in this release.
-" >}}
+Deprecations do not necessarily imply any timeframe for removal of the deprecated feature, except as otherwise expressed explicitly in the appropriate release delta. See [perl5120delta](https://perldoc.perl.org/perl5120delta.html) for more details about specific deprecations in this release.
+
 **@INC Reorganized**
 --------------------
 
@@ -103,10 +103,10 @@ A reorganization of the order of these directories in the default `@INC` in Perl
 **Deprecations**
 ----------------
 
-A handful of core modules are now deprecated: [Class::ISA]({{<mcpan "Class::ISA" >}}), [Pod::Plainer]({{<mcpan "Pod::Plainer" >}}), [Switch]({{<mcpan "Switch" >}}), and [Shell]({{<mcpan "Shell" >}}). They remain available from the CPAN, though consider using `given`/`when` (introduced in Perl 5.10.0" >}}) instead of `Switch`. There's no deprecation category quite strong enough to describe the recommendation against it.
+A handful of core modules are now deprecated: [Class::ISA](https://metacpan.org/pod/Class::ISA), [Pod::Plainer](https://metacpan.org/pod/Pod::Plainer), [Switch](https://metacpan.org/pod/Switch), and [Shell](https://metacpan.org/pod/Shell). They remain available from the CPAN, though consider using `given`/`when` (introduced in Perl 5.10.0) instead of `Switch`. There's no deprecation category quite strong enough to describe the recommendation against it.
 
-The core has also included several libraries written in the Perl 4 era. They are now available from the CPAN in the [Perl4::CoreLibs]({{<mcpan "Perl4::CoreLibs" >}}) distribution. Though they are not *quite* deprecated yet, they will be in Perl 5.14. In almost every case, Perl 5 era replacements exist under active maintenance.
-" >}}
+The core has also included several libraries written in the Perl 4 era. They are now available from the CPAN in the [Perl4::CoreLibs](https://metacpan.org/pod/Perl4::CoreLibs) distribution. Though they are not *quite* deprecated yet, they will be in Perl 5.14. In almost every case, Perl 5 era replacements exist under active maintenance.
+
 **Unicode Improvements**
 ------------------------
 
@@ -115,7 +115,7 @@ As the Unicode standards change, so must Perl 5's Unicode handling. The biggest 
 **Miscellaneous**
 -----------------
 
-Many bugs have been fixed. Several performance improvements are present. More tests are available. Dual-lived modules have been updated. More documentation is available (including [perlperf]({{<perldoc "perlperf" >}}), a detailed discussion of profiling and optimizing Perl 5 programs" >}}). Some 200 people have changed 750,000 lines in more than 3,000 files.
+Many bugs have been fixed. Several performance improvements are present. More tests are available. Dual-lived modules have been updated. More documentation is available (including [perlperf](https://perldoc.perl.org/perlperf.html), a detailed discussion of profiling and optimizing Perl 5 programs). Some 200 people have changed 750,000 lines in more than 3,000 files.
 
 Even with all of those changes, Perl 5 remains a vibrant, powerful programming language. Programs written a decade ago will still run with few, if any, necessary changes, and almost all of the CPAN is ready to run on it.
 
