@@ -35,7 +35,7 @@ These plans are subject to change, but the monthly releases have gone well, and 
 **Improved Package Version Syntax**
 -----------------------------------
 
-In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable `$VERSION`. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as [ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}) and [Module::Build]({{<mcpan "Module::Build" >}}) have to perform several contortions to parse them with any degree of accuracy. David Golden's [Version Numbers Should Be Boring](http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/" >}}) gives copious detail on how to do version numbers right, if you can't use 5.12.
+In previous versions of Perl 5, individual packages set their version numbers by manipulating the package global variable `$VERSION`. There were few rules for what this variable contained or how to parse this version number, and toolchain modules such as [ExtUtils::MakeMaker]({{<mcpan "ExtUtils::MakeMaker" >}}) and [Module::Build]({{<mcpan "Module::Build" >}}) have to perform several contortions to parse them with any degree of accuracy. David Golden's [Version Numbers Should Be Boring](http://www.dagolden.com/index.php/369/version-numbers-should-be-boring/) gives copious detail on how to do version numbers right, if you can't use 5.12.
 
 An addition to the core [version]({{<mcpan "version" >}}) module enables a feature called "strict version numbers", where these numbers conform to a few guidelines. The most important rule is that version numbers must be standard numbers with one decimal point (`1.23`" >}}) *or* version strings (`v1.234.5`).
 
