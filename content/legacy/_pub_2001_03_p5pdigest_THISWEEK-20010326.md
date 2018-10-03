@@ -126,7 +126,7 @@ which would call a subroutine every time more data was needed.
 
 ### <span id="NetPing">Net::Ping</span>
 
-Colin McMillen had some suggestions (and, heavens above, an implementation) for some changes he wanted to make to `Net::Ping`. I'll quote his summary here, and you can read the details in [his mail](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-03/msg01018.html).
+Colin McMillen had some suggestions (and, heavens above, an implementation) for some changes he wanted to make to `Net::Ping`. I'll quote his summary here, and you can read the details in [his mail](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-03/msg01018.html).
 
 > 1.  Removal of `alarm()` function.
 > 2.  Incorrect returns of `false` removed from TCP ping

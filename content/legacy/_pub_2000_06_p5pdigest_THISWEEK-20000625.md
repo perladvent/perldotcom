@@ -60,7 +60,7 @@ Last week, some people pointed out that it would fail in the presence of code th
 
 Doug submitted an updated patch.
 
-[Updated patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00491.html)
+[Updated patch](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00491.html)
 
 For your delectation, Simon Cozens wrote up an extensive explanation of the patch and how it works, including many details about the Perl internals. If you are interested in the Perl internals (and you should be) then this is strongly recommended reading.
 
@@ -82,7 +82,7 @@ Simon also added a function named `is_utf8_string` that checks a string to make 
 
 Simon submitted an improved patch for this. This one just has the lexer use `tell()` to see if the putative byte-order mark is at the very beginning of the file.
 
-[The new patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00466.html)
+[The new patch](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00466.html)
 
 [Previous summary](/pub/2000/06/p5pdigest/THISWEEK-20000618.html#Byte_Order_Marks_Continue)
 
@@ -94,7 +94,7 @@ A few weeks ago there was discussion of what this should do.
 
 Simon submitted a patch that implemented an idea of Larry's: That a `U` at the beginning of the pack template indicates that the result of `pack` will be a UTF8 string; anything else indicates a byte string. THis means (for example) that you can put `U0` at the beginning of any pattern to force it to produce UTF8; if you want to start with `U` but have the result be bytes, add a do-nothing `C0` at the beginning instead.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00467.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00467.html)
 
 ### <span id="Lexical_variables_and_eval">Lexical variables and `eval()`</span>
 
@@ -129,7 +129,7 @@ Simon contributed the first half of a document titled `perlhacktut`, a tutorial 
 
 If you are interested in the Perl internals (and you should be) then this is strongly recommended reading. (Gosh, that sounds familiar.)
 
-[First draft.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00577.html)
+[First draft.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00577.html)
 
 ### <span id="perlutilpod">`perlutil.pod`</span>
 
@@ -137,7 +137,7 @@ Simon also contributed a document describing the utility programs that cmoe pack
 
 Quite a busy week for Simon.
 
-[`perlutil`](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00505.html)
+[`perlutil`](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00505.html)
 
 ### <span id="Missing_Methods">Missing Methods</span>
 
@@ -165,7 +165,7 @@ Doug MacEachern discovered lots and lots of subroutine declarations in `Socket.p
 
 Doug also discovered that these autoloaded constants' values are not inlined, because the code that uses them is compiled before the subroutine is loaded. Doug produced a patch to `Exporter.pm` that lets you specify a name with a leading `+` sign in the `use` line to indicate that the subroutine should be invoked once (and hence autoloaded) immediately, when the module is loaded, so that they can be inlined into the following code.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00573.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00573.html)
 
 ### <span id="libpm">`lib.pm`</span>
 
@@ -193,7 +193,7 @@ Frank Tobin submitted a patch that allows the user of `IPC::Open3` to request th
 
 Ian Flanigan found a very upsetting bug in the regex engine.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00627.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00627.html)
 
 ### <span id="Foo_isa_Foo">`Foo isa Foo`</span>
 
@@ -214,13 +214,13 @@ Johan said 'Yuck.'
 
 Jeff Okamoto updated it again.
 
-[Here it is.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00531.html)
+[Here it is.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00531.html)
 
 ### <span id="my___PACKAGE___obj_">`my __PACKAGE__ $obj` ...</span>
 
 Doug MacEachern submitted a patch to enable this. The patch came in just barely before the end-of-the week cutoff, and has already been a lot of discussion of it in the past two days, so I am going to defer talking about it any more until my next report.
 
-Should you want to look at it before then, [here it is.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00628.html)
+Should you want to look at it before then, [here it is.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00628.html)
 
 ### <span id="asdgasdfasd">asdgasdfasd</span>
 

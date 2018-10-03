@@ -53,7 +53,7 @@ Richard Foley replied that some of this is in progress, or is easy. For example,
 
 Nat then pointed out that this would be a good way for beginning p5p people to gain expertise. Sarathy agreed that the biggest problems appeared not to be technical, but that there is no bug champion who has taken responsibility for taking care of the database. I mentioned that I had been planning to take this up after the conference this month, and had been moving into the job stealthily by reportong on open bugs in these reports, and encouraging people to try to fix them. Several people volunteered to help categorize bugs and close tickets.
 
-[Alan Burlison described his imagined bug lifecycle.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00205.html)
+[Alan Burlison described his imagined bug lifecycle.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00205.html)
 
 Summary of Alan's ideas:
 
@@ -69,7 +69,7 @@ Simon also mentioned that he is starting up a [web site](http://sourcetalk.perlh
 
 There was some discussion of alternate bug tracking systems, including Debian's, which is reputed to be good, but the consensus seemed to be that it was not appropriate for Perl.
 
-[Root of this thread.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00108.html)
+[Root of this thread.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00108.html)
 
 ### <span id="buildtoc">`buildtoc`</span>
 
@@ -111,13 +111,13 @@ There was a tangent discussion about the uses of `__PACKAGE__`.
 
 ### <span id="Unicode_Input_Solution">Unicode Input Solution</span>
 
-Simon reported a clever suggestion from the Perl-Unicode mailing list. Some systems, such as Windows, store system data like directory entries in unicode. You'd like to flag such inputs as UTF8 when they are read in. The suggestion was to piggyback this atop the tainting mechanism. At present, there's a macro which, if taint mode is on, turns on the taint flag on the input scalar for every input Perl reads from any source. Simon posted a patch which extends the macro so that if `use utf8` is in scope, and the string is a valid UTF8 string, Perl will also set the `UTF8` flag on the scalar. Since presumably everything is already checked for taintedness when it's read in, this automatically puts the check for UTF8-ness everywhere also. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00026.html)
+Simon reported a clever suggestion from the Perl-Unicode mailing list. Some systems, such as Windows, store system data like directory entries in unicode. You'd like to flag such inputs as UTF8 when they are read in. The suggestion was to piggyback this atop the tainting mechanism. At present, there's a macro which, if taint mode is on, turns on the taint flag on the input scalar for every input Perl reads from any source. Simon posted a patch which extends the macro so that if `use utf8` is in scope, and the string is a valid UTF8 string, Perl will also set the `UTF8` flag on the scalar. Since presumably everything is already checked for taintedness when it's read in, this automatically puts the check for UTF8-ness everywhere also. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00026.html)
 
 ### <span id="tra_z_0">`tr/a-z-0//`</span>
 
 I reported that this is equivalent to `tr/a-y//`, because the ranges are expanded inline from left to right, so the original `tr` becomes `tr/abcdefghijklmnopqrstuvwxyz-0//`, and then the `z-0` is discarded (because there are no characters between `z` and `0`. Sometime later, I sent a patch, and also sent a patch that forbids `X-Y` when `X` occurs after `Y`. The latter was already a fatal error in a regex character class; it turns out that the code for range parsing in `tr` is totally separate from the analogous range parsing code for regexes.
 
-[Patch \#1.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00054.html)[Patch \#2.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00095.html)
+[Patch \#1.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00054.html)[Patch \#2.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00095.html)
 
 ### <span id="Mutual_use">Mutual `use`</span>
 
@@ -131,9 +131,9 @@ Sarathy pointed out a problem with Dominic Dunlop's excellent `sprintf` tests: N
 
 H. Merijn Brand fixed a bug that he reported last month: Complex expressions like `$h{foo}[1]` were misparsed when they appeared in `format` lines.
 
-[Original bug report](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00194.html)
+[Original bug report](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00194.html)
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00084.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00084.html)
 
 Thank you very much, Merijn!
 
@@ -141,7 +141,7 @@ Thank you very much, Merijn!
 
 Lincoln Stein sent a smallish program that hangs inside the thread library. Persons wishing to be deemed heroic should investigate this.
 
-[Test case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-07/msg00099.html)
+[Test case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/07/msg00099.html)
 
 ### <span id="What_does_changing_PL_sh_path_do">What does changing `PL_sh_path` do?</span>
 

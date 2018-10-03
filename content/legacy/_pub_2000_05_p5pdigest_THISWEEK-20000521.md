@@ -77,7 +77,7 @@ The obvious explanation is: `my` creates a lexical variable, and then at run tim
 
 Here the variable `@array`is *shared* between the two closures. If you omit the `if 0;` then `$a` and `$b` get separate variables.
 
-Nat Torkington did provide an explanation which I think is correct, with Jan Dubois filling in some of the technical details. [Jan's description of the guts.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00736.html)
+Nat Torkington did provide an explanation which I think is correct, with Jan Dubois filling in some of the technical details. [Jan's description of the guts.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00736.html)
 
 Some people suggested documenting this 'feature'. Tom said that Larry had told him not to do that because he didn't want to reply on supporting it. Larry affirmed this:
 
@@ -91,7 +91,7 @@ The thread also contained a side discussion about whether or not 5.6.0 is stable
 
 ### <span id="Zero_padded_numbers_in_formats">Zero-padded numbers in formats</span>
 
-John Peacock provided a patch that allows you to specify that numbers displayed in formats can be zero-filled. (Remember formats? You print a formatted report with the `write` function.) [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00664.html)
+John Peacock provided a patch that allows you to specify that numbers displayed in formats can be zero-filled. (Remember formats? You print a formatted report with the `write` function.) [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00664.html)
 
 Tom asked why not use `sprintf`. John replied that the patch to the `format` code is simple and that the `sprintf` solution requires a lot more Perl code than just using a zero-filled format picture.
 
@@ -115,7 +115,7 @@ will work.
 
 ### <span id="Port_to_WindowsCE">Port to Windows/CE</span>
 
-Jarkko Hietaniemi forwarded an article that Ned Konz had posted on `comp.lang.perl.moderated`, saying that he was working on a port of Perl to Windows/CE, which I gather is a version of Windows that runs on a palmtop. Ned mentioned a number of potential problems he foresaw. [Ned's Article](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00556.html)
+Jarkko Hietaniemi forwarded an article that Ned Konz had posted on `comp.lang.perl.moderated`, saying that he was working on a port of Perl to Windows/CE, which I gather is a version of Windows that runs on a palmtop. Ned mentioned a number of potential problems he foresaw. [Ned's Article](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00556.html)
 
 Simon Cozens referred him to 'microperl', which he said had been created with the intention of porting Perl to small operating systems.
 
@@ -133,7 +133,7 @@ Summary: Don't use `chat2.pl`.
 
 Tim Jenness suggested replacing the old `pod2latex` with his new version based on `POD::LaTeX`. There was no discussion.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00560.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00560.html)
 
 ### <span id="Long_Regexes">Long Regexes</span>
 
@@ -141,11 +141,11 @@ Michael Shields demonstrated a sample email message that made the `Mail::Header`
 
 Mike Guy pointed out that even without the patch the regex completed quickly under 5.6.0, because the regex optimizations are better. However, Ilya says that this particular optimization is buggy: It only works under certain circumstances, and he did not implement a check for those circumstances. But he could not make a test case where the optimization fails. He asked for help doing this.
 
-[Ilya's request for a test case.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00585.html)
+[Ilya's request for a test case.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00585.html)
 
 Ben Tilly and Ilya had long and extremely interesting discussion of next-character-peeking optimiztions that is required reading for anyone who is interested in the guts of the regex engine or who might someday want to be the Regex Engine Pumpking.
 
-[The root of this discussion.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00582.html)
+[The root of this discussion.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00582.html)
 
 There was a sidetrack: John Macdonald suggested that there could be a standard module that would provide efficient, correct regexes for common cases such as matching a string that contains balanced parentheses. Damian Conway pointed out that his `Text::Balanced` module does precisely this.
 
@@ -169,7 +169,7 @@ James Bence stepped up to answer Larry's request that `mktables.pl` be refurbish
 
 Jonathan Leffler forwarded a problem that had come up on the DBI mailing list relating to the way Perl uses the environment; if some other library *also* tries to modify the environment, this messes up Perl and can cause core dumps. Jonathan forwarded an archive of some discussion of this same problem in 1997, and I remember it also came up last November.
 
-[Jonathan's message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00589.html)
+[Jonathan's message.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00589.html)
 
 [Summary of November discussion.](/pub/1999/11/p5pdigest/THISWEEK-19991121.html#Wandering_Environment)
 
@@ -184,11 +184,11 @@ Mark Summerfield wants to make a pragma called `readonly` that declares a read-o
 
 The key here is `PI`, not `3`. Several alternative suggestions were advanced; the nicer ones seemed to be William Setzer's `Const` module which is a tiny XS that just sets the `READONLY` flag in the SV. Unfortunately, it doesn't seem to be on CPAN. Tom did post the entire code, which is only a couple of paragraphs long.
 
-[Const.pm](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00777.html)
+[Const.pm](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00777.html)
 
 ### <span id="Tutorials">Tutorials</span>
 
-Ken Rietz offered to write more tutorials or to coordinate the writing of tutorials, and asked for suggestions. [See the message if you want to make a suggestion.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00761.html)
+Ken Rietz offered to write more tutorials or to coordinate the writing of tutorials, and asked for suggestions. [See the message if you want to make a suggestion.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00761.html)
 
 ### <span id="Brad_Appleton_replies_to_my_remarks_about_Pod::Parser">Brad Appleton replies to my remarks about `Pod::Parser`</span>
 

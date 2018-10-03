@@ -46,9 +46,9 @@ In the last report, I posted an explanation by Dan Sugalski of the current threa
 
 This reopened debates about the feasibility of the new model, and Dan, Sarathy, and Ilya had a medium-long discussion about it. The debate centered around how much stuff gets cloned when you fork a new thread/process. Here's my probably-too-brief summary: Under the new model, when you start a new thread, the Perl stack is cloned and each thread gets a separate clone. But you can also request `fork()`-like semantics, in which case all global variables also get cloned. This will allow forkless Windows platforms to emulate `fork()` with threads. In either case, the op tree (which is read-only) is shared between threads.
 
-The debate centered around the largeness of the amount of data that would need to be cloned. [Sarathy claims that even in the `fork` case the op tree outeighs the global data by a factor of 8.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00925.html)
+The debate centered around the largeness of the amount of data that would need to be cloned. [Sarathy claims that even in the `fork` case the op tree outeighs the global data by a factor of 8.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00925.html)
 
-The whole discussion was very interesting and is recommended reading. [The top of the discussion is here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00912.html)
+The whole discussion was very interesting and is recommended reading. [The top of the discussion is here.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00912.html)
 
 This and the ensuing discussion is worth reading if you are interested in the changes in Perl's threading model.
 
@@ -80,7 +80,7 @@ I seem to remember that debate on whether or not this was advisable continued th
 
 ### <span id="Bugs_in_NT_Perl_Sockets?">Bugs in NT Perl Sockets?</span>
 
-Phil Pfeiffer posted an interesting analysis of peculiarities of Perl network sockets under NT. I found these interesting, but there was no discussion. Of course, it is probably NT's fault, but it would be nice to see these fixed anyway. As Larry has said \`\`The Golden Gate wasn't our fault either, but we still put a bridge across it.'' [Read it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00898.html)
+Phil Pfeiffer posted an interesting analysis of peculiarities of Perl network sockets under NT. I found these interesting, but there was no discussion. Of course, it is probably NT's fault, but it would be nice to see these fixed anyway. As Larry has said \`\`The Golden Gate wasn't our fault either, but we still put a bridge across it.'' [Read it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00898.html)
 
 ### <span id="Run_Out_of_File_Descriptors">Run Out of File Descriptors</span>
 
@@ -96,7 +96,7 @@ The discussion about semantics of control-backslash in a double-quoted string co
 
 ### <span id="Bitwise_Operators">Bitwise Operators</span>
 
-Someone was caught by the changed behavior of the `&` operator between Perl 4 and Perl 5. Tom Christiansen posted [a clear explanation.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00950.html) For some reason this topic was omitted from `perltrap`.
+Someone was caught by the changed behavior of the `&` operator between Perl 4 and Perl 5. Tom Christiansen posted [a clear explanation.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00950.html) For some reason this topic was omitted from `perltrap`.
 
 The discussion then turned towards how you can tell whether or not a string has ever been used in a numeric context. Larry suggested:
 

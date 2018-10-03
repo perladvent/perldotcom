@@ -83,7 +83,7 @@ John's eventual compromise was to keep them in the development sources for those
 
 ### <span id="How_Magic_and_Ties_Work">How Magic and Ties Work</span>
 
-I provided a sample few sections from my forthcoming Perl Internals training course about [how magic and ties work](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-04/msg00238.html). Enjoy.
+I provided a sample few sections from my forthcoming Perl Internals training course about [how magic and ties work](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-04/msg00238.html). Enjoy.
 
 ### <span id="Various">Various</span>
 
@@ -101,7 +101,7 @@ Jonathan Stowe tried to change something about `$#`; Sarathy suggested that this
 
 The `TIESLICE`/ `STORESLICE` issue came back. The discussion produced more light than heat.
 
-And finally... Dan Brian explained [what happens if you cross Black and White with Perl5-Porters.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-04/msg00188.html)
+And finally... Dan Brian explained [what happens if you cross Black and White with Perl5-Porters.](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-04/msg00188.html)
 
 Until next week I remain, your humble and obedient servant,
 

@@ -49,16 +49,16 @@ Please send corrections and additions to `mjd-perl-thisweek-YYYYMM@plover.com` w
 
 ### <span id="5005_63_Released">5.005\_63 Released</span>
 
-[Sarathy's Announcement](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00250.html) includes a list of changes and a substantial TODO list for 5.005\_64.
+[Sarathy's Announcement](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00250.html) includes a list of changes and a substantial TODO list for 5.005\_64.
 
 There was the usual collection of bug reports that follows a new release, mostly concerning compilation and configuration issues.
 
 > **Dan Sugalski:** Too late to slip in support for `open(RW, "| foo |")?`
 > **Sarathy:** Yes, unless you can convince me that it's life-threatening. :-)
 
-[Tom also posted a to-do list](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00275.html) about messages that are in the source but not documented in `perldiag`.
+[Tom also posted a to-do list](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00275.html) about messages that are in the source but not documented in `perldiag`.
 
-Sarathy and Dan Sugalski's discussion of the new threading model continued. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00278.html)
+Sarathy and Dan Sugalski's discussion of the new threading model continued. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00278.html)
 
 ### <span id="Development_Continues_on_Ilyas_Patches">Development Continues on Ilya's Patches</span>
 
@@ -78,15 +78,15 @@ Sarathy supplied a patch to eliminate the many warnings caused by replacement of
 
 #### <span id="Change_to_xsubpp">Change to `xsubpp`</span>
 
-In spite of the favorable test reports from last week, [Ilya's `xsubpp` patch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00088.html) did not get into 5.005\_63. I was not quite clear on why not. Sarathy said that the patch was incomplete and not robust, but only specified that there was a lack of documentation and that there was no way to disable the change. Ilya protested that there are zillions of `xsubpp` features that cannot be disabled.
+In spite of the favorable test reports from last week, [Ilya's `xsubpp` patch](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00088.html) did not get into 5.005\_63. I was not quite clear on why not. Sarathy said that the patch was incomplete and not robust, but only specified that there was a lack of documentation and that there was no way to disable the change. Ilya protested that there are zillions of `xsubpp` features that cannot be disabled.
 
 #### <span id="Patch_Location">Patch Location</span>
 
-Ilya made up packages of his patches that were not accepted for 5.005\_63. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00242.html)
+Ilya made up packages of his patches that were not accepted for 5.005\_63. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00242.html)
 
 ### <span id="New_Improved_File::Find">New Improved `File::Find`</span>
 
-Helmut Jarausch contributed a new and improved version of `File::Find`. [Here is Helmut's original message,](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00133.html) which summarizes the new features. (Or see `perldelta` in 5.005\_63.)
+Helmut Jarausch contributed a new and improved version of `File::Find`. [Here is Helmut's original message,](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00133.html) which summarizes the new features. (Or see `perldelta` in 5.005\_63.)
 
 ### <span id="DB_File_Locking_Technique">`DB_File` Locking Technique</span>
 
@@ -100,7 +100,7 @@ Paul Marquess reported that the file locking strategy suggested by the `DB_File`
         flock(DB_FH, LOCK_UN);
         undef $db;
 
-Problem: The `tie` itself opens the file, which causes the stdio library to read and cache some data from the database. But this occurs before the file is locked. Therefore there is a race condition here. This method also appears in the Camel and Ram books. [Paul posted a message describing the problem in detail,](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00111.html) including solutions. One of these solutions is to simply lock some *other* file instead of the database file itself; this is also a general solution to many similar problems.
+Problem: The `tie` itself opens the file, which causes the stdio library to read and cache some data from the database. But this occurs before the file is locked. Therefore there is a race condition here. This method also appears in the Camel and Ram books. [Paul posted a message describing the problem in detail,](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00111.html) including solutions. One of these solutions is to simply lock some *other* file instead of the database file itself; this is also a general solution to many similar problems.
 
 David Harris was the person who originally reported this problem to Paul. [He has a detailed description of it online.](http://www.davideous.com/misc/dblockflaw-1.2/)
 
@@ -155,7 +155,7 @@ It did not appear in 5.005\_63.
 
 ### <span id="Getopt::Long_Documentaion">`Getopt::Long` Documentation</span>
 
-Johan Vromans [rewrote the `Getopt::Long` documentation.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00255.html)
+Johan Vromans [rewrote the `Getopt::Long` documentation.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00255.html)
 
 ### <span id="lex_fakebrack_Horrors">`lex_fakebrack` Horrors</span>
 

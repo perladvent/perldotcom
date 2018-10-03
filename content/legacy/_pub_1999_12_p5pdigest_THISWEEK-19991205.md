@@ -57,13 +57,13 @@ He wants `$c` to contain 3 and `$d` to contain 4. Instead, they contain 1 and 2.
 
 What happened here? In scalar context, `m//g` finds one match, starting from where it left off. However, in list context, it finds all the remaining match, and returns a list of all the results. LIine 2 above matched and generated the list `(1,2,3,4,5,6)`. It assigned this list to `$a` and `$b`, throwing away 3, 4, 5, and 6; then the match on ilne 3 started over again at the beginning.
 
-This recalled [a similar complaint from Randal Schwartz,](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01047.html) which I neglected to mention at the time.
+This recalled [a similar complaint from Randal Schwartz,](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01047.html) which I neglected to mention at the time.
 
 > **Ilya Zakharevich:** I remember some discussionfor making list context `m//gc` behave differently. What wasthe result?
 
 Apparently the result was that it was forgotten. It might be nice to reopen this. As Ralph says, \`\` `/g` means two things (many matches and enable `\G`), it means you can't just enable `\G`.''
 
-His second message has a very clear statement of the problem, and a proposal for what to do instead. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00028.html)
+His second message has a very clear statement of the problem, and a proposal for what to do instead. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00028.html)
 
 ### <span id="eof_at_the_Beginning_of_the_Input">`eof()` at the Beginning of the Input</span>
 
@@ -85,9 +85,9 @@ Discussion continued from last week about the behavior of Perl's `getpw*` functi
 
 ### <span id="Perl_EBCDIC_and_Unicode">Perl, EBCDIC, and Unicode</span>
 
-Geoffrey Rommel asked for pointers to docmuentation about unicode support in Perl so that he could understand the implications for his `Convert::IBM390` module. He got two excellent responses: [James Briggs is writing a document called \`Perl, Unicode and I18N' which he expects to have done by 7 January.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg01077.html)
+Geoffrey Rommel asked for pointers to docmuentation about unicode support in Perl so that he could understand the implications for his `Convert::IBM390` module. He got two excellent responses: [James Briggs is writing a document called \`Perl, Unicode and I18N' which he expects to have done by 7 January.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg01077.html)
 
-[Peter Prymmer posted some links and pointers to relevant mailing lists.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg01099.html)
+[Peter Prymmer posted some links and pointers to relevant mailing lists.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg01099.html)
 
 He also suggested that the techniques of the `utf8` pragma could be adapted to provide an analogous `utfebcdic` pragma which would enable an EBCDIC internal representation.
 
@@ -103,15 +103,15 @@ A few weeks ago, I reported on a new module, [`Safe::Hole`](/pub/1999/11/p5pdige
 
 Back in early November, I reported:
 
-> Ilya submitted a [patch to `xsubpp`](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00088.html) which will change the value return semantics of XSUBs to be more efficient. It needs wide testing because almost all XSUBs will be affected.
+> Ilya submitted a [patch to `xsubpp`](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00088.html) which will change the value return semantics of XSUBs to be more efficient. It needs wide testing because almost all XSUBs will be affected.
 
 Sarathy said that it was risky enough that it should be enable only when explicitly requested; Ilya objected, saying that it needed wide testing and that if it were only enabled by a command-line argument it would not receive wide testing.
 
-Nick Ing-Simmons then offered to test it with `Tk`, but I did not see the outcome. Andreas K&omul;nig tested it with [many important modules](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00077.html)(including `Tk`,) and reported that it caused no problems that were not already present.
+Nick Ing-Simmons then offered to test it with `Tk`, but I did not see the outcome. Andreas K&omul;nig tested it with [many important modules](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00077.html)(including `Tk`,) and reported that it caused no problems that were not already present.
 
 ### <span id="Euphoria">Euphoria</span>
 
-Simon Cozens reported that Freshmeat had announced a programming language, \`Euphoria', which purported to be \`simple, flexible, and easy to learn and outperforms all popular interpreted languages'. (No URL, unfortunately, just that it was in Freshmeat on 29 November.) [Larry says that the benchmarks are somewhat cooked.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg01086.html)
+Simon Cozens reported that Freshmeat had announced a programming language, \`Euphoria', which purported to be \`simple, flexible, and easy to learn and outperforms all popular interpreted languages'. (No URL, unfortunately, just that it was in Freshmeat on 29 November.) [Larry says that the benchmarks are somewhat cooked.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg01086.html)
 
 ### <span id="Talarian_SmartSockets">Talarian SmartSockets</span>
 
@@ -121,11 +121,11 @@ This sounds like a joke, doesn't it? But Tim Bunce wants to know if there is a P
 
 Ilya made some substantial additions to the `perlxstut` man page. He added a section on troubleshooting the examples in the document, and some notes about how to detect old versions of Perl. He added a lot of details about the contents of `.xs` files and the generated `.c` files.
 
-[Changes to `perlxstut`](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00002.html)
+[Changes to `perlxstut`](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00002.html)
 
-[Changes to `perlxs`](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00003.html)
+[Changes to `perlxs`](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00003.html)
 
-[Sarathy edited the prose in the `perlxs` changes and added some additional text.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00068.html) He also suggested that it could use some going-over by other people.
+[Sarathy edited the prose in the `perlxs` changes and added some additional text.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00068.html) He also suggested that it could use some going-over by other people.
 
 ### <span id="Reset_umasks">Reset `umask`s</span>
 
@@ -143,11 +143,11 @@ Some time ago I reported an [entertainment](http://www4.telge.kth.se/~d99_kme/).
 
 ### <span id="Floating_Point_Numbers">Floating-Point Numbers</span>
 
-Ilya posted [the locations of some web resources](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00043.html) he recommended for people interested in floating-point numbers.
+Ilya posted [the locations of some web resources](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00043.html) he recommended for people interested in floating-point numbers.
 
 ### <span id="Development_Continues_on_Ilyas_Patches">Development Continues on Ilya's Patches</span>
 
-[Sarathy rejected Ilya's `PREPARE` patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-12/msg00070.html)He made some changes to it, but not all the changes he wanted. [Earlier summary of this work](/pub/1999/11/p5pdigest/THISWEEK-19991121.html#PREPARE)
+[Sarathy rejected Ilya's `PREPARE` patch.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/12/msg00070.html)He made some changes to it, but not all the changes he wanted. [Earlier summary of this work](/pub/1999/11/p5pdigest/THISWEEK-19991121.html#PREPARE)
 
 Sarathy also found a failure case for Ilya's [Regex Optimization Patch](/pub/1999/11/p5pdigest/THISWEEK-19991114.html#Ilya_Regex_Optimization).
 

@@ -43,7 +43,7 @@ And you wonder why Jarkko throws his hands in the air at the mention of anything
 
 [Nicholas Clark](http://simon-cozens.org/writings/whos-who.html#CLARK) provided a patch which extended the little-known coderef-in- `@INC` feature to allow passing an object; if you pass an object instead of a coderef, the `INC` method will be called on it. This has allowed him to create an experimental pragma, [`ex::lib::zip`](http://www.flirble.org/~nick/P/ex-lib-zip-0.01.tar.gz) which lets you put a module tree inside a ZIP archive and Perl will extract the modules it needs from it.
 
-He then also explained what it was all about, in the hope that someone would write some proper documentation. Nobody did so, (my fault, I promised to but didn't get around to it) but his extremely helpful explanation of the coderef-in- `@INC` API, and the cheap source filter API it allows can be found [here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01780.html).
+He then also explained what it was all about, in the hope that someone would write some proper documentation. Nobody did so, (my fault, I promised to but didn't get around to it) but his extremely helpful explanation of the coderef-in- `@INC` API, and the cheap source filter API it allows can be found [here](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg01780.html).
 
 Briefly, you can do
 
@@ -93,13 +93,13 @@ caused all kinds of merry hell - on some platforms, it ran fine, on some it segf
 
 > ./perl will pass. /usr/local/bin/perl will SEGV. They are byte for byte identical.
 
-Jarkko thought this was a recent problem, but Nick managed to reproduce it in 5.005\_02. Alan produced an [impressive explanation](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-03/msg00176.html) of what was going on, which I greatly encourage you to read if you want to learn how to track this sort of thing down, but stopped short of an actual fix.
+Jarkko thought this was a recent problem, but Nick managed to reproduce it in 5.005\_02. Alan produced an [impressive explanation](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-03/msg00176.html) of what was going on, which I greatly encourage you to read if you want to learn how to track this sort of thing down, but stopped short of an actual fix.
 
 There was, of course, the usual discussion of how useless `reset` was anyway, including one suggestion of rewriting the op in pure Perl.
 
 ### <span id="Yet_More_Unicode_Wars">Yet More Unicode Wars</span>
 
-87 messages this week were spent attempting to formulate a sensible and acceptable Unicode policy. The attempt failed. If you really want to jump in and have a look, [this](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-02/msg01680.html) is as good a place to start as any.
+87 messages this week were spent attempting to formulate a sensible and acceptable Unicode policy. The attempt failed. If you really want to jump in and have a look, [this](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-02/msg01680.html) is as good a place to start as any.
 
 ### <span id="Switch_is_broken">Switch is broken</span>
 

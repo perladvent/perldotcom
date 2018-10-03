@@ -45,11 +45,11 @@ Ilya said it would be better to add the trie code from `Regex::PreSuf` to the re
 
 Dan Sugalski sent a replacement for his patch that makes the `lock()` function thread-safe. It also exposes `lock()` functionality to XS subroutines, and some other things.
 
-[See the patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00352.html)
+[See the patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00352.html)
 
 Also in thread news: A user posted a message asking why threads weren't fully supported, and Dan replied at some length. (Summary: Because it's hard.)
 
-[Dan's reply.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00382.html)
+[Dan's reply.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00382.html)
 
 > **Marek Rouchal:** Bottom line: I'd be very happyabout fully working threads in Perl 5.6.1
 >
@@ -59,7 +59,7 @@ Also in thread news: A user posted a message asking why threads weren't fully su
 
 As quickly as it arrived, last week's discussion of docmuentation issues has ended. The only discussion of note this week was a message from Mark Fisher with a reference to a 1971 paper that compared automatic indexing with manual indexing. Would-be indexers should probably take a look at this.
 
-[Mark's message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00387.html)
+[Mark's message.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00387.html)
 
 [Gerald Salton's paper.](http://cs-tr.cs.cornell.edu/Dienst/UI/2.0/Describe/ncstrl.cornell/TR71-115)
 
@@ -67,15 +67,15 @@ As quickly as it arrived, last week's discussion of docmuentation issues has end
 
 Rocco Caputo made some changes to fix the build process on OS/2.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00357.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00357.html)
 
 ### <span id="Regex_Engine">Regex Engine</span>
 
 In the course of trying to investigate a bug in the regex engine, Hugo van der Sanden critiqued the code style and comments. This led to a brief but interesting discussion about the code there.
 
-[Original bug report](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00271.html)
+[Original bug report](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00271.html)
 
-[Hugo's critique message](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00362.html)
+[Hugo's critique message](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00362.html)
 
 ### <span id="Method_calls_on_unblessed_references">Method calls on unblessed references</span>
 
@@ -89,7 +89,7 @@ Randal said that this had come up some years ago, and the consensus was not to d
 
 I was not able to find this discussion. John found a 1996 message from Tim Bunce that referred to an even earlier discussion of this same idea. (Tim submitted a patch similar to John's.) If anyone can dig up a pointer to the original discussion, please let me know.
 
-[Tim's really old message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/9607/msg00750.html)
+[Tim's really old message.](https://www.nntp.perl.org/group/perl.perl5.porters/96/07/msg00750.html)
 
 ### <span id="Version_Tuples_Broken?">Version Tuples Broken?</span>
 

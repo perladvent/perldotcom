@@ -57,17 +57,17 @@ Nick Ing-Simmons said that had had similar doubts for some time. But he also poi
 
 Tim Bunce suggested compresing the bytecode. Stephen Zander recalled that Nicholas Clark had posted an almost-complete solution in October, 1998. Nicholas suggested that the final problems might be soluble once line disciplines are implemented.
 
-[Root of this thread](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg01109.html)
+[Root of this thread](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg01109.html)
 
 In other `B::Bytecode` news, Benjamin Stuhl posted a patch that adds several features and generates smaller bytecodes.
 
-[Patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00057.html)
+[Patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00057.html)
 
 ### <span id="Bens_map_Patch">Ben's `map` Patch</span>
 
 Back in April Ben Tilly submitted a patch for `map` that was intended to make it perform better in the common case where the result was larger than the input. Sarathy said that he thought a better solution was possible, and provided some details about how it might work. The question is when to extend the stack to accomodate the results of each iteration of the `map`, and when to relocate the new items (which are placed at the top of the stack) to below the remaining arguments (which need to be at the top of the stack at the beginning of each iteration.)
 
-[Sarathy's message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg01154.html)
+[Sarathy's message.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg01154.html)
 
 Ben Tilly disagreed; he said that he had subsequently decided that his patch was doing the best possible thing, and that he had considered Sarathy's approches and decided that there was no good improvement, because the overhead of keeping track of extra information would be at least as big as the gain from not copying as many stack items.
 
@@ -101,7 +101,7 @@ Simon Cozens sent in a program to generate the `perlmodlib` man page automatical
 
 Simon also sent in a new `perlnewmod` manual page, which explains how to write a module and submit it to CPAN.
 
-[Read it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg01095.html)
+[Read it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg01095.html)
 
 If you have suggestions about `perlnewmod`, please mail Simon.
 
@@ -109,7 +109,7 @@ If you have suggestions about `perlnewmod`, please mail Simon.
 
 Ben Tilly sent a long note about how to speed up inheritance and method lookups, but Sarathy replied that adding more solution hacks would be premature, since at present nobody knows why method calls are actually slow. Someone should have investigated this a long time ago. If you are interested in investigating this but do not know how to begin, please send me email.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg01102.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg01102.html)
 
 ### <span id="Perl_in_Russia">Perl in Russia</span>
 
@@ -125,7 +125,7 @@ If you use Eudora to send patches, make sure the word-wrap setting is turned off
 
 Robert Spier pointed out that the 5.6 version of `h2xs` is not usable with any earlier version of Perl, because it generates `our` declarations and `use warnings` declarations. It makes sense to use the 5.6 `h2xs` with an earlier Perl, because the new release of `h2xs` has been so improved. Robert later provided a patch (which he subsequently revised) that adds a `-b` backward-compatibility flag to `h2xs`.
 
-[The patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-06/msg00147.html)
+[The patch.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/06/msg00147.html)
 
 ### <span id="Various">Various</span>
 

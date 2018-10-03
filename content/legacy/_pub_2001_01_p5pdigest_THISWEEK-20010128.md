@@ -31,11 +31,11 @@ Still, it does look like 5.6.1 is going to take a while to get out there. Hold o
 
 ### <span id="TestHarness_again">Test::Harness again</span>
 
-Michael Schwern's [valiant efforts with Test::Harness](/pub/2001/01/p5pdigest/THISWEEK-20010121.html#TestHarness_Megapatch) are beginning to bear fruit, as he produced another [megapatch](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01428.html) this week. This seemed to make a lot of people happier, but there were still some small problems with it; notably that it would choke if some output arrived before the first "ok" or "1..N", and that it failed its own test suite. The irony! But it's looking a lot closer to going in, and it's looking a lot cleaner code. Nicholas Clark also noticed that you can overwrite the `runtests` function to build several different perls and runs the tests on each o of them.
+Michael Schwern's [valiant efforts with Test::Harness](/pub/2001/01/p5pdigest/THISWEEK-20010121.html#TestHarness_Megapatch) are beginning to bear fruit, as he produced another [megapatch](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01428.html) this week. This seemed to make a lot of people happier, but there were still some small problems with it; notably that it would choke if some output arrived before the first "ok" or "1..N", and that it failed its own test suite. The irony! But it's looking a lot closer to going in, and it's looking a lot cleaner code. Nicholas Clark also noticed that you can overwrite the `runtests` function to build several different perls and runs the tests on each o of them.
 
 ### <span id="Lots_of_test_results">Lots of test results</span>
 
-But this process - building Perl with lots of different options and sending in the results - is one that a few people (Notably Alan, Merijn and Abigail) have already been doing, and P5P has been near innundated with OK and Not OK reports. Jarkko suggested that some kind of summarizing program should be run over the results, and [Merijn provided one](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01619.html). (The link is actually to an updated version he posted later in the week.) It tests Perl in lots of different configurations in all of the different possible IO subsystems. If you've got any kind of non-obvious operating system, lots of spare cycles, and you're following the rsync Perl, it would be great if you could play with it!
+But this process - building Perl with lots of different options and sending in the results - is one that a few people (Notably Alan, Merijn and Abigail) have already been doing, and P5P has been near innundated with OK and Not OK reports. Jarkko suggested that some kind of summarizing program should be run over the results, and [Merijn provided one](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01619.html). (The link is actually to an updated version he posted later in the week.) It tests Perl in lots of different configurations in all of the different possible IO subsystems. If you've got any kind of non-obvious operating system, lots of spare cycles, and you're following the rsync Perl, it would be great if you could play with it!
 
 ### <span id="The_hashing_function">The hashing function</span>
 
@@ -59,13 +59,13 @@ The one Perl uses at the moment looks like this:
 
 )
 
-Nick Clark found that by applying [Duff's device](http://www.lysator.liu.se/c/duffs-device.html#duffs-device) to the hashing function he could get a 2% speedup; this led to Yet Another Benchmarking Argument, and Nick Ing-Simmons rightly pointing out that you can usually get a 2% speedup in the test suite merely by running the test suite again with no changes. Still, it was fun while it lasted - Nick's implementation is [here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01262.html).
+Nick Clark found that by applying [Duff's device](http://www.lysator.liu.se/c/duffs-device.html#duffs-device) to the hashing function he could get a 2% speedup; this led to Yet Another Benchmarking Argument, and Nick Ing-Simmons rightly pointing out that you can usually get a 2% speedup in the test suite merely by running the test suite again with no changes. Still, it was fun while it lasted - Nick's implementation is [here](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01262.html).
 
 Next up was Mark Leighton Fisher, who provided a patch to make Perl use Bob Jenkins' [\`\`One-at-a-time''](http://burtleburtle.net/bob/hash/doobs.html) hash function. There was no noticable speedup in the Perl benchmarking suite, but it did cause a lot of otherwise sensible programmers to write a lot of assembly code for no apparent reason.
 
 ### <span id="chop_examples">chop examples</span>
 
-Michael Schwern has been cleaning up the perlfunc documentation, and putting in useful examples; unfortunately, he's stuck on finding useful examples for `chop`. Some people have surmised that this is because `chop` is fundamentally useless, and there's a proposal that it should be [outlawed in Perl 6](http://dev.perl.org/rfc/195.html). Well, who knows, but we all certainly had a hard time thinking of [handy things to do with it](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01503.html). Can you come up with anything better?
+Michael Schwern has been cleaning up the perlfunc documentation, and putting in useful examples; unfortunately, he's stuck on finding useful examples for `chop`. Some people have surmised that this is because `chop` is fundamentally useless, and there's a proposal that it should be [outlawed in Perl 6](http://dev.perl.org/rfc/195.html). Well, who knows, but we all certainly had a hard time thinking of [handy things to do with it](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01503.html). Can you come up with anything better?
 
 ### <span id="PerlIO_programming_documentation">PerlIO programming documentation</span>
 
@@ -103,7 +103,7 @@ Tim Jenness then raised another ActiveState config point: ActiveState's build of
 
 ### <span id="Various">Various</span>
 
-Ilya's mad patch of the week was to allow [overloading of int()](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01380.html); shame he didn't look at [lvalue overloading](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01600.html) while he was at it. Peter Prymmer provided MVS users with [dynamic loading on OS/390](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01381.html). (as well as lots of other useful OS/390 fixes.) There was another debate about the meaninglessness of benchmarking. Yes, floating point arithmetic is still imprecise. We know.
+Ilya's mad patch of the week was to allow [overloading of int()](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01380.html); shame he didn't look at [lvalue overloading](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01600.html) while he was at it. Peter Prymmer provided MVS users with [dynamic loading on OS/390](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01381.html). (as well as lots of other useful OS/390 fixes.) There was another debate about the meaninglessness of benchmarking. Yes, floating point arithmetic is still imprecise. We know.
 
 Unicode. There, I've mentioned it.
 

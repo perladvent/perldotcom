@@ -43,7 +43,7 @@ Please send corrections and additions to `mjd-perl-thisweek-YYYYMM@plover.com` w
 
 Since last time, Perl 5.6.0 has been released. As you can see, the version-numbering scheme has been changed. If it had not been changed, this would have been 5.006, or maybe 5.006\_00.
 
-[Announcement for version 5.6.0](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-03/msg02596.html)
+[Announcement for version 5.6.0](https://www.nntp.perl.org/group/perl.perl5.porters/2000/03/msg02596.html)
 
 In the wake of this, list traffic was very high with various small bug reports and configuration problems. It has since quieted down.
 
@@ -51,7 +51,7 @@ Another major contributor to the high volume in late March and early April was a
 
 On the one hand were people complaining about bugs and how it was unstable and saying that nobody was going to switch, and there were some accusations that Sarathy was part of a Microsoft conspiracy to sabotage Perl. Blah blah blah. Then on the other hand were a lot of people saying that the changes were not significant enough to warrant a new version number.
 
-(To this last point, I think [Tom's reply](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00042.html) answers the point most effectively. The tone is characteristic of most of the entire discussion.)
+(To this last point, I think [Tom's reply](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00042.html) answers the point most effectively. The tone is characteristic of most of the entire discussion.)
 
 You would think that at most one set of these assertions could be plausible; either Microsoft is trying to sabotage Perl by forcing a premature, unstable release, *or* the changes are too small to be worth releasing. You might think this, but you would be mistaken.
 
@@ -59,7 +59,7 @@ Now let's close the book on this particularly disgraceful chapter.
 
 ### <span id="p5p_to_become_Refereed?">p5p to become Refereed?</span>
 
-Partly as a result of the long, tedious, and irrelevant flamefest that took up so much time and energy in March and April, Sarathy proposed that the list be \`refereed'. This is a little different from moderation: Most people's messages go through normally, but if the referees agree, then messages in a certain thread or from a certain subscriber have to pass a moderator before they are sent to the list. [Read the actual proposal before you make up your mind.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00574.html)
+Partly as a result of the long, tedious, and irrelevant flamefest that took up so much time and energy in March and April, Sarathy proposed that the list be \`refereed'. This is a little different from moderation: Most people's messages go through normally, but if the referees agree, then messages in a certain thread or from a certain subscriber have to pass a moderator before they are sent to the list. [Read the actual proposal before you make up your mind.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00574.html)
 
 The following discussion was gratifyingly free of manifestoes, ultimatums, accusations, soapboxing, etc.
 
@@ -73,9 +73,9 @@ A sideline here was that Jarkko expressed a desire that someone else pick up the
 
 While I wasn't doing reports, Mark Kvale submitted a draft of a `perlretut` man page which would be a tutorial for regular expression beginners. (Maybe you haven't noticed that the existing `perlre` man page is incomprehensible unless you've been using `sed` for three years already.) I complained that `perlretut` was much too long, and Mark obligingly produced a cut-down version, `perlrequick`.
 
-[perlretut](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00321.html)
+[perlretut](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00321.html)
 
-[perlrequick](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00444.html)
+[perlrequick](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00444.html)
 
 ### <span id="Threading_Hilarity">Threading Hilarity</span>
 
@@ -83,15 +83,15 @@ Dan Sugalski discovered that the `lock()` function is not thread safe. I nominat
 
 This started off another debate between Dan and Sarathy about the best appraoch for Perl threads. Dan's patch added a mutex to *every* SV; Sarathy objected to this.
 
-[The thread starts here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00624.html)
+[The thread starts here.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00624.html)
 
 > **Dan Sugalski:** Whenever there's any sharing you have to deal with this.
 > **Sarathy:** Sorry, I don't have a VISA to enter the Land of Conclusions just now. :-)
 > **Dan:** And apparently nobody's granted a visa to enter the Land Of Even Partially Working Alternatives in the past two years either.
 
-[Sarathy's reply](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00699.html)
+[Sarathy's reply](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00699.html)
 
-[Discussion continued later in a second thread.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00773.html)
+[Discussion continued later in a second thread.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00773.html)
 
 The discussion was really interesting, and I didn't understand all of it. If someone wants to contribute a more detailed discussion of the issues for my next report, I'd be grateful to get it.
 
@@ -101,7 +101,7 @@ Simon Cozens did some work on the promised 'line disciplines' feature that didn'
 
 The rudiments of this are in Perl 5.6.0; see for example the documentation for `binmode()` in 5.6.0.
 
-[Simon's message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00807.html)
+[Simon's message.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00807.html)
 
 ### <span id="Older_Discussion_of_Disciplines">Older Discussion of Disciplines</span>
 
@@ -120,7 +120,7 @@ Benjamin Tilly brought up a number of interesting points. First, the error messa
 
 However, he did not provide patches for either of these things.
 
-[Benjamin's article](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00610.html)
+[Benjamin's article](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00610.html)
 
 Later, Benjamin reported that `map` is quite slow in some cases, even slower than an all-Perl function to do the same thing. It appears that the `grep` function, which `map` is based on, is optimized to be fast in cases where the result list is no longer than the argmuent list. For `grep`, this is all cases. But is it not always true for `map`, the typical example being
 
@@ -128,7 +128,7 @@ Later, Benjamin reported that `map` is quite slow in some cases, even slower tha
 
 Benjamin suggested how this might be fixed, but unfortunately did not provide a patch.
 
-[Benjamin's other article](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00647.html)
+[Benjamin's other article](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00647.html)
 
 Benjamin also reported a bug in `Math::BigInt`; it crashes with `Out of memory!` when it shouldn't. Hugo van der Sanden confirmed, and found a smaller test case:
 
@@ -136,7 +136,7 @@ Benjamin also reported a bug in `Math::BigInt`; it crashes with `Out of memory!`
 
 ### <span id="C_with_Embedded_Perl">C with Embedded Perl</span>
 
-Vadim Konovalov came up with a very simple and convenient way to embed Perl code into a C program. It's a simple preprocessor that works alongside the regular C preprocessor. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00492.html)
+Vadim Konovalov came up with a very simple and convenient way to embed Perl code into a C program. It's a simple preprocessor that works alongside the regular C preprocessor. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00492.html)
 
 ### <span id="Unreachable_code">\`Unreachable' code.</span>
 
@@ -161,17 +161,17 @@ Here the `if` block is optimized away, so the program prints `1` and then aborts
 
 Hard to argue with that. However, there were no followups.
 
-[The original message.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00573.html)
+[The original message.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00573.html)
 
 ### <span id="sprintf_Precision">sprintf Precision</span>
 
-Someone wrote in (again) asking why `sprintf("%.0f", 0.5)` yielded 0 and not 1. I wouldn't mention this, except that it attracted a followup from John Peacock, who said he was writing a `Math::FixedPrecision` module that might help with this sort of problem. It sounds interesting, and might be worth a look. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00766.html)
+Someone wrote in (again) asking why `sprintf("%.0f", 0.5)` yielded 0 and not 1. I wouldn't mention this, except that it attracted a followup from John Peacock, who said he was writing a `Math::FixedPrecision` module that might help with this sort of problem. It sounds interesting, and might be worth a look. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00766.html)
 
 ### <span id="SDF_Replacement">SDF Replacement</span>
 
 Some time ago, Ian Clatworthy developed a document format called SDF, the Simple Document Format. It's a markup language that's easy to read, like POD, but more powerful, but also convertible to many other formats. (In some cases it uses POD as an intermediate format.)
 
-Ian announced to p5p that he was working on a successor to SDF, called ANEML. He did this because he thought we'd be interested (I'm certainly interested) and because he thought someone might volunteer to help him. [Many details are here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00810.html)
+Ian announced to p5p that he was working on a successor to SDF, called ANEML. He did this because he thought we'd be interested (I'm certainly interested) and because he thought someone might volunteer to help him. [Many details are here.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00810.html)
 
 ### <span id="Various">Various</span>
 

@@ -91,7 +91,7 @@ WORK FROM HOME!!!!
 
 A lot of the stuff I omitted is on topic and has real value, but isn't particularly interesting. For example I have omitted a bunch of cases where someone submitted a minor patch that was accepted with no discsusion. I omitted some discussions that did not seem to be of general interest. For example, this week, Brad Appleton and Ilya Zakharevich had an exchange about the pod-formatting features of cperl-mode.
 
-It is hard to keep track of everything, and I may occasionally omit something you think is important, or I might misunderstand some important issue. Your additions and emendations are welcome. Please send any corrections, suggestions, additions, or embellishments to `mjd-perl-thisweek-YYYYMM@plover.com` where `YYYYMM` is the current year and month. For a more complete view of perl5-porters, either subscribe to the mailing list or [check the archive](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/).
+It is hard to keep track of everything, and I may occasionally omit something you think is important, or I might misunderstand some important issue. Your additions and emendations are welcome. Please send any corrections, suggestions, additions, or embellishments to `mjd-perl-thisweek-YYYYMM@plover.com` where `YYYYMM` is the current year and month. For a more complete view of perl5-porters, either subscribe to the mailing list or [check the archive](https://www.nntp.perl.org/group/perl.perl5.porters/).
 
 I wanted to include hot links to the relevant messages in the archive, but the archive was down and I could not get the URLs. This will be corrected in a future issue, even if we have to start our own archive.
 

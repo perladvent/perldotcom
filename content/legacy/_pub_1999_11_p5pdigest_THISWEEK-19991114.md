@@ -42,7 +42,7 @@ Ilya forwarded an article that had been posted to `comp.lang.perl.misc` by Krage
      sub test1 {my $foo = 2;  return sub { eval shift } }
      print test1()->('$foo');
 
-The subroutine captures a lexical scope in which `$foo=2`; on the other hand, the argument is evaluated in a lexical scope in which `$foo=1`. Which value of `$foo` is printed? Answer: Neither. [Ilya wrote to p5p suggesting that this discrepancy generate a warning.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00280.html) But there was no discussion.
+The subroutine captures a lexical scope in which `$foo=2`; on the other hand, the argument is evaluated in a lexical scope in which `$foo=1`. Which value of `$foo` is printed? Answer: Neither. [Ilya wrote to p5p suggesting that this discrepancy generate a warning.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00280.html) But there was no discussion.
 
 I tried to do a little research to find out how other languages handle this problem. (An ounce of prior art is worth a pound of cure.) I looked around in Lisp world. Most Lisp doesn't have lexically scoped variables. The major exception is the Scheme family. Until Revision 5, Scheme did not have `eval`. Revision 5 does have `eval`, but you have to explicitly specify the environment in which you want the code evaluated. Conclusion: We may be on untrodden ground here.
 
@@ -59,13 +59,13 @@ Jan Dubois submitted a patch to enable the Perl `link()` function to work under 
 <span id="Ilya_Regex_Optimization">Regex Optimization</span>
 ------------------------------------------------------------
 
-Ilya posted a really big patch to the regex engine that contains [a pretty major optimization](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00286.html).
+Ilya posted a really big patch to the regex engine that contains [a pretty major optimization](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00286.html).
 
 Ilya's example was `/\bt.{0,10}br/`. Normally, Perl can look for a longish fixed string inside the regex, in this case the `br`. It then looks for `br` in the target string, because there can't be a match without a `br`. It knows that if it finds a match, the `br` will occur at some position 1 .. 11 of the matching string; the `t` must occur at position 0. Perl hunts through the target string looking for the `br`, and when it finds it, it backs up to look for the `t`. If there is no `t`, it starts over and looks for another `br`. Since this process involves simply scanning the target for fixed substrings, it is very fast.
 
 Suppose Perl finds the `t`. Prior to the optimization, it would then enter the regex engine and start matching normally, looking for the word boundary. With the new optimization, it can notice when there is no word boundary and abandon the match immediately, without starting the main part of the regex engine.
 
-[Here's the example](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00566.html).
+[Here's the example](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00566.html).
 
 <span id="Threads_on_Solaris">Threads on Solaris</span>
 -------------------------------------------------------
@@ -87,7 +87,7 @@ Somewhere in the discussion, Jesus Quiroga mentioned that he was working on a re
 <span id="Big_Files_Continue">Big Files Continue</span>
 -------------------------------------------------------
 
-Last week [Jarkko remarked that 5.6 would have better support for large files.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00142.html) (There are 32-bit integer overflow problems associated with those larger than 2GB.) A very long discussion, which appeared to have very little actual content, ensued. If I'm mistaken about this, maybe someone would like to mail me with a summary of the important points?
+Last week [Jarkko remarked that 5.6 would have better support for large files.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00142.html) (There are 32-bit integer overflow problems associated with those larger than 2GB.) A very long discussion, which appeared to have very little actual content, ensued. If I'm mistaken about this, maybe someone would like to mail me with a summary of the important points?
 
 Here are some typical problems: You have a file larger than 2GB and you try to get the file pointer position with `seek()`. The result might be too big to fit in a 32-bit integer. Your system's `off_t` type is probably big enough to hold the offset value; but when this value is stored into Perl's SV structure, it is coerced into 32 bits and information is lost. So, to handle this properly, SVs need to use 64-bit integers. But if you change the size of the integers in the SV, then Perl is no longer binary-compatible with compiled XS modules that have a different-size SV. When arithmetic on an integer value overflows the integer, it is converted to a floating-point number; but what happens in a system where an integer is *more* accurate than a float?
 
@@ -110,12 +110,12 @@ All sorts of UTF-8 tests fail on EBCDIC systems because of similar problems. I t
 <span id="Marshalling_Modules">Marshalling Modules</span>
 ---------------------------------------------------------
 
-David Muir Sharnoff sent an interesting message, copied to the Modules list. Among other things, it calls for a standard interface to marshalling modules. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00567.html)
+David Muir Sharnoff sent an interesting message, copied to the Modules list. Among other things, it calls for a standard interface to marshalling modules. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00567.html)
 
 <span id="Got_Perl?">Got Perl?</span>
 -------------------------------------
 
-Banana Republic has a new advertisement that features a llama wearing a scarf. [Here we see the llama wearing Larry's mustache as well.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-11/msg00339.html)
+Banana Republic has a new advertisement that features a llama wearing a scarf. [Here we see the llama wearing Larry's mustache as well.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/11/msg00339.html)
 
 <span id="localtime_has_Another_Bug">`localtime()` has Another Bug!</span>
 --------------------------------------------------------------------------

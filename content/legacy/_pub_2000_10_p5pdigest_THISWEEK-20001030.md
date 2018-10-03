@@ -39,7 +39,7 @@ Jarkko got around to implementing a `sprintf` which lets you reorder the paramet
             printf "%2\$d %1\$d\n", 12, 34;           
             # will print "34 12\n"
 
-There was some discussion as to whether that's the right way to do it, but that's the way libc seems to do it, so we should too. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg00962.html)
+There was some discussion as to whether that's the right way to do it, but that's the way libc seems to do it, so we should too. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/10/msg00962.html)
 
 ### <span id="The_Dangers_and_bugs_of_Unicode">The Dangers (and bugs) of Unicode</span>
 
@@ -57,7 +57,7 @@ In other Unicode news, Jarkko also noted that `\x{some number}` should always pr
 
 Steffen Beyer has noticed that removing the capacity to tie an object to itself breaks his [Data::Locations]({{<mcpan "Data::Locations" >}}) module: he was using it to make filehandles which were also objects. (A really cool idea, but undocumented and unsupported.)
 
-There followed a long and fairly acrimonious thread, but a [sensible conclusion](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg01139.html): Jarkko reallowed self-ties on scalars. Marc Lehmann tried to stir up trouble by asking what should be done about pseudohashes. Jarkko got it right:
+There followed a long and fairly acrimonious thread, but a [sensible conclusion](https://www.nntp.perl.org/group/perl.perl5.porters/2000/10/msg01139.html): Jarkko reallowed self-ties on scalars. Marc Lehmann tried to stir up trouble by asking what should be done about pseudohashes. Jarkko got it right:
 
 > Yes. They should die. How's that for a polemic statement? :-)
 
@@ -77,9 +77,9 @@ Work on the `Encode` module to convert character sets continues, and it's really
 
 \[ Dominus again: What Nick is doing is so interesting that I thought it deserved special mention. Nick wrote a replacement standard I/O package and embedded it into Perl. This continues Perl's trend towards providing its own functionality in areas traditionally covered by the C library, and removing dependence on the various broken libraries that are provided by vendors. This has happened already with `sprintf` and `qsort`. [Last week's item about the limit of 256 open files under Solaris](/pub/2000/10/p5pdigest/THISWEEK-20001023.html#More_than_256_Files__sysopen) shows that even basic functions on major platforms can be impaired.
 
-\[ In any case, it became clear a while ago that to support Unicode properly, Perl was going to have to have a custom stdio package, and Nick's work is a big first step in that direction. [Read more](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg01323.html). -- D. \]
+\[ In any case, it became clear a while ago that to support Unicode properly, Perl was going to have to have a custom stdio package, and Nick's work is a big first step in that direction. [Read more](https://www.nntp.perl.org/group/perl.perl5.porters/2000/10/msg01323.html). -- D. \]
 
-Peter Prymmer's did an excellent job and created an EBCDIC-&gt;Unicode mapping with it; Nick came up with a POD translation of the documentation on [how Encode's mapping files work](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-10/msg01122.html). (We stole them from Tcl! Ha!)
+Peter Prymmer's did an excellent job and created an EBCDIC-&gt;Unicode mapping with it; Nick came up with a POD translation of the documentation on [how Encode's mapping files work](https://www.nntp.perl.org/group/perl.perl5.porters/2000/10/msg01122.html). (We stole them from Tcl! Ha!)
 
 The thread wandered off into discussion of what the Unicode characters `0x0000` and `0xFFFF` mean. Don't just guess, see the [Unicode FAQ](http://www.unicode.org/unicode/faq/)!
 

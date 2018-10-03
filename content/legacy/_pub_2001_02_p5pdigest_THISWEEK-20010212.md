@@ -47,7 +47,7 @@ He first proposed a system similar to URL encoding, using `%XX` to escape signif
 
 > I have a feeling that putting too much in the one string is a mistake. I think we may need something akin to `ioctl()` which can call "method(s)" on the "layer object" to allow a more extensible approach.
 
-Surprisingly, this is what Ilya was saying [nearly a year ago](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00098.html).
+Surprisingly, this is what Ilya was saying [nearly a year ago](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00098.html).
 
 ### <span id="Memory_Leak_Plumbing">Memory Leak Plumbing</span>
 

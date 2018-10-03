@@ -47,7 +47,7 @@ As I mentioned a few weeks ago, Sarathy suggested a light-handed moderation sche
 
 The discussion of Damian Conway's overloading module (see below) sparked a return to this topic.
 
-This is very important, and you be sure to read Sarathy's actual proposal for the details. [The proposal.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg00574.html)
+This is very important, and you be sure to read Sarathy's actual proposal for the details. [The proposal.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg00574.html)
 
 [Earlier summary](/pub/2000/04/p5pdigest/THISWEEK-20000423.html#p5p_to_become_Refereed)
 
@@ -69,7 +69,7 @@ There was some discussion of the technical mechanics of the refereeing, and it l
 
 In the course of this, Simon posted a document he had written about how to use p5p.
 
-[Simon's guide to p5p.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00306.html)
+[Simon's guide to p5p.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00306.html)
 
 ### <span id="Big_Discussion_of_perldoc_and_Indexing">Big Discussion of `perldoc` and Indexing</span>
 
@@ -77,11 +77,11 @@ Forty-eight percent of this week's 350 messages were related to `perldoc` in one
 
 The discussion started when Johan Vromans suggested that `perldoc` be extended to do something reasonable with `perldoc -f foreach`, analogous to the way `perldoc -f print` is presently treated. Sarathy agreed with this; Tom Christiansen objected strenuously. I think that the point of Tom's objection was that it is very easy to just grep the entire manual for the term you want to find, that even on non-unix crippleware platforms, `grep` can be implemented as a one-line Perl program, and that people whould be encouraged to understand their own power to search the manuals, rathern than being encouraged to depend on a canned solution like `perldoc`. I think there's something to be said for this, but Tom did not seem to find much agreement among the other p5pers.
 
-[Root of the thread](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg01122.html)
+[Root of the thread](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg01122.html)
 
 Several interesting topics developed from this. First, Tom announced that he had been writing a new manual page, `perlrtfm`, which would explain how the manual was organized and how to use it effectively.
 
-[Draft version of perlrtfm.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00065.html)
+[Draft version of perlrtfm.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00065.html)
 
 Ilya said that the mapping from keywords to manual sections should not be hardwired into `perldoc`, but rather should be in an index file somewhere. Nick Ing-Simmons agreed, and I've believed this for a long time. `grep` is very nice, and works well much of the time, but as almost any user of a web search engine can tell you, sometimes the document you're looking for doesn't happen to contain the keyword it should. I went looking for an example of this and found one right away: If you want to find the remainder after division, and grep for `remainder`, you do *not* locate the section in `perlop` about the modulus operator. A well-constructed index would fix this.
 
@@ -101,9 +101,9 @@ Pod has always documented an `X<>` tag 'for indexing'. But the documents never s
 
 Tom said that if an index were contructed, it should use the `X<>` tag to mark up the pods with index entries. I pointed out that the big downside of that is that if there are many `X<>` tags, they render the pod text itself less readable. But I don't think anyone advanced a better suggestion. I sent some mail about possible semantics for `X<>`, based on my (limited) indexing experience. (Among other things, I am writing a book about Perl in a Pod-like markup language and I am using `X<>` to indicate an index entry.
 
-[Indexing notes.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00033.html)
+[Indexing notes.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00033.html)
 
-[More indexing notes.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00083.html)
+[More indexing notes.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00083.html)
 
 Tom also pointed out that
 
@@ -131,7 +131,7 @@ makes `Y<some text>` synonymous with `B<some text>`. That way you could use `Y` 
 
 Ben Tilly posted a wishlist for Perl's documentation, including that the output of `perldoc` should include the name of the file that it had found the documentation in. This would help remind people that the documentation is actually in a file somewhere and is not available only from the `perldoc` magic genie.
 
-[Ben's other wishes](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00086.html)
+[Ben's other wishes](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00086.html)
 
 #### <span id="Toms_Plan">Tom's Plan</span>
 
@@ -145,9 +145,9 @@ While people were posting all sorts of ideas for enhancements to `perldoc`, Tom 
 
 He also showed a demonstration of some simpler tools that might replace the large, bloated `perldoc`.
 
-[Here's the demo](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00123.html)
+[Here's the demo](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00123.html)
 
-[Later demo](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00210.html)
+[Later demo](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00210.html)
 
 Tom also pointed out later that unlike `perldoc`, these tools don't have to parse Pod except in a very simple and rudimentary way. Brad Appleton put in that the `Pod::Select`module would do the same sort of parsing, and Tom replied that it was entirely useless for disgorging documentation, because it is between fifty and a hundred times slower than the naive approach, and nobody wants to use a documentation program that takes ten seconds to cough up the documentation.
 
@@ -155,7 +155,7 @@ Brad says that `Pod::Parser` could be made faster, but I wonder if it can really
 
 Brad also asked for help in extending the test suite for these modules.
 
-[Brad's call for assistance.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00035.html)
+[Brad's call for assistance.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00035.html)
 
 #### <span id="Editorial_Opinion_Section">Editorial Opinion Section</span>
 
@@ -173,7 +173,7 @@ Pod is very nice in some ways, but it has severe problems. The goal was to have 
 
 Mark Fisher announced that he had written a `man`-like tool for Perl. Unfortunately, it is not available yet.
 
-[Mark's announcement](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00205.html)
+[Mark's announcement](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00205.html)
 
 Randal Schwartz suggested that whatever becomes of `perldoc`, that `perl -man` invoke the documentation system. He points out that many corporate IT folks get the `perl` binary installed correctly, and omit all the support programs like `perldoc`.
 
@@ -219,7 +219,7 @@ That is the end of the report on the gigantic multithread about `perldoc` and re
 
 Tom Christiansen submitted a major update to `perlre`.
 
-[The patch is here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-04/msg01128.html)
+[The patch is here.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/04/msg01128.html)
 
 ### <span id="mktablesPLNeeds_Work">`mktables.PL` Needs Work</span>
 
@@ -229,13 +229,13 @@ Nobody replied, so if you're interested in helping, here's a chance to be a hero
 
 > **Larry:** Anyway, anybody have any tuits thisweek? I don't, and this really needs to get straightened outsoon. Besides it's Perl hacking, not C hacking, and that'ssupposed to be fun.
 
-[Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00062.html)
+[Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00062.html)
 
 ### <span id="Jarkko_is_Still_Trying_to_Give_Away_the_Configure_Pumpkin">Jarkko is Still Trying to Give Away the `Configure` Pumpkin</span>
 
 Would you like become an Important Person? Here's your opportunity.
 
-[Jarkko provides some details about what is required.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00208.html)
+[Jarkko provides some details about what is required.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00208.html)
 
 ### <span id="Pushing_into_Hashes">Pushing into Hashes</span>
 
@@ -282,7 +282,7 @@ Now if you try to assign a value to `$var` that is not an object of type `ClassN
 
 There are a lot of other features also. Damian plans to change the name to something less abnormal.
 
-[Details here.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-05/msg00272.html)
+[Details here.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/05/msg00272.html)
 
 Ilya asked how this was different from the `PREPARE` method of
 

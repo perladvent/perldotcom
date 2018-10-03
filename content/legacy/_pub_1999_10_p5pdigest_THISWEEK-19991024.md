@@ -58,7 +58,7 @@ Gosh. When I took this job, I knew there would be occasional weeks where there w
 
 If there was a conclusion to this discussion, I was not able to find it. Maybe there will be an update next week, or maybe everyone will just get tired of the whole thing and forget about it. Tom eventually punted on the problem, and his program now assumes that it is running under Red Hat.
 
-In this midst of this, there were some sidetracks I found interesting. There was discussion of Sarathy's hack to create `fork()` on forkless Microsoft OSes (more about this below.) Tom Horsley had [a really delightful rant about `Configure`](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg00902.html), which unfortunately is too long to reproduce here:
+In this midst of this, there were some sidetracks I found interesting. There was discussion of Sarathy's hack to create `fork()` on forkless Microsoft OSes (more about this below.) Tom Horsley had [a really delightful rant about `Configure`](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg00902.html), which unfortunately is too long to reproduce here:
 
 > \[`Configure`\] acts, in fact, as though it were a compressed archive chock full of config.h files for all kinds of different systems, and pressing the button merely unpacks one of the files.
 >
@@ -78,7 +78,7 @@ Vishal Bhatia pointed out that this would solve an existing compiler bug: `END` 
 
 Larry Virden submitted a minor doc patch: There was a line which looked empty, but which contained white space. This prevented the POD parser from recognizing a `=head` directive on the following line, because directives are only recognized when they begin \`paragraphs', and a line is not deemed to end a paragraph unless it is entirely empty.
 
-It appears that this annoying behavior is finally going to be fixed. I am delighted, because [I had complained about this back in 1995](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/9512/msg01372.html).
+It appears that this annoying behavior is finally going to be fixed. I am delighted, because [I had complained about this back in 1995](https://www.nntp.perl.org/group/perl.perl5.porters/95/12/msg01372.html).
 
 ### <span id="C_PERL_HEADER_environment_varia">`PERL_HEADER` environment variable</span>
 
@@ -112,7 +112,7 @@ Perl 5.005\_62 optionally has a new built-in implementation of the `glob` functi
 
 Some discussion ensued about what to do. Sarathy seemed inclined to let the new globber continue to be insensitive on case-insensitive filesystems, and vice versa; on Windows systems there is an API for finding this out. He asked Paul for a patch for this. He said that people could use the `File::Glob` or `File::DosGlob` modules if they needed a specific semantics.
 
-Incidentally, [Larry suggested that the new `glob` be made the default for the beta test versions of Perl](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01183.html), so that it would be tested adequately.
+Incidentally, [Larry suggested that the new `glob` be made the default for the beta test versions of Perl](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01183.html), so that it would be tested adequately.
 
 ### <span id="C_reftype_function">`reftype` function</span>
 
@@ -124,7 +124,7 @@ Nobody addressed the `(;$)` issue, but there was discussion of how to build such
 
 ### <span id="New_C_perlthread_man_page">New `perlthread` man page</span>
 
-Dan Sugalski presented for comments [a draft of a `perlthread` man page](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01081.html), discussing Perl's thread interface and thread semantics.
+Dan Sugalski presented for comments [a draft of a `perlthread` man page](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01081.html), discussing Perl's thread interface and thread semantics.
 
 ### <span id="Win32_and_C_fork_">Win32 and `fork()`</span>
 
@@ -138,7 +138,7 @@ This continued from last week. Michael King split up his module functionality in
 
 At the tail end of this discussion, several people complained that although they thought that they'd followed the documented procedure for reserving namespaces in the CPAN module list, nothing ever seemed to come of it, and their names never appeared in the list. Andreas König took responsibility for this problem. He is rewriting the PAUSE software to handle the bookkeeping, because the module list owners are too overworked to do it all manually.
 
-[Andreas asked people whose requests had been forgotten to send a reminder to the module list](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg00903.html) by the end of October, and promised to get these requests listed within 24 hours.
+[Andreas asked people whose requests had been forgotten to send a reminder to the module list](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg00903.html) by the end of October, and promised to get these requests listed within 24 hours.
 
 ### <span id="C_cron_daemon_runs_processes_wi">`cron` daemon runs processes with `$SIG{CHLD}` set to `IGNORE`</span>
 
@@ -146,7 +146,7 @@ On some systems, the `cron` daemon has this bug. (It is a bug in `cron`, because
 
 Tom Phoenix added a patch to the linux hints file to try to detect this, and print out a warning at Perl build time if so. Sarathy said it was bad to put this in the hints, because it does not actually *affect* the build process, and that it should be documented more prominently.
 
-Mike Guy asked: \`\`Wouldn't it be better for Perl just to set `$SIG{CHLD} = 'DEFAULT'` automatically at startup in this case? Would it do any harm to do it in *all* cases?'' [Sarathy agreed](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01201.html), and put in a patch to do that, and also to issue a warning if so.
+Mike Guy asked: \`\`Wouldn't it be better for Perl just to set `$SIG{CHLD} = 'DEFAULT'` automatically at startup in this case? Would it do any harm to do it in *all* cases?'' [Sarathy agreed](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01201.html), and put in a patch to do that, and also to issue a warning if so.
 
 ### <span id="Day_range_checking_in_C_Time_Lo">Day range checking in `Time::Local::timelocal`</span>
 
@@ -158,7 +158,7 @@ John L. Allen complained that this was stupid for two reasons: First, it doesn't
 
 A patch like that had been in before, but Sarathy took it out because it caused a test failure in `libwww`; Sarathy wants it to be conditionalized on a `nocroak` variable or something, for backward compatibility. In the ensuing discussion, Jonathan Scott Duff made a list of new features he'd like to see in `Time::Local`---features like \`fast' and \`correct'.
 
-[Mike Guy said that he had worked on such a thing](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01181.html), but run into some annoying backward compatibility issues. For example, the current `timelocal` returns -1 on an error. But because -1 also indicates a valid time before 1970, `timelocal` cannot work for dates before 1970 and be backward-compatible with the current version at the same time. Also, the existing `timelocal` has a very nasty interpretation of the year: `2070`, `170`, and `70` all mean the year 2070, contrary to good sense and the documentation.
+[Mike Guy said that he had worked on such a thing](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01181.html), but run into some annoying backward compatibility issues. For example, the current `timelocal` returns -1 on an error. But because -1 also indicates a valid time before 1970, `timelocal` cannot work for dates before 1970 and be backward-compatible with the current version at the same time. Also, the existing `timelocal` has a very nasty interpretation of the year: `2070`, `170`, and `70` all mean the year 2070, contrary to good sense and the documentation.
 
 Sarathy said he would accept the `timelocal` replacement if there were a command to enable the improved behaviors that were not backward compatible with the old behavior.
 
@@ -168,13 +168,13 @@ Kragen Sitaker asked, on `comp.lang.perl.misc`, whether it wouldn't be nice for 
 
 Kragen also suggested that, the Japanese \`corner quote' characters U+300C ![](http://charts.unicode.org/Unicode.charts/Small.Glyphs/30/U300C.gif) and U+300D ![](http://charts.unicode.org/Unicode.charts/Small.Glyphs/30/U300D.gif) (for example) could be used to imply the `qr` operator, in the same way that ordinary double quotes presently imply the `qq` operator and ordinary backquotes imply the `qx` operator.
 
-Ilya thought it was worth forwarding to `p5p`: [\`\`Once Unicode goes in, one would not be able to change matching rules. So it should be at least *discussed* early.''](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg00623.html) But nobody had anything to say about it.
+Ilya thought it was worth forwarding to `p5p`: [\`\`Once Unicode goes in, one would not be able to change matching rules. So it should be at least *discussed* early.''](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg00623.html) But nobody had anything to say about it.
 
 ### <span id="Lexical_or_dynamic_scope_for_C_u">Lexical or dynamic scope for `use utf8`?</span>
 
 It is presently lexically scoped. There was discussion some weeks ago about whether to make it dynamically scoped; then the caller of a function could set the `utf8` behavior of the library functions it called. I did not understand the issues at the time, so I cannot rehash them here.
 
-[Sarathy asked for informed persons to contribute their thoughts](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg00739.html), but there were none.
+[Sarathy asked for informed persons to contribute their thoughts](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg00739.html), but there were none.
 
 ### <span id="Full_path_of_cwd_in_C_INC_">Full path of cwd in `@INC`</span>
 
@@ -184,7 +184,7 @@ Ed Peschko asked if it would be possible to include the full path of the current
 
 Sounds like a bad move to me, but David Falk had this to say for himself:
 
-> [I am CEO of Dionaea Corporation, a software company that designs performance monitoring tools for UNIX, and we have made the strategic decision to use the `perlcc` compiler as the hub of our code development. Overall this has been a good decision for us, but we have run into several snags with the compiler.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg01158.html)
+> [I am CEO of Dionaea Corporation, a software company that designs performance monitoring tools for UNIX, and we have made the strategic decision to use the `perlcc` compiler as the hub of our code development. Overall this has been a good decision for us, but we have run into several snags with the compiler.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg01158.html)
 
 He then reported the bugs. They looked pretty simple, but nobody replied. Scary to think that someone's family might starve in the streets because of problems in the Perl compiler.
 
@@ -192,7 +192,7 @@ He then reported the bugs. They looked pretty simple, but nobody replied. Scary 
 
 Actually the real birthday was on 17 October, 1994, but there is an error in `perlhist` so the birthday wishes arrived on the 18th. (Nobody has supplied a patch yet.)
 
-[Chris Nandor submitted a birthday patch.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg00726.html)
+[Chris Nandor submitted a birthday patch.](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg00726.html)
 
 ### <span id="Unicode_Character_Classes_Revisi">Unicode Character Classes Revisited</span>
 
@@ -200,7 +200,7 @@ Actually the real birthday was on 17 October, 1994, but there is an error in `pe
 
 ### <span id="Sarathy_says_Yikes_again">Sarathy says \`Yikes' again</span>
 
-> [\`\`Yikes, this is one is the size of China.''](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/1999-10/msg00598.html)
+> [\`\`Yikes, this is one is the size of China.''](https://www.nntp.perl.org/group/perl.perl5.porters/1999/10/msg00598.html)
 
 ### <span id="Various">Various</span>
 

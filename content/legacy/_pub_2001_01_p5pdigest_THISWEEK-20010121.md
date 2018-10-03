@@ -41,7 +41,7 @@ The discussion then veered onto the problems of using any sort of non-local jump
 
 Alan also suggested that we would need to roll our own threading model in Perl 6 to have full control over exception handling; the discussion carried on about Perl 6 over on the `perl6-internals` mailing list.
 
-The part where it gets interesting this week starts [here](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg01023.html).
+The part where it gets interesting this week starts [here](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg01023.html).
 
 ### <span id="Safe_Signals">Safe Signals</span>
 
@@ -81,7 +81,7 @@ I did something evil again. After hearing a talk by Knuth about Literate Program
 
 > There is no program that will reformat Perl as much as indent(1) will do for C. The complex feedback between the scanner and the parser (this feedback is what confuses the vgrind and emacs programs) makes it challenging at best to write a stand-alone Perl parser.
 
-So if I couldn't build a stand-alone parser, I'd use the one we've got - `perl`. By adding a call to a reporting function every time Perl makes a decision about what a token is, you can generate a listing of all the tokens in a program and their types. Implementation of a robust pretty-printer is [left as an exercise for the reader](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg00833.html); answers on a postcard, please.
+So if I couldn't build a stand-alone parser, I'd use the one we've got - `perl`. By adding a call to a reporting function every time Perl makes a decision about what a token is, you can generate a listing of all the tokens in a program and their types. Implementation of a robust pretty-printer is [left as an exercise for the reader](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg00833.html); answers on a postcard, please.
 
 (PS: I've since been alerted to the existence of Tim Maher's [Perl beautifier](http://www.consultix-inc.com/perl_beautifier.html), which is an equally cool hack.)
 

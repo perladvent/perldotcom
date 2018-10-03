@@ -83,11 +83,11 @@ Sarathy explained that
 >
 > Updating the patch area still requires manual intervention (with all the goofiness that implies, which you've noted) and is typically on a daily cycle. Making this process automatic is on my tuit list, but don't ask me when.
 
-The thread went a little off topic into the mechanics of setting up a rsync server, but lead to [a contribution to perlhack](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00073.html) from Merijn explaining how to keep in sync with the Perl source.
+The thread went a little off topic into the mechanics of setting up a rsync server, but lead to [a contribution to perlhack](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00073.html) from Merijn explaining how to keep in sync with the Perl source.
 
 ### <span id="Changes_to_READMEaix">Changes to README.aix</span>
 
-We've recently been telling AIX users that they need to upgrade their compilers in order to compile Perl, so Merijn send in a patch to README.aix to tell them how to do so. [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00152.html)
+We've recently been telling AIX users that they need to upgrade their compilers in order to compile Perl, so Merijn send in a patch to README.aix to tell them how to do so. [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00152.html)
 
 Jarkko also decided it was time we had a README.Solaris; volunteers are being sought.
 
@@ -103,9 +103,9 @@ Anyone who's got infinite patience and sanity may want to consider hacking at re
 
 ### <span id="Things_nobodys_fixed">Things nobody's fixed</span>
 
-A few bug reports nobody's investigated yet, for those of you with a spare minute: [xsubpp truncates files](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00043.html)
+A few bug reports nobody's investigated yet, for those of you with a spare minute: [xsubpp truncates files](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00043.html)
 
-, [the AUTOLOAD behaviour changed in 5.6](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00060.html), and [UTF |= is broken](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2000-11/msg00221.html).
+, [the AUTOLOAD behaviour changed in 5.6](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00060.html), and [UTF |= is broken](https://www.nntp.perl.org/group/perl.perl5.porters/2000/11/msg00221.html).
 
 Enjoy!
 

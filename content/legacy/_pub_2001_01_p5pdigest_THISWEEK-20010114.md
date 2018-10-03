@@ -43,11 +43,11 @@ Alan did some more fiddling with optimization and Solaris configuration, and man
 
 Nicholas Clark asked what a sensible benchmark would be; he suggested Gisle's [perlbench](https://metacpan.org/search?q=perlbench), which was at least designed to try to be a fair test for Perl, but it seemed there was some confusion as to how it was supposed to work. Doug Bagley's [programming language shootout](http://www.bagley.org/~doug/shootout/) was also mentioned.
 
-Jarkko nailed the question, in the end : "The problem with all artificial benchmarks is that they are artificial." [Read about it.](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg00401.html)
+Jarkko nailed the question, in the end : "The problem with all artificial benchmarks is that they are artificial." [Read about it.](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg00401.html)
 
 ### <span id="UTF8_Heroism">UTF8 Heroism</span>
 
-INABA Hiroto's been at it again. With his latest patches, the Unicode torture test works fine, which is fantastic news - Unicode should now be considered stable and usable. In fact, [one of his patches](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg00326.html) also fixes a couple of regular expression bugs as well. There was then some disagreement over Unicode semantics (as usual) and whether or not `\x{XX}` should produce Unicode output; Hiroto came up with an excellent suggestion: the `qu//` operator would work like a quoted string but would always produce UTF8. And, dammit, he implemented it as well. In the words of Pete Townsend, I've gotta hand my Unicode crown to him. Or something.
+INABA Hiroto's been at it again. With his latest patches, the Unicode torture test works fine, which is fantastic news - Unicode should now be considered stable and usable. In fact, [one of his patches](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg00326.html) also fixes a couple of regular expression bugs as well. There was then some disagreement over Unicode semantics (as usual) and whether or not `\x{XX}` should produce Unicode output; Hiroto came up with an excellent suggestion: the `qu//` operator would work like a quoted string but would always produce UTF8. And, dammit, he implemented it as well. In the words of Pete Townsend, I've gotta hand my Unicode crown to him. Or something.
 
 All that's really left to do now is to reconcile EBCDIC support and UTF8 support - the suggested way to do this was to put in some conversion tables between the two character encodings, so that anything that created UTF8 data would have its EBCDIC input sent through a filter to turn it into Latin 1, and anything which decoded UTF8 data would be sent through a filter to turn it back into EBCDIC. There was some progress on that this week, but a fundamental problem remains: some things, such as version strings, want the UTF8 codepoints qua codepoints. That's to say, the numbers in `v5.7.0` should NOT be transformed into their EBCDIC equivalents. This was manifesting itself with weird errors like
 
@@ -89,7 +89,7 @@ Andreas said that his experience had been that upgrading his kernel, making the 
 
 ### <span id="Calls_for_papers">Calls for papers</span>
 
-Nat Torkington reminded us that the Perl Conference [call for papers](http://conferences.oreilly.com/perl5/) has been published, and gave a few [ideas for papers](http://www.xray.mpe.mpg.de/mailing-lists/perl5-porters/2001-01/msg00654.html) that Perl porters could give. We're trying to press-gang someone into giving a paper on how the regular expression engine actually works, but the usual suspects have gone very quiet.
+Nat Torkington reminded us that the Perl Conference [call for papers](http://conferences.oreilly.com/perl5/) has been published, and gave a few [ideas for papers](https://www.nntp.perl.org/group/perl.perl5.porters/2001/-01/msg00654.html) that Perl porters could give. We're trying to press-gang someone into giving a paper on how the regular expression engine actually works, but the usual suspects have gone very quiet.
 
 Rich Lafferty also remarked that the equally worthy [Yet Another Perl Conference](http://yapc.org/America/) was also seeking papers.
 
