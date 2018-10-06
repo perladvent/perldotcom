@@ -1,5 +1,5 @@
 {
-   "categories" : "tutorial",
+   "categories" : "tutorials",
    "description" : "Our tools make it easier than you might think",
    "draft" : false,
    "date" : "2018-08-16T07:28:49",
