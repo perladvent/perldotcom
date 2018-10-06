@@ -13,7 +13,7 @@
    "title" : "Monitoring my phone's internet activity with DD-WRT and Perl",
    "description" : "Do you know who your phone is talking to?",
    "date" : "2017-10-26T19:56:37",
-   "categories" : "networks",
+   "categories" : "networking",
    "thumbnail" : "/images/monitoring-my-phone-internet-activity-with-dd-wrt-and-perl/thumb_samsung-galaxy-s8-starry-night.jpg",
    "draft" : false,
    "authors" : [

@@ -8,7 +8,7 @@
     "image"       : "",
     "thumbnail"   : "",
     "description" : "Identifying which routers process an IP request",
-    "categories"  : "networks"
+    "categories"  : "networking"
   }
 
 Lately I've been reading [Interconnections](https://www.amazon.com/Interconnections-Bridges-Switches-Internetworking-Protocols/dp/0201634481/) by Radia Perlman (great lastname!). It's an old, but still relevant book which describes how low-level networking technologies work, such as ethernet. The book contains many insights and anecdotes. On page 236 I came across this gem:
