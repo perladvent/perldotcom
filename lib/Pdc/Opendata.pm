@@ -1,4 +1,4 @@
-package Opendata;
+package Pdc::Opendata;
 use Modern::Perl;
 use JSON::MaybeXS;
 use File::Find::Rule;
@@ -16,7 +16,7 @@ sub extract_metadata_from_md {
 
   my $json_obj = JSON->new();
   my $perl_data = $json_obj->decode("$json_data");
-  return %{$perl_data};
+  return $perl_data;
 }
 
 1;
