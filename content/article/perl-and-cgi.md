@@ -90,12 +90,12 @@ And, if the program was this --
 echo 'status: 200'
 echo 'content-type: image/png'
 echo
-cat images/fav.png
+cat images/author/dave-jacoby.jpg
 ```
 
 -- you would get this:
 
-![fav.png](/images/fav.png)
+![/images/author/dave-jacoby.jpg](/images/author/dave-jacoby.jpg)
 
 ## How About Input?
 
