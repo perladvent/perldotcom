@@ -22,4 +22,6 @@ is_deeply(\@authors, \@expected_authors, 'Testing authors extraction');
 
 my $get_category = \&Pdc::Opendata::extract_category_from_metadata;
 my $community = $get_category->($metadata);
-cmp_ok($community, 'eq', 'community', "$community eq community")
+cmp_ok($community, 'eq', 'community', "$community eq community");
+
+map { print $_->{"title"}."\n" } Pdc::Opendata::browse_articles_metadata_from("../content");

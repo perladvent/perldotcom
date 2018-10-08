@@ -19,6 +19,11 @@ sub extract_metadata_from_md {
   return $perl_data;
 }
 
+sub browse_articles_metadata_from {
+  my $directory_to_browse = shift;
+  return map { my $filename = "$_";extract_metadata_from_md("$filename") } File::Find::Rule->file->name('*.md')->in("$directory_to_browse");
+}
+
 sub _extract_data_with_meta {
   my ($meta, $metadata) = @_;
 
