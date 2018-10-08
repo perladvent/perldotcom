@@ -2,7 +2,7 @@
 "title" : "Perl and CGI",
 "authors" : ["dave-jacoby"],
 "date" : "2018-10-03T18:41:08",
-"tags" : [cgi,module,web],
+"tags" : [cgi,module,web], 
 "draft" : true,
 "image" : "",
 "thumbnail" : "",
@@ -12,39 +12,56 @@
 
 # Perl and CGI
 
-"It is in the core, as far as I know, because once it was the state of the art, and a major reason for many people to use the language."
+[In May 2013, Ricardo Signes, then Perl5 Pumpking, sent this to the Perl5 Porters list](https://www.nntp.perl.org/group/perl.perl5.porters/2013/05/msg202130.html):
 
-[This is what Ricardo Signes wrote to Perl5 Porters in 2013](https://www.nntp.perl.org/group/perl.perl5.porters/2013/05/msg202130.html), when he suggested removing CGI.pm from Core.
+> I think it's time to seriously consider removing CGI.pm from the core distribution. It is no longer what I'd point _anyone_ at for writing _any_ sort of web code. It is in the core, as far as I know, because once it was the state of the art, and a major reason for many people to use the language. I don't think either is true now. Finally, if you need CGI, it's easy to install after installing perl, just like everything else we've dropped from the core distribution.
+>
+> In the past two years, all my interactions with CGI.pm have been to fix bugs or send pull requests to quiet it from making noise in the core. I expect others here have had the same experience.
 
-In the 1990s, as the web started to grow, we wanted to be able to do more with the web, and that was largely with CGI, with Perl, with the CGI module.
+It was marked deprecated with 5.20, the next major release, and removed from Core with 5.22. This is not catastrophic; it is still available in CPAN, so you would have to install it, or have your administrator install it, depending on your environment.
 
-[CGI was removed from Perl Core in May 2014](https://perl5.git.perl.org/perl.git/commitdiff/e9fa5a80), with the release of 5.20. It's available [on CPAN](https://metacpan.org/pod/CGI). GRR GRRR GRR SEGUE
+But it **is** a significant change.
 
-## What is CGI?
+## Starting From The Beginning
 
-If you want to run a command on a remote machine, you can make it less remote, connect to it and run it or just
+Before HTTP was **FTP**, the _File Transfer Protocol_, and it's job was, clearly, to transfer files. There was a technique, called Anonymous FTP, where you were allowed GET access by logging in with `anonymous` as the login. When Tim Berners-Lee created the _HyperText Transfer Protocol_, the users were able to view the downloaded material in the browser instead of using a text editor to view it once it was downloaded. But it was still moving around static material, and for the kind of things we wanted to do on the web (like blogs and catalogs), it would be very useful to allow user input.
 
-> `ssh host ls`
+The solution was the [_Common Gateway Interface_](https://tools.ietf.org/html/rfc3875#section-6.2.1), or CGI. It allowed the web server to run a program and transfer the output, rather than transfer the program itself.
 
-We can see CGI as similar, but instead, we're using the hypertext transfer protocol (HTTP) instead of secure shell.
-
-[CGI](https://tools.ietf.org/html/rfc3875.html) stands for _Common Gateway Interface_ and is the way web servers like Apache can run programs instead of just serving static files.
-
-There are the three main connections to a program: the input stream, the output stream, and the error stream. With CGI, STDOUT is what the server sends to the browser, and the error goes to the server's error log.
-
-And input? We'll get to that.
-
-## CGI without CGI
-
-You don't _need_ a lot of overhead to do this work. The basics of a HTTP response are, very simply:
+Of course, you might want to be able to transfer a program. There were two ways around this. The first is to have `cgi-bin` directories where every file gets executed instead of transferred. The Apache httpd.conf file would have this.
 
 ```
-HEADER
-
-BODY
+    <Directory "/home/*/www/cgi-bin">
+        Options ExecCGI
+        SetHandler cgi-script
+    </Directory>
 ```
 
-And `BODY` is optional. Take this very simple CGI program.
+The other possibility is to allow CGI to be enabled in a directory, with a configuration that looks like this:
+
+```
+<Directory "/home/*/www">
+    Options +ExecCGI
+    AddHandler cgi-script .cgi
+</Directory>
+```
+
+And then add a **.htaccess** file that looks like this:
+
+```
+AddHandler cgi-script .cgi
+Options +ExecCGI
+```
+
+So that `foo.pl` will transfer but `foo.cgi` will run, even if both are executable.
+
+## CGI without CGI.pm
+
+A program commonly needs three communication channels: Input, Output and Error. The program's errors end up in the server's error log, likely in `/var/log/httpd/error.log`, and the output goes to standard out, so `print "text"` is all you need.
+
+Almost.
+
+An HTTP message contains two parts: The _Header_ and the _Body_, and, depending on the Header, the Body might not be necessary. The simplest possible CGI program isn't even Perl:
 
 ```bash
 #!/bin/bash
@@ -52,33 +69,39 @@ echo 'location: https://perl.com/'
 echo
 ```
 
-This redirects the browser to a new page; in this case, perl.com. The header can have many lines, separated by newlines.
+Go to this and you will immediately be transferred to [perl.com](https://perl.com/). I believe that there should be an accompanying status code, such as `echo "status: 302"`, but thanks to [Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle), the above code has always worked.
 
-The most common use for this is setting the `Content-Type`, which tells the browser what to expect and what to do with it. Most common is `text/html`, which tells the browser it's a web page.
-
-```bash
-#!/bin/bash
-echo 'Content-Type: text/html'
-echo
-echo '<html>HTML!</html>'
-```
-
-But it doesn't have to be. Want to make a modern-like AJAX thing? `Content-Type: application/json`. Want to send some comma-separated-value text, which might be the output of a database query? `Content-Type: text/csv` or even `application/vnd.ms-excel`, which should open it in a spreadsheet.
-
-Or even...
+The simplest program that would return a value would be something more akin to
 
 ```bash
 #!/bin/bash
-echo content-type: image/jpeg
+echo 'status: 200'
+echo 'content-type: text/plain'
 echo
-cat dave_jacoby.jpg
+echo 'a value'
 ```
 
-Yes, if it has a MIME type, you can send it dynamically.
+The content-type is a [**Multipurpose Internet Mail Extension (MIME) type**](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types), and it determines how the browser handles the message once it returns. The above example treats the "a value" message as text, and displays it as such. If the content-type was "text/html", it would be parsed for HTML like a web page. If it was "application/json", it might be displayed like text, or formatted into a browsable form, depending on your browser or extensions. If it was "application/vnd.ms-excel" or even "text/csv", the browser would likely open in in Excel or another spreadsheet program.
 
-## CGI.pm: The Good Parts
+And, if the program was this --
 
-I mentioned input above, and the way you get input to your program with CGI is basically with environment variables. Our new program, now with perl in the hashbang, looks like this:
+```bash
+#!/bin/bash
+echo 'status: 200'
+echo 'content-type: image/png'
+echo
+cat images/fav.png
+```
+
+-- you would get this:
+
+![fav.png](/images/fav.png)
+
+## How About Input?
+
+There are two or three main ways to get data into a CGI program, and these are where the value of having Perl and [CGI](https://metacpan.org/pod/CGI/) comes apparent.
+
+Input is passed in via environment variables, which we can see by printing %ENV.
 
 ```perl
 #!/usr/bin/perl
@@ -92,7 +115,7 @@ for my $k ( sort keys %ENV ) {
 }
 ```
 
-And the output will look something like this:
+What we get could look something like this, minus a few fields for sake of privacy and brevity:
 
 ```text
 GATEWAY_INTERFACE
@@ -121,7 +144,7 @@ REQUEST_URI
 	/~djacoby/simple.cgi
 ```
 
-I cut out some for space and some for anonymity, but this gives you the flavor. Much of this is stuff that will be of minimal use, but the empty `QUERY_STRING` entry might draw your attention. If you simply add `?foo=bar` to the end of the URL and you get these entries:
+Much of this is stuff that will be of minimal use, but the empty `QUERY_STRING` entry might draw your attention. If you simply add `?foo=bar` to the end of the URL and you get these entries:
 
 ```text
 QUERY_STRING
@@ -146,29 +169,35 @@ So, now, let's make a web page like this:
 </html>
 ```
 
-And click "submit". The response is like:
+And we lose the values in `QUERY_STRING` but gain a value in `CONTENT_LENGTH`.
 
 ```text
+CONTENT_LENGTH
+	7
 QUERY_STRING
 
 REQUEST_METHOD
 	POST
 ```
 
-The `foo=bar` info is somewhere. I have parsed it without CGI. Decades ago. But for the life of me, I forget how.
-
-We have hit the big reason why we want to use the CGI module: it is the [Getopt::Long](https://metacpan.org/pod/Getopt::Long) for the (early) web, because if we start using CGI:
+`CONTENT_LENGTH` tells you how much data to read from STDIN --
 
 ```perl
+read( STDIN, my $form_data, $ENV{CONTENT_LENGTH} );
+```
+
+-- and then you have to parse it, handling repeated key names and such, and this is where **CGI** comes to the rescue, because with CGI, you do
+
+```
 #!/usr/bin/perl
 use strict;
 use warnings;
-use CGI ;
+use CGI;
 
 my $cgi = CGI->new;
-my $method = $ENV{REQUEST_METHOD} || 'GET' ;
+my $method = $ENV{REQUEST_METHOD} ;
 my %param = map { $_ => scalar $cgi->param($_) } $cgi->param() ;
-
+print qq{status: 200\n};
 print qq{content-type: text/plain\n};
 print qq{\n};
 print qq{METHOD:\t$method\n};
@@ -192,25 +221,23 @@ METHOD:	POST
 PARAM:	foo	bar
 ```
 
-You can send much more data with POST than with GET, but to the Perl developer using CGI.pm, they are effectively interchangable. For me, this lead me to be agnostic about the differences between REQUEST_METHODs until the rise of AJAX and REST.
+You can send larger forms via POST. You can also use it to upload files. But both present data in `$cgi->param()`. This allowed me, and presumably, many other developers, to kinda fudge the difference between GET and POST most of the time. When the data was big, or when I really didn't want it in the URL, use POST, otherwise use GET.
 
-We started off handling header information, so let's hit them again. We can get a standard header from CGI like this:
+Much of the URL is determined from directory paths: if it's `http://example.com/users/jacoby/test.cgi`, you would expect to find test.cgi in `DOCUMENT_ROOT/users/jacoby`. But how about `http://example.com/users/jacoby/wiki.cgi/RecentChanges`?
 
-```perl
-print $cgi->header;
-```
+There, the environment variable `PATH_INFO` would be set to `/RecentChanges`, and it would be up to the code to return a page listing the wiki's most recent changes. Or, if it was `/WebDevelopmentHistory`, it could either show a document much like the one I'm writing now, or a form allowing you to write your own.
 
-And get this.
+Between these three input methods that are given by two methods, CGI shows itself as the Getopt::Long of the Web.
+
+## Headers
+
+And CGI will also handle the headers I mentioned above. Since web pages are the default, `print $cgi->headers` will give you:
 
 ```text
 Content-Type: text/html; charset=ISO-8859-1
 ```
 
-We're well into the 21st Century and we like expanded character sets, because then we can have ligatures and emoji and all.
-
-```perl
-print $cgi->header(-charset=>'UTF-8');
-```
+But ISO-8859-1 is an old character set, which is mostly ASCII, which excludes a whole lot of characters you may want available, including the symbol for the Euro, languages with non-Latin character sets, and emoji. So, `print $cgi->header(-charset=>'UTF-8')` give you. 
 
 ```text
 Content-Type: text/html; charset=UTF-8
@@ -230,15 +257,19 @@ Status: 302 Found
 Location: https://perl.com/
 ```
 
-## The Other Stuff
+You may want to set the **expires** header, which tells the browser and other caches how long that page would be good for. You can also set cookies to sets and retrieves persistent data to insert state into the stateless protocol that is HTTP.
 
-When you read [the documentation for CGI.pm](https://metacpan.org/pod/CGI), you see a few things. Right after the description is a section named **CGI.pm HAS BEEN REMOVED FROM THE PERL CORE**, followed by **[HTML Generation functions should no longer be used](https://metacpan.org/pod/CGI#HTML-Generation-functions-should-no-longer-be-used)**.
+## Writing HTML with CGI
+
+Don't do it.
+
+Don't believe me; believe [the documentation for CGI.pm](https://metacpan.org/pod/CGI#HTML-Generation-functions-should-no-longer-be-used)**.
 
 > All HTML generation functions within CGI.pm are no longer being maintained. Any issues, bugs, or patches will be rejected unless they relate to fundamentally broken page rendering.
 >
 > The rationale for this is that the HTML generation functions of CGI.pm are an obfuscation at best and a maintenance nightmare at worst. You should be using a template engine for better separation of concerns. See [CGI::Alternatives](https://metacpan.org/pod/CGI::Alternatives) for an example of using CGI.pm with the [Template::Toolkit](https://metacpan.org/pod/Template::Toolkit) module.
 
-Yeah. To demonstrate, this is how to recreate the form above, using CGI to generate the HTML.
+The HTML-generation aspects of CGI were pretty rough. To recreate the form used above, to demonstrate the difference between GET and POST, we would have to do this: 
 
 ```perl
 my $output;
@@ -265,18 +296,26 @@ END
 
 Or, of course, Template Toolkit.
 
-HTML was, is and will remain a moving target, changing with browser capabilities.
+And, of course, as HTML changes, the HTML you want to generate changes, and CGI just didn't move forward, with a very clunky interface. 
 
-I will add to this that, while Template Toolkit is a great templating engine, it is an engine that only works with Perl, and to allow you to use the same templates for client and server generation, or to just lessen the cognitive load, you might want to look at [Text::Handlebars](https://metacpan.org/pod/Text::Handlebars).
+I will add to this that, while Template Toolkit is a great templating engine, it is an engine that only works with Perl, and to allow you to use the same templates on both client and server, you might want to look at [Text::Handlebars](https://metacpan.org/pod/Text::Handlebars).
 
 (Well, [there is a JS implementation of TT](https://github.com/ashb/template), so...)
 
-## Why Not CGI?
+## Why You Don't Want to `use CGI`
 
-Cohesive code. Response time. Ruby on Rails.
+There are two big issues with code: speed and complexity. You want to increase speed, because the longer a user has to wait, more likely that user is to not wait, but to go to another site. You want to decrease complexity, because the more places you have to go to change, for example, the look and feel of your website, the less likely that change will go to everywhere it needs to.
 
-With CGI and traditional web, the architecture is largely controlled by directory structure, with `http://example.com/code/sample.cgi` being in `DOCUMENT_ROOT/code/sample.cgi`, and each one is likely built to the standards of that developer and the web at that point in time. They may use the same JavaScript and CSS files, but they might not. Each one exists and behaves as their own project, making source control difficult, and this forces you to make changes across perhaps hundreds of files rather than in one place.
+In 2005, David Heinemeier Hansson released Ruby on Rails, a web framework that addressed both issues. All the endpoints are defined in one web application, rather than being thrown around a large directory structure. You run a persistent applications server, rather than finding, opening and running each executable each time. 
 
-Plus, when you call a CGI program, there is an irreducible amount of startup time: find the program, load the Perl executable, parse the code. With frameworks, you have an application server that is already running, so that the startup overhead is removed. This is key. I believe that the current heuristic is that, if the page doesn't load in under two seconds, the user is likely to go somewhere else.
+There are a few web frameworks written in Perl; among them are [Catalyst]( https://metacpan.org/pod/Catalyst::Manual), [Dancer](
+https://metacpan.org/pod/Dancer2), and [Mojolicious](
+https://metacpan.org/pod/Mojolicious). They all use [the PSGI interface](https://plackperl.org/) to run on application servers such as Plack and Starman. These are the tools that are suggested in the CGI documentation.
 
-There are many web frameworks in Perl for you to choose from. The big ones are [Catalyst](http://www.catalystframework.org/), [Dancer](http://perldancer.org/) and [Mojolicious](https://mojolicious.org/). They use [PSGI/Plack](https://plackperl.org/) to bring a more cohesive [MVC](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)-style environment for developing more complex web applications.
+## Ending
+
+As the Web grew in the 1990s and early 2000s, CGI and Perl grew with it. This fact is borne out by O'Reilly's developer's conference, OSCON, was first the Perl Conference.
+
+But time moved on, and different styles of web development came forward. CGI's still available on CPAN, and many Linux distros still come with pre-5.20 versions of Perl. For many good reasons, it is no longer how we thing you should use Perl for the web.
+
+But you certainly can do some fun things with it.
