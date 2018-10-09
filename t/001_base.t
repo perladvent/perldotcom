@@ -23,4 +23,4 @@ my $get_category = \&MetadataToolbox::extract_category_from_metadata;
 my $community = $get_category->($metadata);
 cmp_ok($community, 'eq', 'community', "$community eq community");
 
-map { print $_->{"title"}."\n" } MetadataToolbox::browse_articles_metadata_from("../content");
+map { print "[".$_->{title}."]\n" if ! defined($_->{authors}[0]) } MetadataToolbox::browse_articles_metadata_from("../content");
