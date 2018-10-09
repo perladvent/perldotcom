@@ -1,4 +1,4 @@
-package Pdc::Opendata;
+package MetadataToolbox;
 use Modern::Perl;
 use JSON::MaybeXS;
 use File::Find::Rule;
