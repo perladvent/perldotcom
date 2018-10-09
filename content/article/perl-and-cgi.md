@@ -2,7 +2,7 @@
 "title" : "Perl and CGI",
 "authors" : ["dave-jacoby"],
 "date" : "2018-10-03T18:41:08",
-"tags" : [cgi,module,web], 
+"tags" : ["cgi","module","web"], 
 "draft" : true,
 "image" : "",
 "thumbnail" : "",
