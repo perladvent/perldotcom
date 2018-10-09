@@ -7,7 +7,7 @@
    "description" : " Randy Ray is coauthor of Programming Web Services with Perl Abstract: One of the most common categories of questions on the SOAP::Lite mailing list is how to get Perl SOAP applications to work with .NET services. It's not that...",
    "thumbnail" : "/images/_pub_2003_03_26_perlanddotnet/111-dotnet_and_perl.gif",
    "tags" : [
-      "net",
+      "dotnet",
       "net",
       "perl",
       "perl-soap-applications",

@@ -5,7 +5,7 @@
       "debugging",
       "documentation",
       "linux",
-      "network",
+      "networking",
       "sysadmin"
    ],
    "draft" : false,
