@@ -32,7 +32,7 @@ Perl.com stores author profile data in the `data/author` directory. As this is y
 ```
 
 * `name` - your author name that will be displayed in the article
-* `key` - a unique asii-fied version of your name which should also match your author data filename (e.g. "david-farrell.json"). Use this later in the `authors` array in your article frontmatter
+* `key` - a unique ascii-fied version of your name which should also match your author data filename (e.g. "david-farrell.json"). Use this later in the `authors` array in your article frontmatter
 * `bio` - your biography in markdown, so you can include links to your social media and other relevant sites
 * `image` - a square portrait/avatar jpeg image 500 pixels wide or smaller, ideally under 50kb in size. These go in the `static/images/author` directory. If you don't have an image or want to use one, use `/images/site/avatar.png`.
 
