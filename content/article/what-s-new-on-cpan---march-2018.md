@@ -7,7 +7,6 @@
    "description" : "A curated look at March's new CPAN uploads",
    "categories" : "cpan",
    "title" : "What's new on CPAN - March 2018",
-   "image" : null,
    "authors" : [
       "david-farrell"
    ]
