@@ -12,6 +12,32 @@
 
 # Perl and CGI
 
+LESS DEPRESSING INTRO HERE
+
+## What is CGI
+
+CGI is Common Gateway Interface, and allows you to use alternate IN OUT ERR
+
+## Processing input (e.g. a form submission)
+
+FORM -> GET
+
+FORM -> POST
+
+## Generating HTML (why not to do it with CGI, TT example)
+
+GRR!
+
+## Configuring CGI on a web server
+
+Apache!
+
+## Why not to use CGI (limitations, alternatives)
+
+## Useful CGI references (articles, books, modules, documentation that might help users)
+
+# IGNORE/STEAL FROM BELOW THIS LINE
+
 [In May 2013, Ricardo Signes, then Perl5 Pumpking, sent this to the Perl5 Porters list](https://www.nntp.perl.org/group/perl.perl5.porters/2013/05/msg202130.html):
 
 > I think it's time to seriously consider removing CGI.pm from the core distribution. It is no longer what I'd point _anyone_ at for writing _any_ sort of web code. It is in the core, as far as I know, because once it was the state of the art, and a major reason for many people to use the language. I don't think either is true now. Finally, if you need CGI, it's easy to install after installing perl, just like everything else we've dropped from the core distribution.
