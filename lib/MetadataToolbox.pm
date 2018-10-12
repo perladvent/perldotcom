@@ -21,7 +21,27 @@ sub extract_metadata_from_md {
 
 sub browse_articles_metadata_from {
   my $directory_to_browse = shift;
-  return map { my $filename = "$_";extract_metadata_from_md("$filename") } File::Find::Rule->file->name('*.md')->in("$directory_to_browse");
+  return map { my $filename = "$_";$filename => extract_metadata_from_md("$filename") } File::Find::Rule->file->name('*.md')->in("$directory_to_browse");
+}
+
+sub build_categories_registry {
+  my ($registry, $repository) = @_;
+  my %categories_registry;
+  foreach my $filename (keys %{$registry}){
+    my $current_category = $registry->{$filename}->{'categories'};
+    if (exists $categories_registry{$current_category}){
+      push @{$categories_registry{$current_category}}, "$filename";
+    }
+    else {
+      $categories_registry{$current_category} = [ "$filename" ];
+    }
+  }
+  my $json_data = JSON::MaybeXS->new(pretty => 1);
+  my $categories_registry_json_format = $json_data->encode(\%categories_registry);
+  open my $ofh, '>', "$repository/categories.json";
+  print $ofh $categories_registry_json_format;
+  close $ofh;
+  return 1;
 }
 
 sub _extract_data_with_meta {
