@@ -64,8 +64,8 @@ Using this program is much quicker than me going to the USPS website to paste nu
 
 <?{{mcpan Term::ANSIColor}}> works by outputting [special escape sequences](http://wiki.bash-hackers.org/scripting/terminalcodes) that instruct the (ANSI) terminal to switch colors. The new color is in effect until you output the special reset sequence (or change to another color):
 
-	$ perl -MTerm::ANSIColor=:constants -e 'print RED, "Hello World", RESET'
-	Hello World
+<pre>$ perl -MTerm::ANSIColor=:constants -e 'print RED, "Hello World", RESET'
+<code style="color:red">Hello World</code></pre>
 
 I can do that in my tracking program. I'll use green to indicate an outstanding shipment (a brighter color on my dark background) and blue (a darker color that subdues the line) to indicate a delivered shipment. I can know the status just by the color:
 
