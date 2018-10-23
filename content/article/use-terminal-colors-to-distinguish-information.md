@@ -11,11 +11,11 @@
     "categories"  : "development"
   }
 
-The <?{{mcpan Term::ANSIColor}}> module is one of my favorite Perl tools. It doesn't make my program work better but it allows me to quickly identify the output that's important to me without missing out on the other stuff. I recently used it to track the shipments of my latest book.
+The module [Term::ANSIColor]({{< mcpan "Term::ANSIColor" >}}) is one of my favorite Perl tools. It doesn't make my program work better but it allows me to quickly identify the output that's important to me without missing out on the other stuff. I recently used it to track the shipments of my latest book.
 
 [Learning Perl 6](https://www.learningperl6.com), was published and the paper versions were available. This meant that I owed about 100 people a signed copy. From my years of publishing a print Perl magazine, I know that physically shipping stuff is an exercise in pain and memory. Did I send the book? When did I send it? I'm never quite sure the task is finished because a parcel might go missing without the recipient realizing they are missing something. Months later I get the complaint. No big whoop—that's life in retail.
 
-I ship these through the US Postal Service and get a tracking number for each parcel. I could check those by hand at the USPS website, but I also wrote the <?{{mcpan Business::US::USPS::WebTools}}> module to handle that for me. I can use the post office's web API (rudimentary as it is) to get the status of packages.
+I ship these through the US Postal Service and get a tracking number for each parcel. I could check those by hand at the USPS website, but I also wrote the [Business::US::USPS::WebTools]({{<mcpan "Business::US::USPS::WebTools">}}) module to handle that for me. I can use the post office's web API (rudimentary as it is) to get the status of packages.
 
 Curiously, this summer I had just given up this module because I didn't want to maintain it anymore. I hadn't used it in a couple of years and the interfaces had changed slightly. A couple weeks later I had another use for it. Go figure. It now lives in the the [CPAN Adoptable Modules](https://github.com/CPAN-Adoptable-Modules) GitHub organization that I set up. If you have repos for modules that you no longer want, let me know about them. I'll pull them into that organization and you can delete them from your own account. Anyone who wants to maintain them later will still find them. And, there's also [GitPAN](https://github.com/gitpan), but that's not quite the same thing.
 
@@ -62,7 +62,7 @@ The output is servicable but boring (and I've mutated the tracking numbers so th
 
 Using this program is much quicker than me going to the USPS website to paste numbers into their form. It can be better—what I really want to know is if I need to do anything for a this shipment. I can read the output to figure that out. If it's "Delivered" than I should be fine. If not, it can still be lost. But reading is hard! Adding color to that relieves me of the burden of scanning a whole line of text. The program can read the text for me and categorize it with color.
 
-<?{{mcpan Term::ANSIColor}}> works by outputting [special escape sequences](http://wiki.bash-hackers.org/scripting/terminalcodes) that instruct the (ANSI) terminal to switch colors. The new color is in effect until you output the special reset sequence (or change to another color):
+[Term::ANSIColor]({{<mcpan "Term::ANSIColor">}}) works by outputting [special escape sequences](http://wiki.bash-hackers.org/scripting/terminalcodes) that instruct the (ANSI) terminal to switch colors. The new color is in effect until you output the special reset sequence (or change to another color):
 
 <pre>$ perl -MTerm::ANSIColor=:constants -e 'print RED, "Hello World", RESET'
 <code style="color:red">Hello World</code></pre>
