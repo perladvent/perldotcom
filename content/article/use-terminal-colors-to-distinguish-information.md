@@ -1,15 +1,21 @@
-
-  {
-    "title"       : "Use terminal colors to distinguish information",
-    "authors"     : ["brian d foy"],
-    "date"        : "2018-10-23T20:07:36",
-    "tags"        : ["usps","ansi","term-ansicolor","terminal"],
-    "draft"       : true,
-    "image"       : "/images/use-terminal-colors-to-distinguish-information/packages-at-post-office.jpg",
-    "thumbnail"   : "",
-    "description" : "",
-    "categories"  : "development"
-  }
+{
+   "title" : "Use terminal colors to distinguish information",
+   "tags" : [
+      "usps",
+      "ansi",
+      "term-ansicolor",
+      "terminal"
+   ],
+   "draft" : true,
+   "description" : "",
+   "authors" : [
+      "brian d foy"
+   ],
+   "thumbnail" : "/images/use-terminal-colors-to-distinguish-information/thumb_packages-at-post-office.jpg",
+   "date" : "2018-10-23T20:07:36",
+   "image" : "/images/use-terminal-colors-to-distinguish-information/packages-at-post-office.jpg",
+   "categories" : "development"
+}
 
 The module [Term::ANSIColor]({{< mcpan "Term::ANSIColor" >}}) is one of my favorite Perl tools. It doesn't make my program work better but it allows me to quickly identify the output that's important to me without missing out on the other stuff. I recently used it to track the shipments of my latest book.
 
