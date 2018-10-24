@@ -2,8 +2,8 @@
   {
     "title"       : "Use terminal colors to distinguish information",
     "authors"     : ["brian d foy"],
-    "date"        : "2018-10-03T16:49:36",
-    "tags"        : [],
+    "date"        : "2018-10-23T20:07:36",
+    "tags"        : ["usps","ansi","term-ansicolor","terminal"],
     "draft"       : true,
     "image"       : "/images/use-terminal-colors-to-distinguish-information/packages-at-post-office.jpg",
     "thumbnail"   : "",
