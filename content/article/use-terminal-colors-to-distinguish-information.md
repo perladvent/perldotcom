@@ -6,7 +6,7 @@
       "term-ansicolor",
       "terminal"
    ],
-   "draft" : true,
+   "draft" : false,
    "description" : "Term::ANSIColor makes formatting terminal output easy",
    "authors" : [
       "brian-d-foy"
