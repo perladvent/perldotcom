@@ -7,7 +7,7 @@
       "terminal"
    ],
    "draft" : true,
-   "description" : "",
+   "description" : "Term::ANSIColor makes formatting terminal output easy",
    "authors" : [
       "brian d foy"
    ],
