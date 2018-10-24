@@ -9,7 +9,7 @@
    "draft" : true,
    "description" : "Term::ANSIColor makes formatting terminal output easy",
    "authors" : [
-      "brian d foy"
+      "brian-d-foy"
    ],
    "thumbnail" : "/images/use-terminal-colors-to-distinguish-information/thumb_packages-at-post-office.jpg",
    "date" : "2018-10-23T20:07:36",
