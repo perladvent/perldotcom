@@ -17,7 +17,7 @@ One of the delights of working in an old language with penchant for backwards-co
    > the old-fashioned syntax is still supported for backwards
    > compatibility
 
-How interesting! Ada uses a single quote as an [attribute delimiter](https://en.wikibooks.org/wiki/Ada_Programming/Delimiters/'), similar to the possessive in English:
+How interesting! Ada uses a single quote as an [attribute delimiter](https://en.wikibooks.org/wiki/Ada_Programming/Delimiters/\)'), similar to the possessive in English:
 
     Customer'name
 

@@ -20,7 +20,7 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 * [WebService::S3::Tiny]({{<mcpan "WebService::S3::Tiny" >}}) is a minimalist wrapper for S3 around HTTP::Tiny
 * [Finance::Robinhood]({{<mcpan "Finance::Robinhood" >}}) can trade stocks, ETFs, options, and cryptocurrency without commission
 * Use the Oracle ZFS Storage Appliance RESTful API with [Oracle::ZFSSA::Client]({{<mcpan "Oracle::ZFSSA::Client" >}})
-* Use the Star Wars API webservice with Perl using [Webservice::Swapi]({{<mcpan "Webservice::Swapi" >}})
+* Use the Star Wars API webservice with Perl using [WebService::Swapi]({{<mcpan "WebService::Swapi" >}})
 
 
 ### Config & Devops

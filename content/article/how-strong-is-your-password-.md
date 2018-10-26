@@ -30,7 +30,7 @@ Once it has calculated the entropy of a password, zxcvbn estimates other statist
 
 ### Installation
 
-Data::Password::zxcvbn is on CPAN, so installation can be done with your favorite CPAN client, like [cpan]({{<mcpan "App::CPAN" "cpan" >}}) or [cpanm]({{<mcpan "App::cpanminus" "cpanm" >}}).
+Data::Password::zxcvbn is on CPAN, so installation can be done with your favorite CPAN client, like [cpan]({{<mcpan "App::Cpan" "cpan" >}}) or [cpanm]({{<mcpan "App::cpanminus" "cpanm" >}}).
 
     $ cpanm Data::Password::zxcvbn
 

@@ -41,7 +41,7 @@ fastcgi_cache_path  /var/cache/nginx levels=1:2
 fastcgi_cache_key "$scheme$request_method$host$request_uri";
 ```
 
-A GET request for "http://perltricks.com/" would have a key of "httpGETperltricks.com/", and be stored at: "/var/cache/nginx/4/85/200d51ef65b0a76de421f8f1ec047854". Note that the name of the first subdirectory is the last letter of the md5 hash ("4") and the second subdirectory name the previous two letters ("85") - this is because of the levels value of "1:2" set in the nginx virtual host file. Deleting the file "/var/cache/nginx/4/85/200d51ef65b0a76de421f8f1ec047854 will purge it from nginx's cache.
+A GET request for http://perltricks.com/ would have a key of "httpGETperltricks.com/", and be stored at: "/var/cache/nginx/4/85/200d51ef65b0a76de421f8f1ec047854". Note that the name of the first subdirectory is the last letter of the md5 hash ("4") and the second subdirectory name the previous two letters ("85") - this is because of the levels value of "1:2" set in the nginx virtual host file. Deleting the file "/var/cache/nginx/4/85/200d51ef65b0a76de421f8f1ec047854 will purge it from nginx's cache.
 
 ### Introducing Nginx::FastCGI::Cache
 

@@ -25,7 +25,7 @@ I've had a cracked phone screen for years, but recently as the glass started fal
 
 ### Router Setup
 
-I run [DD-WRT](http://www.dd-wrt.com/site/index) Linux on my home WiFi router. DD-WRT can run an [Rflow service](https://www.dd-wrt.com/wiki/index.php/Network_traffic_analysis_with_netflow_and_ntop) where it posts [NetFlow](https://en.wikipedia.org/wiki/NetFlow) traffic data to another computer on the network via UDP. I enabled the service, and configured it to post to my laptop's IP address and the default port, 2055.
+I run [DD-WRT](http://www.dd-wrt.com/site) Linux on my home WiFi router. DD-WRT can run an [Rflow service](https://www.dd-wrt.com/wiki/index.php/Network_traffic_analysis_with_netflow_and_ntop) where it posts [NetFlow](https://en.wikipedia.org/wiki/NetFlow) traffic data to another computer on the network via UDP. I enabled the service, and configured it to post to my laptop's IP address and the default port, 2055.
 
 ### Monitoring
 

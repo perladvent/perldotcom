@@ -143,7 +143,7 @@ This sort of thing is quite handy for rotated logs when I want to read them all 
 
 If you want to know more about the gzip compression, [Julia Evans created a nice animation of gzip working in real time on *The Raven*](http://jvns.ca/blog/2013/10/24/day-16-gzip-plus-poetry-equals-awesome/).
 
-You can see a bit more abstract [animation](http://www.data-compression.com/lempelziv.html%0A) at www.data-compression.com. You can see how this single-pass method works and how it can work from a possibly infinite stream like I provide in this article.
+You can see a bit more abstract [animation](https://web.archive.org/web/20170805011431/http://www.data-compression.com/lempelziv.html) at [www.data-compression.com](https://web.archive.org/web/20170805011431/http://www.data-compression.com). You can see how this single-pass method works and how it can work from a possibly infinite stream like I provide in this article.
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*

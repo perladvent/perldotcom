@@ -31,7 +31,7 @@ The overall aim then, was to see what we could do if we "burned it down" and sta
 
 The goal of the first round was to develop a web application that would respond to certain GET requests by serving a particular template. Much of the template was static, but there was some dynamic logic to it.
 
-My team built a solution on top of [Plack]({{<mcpan "Plack" >}}). We created thin request and response classes in [Moo]({{<mcpan "Moo" >}}), a router coded in C ([Router::XS]({{<mcpan "Router::XS" >}})), and used [Text::XSlate]({{<mcpan "Text::XSlate" >}}) for the template. The solution kicked ass - it was able to serve over 10,000 requests per second, and we placed second overall, losing out only to a Java entry.
+My team built a solution on top of [Plack]({{<mcpan "Plack" >}}). We created thin request and response classes in [Moo]({{<mcpan "Moo" >}}), a router coded in C ([Router::XS]({{<mcpan "Router::XS" >}})), and used [Text::Xslate]({{<mcpan "Text::Xslate" >}}) for the template. The solution kicked ass - it was able to serve over 10,000 requests per second, and we placed second overall, losing out only to a Java entry.
 
 # Round 2
 
