@@ -10,12 +10,42 @@
 "categories" : "cpan"
 }
 
-We need a MySQL-focused tutorial on using MySQL with Perl and DBI. The article should probably include:
+# Querying MySQL with Perl
 
-* links to how to install/setup MySQL Server
-* Installing DBI and DBD::MySQL
-* connecting to the database
-* executing queries with "do"
-* how to read data from query results
+MySQL is one of the biggest relational database engines, and 
 
-The article body goes here. Use [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/) to write the article body. Don't forget to delete this line!
+
+
+## Setup
+
+DBI and DBD::mysql, and also the 
+
+Note: MariaDB was forked from MySQL by the original developer, Michael Widenius. They are functionally interchangeable. If you want to hear more of the story, [Randal Schwartz interviewed him for FLOSS Weekly](https://twit.tv/shows/floss-weekly/episodes/194).
+
+## Connecting
+
+This is as much a networking protocol as a query language, so the first step is to connect to the database. In this case, we want the host (maybe `localhost`), the port (the default is 3306) and the database, which we'll call _coffee_, which makes the _source_ to be `dbi:mysql:coffee:localhost:3306`. 
+
+Attributes:
+```perl
+    my %attr;
+    # thank you pjf
+    $attr{RaiseError}         = 1; # throws die() w/ error
+    $attr{PrintError}         = 0; # avoid double-printing
+    $attr{ShowErrorStatement} = 1; # appends query to error
+    # enables UTF8
+    $attr{mysql_enable_utf8}  = 1;
+```
+
+Rally
+
+```perl
+my $source = "dbi:mysql:$database:$host:$port";
+my $dbh = DBI->connect( $source, $user, $password, \%attr )
+        or croak $DBI::errstr ;
+```
+
+## Data Out Of DB
+
+## Data Into DB
+
