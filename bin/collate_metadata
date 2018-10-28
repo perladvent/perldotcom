@@ -1,0 +1,50 @@
+use v5.28;
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+use Mojo::File;
+use Mojo::JSON qw(encode_json);
+
+use Data::Dumper;
+use IO::Interactive qw(interactive);
+
+use Local::Metadata;
+
+my @keys = qw(tags authors categories);
+
+my @files = glob( "content/**/*.md" );
+say {interactive} "There are " . @files . " files";
+
+my %grand_collation;
+
+FILE: foreach my $file ( @files ) {
+	my $metadata = Local::Metadata->new_from_file( $file );
+	unless( ref $metadata ) {
+		warn "Couldn't extract data from <$metadata>. Skipping...\n";
+		next FILE;
+		}
+
+	KEY: foreach my $key ( @keys ) {
+		VALUE: foreach my $value ( $metadata->$key()->@* ) {
+			push @{ $grand_collation{$key}{$value} }, $file
+			}
+		}
+
+	}
+
+# This won't be the final directory, but it's good for now.
+my $dir = Mojo::File->new('collations');
+foreach my $subdir ( qw(tags categories authors) ) {
+	$dir->child( $subdir )->make_path;
+	foreach my $value ( keys $grand_collation{$subdir}->%* ) {
+		$dir->child( $subdir, "$value.json" )->spurt(
+			encode_json( $grand_collation{$subdir}{$value} )
+			);
+		}
+	}
+
+
+
+
+# say Dumper( $grand_collation{categories} );
