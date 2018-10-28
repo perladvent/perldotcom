@@ -9,7 +9,7 @@
    "slug" : "122/2014/10/31/Implementing-Did-You-Mean-in-Perl",
    "tags" : [
       "autoload",
-      "mastering_perl",
+      "mastering-perl",
       "symbol_table",
       "ruby",
       "did_you_mean"
