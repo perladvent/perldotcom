@@ -19,7 +19,7 @@
 
 
 
-This week, perl.com has the pleasure of interviewing Allison Randal, one of the key figures in the Perl community. Allison has been active in the Perl 6 design process since its inception, and is the President of the Perl Foundation. Let's hear more from Allison about what all of this means to her.
+This week, Perl.com has the pleasure of interviewing Allison Randal, one of the key figures in the Perl community. Allison has been active in the Perl 6 design process since its inception, and is the President of the Perl Foundation. Let's hear more from Allison about what all of this means to her.
 
 **perl.com**: *To begin with, please tell us a little about yourself.*
 
