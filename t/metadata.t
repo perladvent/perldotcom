@@ -39,6 +39,7 @@ subtest extract => sub {
 	ok   $metadata->has_category( 'community' ), "Has the category <community>";
 	ok ! $metadata->has_category( 'not-there' ), "Does not have the category <not-there>";
 
+	isa_ok $metadata->augmented, ref {}, "augmented section is there";
 	};
 
 done_testing();

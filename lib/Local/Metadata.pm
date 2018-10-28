@@ -3,8 +3,10 @@ use feature qw(signatures);
 no warnings qw(experimental::signatures);
 
 package Local::Metadata;
-use JSON::MaybeXS;
 use Carp qw(carp);
+use File::stat;
+use JSON::MaybeXS;
+use Time::Moment;
 
 =head1 NAME
 
@@ -87,6 +89,39 @@ sub new_from_file ( $class, $filename ) {
 		}
 
 	bless $metadata, $class;
+
+	$metadata->augment(
+		filename => $filename,
+		stat     => stat( $filename ),
+		legacy   => !! ( $filename =~ m/\Alegacy/ ),
+		epoch    => $metadata->_date_to_epoch,
+		);
+
+	$metadata->augment(
+		url_path => $metadata->_file_to_url_path,
+		);
+
+	return $metadata;
+	}
+
+sub _extract_metadata_from_md ( $class, $filename ) {
+	# we need the raw UTF-8 string to decode it as JSON
+	open my $fh, '<:raw', $filename or do {
+		carp "Could not open <$filename>: $!\n";
+		return;
+		};
+
+	my $json_data;
+	while (<$fh>) {
+		$json_data .= $_ if /^\s*{/ .. 0;
+		last if /}\s*$/;
+		}
+
+	close $fh;
+
+	my $json_obj = JSON->new();
+	my $perl_data = $json_obj->decode($json_data);
+	return $perl_data;
 	}
 
 
@@ -166,25 +201,107 @@ sub _find ( $self, $key, $search ) {
 	return 0;
 	}
 
-sub _extract_metadata_from_md ( $class, $filename ) {
-	# we need the raw UTF-8 string to decode it as JSON
-	open my $fh, '<:raw', $filename or do {
-		carp "Could not open <$filename>: $!\n";
-		return;
-		};
+=back
 
-	my $json_data;
-	while (<$fh>) {
-		$json_data .= $_ if /^\s*{/ .. 0;
-		last if /}\s*$/;
+=head2 Augmented methods
+
+Some interesting metadata do not show up in the JSON header metadata
+but we add them to the object anyway.
+
+=over 4
+
+=item * filename
+
+=cut
+
+sub filename ( $self ) { $self->augmented->{'filename'} }
+
+=item * file_stat
+
+Returns the file_stat data as a L<File::stat> object. This data
+is probably not reliable.
+
+=cut
+
+sub file_stat ( $self ) { $self->augmented->{'stat'} }
+
+=item * url_path
+
+Returns the URL path from the filename.
+
+=cut
+
+sub _file_to_url_path ( $self ) {
+	my $file = $self->filename;
+	say STDERR "Translating <$file>";
+	return do {
+		# content/legacy/_pub_2011_05_new-features-of-perl-514-package-block.md
+		# There's that leading underscore for the front of the URL
+		if( $self->is_legacy ) {
+			$file =~ s|\Acontent/legacy/||;
+			$file = "$file";
+			$file =~ s|_|/|r;
+			}
+		# content/article/untangling-subroutine-attributes.md
+		else { $file =~ s|\Acontent/|/|r }
+		};
+	}
+
+sub url_path ( $self ) { $self->augmented->{'url_path'} }
+
+=item * is_legacy
+
+Returns true if the article was from the old, legacy Perl.com site.
+
+=cut
+
+sub is_legacy ( $self ) { !! $self->augmented->{'legacy'} }
+
+=item * epoch
+
+Returns an integer version of the publication date.
+
+=cut
+
+#2016-05-04T20:37:57
+sub _date_to_epoch ( $self ) {
+	Time::Moment->from_string( "$self->{date}Z" )->epoch
+	}
+
+sub epoch ( $self ) { $self->augmented->{'epoch'} }
+
+=item * augmented
+
+Returns as a hash the part of the data structure that has the
+augmented data. This is compartmentalized from the declared metadata.
+
+=cut
+
+sub augmented ( $self ) { $self->{augmented} //= {} }
+
+=item * augment( KEY, VALUE, ... )
+
+Add the KEY and VALUE to the augmented data. It could be anything that
+you like. There are several that are already used that you probably don't
+want to overwrite:
+
+	filename
+	file_stat
+	legacy
+	epoch
+
+=cut
+
+sub augment( $self, @args ) {
+	my %args = @args;
+
+	foreach my $key ( keys %args ) {
+		$self->augmented->{$key} = $args{$key};
 		}
 
-	close $fh;
-
-	my $json_obj = JSON->new();
-	my $perl_data = $json_obj->decode($json_data);
-	return $perl_data;
+	return $self;
 	}
+
 
 =back
 
@@ -207,4 +324,5 @@ Copyright © 2018, brian d foy C<< <bdfoy@cpan.org> >>. All rights reserved.
 This software is available under the Artistic License 2.0.
 
 =cut
+
 1;
