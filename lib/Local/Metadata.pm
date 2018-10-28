@@ -241,7 +241,7 @@ sub _file_to_url_path ( $self ) {
 		if( $self->is_legacy ) {
 			$file =~ s|\Acontent/legacy/||;
 			$file = "$file";
-			$file =~ s|_|/|r;
+			$file =~ s|_|/|gr;
 			}
 		# content/article/untangling-subroutine-attributes.md
 		else { $file =~ s|\Acontent/|/|r }
