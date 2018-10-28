@@ -124,6 +124,20 @@ sub _extract_metadata_from_md ( $class, $filename ) {
 	return $perl_data;
 	}
 
+=item * is_published
+
+Returns true if the article is not a draft (which means it is handled
+by Hugo and visibile on the site)
+
+=item * is_draft
+
+Returns true if the article isn't published yet
+
+=cut
+
+sub is_published ( $self ) {  ! $self->is_draft }
+
+sub is_draft     ( $self ) { !! $self->{draft} }
 
 =item * tags
 
