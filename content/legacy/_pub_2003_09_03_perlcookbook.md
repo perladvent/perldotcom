@@ -4,11 +4,9 @@
    "title" : "Cooking with Perl, Part 2",
    "date" : "2003-09-03T00:00:00-08:00",
    "tags" : [
-      "nathan-torkington",
       "perl",
       "perl-cookbook",
       "sending-attachments-in-email",
-      "tom-christiansen",
       "using-sql-without-a-database-server"
    ],
    "thumbnail" : null,
@@ -176,22 +174,22 @@ The full list of MIME::Lite options is given in [Table 18-3](#21965).
 
 The MIME::Lite options and their values govern what is attached (the data) and how:
 
-`Path`   
+`Path`
 The file containing the data to attach.
 
-`Filename`   
+`Filename`
 The default filename for the reader of the message to save the file as. By default this is the filename from the `Path` option (if `Path` was specified).
 
-`Data`   
+`Data`
 The data to attach.
 
-`Type`   
+`Type`
 The `Content-Type` of the data to attach.
 
-`Disposition`   
+`Disposition`
 Either `inline` or `attachment`. The former indicates that the reader should display the data as part of the message, not as an attachment. The latter indicates that the reader should display an option to decode and save the data. This is, at best, a hint.
 
-`FH`   
+`FH`
 An open filehandle from which to read the attachment data.
 
 There are several useful content types: `TEXT` means `text/plain`, which is the default; `BINARY` similarly is short for `application/octet-stream`; `multipart/mixed` is used for a message that has attachments; `application/msword` for Microsoft Word files; `application/vnd.ms-excel` for Microsoft Excel files; `application/pdf` for PDF files; `image/gif`, `image/jpeg`, and `image/png` for GIF, JPEG, and PNG files, respectively; `audio/mpeg` for MP3 files; `video/mpeg` for MPEG movies; `video/quicktime` for Quicktime (*.mov*) files.
@@ -230,7 +228,7 @@ The `print` method writes the string form of the message to a filehandle:
      
     my $SMTP_SERVER = 'smtp.example.com';           # CHANGE ME
     my $DEFAULT_SENDER = 'sender@example.com';      # CHANGE ME
-    my $DEFAULT_RECIPIENT = 'recipient@example.com';# CHANGE ME  
+    my $DEFAULT_RECIPIENT = 'recipient@example.com';# CHANGE ME
      
     MIME::Lite->send('smtp', $SMTP_SERVER, Timeout=>60);
      

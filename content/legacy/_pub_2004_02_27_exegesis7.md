@@ -5,7 +5,6 @@
    "date" : "2004-02-27T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif",
    "tags" : [
-      "damian-conway",
       "exegesis",
       "formats",
       "perl-6"

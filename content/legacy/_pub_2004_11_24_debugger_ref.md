@@ -14,7 +14,6 @@
       "perl-debugger",
       "perl-debugger-pocket-reference",
       "perl-reference-card",
-      "richard-foley"
    ],
    "thumbnail" : "/images/_pub_2004_11_24_debugger_ref/111-debugger.gif"
 }

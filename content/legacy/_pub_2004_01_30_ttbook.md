@@ -10,13 +10,8 @@
    "title" : "How We Wrote the Template Toolkit Book ...",
    "image" : null,
    "tags" : [
-      "andy-wardley",
-      "darren-chamberlain",
-      "dave-cross",
-      "perl-documentation",
-      "perl-template-toolkit",
+      "documentation",
       "template-toolkit",
-      "template-toolkit-book"
    ],
    "thumbnail" : "/images/_pub_2004_01_30_ttbook/111-ptt.gif"
 }
