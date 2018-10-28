@@ -18,7 +18,7 @@
       "patterns",
       "perl",
       "perl-cookbook",
-      "pretending-a-string-is-a-file",
+      "pretending-a-string-is-a-file"
    ]
 }
 

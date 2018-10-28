@@ -11,7 +11,7 @@
    "image" : null,
    "tags" : [
       "documentation",
-      "template-toolkit",
+      "template-toolkit"
    ],
    "thumbnail" : "/images/_pub_2004_01_30_ttbook/111-ptt.gif"
 }

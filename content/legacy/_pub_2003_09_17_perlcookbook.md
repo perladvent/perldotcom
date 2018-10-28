@@ -4,7 +4,7 @@
       "making-simple-changes-to-elements-or-text",
       "perl",
       "perl-cookbook",
-      "templating-with-html-mason",
+      "templating-with-html-mason"
    ],
    "thumbnail" : null,
    "categories" : "development",
