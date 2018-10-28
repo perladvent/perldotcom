@@ -93,7 +93,7 @@ sub new_from_file ( $class, $filename ) {
 	$metadata->augment(
 		filename => $filename,
 		stat     => stat( $filename ),
-		legacy   => !! ( $filename =~ m/\Alegacy/ ),
+		legacy   => !! ( $filename =~ m|\Acontent/legacy/| ),
 		);
 
 	$metadata->augment(
