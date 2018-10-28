@@ -61,10 +61,10 @@ CHECK {
         $module =~ s/\//::/g;
         $module = substr($module, 0, -3);
         $module .= '::AUTOLOAD';
-        
+
         # skip if the package already has an autoload
         next if defined *{ $module };
-        
+
         *{ $module } = Devel::DidYouMean::AUTOLOAD;
     }
 }

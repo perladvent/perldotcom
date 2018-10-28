@@ -55,12 +55,12 @@ Of course you'll need Perl, and that's not hard to come by. Then, at most, you j
       \cit hsd; led-285
       \pos adverb
       \engl inside a house; at home
-      
+
       \hw súut hlgitl'áa
       \cit hsd; led-149; led-411
       \engl speak harshly to someone; insult
       \ex 'Láa hal súut hlgitl'gán. | She said harsh words to her.
-      
+
       \hw tlak'aláang
       \cit led-398
       \pos noun
@@ -77,26 +77,26 @@ Now, one could parse this with a `regexp` and a bit of `while(<IN>) {...}`, but 
 And that prints this:
 
      Lexicon Text::Shoebox::Lexicon=HASH(0x15550f0) contains 4 entries:
-     
+
      Entry Text::Shoebox::Entry=ARRAY(0x1559104) contains:
        hw = "dagiisláng"
        cit = "hsd"
        pos = "verb"
        engl = "wave a piece of cloth"
        ex = "Dáayaangwaay hal dagiislánggan. | He was waving a flag."
-     
+
      Entry Text::Shoebox::Entry=ARRAY(0x1559194) contains:
        hw = "anáa"
        cit = "hsd; led-285"
        pos = "adverb"
        engl = "inside a house; at home"
-     
+
      Entry Text::Shoebox::Entry=ARRAY(0x155920c) contains:
        hw = "súut hlgitl'áa"
        cit = "hsd; led-149; led-411"
        engl = "speak harshly to someone; insult"
        ex = "'Láa hal súut hlgitl'gán. | She said harsh words to her."
-     
+
      Entry Text::Shoebox::Entry=ARRAY(0x1559284) contains:
        hw = "tlak'aláang"
        cit = "led-398"
@@ -264,7 +264,7 @@ So how do we take entries in whatever order, and put them into alphabetical orde
         my %e = $entry->as_list;
         $headword2entry{ $e{'hw'} } = \%e;
       }
-      
+
       foreach my $headword (sort keys %headword2entry) {
         my %e = %{ $headword2entry{$headword} };
         ...and print it here...
@@ -275,11 +275,11 @@ And that indeed works fine. But suppose one of the linguists comes by and adds t
       \hw gíi
       \pos auxiliary verb
       \engl already; always; often
-      
+
       \hw gu
       \pos postposition
       \engl there
-      
+
       \hw gíi
       \pos verb
       \engl swim away [of fish]
@@ -308,7 +308,7 @@ That's simple to graft into our program, even if the syntax for dereferencing ge
         my %e = $entry->as_list;
         push @{ $headword2entries{ $e{'hw'} } },  \%e;
       }
-      
+
       foreach my $headword (sort keys %headword2entries) {
         foreach my $entry ( @{ $headword2entries{$headword} } ) {
           ...code to print the entry...
@@ -438,20 +438,20 @@ However, consider the entry **anáa:** "inside a house; at home" -- our `reversa
 
 Now, there are four alternatives here for how to have finer control over the reversing:
 
-<span>Just don't bother, and instead just do this all manually in the editing of the final draft.</span>  
+<span>Just don't bother, and instead just do this all manually in the editing of the final draft.</span>
 This is a bad approach because, in my experience, the people working on the lexicon get so used to the just-passable reversing algorithm that they end up thinking it's no big deal, and so in the end its effects never get fixed.
 
-Don't do automatic reversing, but have a mandatory field in each entry that says what English headword(s) should point to this native entry.  
+Don't do automatic reversing, but have a mandatory field in each entry that says what English headword(s) should point to this native entry.
 For example, if we call the field "ehw" (for "English headword"), then for "at home; inside a house" could say something like: "\\ehw home, at; house, inside a". However, having this be mandatory is a real drag for simple entries like "gu," where you'd have to do:
 
             \hw gu
             \engl there
             \ehw there
 
-<span id="*_Make_an_">\* Make an "ehw" field optional, and when it's absent, use a smart reversing algorithm.</span>  
+<span id="*_Make_an_">\* Make an "ehw" field optional, and when it's absent, use a smart reversing algorithm.</span>
 So when we have an entry like "\\hw gu \\engl there", of course the reversing algorithm would know to infer a "\\ehw there." And it would somehow be smart enough to know to index "wave a piece of cloth" under "wave" and "cloth" but not under "a," "piece," or "of." The problem with very smart fallback algorithms like this is that people have to understand them completely, so that they can know whether the result is good enough or whether it should be overridden with a default "\\ehw" field. But since nobody can remember all the hacks that get built into the smart algorithm, they either err on the side of doubt by *always* putting a "\\ehw" field (thus making the whole algorithm pointless), or by *never* putting a "\\ehw" field, or, worse some unpredictable and headachy mix of the two. So ironically, a smart fallback algorithm is often a *bad* idea. That leads us to the final alternative:
 
-<span id="*_Make_an_">\* Make an "ehw" field optional, and when it's absent, use a *dumb* reversing algorithm.</span>  
+<span id="*_Make_an_">\* Make an "ehw" field optional, and when it's absent, use a *dumb* reversing algorithm.</span>
 By "dumb," I mean a maximum of two rules -- if it's any more complex than that, people will forget how it works and won't know when they should key in an explicit "\\ehw" field.
 
 So while we could add more and more things to our `reversables()` algorithm, it seems wisest to refrain from doing this, to be content with our one *s/^(a|an|the|to)\\s+//i* rule, and instead just add support for an "\\ehw" field. We can do that simply by changing the call to `reversables()`, from this:
@@ -493,7 +493,7 @@ And then later on we have code that uses that variable:
         $rtf->paragraph(
           [ \'\b',    $e{'hw'}  || "?hw?", ": " ],
           [ \'\b\i',  $e{'pos'} || "?pos?" ],
-          " ", $e{'engl'} || "?english?", ".", 
+          " ", $e{'engl'} || "?english?", ".",
           $For_Editors && $e{'cit'} ? " [$e{'cit'}]" : (),
         );
       }
@@ -534,7 +534,7 @@ With these extra codes in place, our `print_entry` routine now looks like this:
         $rtf->paragraph(  \'\fs20',  # Start out in ten-point
           [ \'\f1\b', $e{'hw'}  || "?hw?", ": " ],
           [ \'\b\i',  $e{'pos'} || "?pos?" ],
-          " ", $e{'engl'} || "?english?", ".", 
+          " ", $e{'engl'} || "?english?", ".",
           $For_Editors && $e{'cit'} ? " [$e{'cit'}]" : (),
           $ex_eng ? (" ", \'\f1', $ex, \'\f2\fs18', $ex_eng) : (),
         );
@@ -681,7 +681,7 @@ We're in a hurry, and so we really appreciate Perl.
         $rtf->paragraph(  \'\fs20',  # Start out in ten-point
           [ \'\f1\b', $e{'hw'}  || "?hw?", ": " ],
           [ \'\b\i',  $Abbrev{$e{'pos'}||''} || $e{'pos'} || "?pos?" ],
-          " ", $e{'engl'} || "?english?", ".", 
+          " ", $e{'engl'} || "?english?", ".",
           $For_Editors && $e{'cit'} ? " [$e{'cit'}]" : (),
           $ex_eng ? (" ", \'\f1', $ex, \'\f2\fs18', $ex_eng) : (),
         );
