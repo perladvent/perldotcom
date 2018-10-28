@@ -2,7 +2,7 @@
    "slug" : "/pub/1998/08/show/perl-photos.html",
    "description" : null,
    "authors" : [
-      "joseph-f--ryan"
+      "joseph-f-ryan"
    ],
    "draft" : null,
    "date" : "1998-08-27T00:00:00-08:00",

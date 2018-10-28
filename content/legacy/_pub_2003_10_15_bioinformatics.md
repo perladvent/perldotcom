@@ -18,7 +18,7 @@
    "description" : " James D. Tisdall is the author of the recently released Mastering Perl for Bioinformatics. In my previous article, A Chromosome at a Time with Perl, Part I, I showed you some programming \"tricks\" that help you avoid the trap...",
    "draft" : null,
    "authors" : [
-      "james-d--tisdall"
+      "james-d-tisdall"
    ]
 }
 
@@ -165,8 +165,8 @@ Here is some code that generalizes that approach. It is more general because it 
         ################# Arguments:
         # $pattern   - the pattern to search for, as a regular _expression
         # $filename  - the name of the DNA fasta file (may have multiple records)
-        # $min       - the shortest length of a usable match to the pattern    
-        # $max       - the longest length of a usable match to the pattern    
+        # $min       - the shortest length of a usable match to the pattern
+        # $max       - the longest length of a usable match to the pattern
         #################
         my($pattern, $filename, $min, $max) = @_;
 
@@ -181,7 +181,7 @@ Here is some code that generalizes that approach. It is more general because it 
         my @locations = ();
         my $header = '';
         #################
-        
+
         # Open the DNA file
         open(DNA,"<$filename") or croak("Cannot open $filename:$!\n");
 
@@ -217,7 +217,7 @@ Here is some code that generalizes that approach. It is more general because it 
             if(length($buffer) < (2 * $max) ) {
                 next;
             }
-        
+
             # Search for the DNA pattern
             # (Report the character at position 0 as at position 1, as usual in biology)
             while($buffer =~ /$pattern/gi) {
@@ -229,11 +229,11 @@ Here is some code that generalizes that approach. It is more general because it 
                     last;
                 }
             }
-        
+
             # Reset the position counter
             # (will be accurate after you reset the buffer, next)
             $position = $position + $max;
-        
+
             # Reset the buffer
             # Discard the first $max worth of data in the buffer
             $buffer = substr($buffer, $max);
@@ -268,7 +268,7 @@ In this code, the devil is in the details of how the specific locations and size
 
 You can profile the speed of your Perl program fairly easily. Let's say I put the program in a file called *sizebound.pl*. Then I can get a report on the time the various parts of the program require by running the program like this:
 
-    [tisdall@coltrane]$ perl -d:DProf sizebound.pl 
+    [tisdall@coltrane]$ perl -d:DProf sizebound.pl
 
 And then getting a summary of the report (from the file tmon.out that DProf creates) like so:
 
@@ -289,7 +289,7 @@ When you have lots of subroutines, this can really help you see where the most t
 
 It's also possible to get information about the space usage of a program, but you have to use a version of Perl that was compiled with -DDEBUG, which is not usually the case. If you have such a version, then the following will give you some information:
 
-    [tisdall@coltrane]$ perl -DL sizebound.pl 
+    [tisdall@coltrane]$ perl -DL sizebound.pl
 
 But that's enough for here and now; take a look at the Perl documentation section called perldebguts. And drive safely.
 

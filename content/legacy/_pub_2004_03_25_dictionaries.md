@@ -1,7 +1,7 @@
 {
    "draft" : null,
    "authors" : [
-      "sean-m--burke"
+      "sean-m-burke"
    ],
    "description" : " When you woke up this morning, the last thing you are likely to have thought is \"If only I had a dictionary!\" But there are thousands of languages on Earth that many people want to learn, but they can't,...",
    "slug" : "/pub/2004/03/25/dictionaries.html",

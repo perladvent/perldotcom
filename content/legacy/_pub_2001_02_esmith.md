@@ -12,7 +12,7 @@
       "template"
    ],
    "authors" : [
-      "kirrily---skud---robert"
+      "kirrily-skud-robert"
    ],
    "draft" : null,
    "description" : " -> The e-smith server and gateway system is a Linux distribution designed for small to medium enterprises. It's intended to simplify the process of setting up Internet and file-sharing services and can be administered by a non-technical user with...",

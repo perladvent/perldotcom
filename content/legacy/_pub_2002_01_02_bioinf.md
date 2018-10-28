@@ -12,7 +12,7 @@
    "description" : " Bioinformatics, the use of computers in biology research, has been increasing in importance during the past decade as the Human Genome Project went from its beginning to the announcement last year of a \"draft\" of the complete sequence of...",
    "draft" : null,
    "authors" : [
-      "james-d--tisdall"
+      "james-d-tisdall"
    ]
 }
 

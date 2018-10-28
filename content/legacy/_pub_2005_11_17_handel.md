@@ -2,7 +2,7 @@
    "description" : " Over the years of doing various levels of web-based programming, I've come feel like Dante taking a trip through the nine circles of web programmer hell. There are certain things we must endure over and over, from project to...",
    "slug" : "/pub/2005/11/17/handel.html",
    "authors" : [
-      "christopher-h--laco"
+      "christopher-h-laco"
    ],
    "draft" : null,
    "thumbnail" : "/images/_pub_2005_11_17_handel/111-ecommerce.gif",
@@ -65,7 +65,7 @@ First, you must create the database. For the sake of this experiment^H^H^H^Harti
 
 Download the [*handel.sqlite.sql*](http://handelframework.com/svn/CPAN/Handel/tags/0.26/sql/handel.sqlite.sql) schema script to your hard drive. Now, in your favorite shell, type the following to create the database:
 
-    [claco@cypher ~] $ wget 
+    [claco@cypher ~] $ wget
         http://handelframework.com/svn/CPAN/Handel/tags/0.26/sql/handel.sqlite.sql
     handel.sqlite.sql                             100% of 2300  B  115 kBps
     [claco@cypher ~] $
