@@ -94,11 +94,11 @@ sub new_from_file ( $class, $filename ) {
 		filename => $filename,
 		stat     => stat( $filename ),
 		legacy   => !! ( $filename =~ m/\Alegacy/ ),
-		epoch    => $metadata->_date_to_epoch,
 		);
 
 	$metadata->augment(
 		url_path => $metadata->_file_to_url_path,
+		epoch    => $metadata->_date_to_epoch,
 		);
 
 	return $metadata;
