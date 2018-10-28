@@ -233,6 +233,8 @@ Returns the URL path from the filename.
 
 sub _file_to_url_path ( $self ) {
 	my $file = $self->filename;
+	$file =~ s/\.md\z//;
+
 	return do {
 		# content/legacy/_pub_2011_05_new-features-of-perl-514-package-block.md
 		# There's that leading underscore for the front of the URL
