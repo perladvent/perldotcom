@@ -262,9 +262,21 @@ Returns an integer version of the publication date.
 
 =cut
 
-#2016-05-04T20:37:57
+# The older files tend to have the time zone with them
+# Te newer files don't, so I'll make them Z
+# 2012-12-31T06:00:01-08:00
+# 2016-05-04T20:37:57
 sub _date_to_epoch ( $self ) {
-	Time::Moment->from_string( "$self->{date}Z" )->epoch
+	my $date = $self->{date};
+	$date .= 'Z' unless $date =~ /[+-]\d\d:?\d\d\z/;
+	my $epoch = eval {
+		Time::Moment->from_string( $date )->epoch
+		};
+	if( $@ ) {
+		carp "Couldn't parse <" . $self->{date} . "> ($date) as a date";
+		return;
+		}
+	return $epoch;
 	}
 
 sub epoch ( $self ) { $self->augmented->{'epoch'} }
