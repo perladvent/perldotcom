@@ -263,7 +263,7 @@ Returns an integer version of the publication date.
 =cut
 
 # The older files tend to have the time zone with them
-# Te newer files don't, so I'll make them Z
+# The newer files don't, so I'll make them Z
 # 2012-12-31T06:00:01-08:00
 # 2016-05-04T20:37:57
 sub _date_to_epoch ( $self ) {
