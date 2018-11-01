@@ -15,7 +15,8 @@
 
 Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads for your reading and programming pleasure. Enjoy!
 
-### APIs & Apps
+APIs & Apps
+-----------
 * Simple ASCII charting using [App::AsciiChart](https://metacpan.org/pod/App::AsciiChart)
 * [App::JsonLogUtils](https://metacpan.org/pod/App::JsonLogUtils) provides command line utilities for dealing with JSON-formatted log files
 * Simple interface to the OneSky API: [Net::OneSky](https://metacpan.org/pod/Net::OneSky)
@@ -23,7 +24,8 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 * [Signer::AWSv4](https://metacpan.org/pod/Signer::AWSv4) can sign AWS requests with v4 signatures without needing an HTTP::Request object
 
 
-### Data
+Data
+----
 * [Data::Exchange](https://metacpan.org/pod/Data::Exchange) can exchange files and update issues from your colleagues via an S3 bucket
 * Manage cards and decks using [Ordeal::Model](https://metacpan.org/pod/Ordeal::Model)
 * Convert OpenAPI (swagger) schemas to SQL::Translator schemas with [SQL::Translator::Parser::OpenAPI](https://metacpan.org/pod/SQL::Translator::Parser::OpenAPI)
@@ -32,17 +34,20 @@ Welcome to "What's new on CPAN", a curated look at last month's new CPAN uploads
 * Get a faster backend for YAML::PP via [YAML::PP::LibYAML](https://metacpan.org/pod/YAML::PP::LibYAML)
 
 
-### Development & Version Control
+Development & Version Control
+---
 * [Git::IssueManager](https://metacpan.org/pod/Git::IssueManager) can manage issues in a git branch within your repository
 * Get JSON API-style error objects with [JSON::API::Error](https://metacpan.org/pod/JSON::API::Error)
 * [Protocol::DBus](https://metacpan.org/pod/Protocol::DBus) D-Bus in pure Perl!
 
 
-### Science & Mathematics
+Science & Mathematics
+---------------------
 * [Astro::Coord::ECI::VSOP87D](https://metacpan.org/pod/Astro::Coord::ECI::VSOP87D) implements the VSOP87D position model of planetary motion
 
 
-### Web
+Web
+---
 * Use [Email::Address::UseXS](https://metacpan.org/pod/Email::Address::UseXS) to avoid choking on badly formatted input
 * Validate HTML with [HTML::T5](https://metacpan.org/pod/HTML::T5), a fork of HTML::Lint
 * Complete with the first fulfilled promise using [Mojo::Promise::Role::HigherOrder](https://metacpan.org/pod/Mojo::Promise::Role::HigherOrder)
