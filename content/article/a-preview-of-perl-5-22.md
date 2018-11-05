@@ -7,8 +7,7 @@
    "image" : null,
    "categories" : "tooling",
    "tags" : [
-      "5",
-      "22",
+      "5.22",
       "features"
    ],
    "draft" : false,

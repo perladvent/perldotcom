@@ -1,0 +1,99 @@
+use v5.28;
+use feature qw(signatures);
+no warnings qw(experimental::signatures);
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+use Data::Dumper;
+use IO::Interactive qw(interactive);
+use JSON::XS;
+use Mojo::File;
+use Mojo::URL;
+
+
+use Local::Metadata;
+
+my @keys = qw(tags authors categories);
+
+my @files = glob( "content/**/*.md" );
+say {interactive} "There are " . @files . " files";
+
+my %grand_collation;
+my %all_articles;
+
+FILE: foreach my $file ( @files ) {
+	my $metadata = Local::Metadata->new_from_file( $file );
+	unless( ref $metadata ) {
+		warn "Couldn't extract data from <$metadata>. Skipping...\n";
+		next FILE;
+		}
+	unless( $metadata->is_published ) {
+		warn "Skipping draft file <$file>\n";
+		next FILE;
+		}
+
+	KEY: foreach my $key ( @keys ) {
+		VALUE: foreach my $value ( $metadata->$key()->@* ) {
+			my $scrubbed = scrub_metadata( $metadata );
+			push @{ $grand_collation{$key}{$value} }, $scrubbed;
+			# the same article shows up in several places and this
+			# structure wants each only once
+			$all_articles{$scrubbed->{url}} = $scrubbed;
+			}
+		}
+
+	}
+
+
+# This won't be the final directory, but it's good for now.
+my $dir = Mojo::File->new('collations');
+my $j = JSON::XS->new->utf8->pretty(1);
+
+my @all_articles = sort { $b->{epoch} <=> $a->{epoch} } values %all_articles;
+$dir->child( 'all_articles.json' )->spurt(
+	$j->encode( \@all_articles )
+	);
+
+$dir->child( 'previous_ten_articles.json' )->spurt(
+	$j->encode( [ @all_articles[0..9] ] )
+	);
+
+foreach my $subdir ( qw(tags categories authors) ) {
+
+	$dir->child( $subdir )->make_path;
+	my @values = keys $grand_collation{$subdir}->%*;
+	$dir->child( "$subdir.json" )->spurt(
+		$j->encode( [
+			map $_->[0],
+			sort { $a->[1] cmp $b->[1] }
+			map [$_,lc],
+			@values ] )
+		);
+
+	foreach my $value ( keys $grand_collation{$subdir}->%* ) {
+		$dir->child( $subdir, "$value.json" )->spurt(
+			$j->encode( $grand_collation{$subdir}{$value} )
+			);
+		}
+	}
+
+sub scrub_metadata ( $metadata ) {
+	state @headers_keys = qw(description title authors tags categories);
+	state @augmented    = qw(epoch url_path);
+	state $base         = Mojo::URL->new( 'https://www.perl.com/' );
+
+	my $hash = {};
+	$hash->@{@headers_keys} = $metadata->@{@headers_keys};
+	$hash->@{@augmented} = $metadata->augmented->@{@augmented};
+	$hash->{url} = Mojo::URL
+		->new( $hash->{url_path} )
+		->base( $base )
+		->to_abs
+		->to_string;
+
+	return $hash;
+	}
+
+
+# say Dumper( $grand_collation{categories} );

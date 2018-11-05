@@ -16,7 +16,6 @@
       "perl-soap",
       "perl-xml",
       "remote-apis",
-      "sam-tregar",
       "soap",
       "web-services",
       "http"

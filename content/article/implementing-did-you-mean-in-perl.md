@@ -9,7 +9,7 @@
    "slug" : "122/2014/10/31/Implementing-Did-You-Mean-in-Perl",
    "tags" : [
       "autoload",
-      "mastering_perl",
+      "mastering-perl",
       "symbol_table",
       "ruby",
       "did_you_mean"
@@ -61,10 +61,10 @@ CHECK {
         $module =~ s/\//::/g;
         $module = substr($module, 0, -3);
         $module .= '::AUTOLOAD';
-        
+
         # skip if the package already has an autoload
         next if defined *{ $module };
-        
+
         *{ $module } = Devel::DidYouMean::AUTOLOAD;
     }
 }

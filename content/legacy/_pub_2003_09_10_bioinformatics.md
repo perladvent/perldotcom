@@ -2,7 +2,7 @@
    "slug" : "/pub/2003/09/10/bioinformatics.html",
    "description" : " James D. Tisdall is the author of the soon-to-be-released Mastering Perl for Bioinformatics. For some time now, the use of Perl in biology has been standard practice. Perl remains the most popular language among biologists for a multitude of...",
    "authors" : [
-      "james-d--tisdall"
+      "james-d-tisdall"
    ],
    "draft" : null,
    "date" : "2003-09-11T00:00:00-08:00",
@@ -121,11 +121,11 @@ Here's the code for the program `find_fragment`:
     #!/usr/bin/perl
 
     #
-    # find_fragment : find 'ACGTACGTACGT' in a very large DNA FASTA file 
+    # find_fragment : find 'ACGTACGTACGT' in a very large DNA FASTA file
     # using minimal memory
     #
-    #  N.B. This example program does no checking of the input to ensure 
-    #       that it is DNA data in FASTA format; it just assumes that 
+    #  N.B. This example program does no checking of the input to ensure
+    #       that it is DNA data in FASTA format; it just assumes that
     #       it is. This program also assumes there is just one FASTA
     #       record in the input file.
     #
@@ -136,7 +136,7 @@ Here's the code for the program `find_fragment`:
     use strict;
     use Carp;
 
-    # Make sure the program is called with one argument, presumably a 
+    # Make sure the program is called with one argument, presumably a
     # FASTA file of DNA
     my $USAGE = "perl find_fragment file.FASTA";
     unless(@ARGV == 1) { croak "$USAGE:$!\n" }
@@ -162,7 +162,7 @@ Here's the code for the program `find_fragment`:
         $buffer .= $newline;
 
         # Search for the DNA fragment, which has a length of 12
-        # (Report the character at string position 0 as being at position 1, 
+        # (Report the character at string position 0 as being at position 1,
         # as usual in biology)
         while($buffer =~ /$fragment/gi) {
             print "Found $fragment at position ", $position + $-[0] + 1, "\n";

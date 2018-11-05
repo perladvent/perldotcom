@@ -15,12 +15,10 @@
       "cooking-with-perl",
       "file-contents",
       "matching-nested-patterns",
-      "nathan-torkington",
       "patterns",
       "perl",
       "perl-cookbook",
-      "pretending-a-string-is-a-file",
-      "tom-christiansen"
+      "pretending-a-string-is-a-file"
    ]
 }
 

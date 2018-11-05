@@ -1,6 +1,6 @@
 {
    "authors" : [
-      "james-d--tisdall"
+      "james-d-tisdall"
    ],
    "draft" : null,
    "slug" : "/pub/2001/11/16/perlbio2.html",
@@ -8,24 +8,17 @@
    "thumbnail" : "/images/_pub_2001_11_16_perlbio2/111-perlprotein-ls.gif",
    "tags" : [
       "beginning-perl-for-bioinformatics",
-      "bioinformaticians",
-      "bioinformaticists",
-      "bioinformatics",
       "bioinformatics",
       "biological-research",
       "biology-research-programming",
       "computational-biology",
       "genetics",
       "genomics",
-      "james-tisdall",
       "learning-to-program",
-      "o-reilly",
-      "o-reilly",
       "oreilly",
       "perl-for-bioinformatics",
       "programming-for-biology-research",
       "sequencing",
-      "tisdall",
       "web"
    ],
    "image" : null,
@@ -77,43 +70,43 @@ Prosite also provides an accompanying data file, [prosite.doc](ftp://ca.expasy.o
 The Prosite data in [prosite.dat](ftp://ca.expasy.org/databases/prosite/release_with_updates/prosite.dat) (or our much smaller test file *prosmall.dat*) is organized in "records," each of which consists of several lines, and which always include an ID line and a termination line containing "//". The Prosite lines all begin with a two-character code that specifies the kind of data that appears on that line. Here's a breakdown of all the possible line types that a record may contain from the [Prosite User Manual](http://ca.expasy.org/cgi-bin/lists?prosuser.txt):
 
 **
-ID  
+ID
 Identification (Begins each entry; one per entry)
 
-AC  
+AC
 Accession number (one per entry)
 
-DT  
+DT
 Date (one per entry)
 
-DE  
+DE
 Short description (one per entry)
 
-PA  
+PA
 Pattern (&gt;=0 per entry)
 
-MA  
+MA
 Matrix/profile (&gt;=0 per entry)
 
-RU  
+RU
 Rule (&gt;=0 per entry)
 
-NR  
+NR
 Numerical results (&gt;=0 per entry)
 
-CC  
+CC
 Comments (&gt;=0 per entry)
 
-DR  
+DR
 Cross references to SWISS-PROT (&gt;=0 per entry)
 
-3D  
+3D
 Cross references to PDB (&gt;=0 per entry)
 
-DO  
+DO
 Pointer to the documentation file (one per entry)
 
-//  
+//
 Termination line (Ends each entry; one per entry)
 
 Each of these line types has certain kinds of information that are formatted in a specific manner, as is detailed in the Prosite documentation.
@@ -178,7 +171,7 @@ Here, then, is our first Perl code, the subroutine `PROSITE_2_regexp`, to transl
       #   is a bit vague, perhaps).
       #
       $regexp =~ s/\[G\>\]/(G|\$)/;
-      
+
       #
       # Ambiguities such as {AM} translate to [^AM].
       #
@@ -236,7 +229,7 @@ Here, then, is our second subroutine, which accepts a Prosite record, and return
 
     #
     # Parse a PROSITE record into "line types" hash
-    # 
+    #
     sub get_line_types {
 
       #
@@ -277,7 +270,7 @@ Here, then, is our second subroutine, which accepts a Prosite record, and return
       }
 
       #
-      # Return the hash 
+      # Return the hash
       #
       return %line_types_hash;
     }
@@ -310,7 +303,7 @@ Now let's see the code at work. The following program uses the subroutines we've
     #
     # A "handle" for the opened PROSITE file
     #
-    my $prosite_filehandle; 
+    my $prosite_filehandle;
 
     #
     # Store each PROSITE record that is read in

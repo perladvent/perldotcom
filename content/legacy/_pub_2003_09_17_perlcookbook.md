@@ -2,11 +2,9 @@
    "tags" : [
       "extracting-table-data",
       "making-simple-changes-to-elements-or-text",
-      "nathan-torkington",
       "perl",
       "perl-cookbook",
-      "templating-with-html-mason",
-      "tom-christiansen"
+      "templating-with-html-mason"
    ],
    "thumbnail" : null,
    "categories" : "development",

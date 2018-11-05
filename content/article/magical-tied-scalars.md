@@ -12,7 +12,7 @@
       "scalar",
       "callback",
       "cycle",
-      "mastering_perl"
+      "mastering-perl"
    ]
 }
 

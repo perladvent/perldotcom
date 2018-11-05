@@ -5,7 +5,6 @@
    "date" : "2004-02-27T00:00:00-08:00",
    "thumbnail" : "/images/_pub_2004_02_27_exegesis7/111-exegesis7.gif",
    "tags" : [
-      "damian-conway",
       "exegesis",
       "formats",
       "perl-6"
@@ -66,7 +65,7 @@ So, whereas in Perl 5 we might write:
         our ($name, $age, $ID, $comments);
 
         format STDOUT
-         =================================== 
+         ===================================
         | NAME     |    AGE     | ID NUMBER |
         |----------+------------+-----------|
         | @<<<<<<< | @||||||||| | @>>>>>>>> |
@@ -133,10 +132,10 @@ At first glance the Perl 6 version may seem like something of a backwards step �
 
 Of course, this is Perl, not Puritanism. So those folks who happen to *like* package variables, global accumulators, and mysterious writes, can still have them. And, if they're particularly nostalgic, they can also get rid of all the quotation marks and commas, and even retain the dot as a format terminator. For example:
 
-        sub myster_rite {                           
-            our ($name, $age, $ID, $comments);     
-            print form :interleave, <<'.'               
-                 =================================== 
+        sub myster_rite {
+            our ($name, $age, $ID, $comments);
+            print form :interleave, <<'.'
+                 ===================================
                 | NAME     |    AGE     | ID NUMBER |
                 |----------+------------+-----------|
                 | {<<<<<<} | {||||||||} | {>>>>>>>} |
@@ -144,7 +143,7 @@ Of course, this is Perl, not Puritanism. So those folks who happen to *like* pac
                 | COMMENTS                          |
                 |-----------------------------------|
                 | {[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[} |
-                 =================================== 
+                 ===================================
                 .
                   $name,     $age,        $ID,
                   $comments;
@@ -167,35 +166,35 @@ Let's take a look...
 But before we do, here's a quick run-down of some of the highly arcane technical jargon we'll be using as we talk about formatting:
 
 **<span id="item_format">Format</span>**
-  
+
 A string that is used as a template for the creation of *text*. It will contain zero or more *fields*, usually with some literal characters and whitespace between them.
 
 **<span id="item_text">Text</span>**
-  
+
 A string that is created by replacing the fields of a format with specific *data* values. For example, the string that a call to `form` returns.
 
 **<span id="item_field">Field</span>**
-  
+
 A fixed-width slot within a format string, into which *data* will be formatted.
 
 **<span id="item_data">Data</span>**
-  
+
 A string or numeric value (or an array of such values) that is interpolated into a format, in order to fill in a particular field.
 
 **<span id="item_single%2dline_field">Single-line field</span>**
-  
+
 A field that interpolates only as much of its corresponding data value as will fit inside it within a single line of text.
 
 **<span id="item_block_field">Block field</span>**
-  
+
 A field that interpolates all of its corresponding data value, over a series of text lines – as many as necessary – producing a *text block*.
 
 **<span id="item_text_block">Text block</span>**
-  
+
 The column of newline-separated text lines. A text block is produced when data is formatted into a block field that is too small to contain the data in a single line
 
 **<span id="item_column">Column</span>**
-  
+
 The amount of space on an output device required to display one single-width character. One character will occupy one column in most cases, the most obvious exceptions being CJK double-width characters.
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 7](http://dev.perl.org/perl6/doc/design/syn/S07.html) for the current design information.*
@@ -375,27 +374,27 @@ which might produce:
 
         I couldn't do my English Lit homework because...
 
-             10. Three witches told me I was going to be    
+             10. Three witches told me I was going to be
                  king.
 
               9. I was busy explaining wherefore am I Romeo.
 
-              8. I was busy scrubbing the blood off my      
+              8. I was busy scrubbing the blood off my
                  hands.
 
-              7. Some dear friends had to charge once more  
+              7. Some dear friends had to charge once more
                  unto the breach.
 
-              6. My so-called best friend tricked me into   
+              6. My so-called best friend tricked me into
                  killing my wife.
 
-              5. My so-called best friend tricked me into   
+              5. My so-called best friend tricked me into
                  killing Caesar.
 
-              4. My so-called best friend tricked me into   
+              4. My so-called best friend tricked me into
                  taming a shrew.
 
-              3. My uncle killed my father and married my   
+              3. My uncle killed my father and married my
                  mother.
 
               2. I fell in love with my manservant, who was
@@ -518,9 +517,9 @@ That's because the `"*"` that's being used as a bullet for the first column is a
 Despite these minor complications, array data sources are particularly useful when formatting, especially if the data is known to fit within the specified width. For example:
 
         print form
-            '-------------------------------------------',   
-            'Name             Score   Time  | Normalized',   
-            '-------------------------------------------',   
+            '-------------------------------------------',
+            'Name             Score   Time  | Normalized',
+            '-------------------------------------------',
             '{[[[[[[[[[[[[}   {III}   {II}  |  {]]].[[} ',
              @name,           @score, @time,   [@score »/« @time];
 
@@ -624,16 +623,16 @@ It's also possible that someone (not you, of course!) might attempt to pass a nu
 
         my @mixed_data = (1, 2, "three", {4=>5}, "6", "7-Up");
 
-        print form 'Thy score be: {]]]].[[}', 
+        print form 'Thy score be: {]]]].[[}',
                                   @mixed_data;
 
 Unlike Perl itself, `form` doesn't autoconvert non-numeric values. Instead it marks them with another special string, by filling the field with question-marks:
 
-        Thy score be:     1.0  
-        Thy score be:     2.0  
+        Thy score be:     1.0
+        Thy score be:     2.0
         Thy score be: ?????.???
         Thy score be: ?????.???
-        Thy score be:     6.0  
+        Thy score be:     6.0
         Thy score be: ?????.???
 
 Note that strings per se aren't a problem – `form` will happily convert strings that contain valid numbers, such as `"6"` in the above example. But it does reject strings that contain anything else besides a number (even when Perl itself would successfully convert the number – as it would for `"7-Up"` above).
@@ -645,11 +644,11 @@ Those who'd prefer Perl's usual, more laissez-faire attitude to numerical conver
 
 This version would print:
 
-        Thy score be:     1.0  
-        Thy score be:     2.0  
-        Thy score be:     0.0  
-        Thy score be:     1.0  
-        Thy score be:     6.0  
+        Thy score be:     1.0
+        Thy score be:     2.0
+        Thy score be:     0.0
+        Thy score be:     1.0
+        Thy score be:     6.0
         Thy score be:     7.0
 
 (The `1.0` on the fourth line appears because Perl 6 hashes numerify to the number of entries they contain).
@@ -692,9 +691,9 @@ Negative numbers work as expected, with the minus sign taking up one column of t
 
 This would print:
 
-        Thy score be:     1.0  
-        Thy score be:    -1.2  
-        Thy score be:     1.23 
+        Thy score be:     1.0
+        Thy score be:    -1.2
+        Thy score be:     1.23
         Thy score be:   -11.234
         Thy score be:   111.235
         Thy score be: #####.###
@@ -706,11 +705,11 @@ However, `form` can also format numbers so that the minus sign *trails* the numb
 
 which would then print:
 
-        Thy score be:     1.0   
-        Thy score be:     1.2-  
-        Thy score be:     1.23  
+        Thy score be:     1.0
+        Thy score be:     1.2-
+        Thy score be:     1.23
         Thy score be:    11.234-
-        Thy score be:   111.235 
+        Thy score be:   111.235
         Thy score be: 12345.67-
 
 `form` also understands the common financial usage where negative numbers are represented as positive numbers in parentheses. Once again, we draw an abstract picture of what we want (by putting parens at either end of the field specification):
@@ -720,11 +719,11 @@ which would then print:
 
 and `form` obliges:
 
-        Thy dividend be:      1.0   
-        Thy dividend be:     (1.2)  
-        Thy dividend be:      1.23  
+        Thy dividend be:      1.0
+        Thy dividend be:     (1.2)
+        Thy dividend be:      1.23
         Thy dividend be:    (11.234)
-        Thy dividend be:    111.235 
+        Thy dividend be:    111.235
         Thy dividend be: (12345.67)
 
 Note that the parens have to go *inside* the field's braces. Otherwise, they're just literal parts of the format string:
@@ -734,8 +733,8 @@ Note that the parens have to go *inside* the field's braces. Otherwise, they're 
 
 and we'd get:
 
-        Thy dividend be: (    1.0  ) 
-        Thy dividend be: (   -1.2  )  
+        Thy dividend be: (    1.0  )
+        Thy dividend be: (   -1.2  )
         Thy dividend be: (    1.23 )
         Thy dividend be: (  -11.234)
         Thy dividend be: (  111.235)
@@ -757,9 +756,9 @@ to produce:
 
         Brittannic      Continental     Subcontinental   Tyrolean        Asiatic
         _____________   _____________   ______________   _____________   _____________
-                 0.0             0,0              0.0             0,0             0.0 
-                 1.0             1,0              1.0             1,0             1.0 
-                 1.1             1,1              1.1             1,1             1.1 
+                 0.0             0,0              0.0             0,0             0.0
+                 1.0             1,0              1.0             1,0             1.0
+                 1.1             1,1              1.1             1,1             1.1
                  1.23            1,23             1.23            1,23            1.23
              4,567.89        4.567,89         4,567.89        4'567,89         4567.89
             34,567.89       34.567,89        34,567.89       34'567,89       3,4567.89
@@ -778,9 +777,9 @@ to produce:
 
         Hyperspatial
         _____________
-                 0:0 
-                 1:0 
-                 1:1 
+                 0:0
+                 1:0
+                 1:1
                  1:23
              4 567:89
             34 567:89
@@ -797,7 +796,7 @@ If we use the `:locale` option, `form` detects the current locale and converts a
 
         @nums = ( 1, -1.2,  1.23, -11.234,  111.235, -12345.67);
 
-        print form 
+        print form
                 "{],]]],]]].[[}",
                 @nums;
 
@@ -834,7 +833,7 @@ or:
              11,23-
             111,235
          12.345,67-
-      
+
     or:
 
               1,0
@@ -938,64 +937,64 @@ Formatting numbers gets even trickier when those numbers represent money. But `f
 produces:
 
         Swiss:
-                      Sfr 0.0 
-                      Sfr 1.0 
+                      Sfr 0.0
+                      Sfr 1.0
                       Sfr 1.23
                   Sfr 1'234.56
                  Sfr -1'234.56
               Sfr 1'234'567.89
 
         Canadian (French):
-                          0,0 $ 
-                          1,0 $ 
+                          0,0 $
+                          1,0 $
                           1,23 $
                       1 234,56 $
                      -1 234,56 $
                   1 234 567,89 $
 
         Dutch:
-                          0.0EUR  
-                          1.0EUR  
-                          1.23EUR 
-                      1,234.56EUR 
+                          0.0EUR
+                          1.0EUR
+                          1.23EUR
+                      1,234.56EUR
                       1,234.56-EUR
                   1,234,567.89EUR
 
         Norwegian:
-                       kr 0,0 
-                       kr 1,0 
+                       kr 0,0
+                       kr 1,0
                        kr 1,23
                    kr 1.234,56
                   kr -1.234,56
                kr 1.234.567,89
 
         German (pre-euro):
-                          0,0DM 
-                          1,0DM 
+                          0,0DM
+                          1,0DM
                           1,23DM
                       1.234,56DM
                      -1.234,56DM
                   1.234.567,89DM
 
         Indian:
-                          0.0 Rs 
-                          1.0 Rs 
+                          0.0 Rs
+                          1.0 Rs
                           1.23 Rs
                       1,234.56 Rs
                      -1,234.56 Rs
                   12,34,567.89 Rs
 
         Portuguese (pre-euro):
-                          0$0 Esc 
-                          1$0 Esc 
+                          0$0 Esc
+                          1$0 Esc
                           1$23 Esc
                       1.234$56 Esc
                      -1.234$56 Esc
                   1.234.567$89 Esc
 
         Canadian (English):
-                         $0.0 
-                         $1.0 
+                         $0.0
+                         $1.0
                          $1.23
                      $1,234.56
                     -$1,234.56
@@ -1034,19 +1033,19 @@ and we'd like to put beside some other text. Because it's already carefully form
 
 Because that would squash our lovely helix:
 
-        Men at  some  time  are  masters  of  their       G==C             
-        fates: / the fault, dear Brutus, is not  in       A==T             
-        our genes, / but in ourselves, that we  are       T=A              
-        underlings.  /  Brutus  and  Caesar:   what       A=T              
-        should be in that 'Caesar'?  /  Why  should       T==A             
-        that DNA be sequenced more  than  yours?  /       G===C            
-        Extract them together, yours is as  fair  a       T==A             
-        genome; / transcribe them, it  doth  become       C=G              
-        mRNA as well; / recombine them,  it  is  as       TA               
-        long; clone with 'em, / Brutus will start a       AT               
-        twin as soon as Caesar. / Now, in the names       A=T              
-        of all  the  gods  at  once,  /  upon  what       T==A             
-        proteins doth our Caesar feed, / that he is       G===C            
+        Men at  some  time  are  masters  of  their       G==C
+        fates: / the fault, dear Brutus, is not  in       A==T
+        our genes, / but in ourselves, that we  are       T=A
+        underlings.  /  Brutus  and  Caesar:   what       A=T
+        should be in that 'Caesar'?  /  Why  should       T==A
+        that DNA be sequenced more  than  yours?  /       G===C
+        Extract them together, yours is as  fair  a       T==A
+        genome; / transcribe them, it  doth  become       C=G
+        mRNA as well; / recombine them,  it  is  as       TA
+        long; clone with 'em, / Brutus will start a       AT
+        twin as soon as Caesar. / Now, in the names       A=T
+        of all  the  gods  at  once,  /  upon  what       T==A
+        proteins doth our Caesar feed, / that he is       G===C
         grown so great?                                   T==A
 
 Nor would right-, full-, centre- or numeric- justification help in this instance. What we really need is "leave-it-the-hell-alone" justification – a field specifier that lays out the data exactly as it is, leading whitespace included.
@@ -1061,19 +1060,19 @@ And that's precisely what we needed for our diagram:
 
 to produce:
 
-        Men at  some  time  are  masters  of  their          G==C          
-        fates: / the fault, dear Brutus, is not  in            A==T        
-        our genes, / but in ourselves, that we  are              T=A       
-        underlings.  /  Brutus  and  Caesar:   what              A=T       
-        should be in that 'Caesar'?  /  Why  should            T==A        
-        that DNA be sequenced more  than  yours?  /          G===C         
-        Extract them together, yours is as  fair  a         T==A           
-        genome; / transcribe them, it  doth  become        C=G             
-        mRNA as well; / recombine them,  it  is  as       TA               
-        long; clone with 'em, / Brutus will start a       AT               
-        twin as soon as Caesar. / Now, in the names        A=T             
-        of all  the  gods  at  once,  /  upon  what         T==A           
-        proteins doth our Caesar feed, / that he is           G===C        
+        Men at  some  time  are  masters  of  their          G==C
+        fates: / the fault, dear Brutus, is not  in            A==T
+        our genes, / but in ourselves, that we  are              T=A
+        underlings.  /  Brutus  and  Caesar:   what              A=T
+        should be in that 'Caesar'?  /  Why  should            T==A
+        that DNA be sequenced more  than  yours?  /          G===C
+        Extract them together, yours is as  fair  a         T==A
+        genome; / transcribe them, it  doth  become        C=G
+        mRNA as well; / recombine them,  it  is  as       TA
+        long; clone with 'em, / Brutus will start a       AT
+        twin as soon as Caesar. / Now, in the names        A=T
+        of all  the  gods  at  once,  /  upon  what         T==A
+        proteins doth our Caesar feed, / that he is           G===C
         grown so great?                                         T==A
 
 Note that, unlike other types of fields, verbatim fields don't [break and wrap their data](/pub/2004/02/27/exegesis7.html?page=7#a_man_may_break_a_word_with_you,_sir...) if that data doesn't fit on a single line. Instead, they truncate each line to the appropriate field width. So a too-short verbatim field:
@@ -1084,41 +1083,41 @@ Note that, unlike other types of fields, verbatim fields don't [break and wrap t
 
 results in gene slicing:
 
-        Men at  some  time  are  masters  of  their          G==C 
+        Men at  some  time  are  masters  of  their          G==C
         fates: / the fault, dear Brutus, is not  in            A==
         our genes, / but in ourselves, that we  are              T
         underlings.  /  Brutus  and  Caesar:   what              A
         should be in that 'Caesar'?  /  Why  should            T==
         that DNA be sequenced more  than  yours?  /          G===C
-        Extract them together, yours is as  fair  a         T==A  
-        genome; / transcribe them, it  doth  become        C=G    
-        mRNA as well; / recombine them,  it  is  as       TA      
-        long; clone with 'em, / Brutus will start a       AT      
-        twin as soon as Caesar. / Now, in the names        A=T    
-        of all  the  gods  at  once,  /  upon  what         T==A  
+        Extract them together, yours is as  fair  a         T==A
+        genome; / transcribe them, it  doth  become        C=G
+        mRNA as well; / recombine them,  it  is  as       TA
+        long; clone with 'em, / Brutus will start a       AT
+        twin as soon as Caesar. / Now, in the names        A=T
+        of all  the  gods  at  once,  /  upon  what         T==A
         proteins doth our Caesar feed, / that he is           G===
         grown so great?                                         T=
 
 rather than teratogenesis:
 
-        Men at  some  time  are  masters  of  their          G==C 
+        Men at  some  time  are  masters  of  their          G==C
         fates: / the fault, dear Brutus, is not  in            A=-
-        our genes, / but in ourselves, that we  are       =T      
+        our genes, / but in ourselves, that we  are       =T
         underlings.  /  Brutus  and  Caesar:   what              -
-        should be in that 'Caesar'?  /  Why  should       T=A     
+        should be in that 'Caesar'?  /  Why  should       T=A
         that DNA be sequenced more  than  yours?  /              -
-        Extract them together, yours is as  fair  a       A=T     
+        Extract them together, yours is as  fair  a       A=T
         genome; / transcribe them, it  doth  become            T=-
-        mRNA as well; / recombine them,  it  is  as       =A      
+        mRNA as well; / recombine them,  it  is  as       =A
         long; clone with 'em, / Brutus will start a          G===C
-        twin as soon as Caesar. / Now, in the names         T==A  
-        of all  the  gods  at  once,  /  upon  what        C=G    
-        proteins doth our Caesar feed, / that he is       TA      
-        grown so great?                                  AT      
-                                                       A=T    
-                                                        T==A  
+        twin as soon as Caesar. / Now, in the names         T==A
+        of all  the  gods  at  once,  /  upon  what        C=G
+        proteins doth our Caesar feed, / that he is       TA
+        grown so great?                                  AT
+                                                       A=T
+                                                        T==A
                                                           G==-
-                                                      =C      
+                                                      =C
                                                             T-
                                                       ==A
 
@@ -1129,34 +1128,34 @@ rather than teratogenesis:
 It's not uncommon for a report to need a series of data fields in one column and then a second column with only single field, perhaps containing a summary or discussion of the other data. For example, we might want to produce recipes of the form:
 
         =================[  Hecate's Broth of Ambition  ]=================
-                                                                          
-          Preparation time:             Method:                           
-             66.6 minutes                  Remove the legs from the       
-                                           lizard, the wings from the     
-          Serves:                          owlet, and the tongue of the   
-             2 doomed souls                adder. Set them aside.         
-                                           Refrigerate the remains (they  
-          Ingredients:                     can be used to make a lovely   
-             2 snakes (1 fenny, 1          white-meat stock). Drain the   
-             adder)                        newts' eyes if using pickled.  
-             2 lizards (1 legless,         Wrap the toad toes in the      
-             1 regular)                    bat's wool and immerse in half 
-             3 eyes of newt (fresh         a pint of vegan stock in       
-             or pickled)                   bottom of a preheated          
-             2 toad toes (canned           cauldron. (If you can't get a  
-             are fine)                     fresh vegan for the stock, a   
-             2 cups of bat's wool          cup of boiling water poured    
-             1 dog tongue                  over a vegetarian holding a    
-             1 common or spotted           sprouted onion will do). Toss  
-             owlet                         in the fenny snake, then the   
-                                           legless lizard. Puree the      
-                                           tongues together and fold      
-                                           gradually into the mixture,    
-                                           stirring widdershins at all   
-                                           times.  Allow to bubble for 45 
-                                           minutes then decant into two   
-                                           tarnished copper chalices.         
-                                           Garnish each with an owlet     
+
+          Preparation time:             Method:
+             66.6 minutes                  Remove the legs from the
+                                           lizard, the wings from the
+          Serves:                          owlet, and the tongue of the
+             2 doomed souls                adder. Set them aside.
+                                           Refrigerate the remains (they
+          Ingredients:                     can be used to make a lovely
+             2 snakes (1 fenny, 1          white-meat stock). Drain the
+             adder)                        newts' eyes if using pickled.
+             2 lizards (1 legless,         Wrap the toad toes in the
+             1 regular)                    bat's wool and immerse in half
+             3 eyes of newt (fresh         a pint of vegan stock in
+             or pickled)                   bottom of a preheated
+             2 toad toes (canned           cauldron. (If you can't get a
+             are fine)                     fresh vegan for the stock, a
+             2 cups of bat's wool          cup of boiling water poured
+             1 dog tongue                  over a vegetarian holding a
+             1 common or spotted           sprouted onion will do). Toss
+             owlet                         in the fenny snake, then the
+                                           legless lizard. Puree the
+                                           tongues together and fold
+                                           gradually into the mixture,
+                                           stirring widdershins at all
+                                           times.  Allow to bubble for 45
+                                           minutes then decant into two
+                                           tarnished copper chalices.
+                                           Garnish each with an owlet
                                            wing, and serve immediately.
 
 There are several ways to achieve that effect. The most obvious is to format each column separately and then lay them out side-by-side with a pair of verbatim fields:
@@ -1174,7 +1173,7 @@ There are several ways to achieve that effect. The most obvious is to format eac
                         '   {[[[[[[[[[[[[[[[[[[[[[[[[[[[[}',
                             $method;
 
-        print form 
+        print form
             '=================[ {||||||||||||||||||||||||||} ]=================',
                                           $recipe,
             '                                                                  ',
@@ -1183,7 +1182,7 @@ There are several ways to achieve that effect. The most obvious is to format eac
 
 We could even chain the calls to `form` to eliminate the interim variables:
 
-        print form 
+        print form
             '=================[ {||||||||||||||||||||||||||} ]=================',
                                           $recipe,
             '                                                                  ',
@@ -1204,7 +1203,7 @@ We could even chain the calls to `form` to eliminate the interim variables:
 
 While it's impressive to be able to do that kind of nested formatting (and highly useful in extreme formatting scenarios), it's also far too ungainly for regular use. A cleaner, more maintainable solution is use a single format and just build the method column up piecemeal, like so:
 
-        print form 
+        print form
             '=================[ {||||||||||||||||||||||||||} ]=================',
                                           $recipe,
             '                                                                  ',
@@ -1232,7 +1231,7 @@ An overflow field automagically duplicates the field specification immediately a
 
 Using overflow fields, we could rewrite our quotation generator like this:
 
-        print form 
+        print form
             '=================[ {||||||||||||||||||||||||||} ]=================',
                                           $recipe,
             '                                                                  ',
@@ -1242,7 +1241,7 @@ Using overflow fields, we could rewrite our quotation generator like this:
             '                                   {VVVVVVVVVVVVVVVVVVVVVVVVVVVV} ',
             'Serves:                            {VVVVVVVVVVVVVVVVVVVVVVVVVVVV} ',
             '   {<<<<<<<<<<<<<<<<<<<<}          {VVVVVVVVVVVVVVVVVVVVVVVVVVVV} ',
-                $serves,                        
+                $serves,
             '                                   {VVVVVVVVVVVVVVVVVVVVVVVVVVVV} ',
             'Ingredients:                       {VVVVVVVVVVVVVVVVVVVVVVVVVVVV} ',
             '   {[[[[[[[[[[[[[[[[[[[[}          {VVVVVVVVVVVVVVVVVVVVVVVVVVVV} ',
@@ -1281,7 +1280,7 @@ we'd get:
         his   wrinkled                             front;  /   And
         now,   instead                             of     mounting
         barded  steeds                             / To fright the
-        souls       of                             fearful        
+        souls       of                             fearful
         adversaries, /                             He       capers
         nimbly  in   a                             lady's chamber.
 
@@ -1322,97 +1321,97 @@ The `{VVVVVVVV}` fields only consumed as much data from `$speech` as was require
             "                  Biography:                           ",
             "Status:             {<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}", $bio,
             "  {[[[[[[[[[[[[}    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", $status,
-            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", 
+            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "Comments:           {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "  {[[[[[[[[[[[}     {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", $comments;
 
 only consume as much of the overflowing `$bio` field as necessary, the result is something like:
 
-        Name:                                                  
-          William                                             
-          Shakespeare                                         
-                          Biography:                          
-        Status:             William Shakespeare was born on    
-          Deceased (1564    April 23, 1564 in Strathford-upon- 
-          -1616)            Avon, England; he was third of     
-                            eight children from Father John    
-        Comments:           Shakespeare and Mother Mary Arden. 
-          Theories          Shakespeare began his education at 
-          abound as to      the age of seven when he probably  
-          the true          attended the Strathford grammar    
-          author of his     school. The school provided        
-          plays. The        Shakespeare with his formal        
-          prime             education. The students chiefly    
-          alternative       studied Latin rhetoric, logic, and 
-          candidates        literature. His knowledge and      
-          being Sir         imagination may have come from his 
-          Francis           reading of ancient authors and     
-          Bacon,            poetry. In November 1582,          
-          Christopher       Shakespeare received a license to  
+        Name:
+          William
+          Shakespeare
+                          Biography:
+        Status:             William Shakespeare was born on
+          Deceased (1564    April 23, 1564 in Strathford-upon-
+          -1616)            Avon, England; he was third of
+                            eight children from Father John
+        Comments:           Shakespeare and Mother Mary Arden.
+          Theories          Shakespeare began his education at
+          abound as to      the age of seven when he probably
+          the true          attended the Strathford grammar
+          author of his     school. The school provided
+          plays. The        Shakespeare with his formal
+          prime             education. The students chiefly
+          alternative       studied Latin rhetoric, logic, and
+          candidates        literature. His knowledge and
+          being Sir         imagination may have come from his
+          Francis           reading of ancient authors and
+          Bacon,            poetry. In November 1582,
+          Christopher       Shakespeare received a license to
           Marlowe, or       marry Anne Hathaway. At the time of
-          Edward de         their marriage, Shakespeare was 18 
+          Edward de         their marriage, Shakespeare was 18
           Vere              years old and Anne was 26. They had
                             three children, the oldest Susanna,
-                            and twins- a boy, Hamneth, and a   
-                            girl, Judith. Before his death on    
-                            April 23 1616, William Shakespeare 
-                            had written thirty-seven plays. He 
-                            is generally considered the        
-                            greatest playwright the world has  
-                            ever known and has always been the 
+                            and twins- a boy, Hamneth, and a
+                            girl, Judith. Before his death on
+                            April 23 1616, William Shakespeare
+                            had written thirty-seven plays. He
+                            is generally considered the
+                            greatest playwright the world has
+                            ever known and has always been the
                             world's most popular author.
 
 If `{VVVVVVVVVVV}` fields ate their entire data – the way `{[[[[[[[[[}` or `{IIIIIIIIII}` fields do – then the output would be much less satisfactory. The first block overflow field for `$bio` would have to consume the entire biography, before the comments field was even reached. So our output would be something like:
 
-        Name:                                                                
-          William                                                
-          Shakespeare                                            
-                          Biography:                          
-        Status:             William Shakespeare was born on    
-          Deceased (1564    April 23, 1564 in Strathford-upon- 
-          -1616)            Avon, England; he was third of     
-                            eight children from Father John    
-                            Shakespeare and Mother Mary Arden. 
-                            Shakespeare began his education at 
-                            the age of seven when he probably  
-                            attended the Strathford grammar    
-                            school. The school provided        
-                            Shakespeare with his formal        
-                            education. The students chiefly    
-                            studied Latin rhetoric, logic, and 
-                            literature. His knowledge and      
-                            imagination may have come from his 
-                            reading of ancient authors and     
-                            poetry. In November 1582,          
-                            Shakespeare received a license to  
+        Name:
+          William
+          Shakespeare
+                          Biography:
+        Status:             William Shakespeare was born on
+          Deceased (1564    April 23, 1564 in Strathford-upon-
+          -1616)            Avon, England; he was third of
+                            eight children from Father John
+                            Shakespeare and Mother Mary Arden.
+                            Shakespeare began his education at
+                            the age of seven when he probably
+                            attended the Strathford grammar
+                            school. The school provided
+                            Shakespeare with his formal
+                            education. The students chiefly
+                            studied Latin rhetoric, logic, and
+                            literature. His knowledge and
+                            imagination may have come from his
+                            reading of ancient authors and
+                            poetry. In November 1582,
+                            Shakespeare received a license to
                             marry Anne Hathaway. At the time of
-                            their marriage, Shakespeare was 18 
+                            their marriage, Shakespeare was 18
                             years old and Anne was 26. They had
                             three children, the oldest Susanna,
-                            and twins- a boy, Hamneth, and a   
-                            girl, Judith. Before his death on  
-                            April 23 1616, William Shakespeare 
-                            had written thirty-seven plays. He 
-                            is generally considered the        
-                            greatest playwright the world has  
-                            ever known and has always been the 
-                            world's most popular author.       
-                                                       
-        Comments:                                               
-          Theories                                               
-          abound as to                                           
-          the true                                               
-          author of his                                          
-          plays. The                                             
-          prime                                                  
-          alternative                                            
-          candidates                                             
-          being Sir                                              
-          Francis                                                
-          Bacon,                                                 
-          Christopher                                            
-          Marlowe, or                                            
-          Edward de                                              
+                            and twins- a boy, Hamneth, and a
+                            girl, Judith. Before his death on
+                            April 23 1616, William Shakespeare
+                            had written thirty-seven plays. He
+                            is generally considered the
+                            greatest playwright the world has
+                            ever known and has always been the
+                            world's most popular author.
+
+        Comments:
+          Theories
+          abound as to
+          the true
+          author of his
+          plays. The
+          prime
+          alternative
+          candidates
+          being Sir
+          Francis
+          Bacon,
+          Christopher
+          Marlowe, or
+          Edward de
           Vere
 
 Which is precisely why `{VVVVVVVVVVV}` fields don't work that way.
@@ -1495,7 +1494,7 @@ For example, if we always wanted to break at the exact width of the field (with 
                 return ($result, $more);
             }
         }
-        
+
         print form
             :break(&break_width),
             "|{[[[[[}|",
@@ -1526,11 +1525,11 @@ Or we might prefer to break on every single whitespace-separated word:
                 # Check for any more data still to come...
                 my bool $more = m:cont/ <before: .* \S> /;
 
-                # Otherwise, return broken text and "more" flag... 
+                # Otherwise, return broken text and "more" flag...
                 return ($found{word}, $more);
             }
         }
-        
+
         print form
             :break(&break_word),
             "|{[[[[[}|",
@@ -1569,7 +1568,7 @@ There are (at least) three schools of thought when it comes to setting out a cal
                                  $bio,
             "  {[[[[[[[[[[[[}    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
                $status,
-            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", 
+            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "Comments:           {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "  {[[[[[[[[[[[}     {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
                $comments;
@@ -1584,7 +1583,7 @@ It does, however, break up the "abstract picture" that the formats portray, whic
             "                  Biography:                           ",
             "Status:             {<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}", $bio,
             "  {[[[[[[[[[[[[}    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", $status,
-            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", 
+            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "Comments:           {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "  {[[[[[[[[[[[}     {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", $comments;
 
@@ -1598,16 +1597,16 @@ Sometimes, however, the data to be interpolated doesn't come neatly pre-packaged
             "                  Biography:                           ",
             "Status:             {<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}",%person{biog},
             "  {[[[[[[[[[[[[}    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",%person{stat},
-            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}", 
+            "                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "Comments:           {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",
             "  {[[[[[[[[[[[}     {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}",%person{comm};
 
 So `form` has an option that lets us put a single, multi-line format at the start of the argument list, place all the data together after it, and have that data automatically interleaved as necessary. Not surprisingly, that option is: `:interleave`. It's normally used in conjunction with a heredoc, since that's the easiest way to specify a multi-line string in Perl:
 
         print form :interleave, <<'EOFORMAT',
-               Name:                                                 
-                 {[[[[[[[[[[[[}                                      
-                                 Biography:                          
+               Name:
+                 {[[[[[[[[[[[[}
+                                 Biography:
                Status:             {<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<}
                  {[[[[[[[[[[[[}    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}
                                    {VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV}
@@ -1636,14 +1635,14 @@ The normal behaviour of `form` is to take each format string, fill in each field
 
 would normally produce this:
 
-        Name:    King Lear           Role: Protagonist 
-        Address: The Cliffs, Dover                     
+        Name:    King Lear           Role: Protagonist
+        Address: The Cliffs, Dover
         _______________________________________________
         Name:    The Three Witches   Role: Plot devices
-        Address: Dismal Forest, Scotland               
+        Address: Dismal Forest, Scotland
         _______________________________________________
-        Name:    Iago                Role: Villain     
-        Address: Casa d'Otello, Venezia               
+        Name:    Iago                Role: Villain
+        Address: Casa d'Otello, Venezia
         _______________________________________________
 
 because the entire three-line format is repeatedly filled in as a single unit, line-by-line and datum-by-datum.
@@ -1660,12 +1659,12 @@ On the other hand, if we tell `form` that it's supposed to automatically interle
 
 then the call produces:
 
-        Name:    King Lear           Role: Protagonist 
+        Name:    King Lear           Role: Protagonist
         Name:    The Three Witches   Role: Plot devices
-        Name:    Iago                Role: Villain     
-        Address: The Cliffs, Dover                     
-        Address: Dismal Forest, Scotland               
-        Address: Casa d'Otello, Venezia               
+        Name:    Iago                Role: Villain
+        Address: The Cliffs, Dover
+        Address: Dismal Forest, Scotland
+        Address: Casa d'Otello, Venezia
         _______________________________________________
 
 because that second version is really equivalent to:
@@ -1700,8 +1699,8 @@ But a small quandry arises. In what order should `form` fill in these fields? Sh
         And  all  the  clouds   anged to merry meeti-   rful  adversaries,  /
         that lour'd upon  our   ngs, /  Our  dreadful   He capers nimbly in a
         house / In  the  deep   marches to delightful   lady's chamber.
-        bosom  of  the  ocean   measures.   /   Grim-   
-        buried. / Now are our   visaged war hath smo-   
+        bosom  of  the  ocean   measures.   /   Grim-
+        buried. / Now are our   visaged war hath smo-
         brows bound with vic-   oth'd  his   wrinkled
 
 Or should the data be run line-by-line across all three columns (the way a Perl 5 `format` does it), filling one line completely before starting the next:
@@ -1761,7 +1760,7 @@ So far, all the examples of tables we've created (for example, our [normalized s
         my @play = map {"$_\r"}  ( "Othello", "Richard III", "Hamlet"   );
         my @name = map {"$_\r"}  ( "Iago",    "Henry",       "Claudius" );
 
-        print form 
+        print form
              "Character       Appears in  ",
              "____________    ____________",
              "{[[[[[[[[[[}    {[[[[[[[[[[}",
@@ -1771,8 +1770,8 @@ correctly produces:
 
         Character       Appears in
         ____________    ____________
-        Iago            Othello     
-                                  
+        Iago            Othello
+
         Henry           Richard III
 
         Claudius        Hamlet
@@ -1796,16 +1795,16 @@ the same formatter would produce:
         Character       Appears in
         ____________    ____________
         Iago            Othello, The
-                        Moor of     
-        Henry,          Venice      
+                        Moor of
+        Henry,          Venice
         Earl of
-        Richmond        The Life and         
-                        Death of    
+        Richmond        The Life and
+                        Death of
         Claudius,       King Richard
-        King of         III         
-        Denmark         
-                        Hamlet,     
-                        Prince of   
+        King of         III
+        Denmark
+                        Hamlet,
+                        Prince of
                         Denmark
 
 The problem is that the two block fields we're using just grab all the data from each array and format it independently into each column. Usually that's fine because the columns *are* independent (as we've [previously seen](/pub/2004/02/27/exegesis7.html?page=5#able_verbatim_to_rehearse...)).
@@ -1823,16 +1822,16 @@ which then produces the desired result:
         Character       Appears in
         ____________    ____________
         Iago            Othello, The
-                        Moor of     
-                        Venice      
-                                    
+                        Moor of
+                        Venice
+
         Henry,          The Life and
-        Earl of         Death of    
+        Earl of         Death of
         Richmond        King Richard
-                        III         
-                                    
-        Claudius,       Hamlet,     
-        King of         Prince of   
+                        III
+
+        Claudius,       Hamlet,
+        King of         Prince of
         Denmark         Denmark
 
 ------------------------------------------------------------------------
@@ -1975,7 +1974,7 @@ The width of the starred comment field in this case is 49 columns – the defaul
 
 If a format contains two or more starred fields, the available space is shared equally between them. So, for example, to create two equal columns (say, to compare the contents of two files), we might use:
 
-        print form 
+        print form
              "{[[[[{*}[[[[}   {[[[[{*}[[[[}",
               slurp($file1),  slurp($file2);
 
@@ -1988,7 +1987,7 @@ There is one special case for starred fields: a starred verbatim field:
 It acts like any other starred field, growing according to the available space, except that it will never grow any wider than the widest line of the data it is formatting. For example, whereas a regular starred field:
 
 
-        print form 
+        print form
              '| {[[{*}[[} |',
                 $monologue;
 
@@ -1998,18 +1997,18 @@ expands to the full page width:
         | Made glorious summer by this sun of York;                     |
         | And all the clouds that lour'd upon our house                 |
         | In the deep bosom of the ocean buried.                        |
-        | Now are our brows bound with victorious wreaths               |  
+        | Now are our brows bound with victorious wreaths               |
         | Our bruised arms hung up for monuments;                       |
         | Our stern alarums changed to merry meetings,                  |
         | Our dreadful marches to delightful measures.                  |
         | Grim-visaged war hath smooth'd his wrinkled front;            |
-        | And now, instead of mounting barded steeds                    |  
-        | To fright the souls of fearful adversaries,                   |  
+        | And now, instead of mounting barded steeds                    |
+        | To fright the souls of fearful adversaries,                   |
         | He capers nimbly in a lady's chamber.                         |
 
 a starred verbatim field:
 
-        print form 
+        print form
              '| {""{*}""} |',
                 $monologue;
 
@@ -2019,13 +2018,13 @@ only expands as much as is strictly necessary to accommodate the data:
         | Made glorious summer by this sun of York;          |
         | And all the clouds that lour'd upon our house      |
         | In the deep bosom of the ocean buried.             |
-        | Now are our brows bound with victorious wreaths;   |  
+        | Now are our brows bound with victorious wreaths;   |
         | Our bruised arms hung up for monuments;            |
         | Our stern alarums changed to merry meetings,       |
         | Our dreadful marches to delightful measures.       |
         | Grim-visaged war hath smooth'd his wrinkled front; |
-        | And now, instead of mounting barded steeds         |  
-        | To fright the souls of fearful adversaries,        |  
+        | And now, instead of mounting barded steeds         |
+        | To fright the souls of fearful adversaries,        |
         | He capers nimbly in a lady's chamber.              |
 
 #### <span id="that_we_our_largest_bounty_may_extend...">That we our largest bounty may extend...</span>
@@ -2251,26 +2250,26 @@ This fills the empty space either side of the centred title with a repeated `=-=
 
         =-=-=-=-=-=-=-[ Table of Contents ]-=-=-=-=-=-=-=
 
-           Foreword. . . . . . . . . . . . . . . . . .i   
-           Preface . . . . . . . . . . . . . . . . .iii   
-           Glossary. . . . . . . . . . . . . . . . . vi   
-           Introduction. . . . . . . . . . . . . . . .1   
-           The Tempest . . . . . . . . . . . . . . . .7   
-           Two Gentlemen of Verona . . . . . . . . . 17   
-           The Merry Wives of Winsor . . . . . . . . 27   
-           Twelfh Night. . . . . . . . . . . . . . . 39   
-           Measure for Measure . . . . . . . . . . . 50   
-           Much Ado About Nothing. . . . . . . . . . 62   
-           A Midsummer Night's Dream . . . . . . . . 73   
-           Love's Labour's Lost. . . . . . . . . . . 82   
-           The Merchant of Venice. . . . . . . . . . 94   
+           Foreword. . . . . . . . . . . . . . . . . .i
+           Preface . . . . . . . . . . . . . . . . .iii
+           Glossary. . . . . . . . . . . . . . . . . vi
+           Introduction. . . . . . . . . . . . . . . .1
+           The Tempest . . . . . . . . . . . . . . . .7
+           Two Gentlemen of Verona . . . . . . . . . 17
+           The Merry Wives of Winsor . . . . . . . . 27
+           Twelfh Night. . . . . . . . . . . . . . . 39
+           Measure for Measure . . . . . . . . . . . 50
+           Much Ado About Nothing. . . . . . . . . . 62
+           A Midsummer Night's Dream . . . . . . . . 73
+           Love's Labour's Lost. . . . . . . . . . . 82
+           The Merchant of Venice. . . . . . . . . . 94
            As You Like It. . . . . . . . . . . . . .105
 
 Note that the fill sequence doesn't have to be a single character and that the fill pattern is consistent across multiple fields and between adjacent lines. That is, it's as if every field is first filled with the same fill pattern, then the actual data written over the top. That's particularly handy in the above example, because it ensures that the fill pattern seamlessly bridges the boundary between the adjacent contents and pages fields.
 
 It's also possible to specify separate fill sequences for the left- and right-hand gaps in a particular field, using the `:lfill` and `:rfill` options. This is particularly common for numerical fields. For example, this call to `form`:
 
-        print form 
+        print form
           'Name              Bribe (per dastardry)',
           '=============     =====================',
           '{[[[[[[[[[[[}         {]],]]].[[[}     ',
@@ -2289,7 +2288,7 @@ with the numeric field padded with whitespace and only showing as many decimal p
 
 However, in order to prevent subsequent..err...creative calligraphy (they *are*, after all, villains and would presumably not hesitate to add a few digits to the front of each number), we might prefer to put stars before the numbers and show all decimal places. We could do that like so:
 
-        print form 
+        print form
           'Name              Bribe (per dastardry)',
           '=============     =====================',
           '{[[[[[[[[[[[}         {]],]]].[[[}     ',
@@ -2345,10 +2344,10 @@ we'd get:
 
         Task                      Processor
         ====                      =========
-        Borrow story                  1      
-        Rename characters             2      
-        Subdivide into scenes         3      
-        Write dialogue                4      
+        Borrow story                  1
+        Rename characters             2
+        Subdivide into scenes         3
+        Write dialogue                4
         Check rhythm and meter  [unallocated]
         Insert puns and japes   [unallocated]
 
@@ -2400,29 +2399,29 @@ without the first `{VVVVVVVVV}` field eating all the data out of `$bio` and leav
 
 That's a very handy feature, but restricting the "minimal height" feature to overflow fields turns out to be not good enough in the general case. For instance, suppose we had wanted the biography field to start at the first line of the output text:
 
-        Name:             Biography:                            
-          William           William Shakespeare was born on    
-          Shakespeare       April 23, 1564 in Strathford-upon- 
-                            Avon, England; he was third of     
-        Status:             eight children from Father John    
-          Deceased (1564    Shakespeare and Mother Mary Arden. 
-          -1616)            Shakespeare began his education at 
-                            the age of seven when he probably  
-        Comments:           attended the Strathford grammar    
-          Theories          school. The school provided        
-          abound as to      Shakespeare with his formal        
-          the true          education. The students chiefly    
-          author of his     studied Latin rhetoric, logic, and 
-          plays. The        literature. His knowledge and      
-          prime             imagination may have come from his 
-          alternative       reading of ancient authors and     
-          candidates        poetry. In November 1582,          
-          being Sir         Shakespeare received a license to  
+        Name:             Biography:
+          William           William Shakespeare was born on
+          Shakespeare       April 23, 1564 in Strathford-upon-
+                            Avon, England; he was third of
+        Status:             eight children from Father John
+          Deceased (1564    Shakespeare and Mother Mary Arden.
+          -1616)            Shakespeare began his education at
+                            the age of seven when he probably
+        Comments:           attended the Strathford grammar
+          Theories          school. The school provided
+          abound as to      Shakespeare with his formal
+          the true          education. The students chiefly
+          author of his     studied Latin rhetoric, logic, and
+          plays. The        literature. His knowledge and
+          prime             imagination may have come from his
+          alternative       reading of ancient authors and
+          candidates        poetry. In November 1582,
+          being Sir         Shakespeare received a license to
           Francis           marry Anne Hathaway. At the time of
-          Bacon,            their marriage, Shakespeare was 18 
+          Bacon,            their marriage, Shakespeare was 18
           Christopher       years old and Anne was 26. They had
           Marlowe, or       three children, the oldest Susanna,
-          Edward de         and twins- a boy, Hamneth, and a   
+          Edward de         and twins- a boy, Hamneth, and a
           Vere              girl, Judith. Before his death on
                             April 23 1616, William Shakespeare
                             had written thirty-seven plays. He
@@ -2451,65 +2450,65 @@ To do that, we would have required a call to `form` like this:
 
 Note that the first line of the Biography field now has to be a block field, not a single-line field (as in previous versions). It can't be a single-line, because the Name field is a block field and that would leave a gap in the Biography column:
 
-        Name:             Biography:                            
-          William           William Shakespeare was born on    
-          Shakespeare       
-                            April 23, 1564 in Strathford-upon- 
-        Status:             Avon, England; he was third of     
+        Name:             Biography:
+          William           William Shakespeare was born on
+          Shakespeare
+                            April 23, 1564 in Strathford-upon-
+        Status:             Avon, England; he was third of
                             etc.
 
 So it has to be a block field, to "keep up" with however much output the multi-line Name field produces. Unfortunately, starting the Biography column with a normal block field doesn't solve the problem either. In fact we get:
 
-        Name:             Biography:                            
-          William           William Shakespeare was born on    
-          Shakespeare       April 23, 1564 in Strathford-upon- 
-                            Avon, England; he was third of     
-                            eight children from Father John    
-                            Shakespeare and Mother Mary Arden. 
-                            Shakespeare began his education at 
-                            the age of seven when he probably  
-                            attended the Strathford grammar    
-                            school. The school provided        
-                            Shakespeare with his formal        
-                            education. The students chiefly    
-                            studied Latin rhetoric, logic, and 
-                            literature. His knowledge and      
-                            imagination may have come from his 
-                            reading of ancient authors and     
-                            poetry. In November 1582,          
-                            Shakespeare received a license to  
+        Name:             Biography:
+          William           William Shakespeare was born on
+          Shakespeare       April 23, 1564 in Strathford-upon-
+                            Avon, England; he was third of
+                            eight children from Father John
+                            Shakespeare and Mother Mary Arden.
+                            Shakespeare began his education at
+                            the age of seven when he probably
+                            attended the Strathford grammar
+                            school. The school provided
+                            Shakespeare with his formal
+                            education. The students chiefly
+                            studied Latin rhetoric, logic, and
+                            literature. His knowledge and
+                            imagination may have come from his
+                            reading of ancient authors and
+                            poetry. In November 1582,
+                            Shakespeare received a license to
                             marry Anne Hathaway. At the time of
-                            their marriage, Shakespeare was 18 
+                            their marriage, Shakespeare was 18
                             years old and Anne was 26. They had
                             three children, the oldest Susanna,
-                            and twins- a boy, Hamneth, and a   
-                            girl, Judith. Before his death on  
-                            April 23 1616, William Shakespeare 
-                            had written thirty-seven plays. He 
-                            is generally considered the        
-                            greatest playwright the world has  
-                            ever known and has always been the 
-                            world's most popular author.       
-                                                               
-        Status:                                                
-          Deceased (1564                                       
-          -1616)                                               
-                                                               
-        Comments:                                              
-          Theories                                             
-          abound as to                                         
-          the true                                             
-          author of his                                        
-          plays. The                                           
-          prime                                                
-          alternative                                          
-          candidates                                           
-          being Sir                                            
-          Francis                                              
-          Bacon,                                               
-          Christopher                                          
-          Marlowe, or                                          
-          Edward de                                            
+                            and twins- a boy, Hamneth, and a
+                            girl, Judith. Before his death on
+                            April 23 1616, William Shakespeare
+                            had written thirty-seven plays. He
+                            is generally considered the
+                            greatest playwright the world has
+                            ever known and has always been the
+                            world's most popular author.
+
+        Status:
+          Deceased (1564
+          -1616)
+
+        Comments:
+          Theories
+          abound as to
+          the true
+          author of his
+          plays. The
+          prime
+          alternative
+          candidates
+          being Sir
+          Francis
+          Bacon,
+          Christopher
+          Marlowe, or
+          Edward de
           Vere
 
 Normal block fields are remorseless in consuming all of their data. So the first Biography field absolutely will not stop formatting, ever, until your entire `$biography` string is gone.
@@ -2540,7 +2539,7 @@ Note that any kind of block field can be modified in this way: justified, numeri
 
 As some of the examples we've seen so far illustrate, formats frequently consist of a set of column titles, followed by the corresponding columns of data. And, typically, those column titles are underlined to make them stand out:
 
-        print form 
+        print form
           'Name              Bribe (per dastardry)',
           '=============     =====================',
           '{[[[[[[[[[[[}         {]],]]].[[[}     ',
@@ -2548,7 +2547,7 @@ As some of the examples we've seen so far illustrate, formats frequently consist
 
 So `form` has an option that automates that process. For example, the payments example above could also have been written:
 
-        print form 
+        print form
           'Name              Bribe (per dastardry)',
           :under("="),
           '{[[[[[[[[[[[}         {]],]]].[[[}     ',
@@ -2581,7 +2580,7 @@ Many people, of course, prefer to draw the underlines themselves, as the results
 
 The default [fill-with-spaces behaviour](/pub/2004/02/27/exegesis7.html?page=10#he_doth_fill_fields_with_harness...) of fields is useful to preserve the vertical alignment of columns within a formatted text, but it could also potentially increase the size of `form`'s output unnecessarily. For example, the following:
 
-        print form 
+        print form
             'To Do:',
             '   {[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[}',
                 @todo;
@@ -2589,12 +2588,12 @@ The default [fill-with-spaces behaviour](/pub/2004/02/27/exegesis7.html?page=10#
 might produce something like:
 
         To Do:
-           Dissemble                                         
-           Deceive                                           
-           Dispute                                           
-           Defy                                              
-           Duel                                              
-           Defeat                                            
+           Dissemble
+           Deceive
+           Dispute
+           Defy
+           Duel
+           Defeat
            Dispatch                                          
 
 That looks fine but, because each line is produced by the large left-justified field that is automatically filled with whitespace, the output contains several hundred more space characters than are strictly necessary (you probably didn't notice them, but they're all there – hanging off the right sides of the individual To-Do items).
@@ -2788,16 +2787,16 @@ which prints:
 
              34  The fair Ophelia! -- Nymph, in thy orisons            34
              35  Be all my sins remembered.                            35
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
-                  
+
+
+
+
+
+
+
+
+
+
                                      END OF TEXT
         ^L
 
@@ -2829,7 +2828,7 @@ For example, to add line numbers to the text each page (but *not* to the headers
 
             # Remember line numbers from call to call...
             state $linenum = 1;
-        
+
             # Compute range of line numbers
             my @linenums = ($linenum .. $linenum+@lines-1);
 
@@ -2859,31 +2858,31 @@ For example, to add line numbers to the text each page (but *not* to the headers
 which produces:
 
         ==========
-                    
-        1      Now is the winter of our discontent /  
-        2      Made glorious summer by this sun of    
-        3      York; / And all the clouds that lour'd 
-        4      upon our house / In the deep bosom of  
-        5      the ocean buried. / Now are our brows  
-        6      bound with victorious wreaths; / Our   
-        7      bruised arms hung up for monuments; /  
-        8      Our stern alarums changed to merry     
-        9      meetings, / Our dreadful marches to    
-                    
+
+        1      Now is the winter of our discontent /
+        2      Made glorious summer by this sun of
+        3      York; / And all the clouds that lour'd
+        4      upon our house / In the deep bosom of
+        5      the ocean buried. / Now are our brows
+        6      bound with victorious wreaths; / Our
+        7      bruised arms hung up for monuments; /
+        8      Our stern alarums changed to merry
+        9      meetings, / Our dreadful marches to
+
         ==========
-                    
-        10     delightful measures. Grim-visaged war  
+
+        10     delightful measures. Grim-visaged war
         11     hath smooth'd his wrinkled front; / And
-        12     now, instead of mounting barded steeds 
-        13     / To fright the souls of fearful       
-        14     adversaries, / He capers nimbly in a   
-        15     lady's chamber.                        
-                    
-                    
-                    
-                    
+        12     now, instead of mounting barded steeds
+        13     / To fright the souls of fearful
+        14     adversaries, / He capers nimbly in a
+        15     lady's chamber.
+
+
+
+
         ==========
-                    
+
         16                      To be, or not to be -- that is the question: /
         17                         Whether 'tis nobler in the mind to suffer /
         18                       The slings and arrows of outrageous fortune /
@@ -2893,21 +2892,21 @@ which produces:
         22                      The heartache, and the thousand natural shocks
         23                      / That flesh is heir to. 'Tis a consummation /
         24                        Devoutly to be wished. To die, to sleep -- /
-                    
+
         ==========
-                    
+
         25                         To sleep -- perchance to dream: ay, there's
         26                          the rub, / For in that sleep of death what
         27                         dreams may come / When we have shuffled off
         28                             this mortal coil, / Must give us pause.
         29                        There's the respect / That makes calamity of
         30                                                       so long life.
-                       
-                       
-                       
-                       
-                       
-                       
+
+
+
+
+
+
                         
 
 *Editor's note: this document is out of date and remains here for historic interest. See [Synopsis 7](http://dev.perl.org/perl6/doc/design/syn/S07.html) for the current design information.*
@@ -2940,18 +2939,18 @@ to produce:
 
         [Ye following tranfcript hath been cenfored by Order of ye King]
 
-                 And therefore, since I cannot prove a lover,  
-                 To entertain these fair well-spoken days,     
-                 I am determined to prove a XXXXXXX            
-                 And hate the idle pleasures of these days.    
-                 XXXXs have I laid, inductions dangerous,      
-                 By drunken prophecies, XXXXXs and dreams,     
-                 To set my brother Clarence and the king       
-                 In XXXXXX hate the one against the other:     
-                 And if King Edward be as true and just        
-                 As I am subtle, XXXXX and XXXXXXXXXXX,        
-                 This day should Clarence closely be mew'd up, 
-                 About a prophecy, which says that XXX         
+                 And therefore, since I cannot prove a lover,
+                 To entertain these fair well-spoken days,
+                 I am determined to prove a XXXXXXX
+                 And hate the idle pleasures of these days.
+                 XXXXs have I laid, inductions dangerous,
+                 By drunken prophecies, XXXXXs and dreams,
+                 To set my brother Clarence and the king
+                 In XXXXXX hate the one against the other:
+                 And if King Edward be as true and just
+                 As I am subtle, XXXXX and XXXXXXXXXXX,
+                 This day should Clarence closely be mew'd up,
+                 About a prophecy, which says that XXX
                  Of Edward's heirs the XXXXXXXX shall be.
 
 Of course, if this were Puritanism and not Perl, we might have a long list of proscribed words that we needed to excise from *every* formatted text. In that case, rather that explicitly running every data source through the same censorious subroutine, it would be handy if `form` had a built-in field that did that for us automatically.
@@ -3010,7 +3009,7 @@ Having created a subroutine to translate censor fields and another to break-and-
             # Make the new field type standard by default in this scope...
             use Form :field[ /\{ X+ \}/ => &censor_field ];
 
-            # Re-export the specialized &form that was imported above...  
+            # Re-export the specialized &form that was imported above...
             sub form is exported {...}
 
         }
@@ -3019,7 +3018,7 @@ Okay, admittedly that's quite a lot of work. But the pay-off is huge: we can now
 
         use Ministry::Of::Truth;
 
-        print form 
+        print form
             "[Ye following tranfcript hath been cenfored by Order of ye King]\n\n",
             "        {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX}",
                       $speech;
@@ -3047,7 +3046,7 @@ prints:
         k o n i r
         e u d e l
           n   n s
-          d   t  
+          d   t
         ~~~~~~~~~
 
 Note that we needed to use a unary `*` to flatten the `«like round and orient perls»` data list. That's because every argument of `form` is evaluated in scalar context, and an unflattened `«...»` list in scalar context becomes an array reference, rather than the five separate strings we needed to fill our five single-character fields.
@@ -3059,7 +3058,7 @@ Single fields are particularly useful for labelling the vertical axes of a graph
         @vert_label = «Villain's fortunes»
         $hor_label  = "Time";
 
-        print form 
+        print form
            '     ^                                        ',
            ' = = | {""""""""""""""""""""""""""""""""""""} ', *@vert_label, @data,
            '     +--------------------------------------->',
@@ -3067,19 +3066,19 @@ Single fields are particularly useful for labelling the vertical axes of a graph
 
 which produces:
 
-             ^                                        
-             |                                        
-         V   |       *                                
-         i f |     *   *                              
-         l o |    *     *                             
-         l r |                                        
-         a t |   *       *                            
-         i u |                                        
-         n n |  *         *                           
-         ' e |                                        
-         s s |                                        
-             |                                        
-             | *           *                          
+             ^
+             |
+         V   |       *
+         i f |     *   *
+         l o |    *     *
+         l r |
+         a t |   *       *
+         i u |
+         n n |  *         *
+         ' e |
+         s s |
+             |
+             | *           *
              +--------------------------------------->
                                Time
 
@@ -3111,16 +3110,16 @@ Bulleted lists of items are a very common feature of reports, but as we saw [ear
 Suppose, for example, we want a list of items bulleted by "diamonds":
 
         <> A rubber sword (laminated with mylar to
-           look suitably shiny).                   
-        <> Cotton tights (summer performances).   
-        <> Woolen tights (winter performances or  
+           look suitably shiny).
+        <> Cotton tights (summer performances).
+        <> Woolen tights (winter performances or
            those actors who are willing to admit
-           to being over 65 years of age).                 
-        <> Talcum powder.                         
-        <> Codpieces (assorted sizes).            
-        <> Singlet.                               
-        <> Double.                                
-        <> Triplet (Kings and Emperors only).     
+           to being over 65 years of age).
+        <> Talcum powder.
+        <> Codpieces (assorted sizes).
+        <> Singlet.
+        <> Double.
+        <> Triplet (Kings and Emperors only).
         <> Supercilious attitude (optional).
 
 Something like this works well enough:
@@ -3215,15 +3214,15 @@ Bullets can be any string we like, and there can be more than one of them in a s
 
 would print:
 
-        + A rubber sword,                65 years of age).     
-          laminated with mylar         + Talcum powder.        
-          to look suitably             + Codpieces (assorted   
-          shiny.                         sizes).               
-        + Cotton tights (summer        + Singlet.              
-          performances).               + Double.               
-        + Woolen tights (winter        + Triplet (Kings and    
-          performances or those          Emperors only).       
-          actors who are willing       + Supercilious attitude 
+        + A rubber sword,                65 years of age).
+          laminated with mylar         + Talcum powder.
+          to look suitably             + Codpieces (assorted
+          shiny.                         sizes).
+        + Cotton tights (summer        + Singlet.
+          performances).               + Double.
+        + Woolen tights (winter        + Triplet (Kings and
+          performances or those          Emperors only).
+          actors who are willing       + Supercilious attitude
           to admit to being over         (optional).
 
 We can even change bullets in mid-`form`, which is useful for multi-level bulleting. Of course, in that case we're going to need a loop again, since `form` itself has only one level of intrinsic looping:
@@ -3248,24 +3247,24 @@ We can even change bullets in mid-`form`, which is useful for multi-level bullet
 
 This would produce:
 
-        * Mineral                       
+        * Mineral
             - Gold, for which men thirst
-            - Salt, by which men thirst 
-            - Sand, on which men thirst 
-        * Animal                        
+            - Salt, by which men thirst
+            - Sand, on which men thirst
+        * Animal
             - The mighty destrider, ship
-              of the knight             
+              of the knight
             - The patient cat, warden of
-              the granary               
-            - Our beloved king, whom we 
-              shall soon have to kill   
-        * Vegetable                     
-            - The lovely peony, garland 
-              of Eddore                 
+              the granary
+            - Our beloved king, whom we
+              shall soon have to kill
+        * Vegetable
+            - The lovely peony, garland
+              of Eddore
             - The mighty oak, from which
-              tiny acorns grow          
-            - The humble cabbage, both  
-              food and metaphor for the 
+              tiny acorns grow
+            - The humble cabbage, both
+              food and metaphor for the
               fool
 
 ------------------------------------------------------------------------

@@ -8,7 +8,6 @@
    "tags" : [
       "autrijus-tang",
       "cpan",
-      "edd-dumbill",
       "eurooscon",
       "european-open-source-convention",
       "gettext-bindings",
