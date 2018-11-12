@@ -1,8 +1,8 @@
 {
    "thumbnail" : "/images/perl-and-cgi/thumb_cgi-official-guide-book-cover.jpg",
-   "date" : "2018-10-31T18:41:08",
-   "categories" : "cpan",
-   "draft" : true,
+   "date" : "2018-11-12T10:36:08",
+   "categories" : "web",
+   "draft" : false,
    "title" : "Perl and CGI",
    "description" : "The CGI module helped Perl grow when the web first blew up. Now it's out of Core and discouraged. What happened?",
    "authors" : [
@@ -215,10 +215,10 @@ There are two big issues with CGI: speed and complexity. Every HTTP request trig
 
 CGI isn't good at managing the complexity of larger web applications: it has no MVC architecture to help developers separate concerns. This tends to lead to hard-to-maintain programs.
 
-The rise of web frameworks such as Ruby on Rails, and the application servers they run on, have done much to solve both problems. There are many web frameworks written in Perl; among the most popular [Catalyst]( https://metacpan.org/pod/Catalyst::Manual), [Dancer](https://metacpan.org/pod/Dancer2), and [Mojolicious](https://metacpan.org/pod/Mojolicious).
+The rise of web frameworks such as Ruby on Rails, and the application servers they run on, have done much to solve both problems. There are many web frameworks written in Perl; among the most popular are [Catalyst]( https://metacpan.org/pod/Catalyst::Manual), [Dancer](https://metacpan.org/pod/Dancer2), and [Mojolicious](https://metacpan.org/pod/Mojolicious).
 
 ## References
 
 The "good" parts of CGI.pm, the header creation and parameter parsing, are well-explained in [the module's documentation](https://metacpan.org/pod/CGI). As for the deprecated HTML generation functions, [the documentation has moved to a different document](https://metacpan.org/pod/CGI::HTML::Functions) in the current version.
 
-Lincoln Stein, the creator of CGI.pm also wrote the [Official Guide](https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448), the front cover of which adorns this article. The book is 20 years old, and out of date but remains a clear and concise resource to CGI.pm.
+Lincoln Stein, the creator of CGI.pm also wrote the [Official Guide](https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448), the front cover of which adorns this article. The book is 20 years old, and out of date but remains a clear and concise resource about CGI.pm.
