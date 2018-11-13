@@ -28,7 +28,12 @@ Conventions
 
     code blocks
 
-- Use header 3 for subtitles and header 4 for sub-subtitles (this might [change](https://github.com/tpf/perldotcom/issues/143).
+- Use header 2 for subtitles, with the dash style:
+
+    Foo Bar
+    -------
+    
+This is nicer to read and edit than the leading pound symbols (`## Foo Bar`). Older articles use header 3, but we intend to substitute those to use header 2.
 
 Tips
 ----
