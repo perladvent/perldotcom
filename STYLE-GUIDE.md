@@ -30,9 +30,11 @@ Conventions
 
 - Use header 2 for subtitles, with the dash style:
 
-    Foo Bar
-    -------
-    
+```
+Foo Bar
+-------
+```
+
 This is nicer to read and edit than the leading pound symbols (`## Foo Bar`). Older articles use header 3, but we intend to substitute those to use header 2.
 
 Tips
