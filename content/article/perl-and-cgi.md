@@ -219,6 +219,6 @@ The rise of web frameworks such as Ruby on Rails, and the application servers th
 
 ## References
 
-The "good" parts of CGI.pm, the header creation and parameter parsing, are well-explained in [the module's documentation](https://metacpan.com/pod/CGI). [Earlier versions of the module's documentation](https://metacpan.org/release/LDS/CGI.pm-3.04) cover more about what you can do with the older, deprecated parts.
+The "good" parts of CGI.pm, the header creation and parameter parsing, are well-explained in [the module's documentation](https://metacpan.org/pod/CGI). As for the deprecated HTML generation functions, [the documentation has moved to a different document](https://metacpan.org/pod/CGI::HTML::Functions) in the current version.
 
 Lincoln Stein, the creator of CGI.pm also wrote the [Official Guide](https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448), the front cover of which adorns this article. The book is 20 years old, and out of date but remains a clear and concise resource to CGI.pm.
