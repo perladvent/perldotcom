@@ -120,7 +120,7 @@ So, now, let's make a web page like this:
 <head>
 </head>
 <body>
-    <form method="POST" action="/path/to/simple.cgi">
+    <form method="POST" action="/url/of/simple.cgi">
         <input type="text" name="foo" value="bar">
         <input type="submit">
     </form>
@@ -161,7 +161,7 @@ use Template;
 my $cgi      = CGI->new;
 my $template = Template->new();
 my $input    = join "\n", <DATA>;
-my $data     = { action => '/path/to/program'} ;
+my $data     = { action => '/url/of/program'} ;
 
 print $cgi->header;
 $template->process(\$input,$data)
