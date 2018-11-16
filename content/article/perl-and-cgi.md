@@ -21,6 +21,8 @@
 
 CGI stands for [Common Gateway Interface](https://tools.ietf.org/html/rfc3875#section-6.2.1), it's a protocol for executing scripts via web requests, and in the late 1990's was the main way to write dynamic programs for the Web. It's also the name of the Perl [module]({{< mcpan "CGI" >}}) we used (and for me, still use) to code for the web.
 
+**Warning** you probably don't want to use CGI for modern web development, see [Why Not to Use CGI](#why-not-to-use-cgi).
+
 ## CGI and HTTP
 
 You've probably heard of HTTP (HyperText Transfer Protocol), which is the communications protocol used by most Internet services. Broadly speaking, CGI programs receive HTTP requests, and return HTTP responses. An HTTP response header must include the status and the content-type. CGI (the interface) makes this easy.
@@ -209,7 +211,7 @@ So that `foo.pl` will transfer but `foo.cgi` will run, even if both are executab
 
 It was marked deprecated with 5.20 and removed from Core with 5.22. This is not catastrophic; it is still available in CPAN, so you would have to install it, or have your administrator install it, depending on your circumstances.
 
-So, why did CGI drop from "state of the art" to discouraged by it's own maintainers? 
+So, why did CGI drop from "state of the art" to discouraged by its own maintainers? 
 
 There are two big issues with CGI: speed and complexity. Every HTTP request triggers the forking of a new process on the web server, which is costly for server resources. A more efficient and faster way is to use a multi-process daemon which does its forking on startup and maintains a pool of processes to handle requests.
 
@@ -217,8 +219,12 @@ CGI isn't good at managing the complexity of larger web applications: it has no 
 
 The rise of web frameworks such as Ruby on Rails, and the application servers they run on, have done much to solve both problems. There are many web frameworks written in Perl; among the most popular are [Catalyst]( https://metacpan.org/pod/Catalyst::Manual), [Dancer](https://metacpan.org/pod/Dancer2), and [Mojolicious](https://metacpan.org/pod/Mojolicious).
 
+CGI also contains a security [vulnerability](https://metacpan.org/pod/distribution/CGI/lib/CGI.pod#Fetching-the-value-or-values-of-a-single-named-parameter) which must be coded around to avoid parameter injection.
+
 ## References
 
 The "good" parts of CGI.pm, the header creation and parameter parsing, are well-explained in the module's [documentation](https://metacpan.org/pod/CGI). As for the deprecated HTML generation functions, they are documented [separately](https://metacpan.org/pod/CGI::HTML::Functions).
 
 Lincoln Stein, the creator of CGI.pm also wrote the [Official Guide](https://www.amazon.com/Official-Guide-Programming-CGI-pm-Lincoln/dp/0471247448), the front cover of which adorns this article. The book is 20 years old, and out of date but remains a clear and concise resource about CGI.pm.
+
+Lee Johnson, the current maintainer of CGI.pm wrote a long form blog [post](https://leejo.github.io/2016/02/22/all_software_is_legacy/) about the history of CGI, its current state and future.
