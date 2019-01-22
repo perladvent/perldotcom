@@ -1,7 +1,7 @@
 {
    "categories" : "science",
    "thumbnail" : "/images/find-relationships-quickly-in-data-with-chart-plot/thumb_2017-mlb-so-hr-lg.png",
-   "title" : "Find Relationships quickly in data with Chart::Plot",
+   "title" : "Find Relationships Quickly in Data With Chart::Plot",
    "description" : "This lightweight module powers through data",
    "authors" : [
       "david-farrell"
@@ -56,7 +56,7 @@ My script opens the csv (which is tab separated) and parses it, pushing the colu
 
 A cursory look at this data would suggest there *is* a correlation between strikeouts and home runs, maybe hard-throwing pitchers throw more strikes, but the additional velocity gives up more home runs?
 
-Multiple Series
+Multiple series
 ---------------
 To display multiple series on the chart, simply call `setData` for each additional series to add. I've updated the MLB data to include which league the pitcher was throwing in:
 
