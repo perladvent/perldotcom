@@ -54,7 +54,7 @@ Finally I launched Selenium server:
 
     java -Dwebdriver.chrome.driver=/usr/bin/chromedriver -jar selenium-server-standalone-3.14.0.jar
 
-This must be running in order for Perl communicate with Chrome using Selenium.
+This must be running in order for Perl to communicate with Chrome using Selenium.
 
 A basic spider
 --------------
