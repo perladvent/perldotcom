@@ -105,7 +105,7 @@ By default, Chart::Plot produces charts with a transparent background. If you wa
 
     $ convert -flatten 2017-mlb-so-hr.png 2017-mlb-so-hr-whitebg.png
 
-But Chart::Plot gives you access to the underlying GD graphics object, so why not manipulate directly in the script?
+But Chart::Plot gives you access to the underlying GD graphics object, so why not manipulate it directly in the script?
 
 ```perl
 my $gd = $img->getGDobject();
