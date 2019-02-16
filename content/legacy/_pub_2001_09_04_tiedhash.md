@@ -29,7 +29,7 @@ Tied objects are, in my opinion, an underused feature of Perl. The details (toge
 
 ### <span id="using tied objects">Using Tied Objects</span>
 
-In your Perl program, you make use of a `tie`d object by calling the `tie` function. `tie` takes two mandatory parameters: the variable that you are `tie`ing and the name of the class to `tie` it to, followed by any number of optional paramters. For example, if we had written the hash with fixed keys discussed earlier (which we will do soon), we could use the class in our program like this:
+In your Perl program, you make use of a `tie`d object by calling the `tie` function. `tie` takes two mandatory parameters: the variable that you are `tie`ing and the name of the class to `tie` it to, followed by any number of optional parameters. For example, if we had written the hash with fixed keys discussed earlier (which we will do soon), we could use the class in our program like this:
 
       use Tie::Hash::FixedKey;
 
@@ -75,7 +75,7 @@ This method is called when the user calls the `delete` function to remove one of
 
 **<span id="item_CLEAR">CLEAR</span>**
   
-This method is called when the user clears the whole hash (usually by asigning an empty list to the hash). It is passed a reference to the tied object.
+This method is called when the user clears the whole hash (usually by assigning an empty list to the hash). It is passed a reference to the tied object.
 
 **<span id="item_EXISTS">EXISTS</span>**
   
@@ -208,7 +208,7 @@ In order to make this change to the behavior of the hash, we need to override th
         return;
       }
 
-Knowing what we know about tied objects, this is pretty simple to follow. We start by getting the reference to the tied object (which will be a hash reference) and the required key. We then check to see whether the key is a reference to a precompiled regular expression (which would have been compiled with `qr//`. If the key *isn't* a regex, then we start by checking whether the key exists in the hash. If it does, we return the associated value. If the key isn't found, then we assume that it is a regex to search for. At this point we compile the regex as if it isn't already precompiled (this gives us a preforamnce boost as we could potentially need to match the regex against all of the keys in the hash). Finally, we check each key in the hash in turn against the regex and if it matches, then we return the associated value. If there are no matches we simply `return`.
+Knowing what we know about tied objects, this is pretty simple to follow. We start by getting the reference to the tied object (which will be a hash reference) and the required key. We then check to see whether the key is a reference to a precompiled regular expression (which would have been compiled with `qr//`. If the key *isn't* a regex, then we start by checking whether the key exists in the hash. If it does, we return the associated value. If the key isn't found, then we assume that it is a regex to search for. At this point we compile the regex as if it isn't already precompiled (this gives us a performance boost as we could potentially need to match the regex against all of the keys in the hash). Finally, we check each key in the hash in turn against the regex and if it matches, then we return the associated value. If there are no matches we simply `return`.
 
 At this point you may realize that it's possible for more than one key to match a regex and you may suggest that it would be nice for [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) to return *all* matches as if it was called in scalar context. This is a nice idea, but in current versions of Perl the syntax `$hash{$key}` *always* calls [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) in scalar context (and the syntax `@hash{@keys}` calls [`FETCH`](/pub/2001/09/04/tiedhash.html#item_FETCH) once in scalar context for each element of `@keys`) so this won't work. To get round this, you can use the slightly kludgey syntax `@vals = tied(%hash)->FETCH($pattern)` and the version of the module on CPAN supports this.
 
