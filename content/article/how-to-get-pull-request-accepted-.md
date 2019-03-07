@@ -4,7 +4,7 @@
     "authors"     : ["mohammad-anwar"],
     "date"        : "2019-03-05T20:35:00",
     "tags"        : ["github", "metacpan"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "Sharing my secrets to getting a PR approved",
