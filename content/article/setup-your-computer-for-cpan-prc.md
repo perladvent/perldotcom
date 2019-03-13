@@ -24,41 +24,30 @@ On Ubuntu:
 
 Alternatively, see the instructions for [macOS](https://docs.docker.com/docker-for-mac/install/) and [Windows](https://docs.docker.com/docker-for-windows/install/).
 
-#### 2: Find out your system architecture
-
-You need to figure out which one of i686 or x86_64 is right for you. On Ubuntu/macOS:
-
-    $ uname --machine
-
-On Windows:
-
-    > wmic os get osarchitecture
-
-#### 3: Fork & clone the repo
+#### 2: Fork & clone the repo
 
 Now you need to fork and clone the Github repository you were assigned for the PRC. For example, I created this [fork](https://github.com/kyzn/App-p), and can clone it with:
 
     $ git clone https://github.com/kyzn/App-p ~/Desktop/App-p
 
-#### 4: Run Docker
+#### 3: Run Docker
 
-I have prepared a docker [image](https://github.com/kyzn/perlbrew-prc-dockerimage) which comes with the latest stable version of Perl (5.26.1), [perlbrew]({{<mcpan "App::perlbrew">}}), [cpanm]({{<mcpan "App::cpanminus">}}) and [dzil]({{<mcpan "Dist::Zilla" >}}), all pre-installed.
+I have prepared a docker [image](https://github.com/kyzn/perlbrew-prc-dockerimage) which comes with a stable version of Perl, [perlbrew]({{<mcpan "App::perlbrew">}}), [cpanm]({{<mcpan "App::cpanminus">}}) and [dzil]({{<mcpan "Dist::Zilla" >}}), all pre-installed.
 
 Here's how I would run docker on the repo I cloned in step 3:
 
-    $ docker run -v ~/Desktop/App-p:/App-p -it kyzn/perlbrew-prc:x86_64
+    $ docker run -v ~/Desktop/App-p:/App-p -it kyzn/perlbrew-prc
 
 Where:
 
   - `~/Desktop/App-p` is the local path to the repo
   - `/App-p` is the path of the directory inside the Docker image
-  - `x86_64` is the system architecture from step 2
 
 This will launch an Ubuntu image as root user, mounting the repository to `/App-p`. Git is installed, but you need to use your local (non-Docker) terminal to pull/push. The text editors nano, vim, and emacs are installed in the image as well. You can also use your local text editor.
 
 #### Building a Docker Image
 
-If you tried both `x86_64` and `i686` and neither worked for you, you can build the docker image by hand. Note that this will take some time:
+Alternatively, you can build the docker image by hand. Note that this will take some time:
 
     $ git clone https://github.com/kyzn/perlbrew-prc-dockerimage
     $ cd perlbrew-prc-dockerimage
@@ -96,13 +85,13 @@ Once it's done, it will ask you to add `source ~/perl5/perlbrew/etc/bashrc` to y
 
 #### 2: Install Perl
 
-Now that we have Perlbrew in place, we can go ahead and install a Perl on our own, keeping system Perl alone. I am going to suggest installing latest stable-version, which happens to be 5.26.1 at the time of this writing. You may run `perlbrew available` to see most common versions. Note that this will take a while.
+Now that we have Perlbrew in place, we can go ahead and install a Perl on our own, keeping system Perl alone. I am going to suggest installing latest stable-version. You may run `perlbrew available` to see most common versions. Note that this will take a while.
 
-    $ perlbrew install -j 4 perl-stable
+    $ perlbrew install -j 4 stable
 
 There are two ways to use a Perl version with Perlbrew: `use` and `switch`. `use` is temporary, it goes away once you close the terminal. That's why I recommend `switch`, which will make it permanent. Change the version to the one you just installed. You can run `perlbrew list` to see installed versions.
 
-    $ perlbrew switch perl-5.26.1
+    $ perlbrew switch $(perlbrew stable)
 
 To make sure switch worked, check your Perl version in the terminal:
 
