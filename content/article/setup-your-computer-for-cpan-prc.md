@@ -91,7 +91,7 @@ Now that we have Perlbrew in place, we can go ahead and install a Perl on our ow
 
 There are two ways to use a Perl version with Perlbrew: `use` and `switch`. `use` is temporary, it goes away once you close the terminal. That's why I recommend `switch`, which will make it permanent. Change the version to the one you just installed. You can run `perlbrew list` to see installed versions.
 
-    $ perlbrew switch $(perlbrew stable)
+    $ perlbrew switch $(perlbrew list)
 
 To make sure switch worked, check your Perl version in the terminal:
 
