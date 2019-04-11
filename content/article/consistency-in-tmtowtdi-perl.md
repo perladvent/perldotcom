@@ -7,7 +7,7 @@
   "draft"       : false,
   "image"       : "",
   "thumbnail"   : "",
-  "description" : "Some tips for improving consistency shared Perl codebases",
+  "description" : "Some tips for improving consistency in shared Perl codebases",
   "categories"  : "development"
 }
 
