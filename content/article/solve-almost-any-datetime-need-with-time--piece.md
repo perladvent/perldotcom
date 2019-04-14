@@ -88,13 +88,13 @@ my $eastern_datetime = Time::Piece->strptime('2015-10-05T09:34:19 -0400','%Y-%m-
 my $pacific_datetime = Time::Piece->strptime('2015-10-05T09:34:19 -0700','%Y-%m-%dT%T %z');
 ```
 
-**Warning** Time::Piece fails to parse timezones with semicolons in them. To handle that, just remove the semicolon from the timezone before passing it to `strptime`:
+**Warning** Time::Piece fails to parse timezones with colons in them. To handle that, just remove the colon from the timezone before passing it to `strptime`:
 
 ```perl
 use Time::Piece;
 
 my $datetime = '2015-10-05T09:34:19 -04:00';
-$datetime    =~ s/([+\-]\d\d):(\d\d)/$1$2;
+$datetime    =~ s/([+\-]\d\d):(\d\d)/$1$2/;
 my $dt       = Time::Piece->strptime($datetime, "%Y-%m-%dT%H:%M:%S %z");
 
 ```
