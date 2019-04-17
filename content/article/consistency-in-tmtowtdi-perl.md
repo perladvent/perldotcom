@@ -27,7 +27,7 @@ When you're involved in a project that has multiple developers you will have dif
 
 My recommendation is to use a git pre-commit hook that runs [Perl::Critic]({{< mcpan "Perl::Critic" >}}) and [perltidy]({{< mcpan "perltidy" >}}). The latter might be more cosmetic than anything else, but I find it helpful. I know that there are other possible tools, but I think that these three are a good combination to use, in order to have practical coding standards and consistent-looking code.
 
-Setup Perl::Critic and Perl::Tidy
+Set Up Perl::Critic and Perl::Tidy
 ------------------
 You can install [Perl::Critic]({{< mcpan "Perl::Critic" >}}) and [Perl::Tidy](<{{ mcpan "Perl::Tidy" >}}) from CPAN or they might be available on your package manager. Once installed, you'll need to configure them.
 
@@ -71,7 +71,7 @@ These are described in the Perl::Tidy [documentation](https://metacpan.org/pod/d
 
 Commit both `.perlcriticrc` and `.perltidyrc` to your repo.
 
-Setup the Git Pre-commit Hook
+Set Up the Git Pre-commit Hook
 ------------------
 For existing projects, you'll want to run perlcritic and perltidy on all existing files *before* creating this pre-commit hook, fixing any files which don't pass perlcritic or break perltidy. This is so that each subsequent commit will only be critiqued and tidied on the changes contained in the commit.
 
