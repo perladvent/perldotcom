@@ -79,7 +79,13 @@ Some modules require extra libraries. For example, if you want to install the My
 
 ### Installing modules without root
 
-XXX: cover local::lib
+Using CPAN is convenient when you have root rights. If not, the workaround for you is local::lib. You can think of it as a "virtual environment" from other languages (like Python's pip with virtualenv).
+
+It will let you to build and install Perl modules without building and installing your own Perl. Local::lib will use your "system" Perl but won't install new modules there. Instead of that it will do a trick with your system's environment.
+
+This approach obviously have some cons. They are mostly about transitions (those modules are not portable and other user don't have access to your local::lib), but also you might be trapped in using old version of Perl.
+
+[Local:lib page](https://metacpan.org/pod/distribution/local-lib/lib/local/lib.pm) on CPAN has a comprehensive documentation on how to properly install and use this glorious module.
 
 ### MetaCPAN - browsing, downloading
 
