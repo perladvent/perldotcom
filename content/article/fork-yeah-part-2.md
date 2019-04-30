@@ -104,7 +104,7 @@ while (1) {
 }
 ```
 
-I've used the group `sys_wait_h` to import multiple symbols from the POSIX module. This time, both child and parent are in infinite while loops. If I pause the child by sending it SIGSTOP, `waitpid` will return. The parent tests whether the child was stopped with the macro `WIFSTOPPED`, if if so it sends SIGCONT to the child via `kill`, resuming it.
+I've used the group `sys_wait_h` to import multiple symbols from the POSIX module. This time, both child and parent are in infinite while loops. If I pause the child by sending it SIGSTOP, `waitpid` will return. The parent tests whether the child was stopped with the macro `WIFSTOPPED`, if so it sends SIGCONT to the child via `kill`, resuming it.
 
 Running the script as `wuntraced.pl`:
 
