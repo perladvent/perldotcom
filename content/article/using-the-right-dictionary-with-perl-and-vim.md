@@ -203,3 +203,5 @@ vnoremap <leader>d :<c-u>WebsterSearch(@*)<cr>
 This maps the same shortcut when Vim is in visual mode; `<c-u>` clears the range automatically entered by Vim, then it calls the function passing the register variable `@*` (the last highlighted text) as the search term.
 
 I've uploaded this code to [GitHub](https://github.com/dnmfarrell/WebsterSearch), along with Vim install instructions.
+
+An alternative to searching the raw dictionary text is to use [GCIDE](http://gcide.gnu.org.ua/) (h/t [frew](https://blog.afoolishmanifesto.com/)) which is based on Webster's 1913 dictionary, and has machine-readable markup for easier parsing.
