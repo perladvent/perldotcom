@@ -21,9 +21,9 @@ When I'm working on code, I have to open a lot of files.  I work primarily at th
 * `git-grep` results
 * GitHub URLs
 
-Figuring this stuff out isn't generally that hard, but it can make your day just a little longer than it needs to be, so I wrote [ot](https://metacpan.org/pod/ot): a command line utility provided by [Open::This](https://metacpan.org/pod/Open::This)
+Figuring this stuff out isn't generally that hard, but it can make your day just a little longer than it needs to be, so I wrote [ot]({{< mcpan "ot" >}}): a command line utility provided by [Open::This]({{< mcpan "Open::This" >}}).
 
-I'll be using `vim` in examples, but [ot](https://metacpan.org/pod/ot) also supports `nvim`, `emacs`,`nano` and `pico`, defaulting to whatever you have set in `$ENV{EDITOR}`.
+I'll be using `vim` in examples, but `ot` also supports `nvim`, `emacs`,`nano` and `pico`, defaulting to whatever you have set in `$ENV{EDITOR}`.
 
 Following Along
 ---------------
