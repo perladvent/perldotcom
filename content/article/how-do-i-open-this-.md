@@ -82,8 +82,10 @@ In my case it opens `/.plenv/versions/5.26.1/lib/perl5/site_perl/5.26.1/Test/Mor
 Opening a File Using a Line Number
 ----------------------------------
 
-### Stack Traces
-I see a lot of stack traces on any given day.  A relevant chunk of a strack trace might look like: `Died at lib/Git/Helpers.pm line 50.`
+#### Stack Traces
+I see a lot of stack traces on any given day.  A relevant chunk of a stack trace might look like: `Died at lib/Git/Helpers.pm line 50.`
+
+Doing this by hand I might copy the file path and enter the following at the command line:
 
 ```bash
 $ vim lib/Git/Helpers.pm
@@ -103,7 +105,7 @@ $ ot lib/Git/Helpers.pm line 50
 
 This will do the right thing and open `lib/Git/Helpers.pm` in `vim` at line 50.
 
-### git-grep
+#### git-grep
 
 The results of some searches, like `git grep`, can contain line numbers as well as file names.  To configure this behaviour in git use the following command:
 
