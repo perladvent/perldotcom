@@ -75,9 +75,10 @@ For highlighted code syntax, use a fenced code block with the programming langua
 
 Otherwise just use a code block (fenced or indented style) and it will be displayed in monospace on a dark background. This is used for showing data and terminal commands.
 
-Article subheadings are size `h3`. So use the following construct:
+Article subheadings are size `h2`. So use the following construct:
 
-    ### Subtitle goes here
+    Subtitle goes here
+    ------------------
 
 Create links to CPAN modules with the `mcpan` shortcode:
 
