@@ -11,8 +11,6 @@
     "categories"  : "development"
   }
 
-# How do I Open This?
-
 When I'm working on code, I have to open a lot of files.  I work primarily at the command line, inside a vim editor.  On any given day I may need to translate some or all of the following into file paths that vim can understand:
 
 * Stack traces
