@@ -4,7 +4,7 @@
     "authors"     : ["olaf-alders"],
     "date"        : "2019-06-03T18:26:42",
     "tags"        : ["vim", "emacs","pico","nano","git","github"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "Find and open files with ease",
