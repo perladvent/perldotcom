@@ -58,7 +58,7 @@ If the file can't be found in one of the standard lib locations, ot will try to 
 $ ot Git::Helpers
 ```
 
-Might open open the following file: `~/.plenv/versions/5.26.1/lib/perl5/site_perl/5.26.1/Git/Helpers.pm`.
+might open open the following file: `~/.plenv/versions/5.26.1/lib/perl5/site_perl/5.26.1/Git/Helpers.pm`.
 
 Opening a Perl Module at a Subroutine Declaration
 -------------------------------------------------
