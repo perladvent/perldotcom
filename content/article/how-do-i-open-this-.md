@@ -13,17 +13,17 @@
 
 # How do I Open This?
 
-When I'm working on code, I have to open a lot of files.  I work primarily at the command line, inside a `vim` editor.  On any given day I may need to translate some or all of the following into file paths that `vim` can understand:
+When I'm working on code, I have to open a lot of files.  I work primarily at the command line, inside a vim editor.  On any given day I may need to translate some or all of the following into file paths that vim can understand:
 
 * Stack traces
 * Perl module names
 * Perl module names suffixed with subroutine names
-* `git-grep` results
+* git-grep results
 * GitHub URLs
 
 Figuring this stuff out isn't generally that hard, but it can make your day just a little longer than it needs to be, so I wrote [ot]({{< mcpan "ot" >}}): a command line utility provided by [Open::This]({{< mcpan "Open::This" >}}).
 
-I'll be using `vim` in examples, but `ot` also supports `nvim`, `emacs`,`nano` and `pico`, defaulting to whatever you have set in `$ENV{EDITOR}`.
+I'll be using vim in examples, but ot also supports nvim, emacs,nano and pico, defaulting to whatever you have set in `$ENV{EDITOR}`.
 
 Following Along
 ---------------
@@ -38,13 +38,13 @@ $ cd git-helpers
 Using a Perl Module Name
 ------------------------
 
-We're now in the root of the **git-helpers** `Git` repository.  Let's say we want to open the `Git::Helpers` module.  Translating a Perl module name into a file path isn't all that hard.  Given something like `Git::Helpers`, I know that I'm likely (but not always) looking for a file called `Git/Helpers.pm`.  This could be in `lib`, `t/lib` or some custom directory.  If I know exactly where to find this file, I can invoke `vim` directly: `vim lib/Git/Helpers.pm`.
+We're now in the root of the **git-helpers** Git repository.  Let's say we want to open the Git::Helpers module.  Translating a Perl module name into a file path isn't all that hard.  Given something like Git::Helpers, I know that I'm likely (but not always) looking for a file called `Git/Helpers.pm`.  This could be in lib, t/lib or some custom directory.  If I know exactly where to find this file, I can invoke vim directly:
 
 ```bash
 $ vim lib/Git/Helpers.pm
 ```
 
-This works because, by default, `ot` will search your `lib` and `t/lib` directories for local files. You can override this via the `$ENV{OPEN_THIS_LIBS}` variable. It accepts a comma-separated list of libs.
+However, if I'm not sure, or if I'm just lazy, this will get me to the same place:
 
 ```bash
 ot Git::Helpers
@@ -69,7 +69,7 @@ Let's take this a step further.  What if we want to open a file for a module but
 $ ot "Git::Helpers::is_inside_work_tree()"
 ```
 
-That's it.  This will Do The Right Thing.  (Note that in this case we had to quote the args to `ot`.  Your shell will likely require this as well.)
+That's it.  This will Do The Right Thing.  (Note that in this case we had to quote the args to ot.  Your shell will likely require this as well.)
 
 We can do exactly the same thing for an installed module.  Try this command:
 
@@ -91,19 +91,19 @@ Doing this by hand I might copy the file path and enter the following at the com
 $ vim lib/Git/Helpers.pm
 ```
 
-If I'm feeling fancy, I might translate the line number into something that `vim` understands:
+If I'm feeling fancy, I might translate the line number into something that vim understands:
 
 ```bash
 $ vim +50 lib/Git/Helpers.pm
 ```
 
-Or, I can just copy the file location and line number and feed it to `ot`:
+Or, I can just copy the file location and line number and feed it to ot:
 
 ```bash
 $ ot lib/Git/Helpers.pm line 50
 ```
 
-This will do the right thing and open `lib/Git/Helpers.pm` in `vim` at line 50.
+This will do the right thing and open `lib/Git/Helpers.pm` in vim at line 50.
 
 #### git-grep
 
@@ -115,14 +115,14 @@ $ git config --global grep.lineNumber true
 
 If you don't want to configure this directly in git you can also search via `git grep --line-number foo`.
 
-Now that we've got line numbers in our `git grep` output, we can use its output to give hints to `ot`:
+Now that we've got line numbers in our git grep output, we can use its output to give hints to ot:
 
 ```bash
 $ git grep 'sub _build_latest_release' .
 lib/Git/Helpers/CPAN.pm:70:sub _build_latest_release {
 ```
 
-Having run the above search, we can copy paste the results to `ot`:
+Having run the above search, we can copy paste the results to ot:
 
 ```bash
 $ ot lib/Git/Helpers/CPAN.pm:70
@@ -133,7 +133,7 @@ This will now open `lib/Git/Helpers/CPAN.pm` at line 70.
 Opening a File at an Arbitrary Line and Column
 ----------------------------------------------
 
-As we saw above, `ot` can open files at the correct line number.  Let's get even lazier and have `ot` open our files at the correct line **and** column.
+As we saw above, ot can open files at the correct line number.  Let's get even lazier and have ot open our files at the correct line **and** column.
 
 If you use  the `--vimgrep` option with `ripgrep` then you will see column numbers as well as line numbers with your search results.  For example:
 
@@ -143,7 +143,7 @@ $ rg --vimgrep '_build_latest_release' .
 ./lib/Git/Helpers/CPAN.pm:70:5:sub _build_latest_release {
 ```
 
-To open `lib/Git/Helpers/CPAN.pm` at line 20 and column 17, simply copy/paste the `rg` output and pass it to `ot`:
+To open `lib/Git/Helpers/CPAN.pm` at line 20 and column 17, simply copy/paste the rg output and pass it to ot:
 
 ```bash
 $ ot ./lib/Git/Helpers/CPAN.pm:20:17
@@ -191,7 +191,7 @@ opens [https://github.com/oalders/git-helpers/blob/master/lib/Git/Helpers.pm#L75
 Opening a File in Your `$ENV{PATH}`
 -----------------------------------
 
-`ot` can also be used as a shortcut to inspect files which can be found inside your `$ENV{PATH}`.
+ot can also be used as a shortcut to inspect files which can be found inside your `$ENV{PATH}`.
 
 For example:
 
