@@ -19,14 +19,13 @@
 
 # <a data-flickr-embed="true"  href="https://www.flickr.com/photos/psyberartist/6686826117/in/photolist-bbTJrt-28sUivg-4pmCYD-9mdKd7-7VxQhR-4CVtdx-6vrn8j-4z5Bhr-4z9Nv5-myEcPM-dPWcrC-WsgtAz-8Abc1E-boy26K-4z5uUX-VMfv6t-4rSXe5-wW28d-7bEhFQ-7VpksA-eA5gX-bbTJbx-ctmiLG-z1h1wd-dwxyRd-7w1CMn-7VgBD8-4QTAq6-LLQ3c-6SNXrT-bbTGni-8w7Q4K-amYZ6G-6SNXeZ-GeSUyQ-4z9TrA-nhj9Fq-kZgme-R6sN5Z-kZg5P-5p5fH-22NTQhn-4ZH1sM-4z5uFp-4z5ymX-4z9P3Y-43GAdZ-25pBqzb-4z5CcB-7wYADF" title="cracked"><img src="https://farm8.staticflickr.com/7167/6686826117_2f7c1d2971_b.jpg" width="1024" height="708" alt="cracked"></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
 
-By some alignment of the stars, lately I've run into the same problem in different contexts and in different projects this year. What happens in an external command when a shell has spaces or other special characters?
+By some alignment of the stars, lately I've run into the same problem in different contexts and in different projects this year. What happens in an external command when an argument has spaces or other special characters?
 
-Ever wonder why weird restrictions on whitespace exists in web forms? It's probably because the backend can't deal with values with whitespace. Or, at some point the programmer dealt with such a system and it scarred them for life; they are spacephobic.
+Ever wonder why web forms have weird restrictions on whitespace? It's probably because the backend can't deal with values with whitespace or other special characters. Or, at some point the programmer dealt with such a system and it scarred them for life; they are spacephobic. The mechanics of some underlying mechanism leak through and infect the your application-level experience.
 
-We tend to assume that we can interpolate strings into a command line and everything will be fine, even if we actually know how that can be dangerous. I explain those dangers in [Mastering Perl](https://www.masteringperl.org) but ignore here. You can read about some of that in [perlsec](https://perldoc.perl.org/perlsec.html).
+We tend to assume that we can interpolate strings into a command line and everything will be fine, even if we actually know how that can be dangerous. I explain some of those dangers in [Mastering Perl](https://www.masteringperl.org) when I write about Perl's taint checking. You can also read about some of that in [perlsec](https://perldoc.perl.org/perlsec.html). I'll ignore all that for this short article.
 
-
-My example here uses a macOS command that I have been playing with, but this applies to just about any Unix-ish external command. On Windows, you have additional concerns because you have to know what `cmd` is going to do as well has a particular program will handle its own argument string. I don't go into that in this article.
+My example here uses a macOS command that I have been playing with, but this applies to just about any Unix-ish external command. On Windows, you have additional concerns because you have to know what `cmd` is going to do as well has a particular program will handle its own argument string.
 
 ### Doing it the wrong way
 
@@ -50,7 +49,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-Even though I know intellectually that this won't work, I wrote it that way anyway because it's easy. We tend to write the easiest thing first even though we know it will have problems later. Some people call this [technical debt](https://www.martinfowler.com/bliki/TechnicalDebt.html); I call it being lazy. And, we all do it. When I run my program, some of the calls have problems:
+Even though I know intellectually that this won't work, I wrote it that way initially because it's easy. I took a shortcut and it ended up biting. When I run my program, some of the calls have problems:
 
 ```
 $ perl shellwords.pl *
@@ -66,6 +65,8 @@ llama.pl
 shellwords.pl
 vicunas.txt                    	Orange
 ```
+
+We tend to write the easiest thing first even though we know it will have problems later. Some people call this [technical debt](https://www.martinfowler.com/bliki/TechnicalDebt.html); I call it being lazy. And, we all do it.
 
 Consider what those failing commands look like. The "weird" filenames don't look like a single argument to the command. One of them is even suspicious. And, I think I have many more parens in filenames that anyone ever envisioned:
 
@@ -104,7 +105,7 @@ shellwords.pl
 vicunas.txt                    	Orange
 ```
 
-At one point I figured that I'd just [quotemeta](https://cocoatech.com/#/) the whole thing even though I knew that was designed to protect strings in regular expressions:
+At one point I figured that I'd just [quotemeta](https://perldoc.perl.org/functions/quotemeta.html) the whole thing even though I knew that was designed to protect strings in regular expressions:
 
 ```perl
 foreach my $file ( @ARGV ) {
@@ -132,7 +133,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-It looks like it works (although I wouldn't be my life on it):
+It looks like it works (although I wouldn't bet my life on it based on my performance with this task so far):
 
 ```
 alpaca.pl
@@ -155,7 +156,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-Blerg. That works but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). I can open a pipe to the command and specify the command and its arguments as a list. This doesn't require quoting nor escaping anything because each argument in Perl is one argument in the command:
+Blerg. That works but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like [system](https://perldoc.perl.org/functions/system.html) in its list form):
 
 ```perl
 foreach my $file ( @ARGV ) {
@@ -165,11 +166,13 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-How much work was this to get right? Hardly any. It's annoying to do this little bit more, but it's much less painful than a bunch of support tickets or angry mobs at your desk. Remember, it doesn't matter how rare the edge case is; it matters how damaging it is. Some things I can't control, but this situation is not one of those things. A couple minutes here saves lots of time and money later.
+How much work was this to get right? Hardly any. It's annoying to do this little bit more, but it's much less painful than a bunch of support tickets or angry mobs at your desk.
+
+Remember, it doesn't matter as much how rare the edge case is; it matters how damaging it is. Some things I can't control, but this situation is not one of those things. A couple minutes here saves lots of time and money later.
 
 ### Capturing output with modules
 
-I could do the same thing with the core module [IPC::Open3](https://metacpan.org/pod/IPC::Open3):
+I can run external commands with arguments with the core module [IPC::Open3](https://metacpan.org/pod/IPC::Open3):
 
 ```perl
 use IPC::Open3;
@@ -184,7 +187,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-The CPAN module [Capture::Tiny](https://metacpan.org/pod/Capture::Tiny) can do the same thing with a slightly more pleasing interface at the cost of an external dependency:
+The CPAN module [Capture::Tiny](https://metacpan.org/pod/Capture::Tiny) can do the same thing with a slightly more pleasing interface (at the cost of an external dependency):
 
 ```perl
 use Capture::Tiny qw(capture_stdout);
