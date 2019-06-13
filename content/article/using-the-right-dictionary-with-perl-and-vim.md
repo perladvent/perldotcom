@@ -28,7 +28,7 @@ Every entry in the 1913 text edition begins with the capitalized term at the beg
     domesticated variety of the guanaco. It was formerly much used as a
     beast of burden in the Andes.
 
-In this case it tells us that "llama" is a noun, originating from Peru. The abbreviation "Zoöl." means it's a Zoölogical term. Wiktionary has a handy [list](https://en.wiktionary.org/wiki/Wiktionary:Abbreviations_in_Webster) Webster's abbreviations.
+In this case it tells us that "llama" is a noun, originating from Peru. The abbreviation "Zoöl." means it's a Zoölogical term. Wiktionary has a handy [list](https://en.wiktionary.org/wiki/Wiktionary:Abbreviations_in_Webster) of Webster's abbreviations.
 
 A single term can contain uppercase letters, numbers, spaces, dashes and single quotes. When there are alternative spellings for the same term, each spelling appears on the same line separated by a semicolon and space, like this:
 
