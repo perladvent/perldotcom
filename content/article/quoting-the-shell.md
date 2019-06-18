@@ -1,23 +1,21 @@
 
   {
     "title"       : "Quoting the Shell",
-    "authors"     : ["brian d foy"],
-    "date"        : "2019-03-10T13:14:27",
+    "authors"     : ["brian-d-foy"],
+    "date"        : "2019-06-17T21:00:00",
     "tags"        : [
-    	"macos",
-    	"pathfinder",
-    	"tag",
-    	"shell",
-    	"quoting"
+      "macos",
+      "pathfinder",
+      "tag",
+      "shell",
+      "quoting"
     ],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "/images/quoting-the-shell/cracked_shell.jpg",
     "thumbnail"   : "/images/quoting-the-shell/thumb_cracked_shell.jpg",
-    "description" : "",
+    "description" : "Escaping program arguments in all the wrong ways",
     "categories"  : "data"
   }
-
-# <a data-flickr-embed="true"  href="https://www.flickr.com/photos/psyberartist/6686826117/in/photolist-bbTJrt-28sUivg-4pmCYD-9mdKd7-7VxQhR-4CVtdx-6vrn8j-4z5Bhr-4z9Nv5-myEcPM-dPWcrC-WsgtAz-8Abc1E-boy26K-4z5uUX-VMfv6t-4rSXe5-wW28d-7bEhFQ-7VpksA-eA5gX-bbTJbx-ctmiLG-z1h1wd-dwxyRd-7w1CMn-7VgBD8-4QTAq6-LLQ3c-6SNXrT-bbTGni-8w7Q4K-amYZ6G-6SNXeZ-GeSUyQ-4z9TrA-nhj9Fq-kZgme-R6sN5Z-kZg5P-5p5fH-22NTQhn-4ZH1sM-4z5uFp-4z5ymX-4z9P3Y-43GAdZ-25pBqzb-4z5CcB-7wYADF" title="cracked"><img src="https://farm8.staticflickr.com/7167/6686826117_2f7c1d2971_b.jpg" width="1024" height="708" alt="cracked"></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
 
 By some alignment of the stars, lately I've run into the same problem in different contexts and in different projects this year. What happens in an external command when an argument has spaces or other special characters?
 
@@ -27,7 +25,8 @@ We tend to assume that we can interpolate strings into a command line and everyt
 
 My example here uses a macOS command that I have been playing with, but this applies to just about any Unix-ish external command. On Windows, you have additional concerns because you have to know what `cmd` is going to do as well has a particular program will handle its own argument string.
 
-### Doing it the wrong way
+Doing it the wrong way
+----------------------
 
 Consider this slightly contrived snippet. I'm using James Berry's [tag](https://github.com/jdberry/tag). It's a command-line tool that can reliably set and retrieve the names of file labels. Run it with a filename and it returns the filename and a list of labels:
 
@@ -38,7 +37,7 @@ vicunas.txt                    	Orange
 
 Here's what that directory looks like in [Path Finder](https://cocoatech.com/#/), my favorite Finder replacement.
 
-![](/images/quoting_the_shell/first_finder_window.png)
+![](/images/quoting-the-shell/first_finder_window.png)
 
 My task involved lots of files. Like most people, I'd like the capture of text from command-line tools to be effortless. I'll often reach for backticks and a simple construction of a command:
 
@@ -49,7 +48,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-Even though I know intellectually that this won't work, I wrote it that way initially because it's easy. I took a shortcut and it ended up biting. When I run my program, some of the calls have problems:
+Even though I know intellectually that this won't always work, I wrote it that way initially because it's easy. I took a shortcut and it ended up biting. When I run my program, some of the calls have problems:
 
 ```
 $ perl shellwords.pl *
@@ -68,16 +67,17 @@ vicunas.txt                    	Orange
 
 We tend to write the easiest thing first even though we know it will have problems later. Some people call this [technical debt](https://www.martinfowler.com/bliki/TechnicalDebt.html); I call it being lazy. And, we all do it.
 
-Consider what those failing commands look like. The "weird" filenames don't look like a single argument to the command. One of them is even suspicious. And, I think I have many more parens in filenames that anyone ever envisioned:
+Consider what those failing commands look like. The "weird" filenames don't look like a single argument to the command. One of them is even suspicious. And I think I have many more parens in filenames that anyone ever envisioned:
 
 ```
 $ tag has spaces.txt
 $ has (parens).txt
 ```
 
-### Naive fixes
+Naive fixes
+-----------
 
-That's an easy fix; I'll just put quotes around it. That works for awhile because I'm really just playing the odds that the edge cases will be rare:
+There's an easy fix; I'll just put quotes around it. That works for awhile because I'm really just playing the odds that the edge cases will be rare:
 
 ```perl
 foreach my $file ( @ARGV ) {
@@ -88,7 +88,7 @@ foreach my $file ( @ARGV ) {
 
 But it fails again when I have a file with a quote in the filename. That's also much less rare than people imagine. For example, I tend to save webpages in a way where their title becomes the file name. How many times am I going to fix this problem?
 
-![](/images/quoting_the_shell/first_second_window.png)
+![](/images/quoting-the-shell/second_finder_window.png)
 
 
 ```
@@ -170,7 +170,8 @@ How much work was this to get right? Hardly any. It's annoying to do this little
 
 Remember, it doesn't matter as much how rare the edge case is; it matters how damaging it is. Some things I can't control, but this situation is not one of those things. A couple minutes here saves lots of time and money later.
 
-### Capturing output with modules
+Capturing output with modules
+-----------------------------
 
 I can run external commands with arguments with the core module [IPC::Open3](https://metacpan.org/pod/IPC::Open3):
 
@@ -197,7 +198,8 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-### A dream
+A dream
+-------
 
 I've always wanted an even simpler way to construct these strings. I'd love to have [sprintf](https://github.com/briandfoy/string-sprintf)-like syntax to interpolate strings in all sorts of special ways. I even have maintainership of [String::sprintf](https://github.com/briandfoy/string-sprintf) although I've done nothing with it:
 
@@ -205,3 +207,7 @@ I've always wanted an even simpler way to construct these strings. I'd love to h
 # some fictional world
 my $command = sprintf "%C @a", $command, @args;
 ```
+
+\
+Cover image © [psyberartist](https://www.flickr.com/photos/psyberartist/6686826117/in/photolist-bbTJrt-28sUivg-4pmCYD-9mdKd7-7VxQhR-4CVtdx-6vrn8j-4z5Bhr-4z9Nv5-my)
+
