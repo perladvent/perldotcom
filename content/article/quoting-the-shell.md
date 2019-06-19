@@ -123,12 +123,13 @@ tag: The file “camel\.txt” couldn’t be opened because there is no such fil
 ...
 ```
 
-The better fix is to escape only the delimiter. This uses a separate statement to do that:
+The better fix is to use a quoting function designed for the shell. This is provided by [String::ShellQuote](https://metacpan.org/pod/String::ShellQuote):
 
 ```perl
+use String::ShellQuote;
 foreach my $file ( @ARGV ) {
-	my $quoted_file = $file =~ s/"/\\"/gr;
-	my $result = `tag "$quoted_file"`;
+	my $quoted_file = shell_quote $file;
+	my $result = `tag $quoted_file`;
 	print $result;
 	}
 ```
@@ -151,7 +152,7 @@ I could put that inline with the command, although it's a bit ugly. I get the mo
 
 ```perl
 foreach my $file ( @ARGV ) {
-	my $result = `tag "@{[ $file =~ s/"/\\"/gr ]}"`;
+	my $result = `tag @{[ shell_quote $file ]}`;
 	print $result;
 	}
 ```
