@@ -191,7 +191,7 @@ He also suggested [IPC::ReadpipeX](https://metacpan.org/pod/IPC::ReadpipeX), whi
 ```perl
 use IPC::ReadpipeX;
 foreach my $file ( @ARGV ) {
-	my $result =  readpipex 'tag' $quoted_file`;
+	my $result =  readpipex 'tag', $quoted_file`;
 	print $result;
 	}
 ```
