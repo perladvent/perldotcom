@@ -156,7 +156,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And, it probably misses some other special case.
+Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And, it probably misses some other special cases, such as `$` for shell interpolation and shell backticks. Single quotes might fix that in Unix but won't in Windows. I'll show [String::ShellQuote](https://metacpan.org/pod/String::ShellQuote) later.
 
 I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like [system](https://perldoc.perl.org/functions/system.html) in its list form):
 
