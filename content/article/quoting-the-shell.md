@@ -156,7 +156,9 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-Blerg. That works but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like [system](https://perldoc.perl.org/functions/system.html) in its list form):
+Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And, it probably misses some other special cases, such as `$` for shell interpolation and shell backticks. Single quotes might fix that in Unix but won't in Windows. I'll show [String::ShellQuote](https://metacpan.org/pod/String::ShellQuote) later.
+
+I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like [system](https://perldoc.perl.org/functions/system.html) in its list form):
 
 ```perl
 foreach my $file ( @ARGV ) {
@@ -169,6 +171,30 @@ foreach my $file ( @ARGV ) {
 How much work was this to get right? Hardly any. It's annoying to do this little bit more, but it's much less painful than a bunch of support tickets or angry mobs at your desk.
 
 Remember, it doesn't matter as much how rare the edge case is; it matters how damaging it is. Some things I can't control, but this situation is not one of those things. A couple minutes here saves lots of time and money later.
+
+Using modules
+-------------
+
+There are some modules that can do this sort of stuff for you (with the risk of an additional dependency). Dan Book suggested this example with [String::ShellQuote](https://metacpan.org/pod/String::ShellQuote). which handles Bourne shell issues (sorry zsh):
+
+```perl
+use String::ShellQuote;
+foreach my $file ( @ARGV ) {
+	my $quoted_file = shell_quote $file;
+	my $result = `tag $quoted_file`;
+	print $result;
+	}
+```
+
+He also suggested [IPC::ReadpipeX](https://metacpan.org/pod/IPC::ReadpipeX). Look under the hood and you'll find that pipe open again:
+
+```perl
+use IPC::ReadpipeX;
+foreach my $file ( @ARGV ) {
+	my $result =  readpipex 'tag', $quoted_file`;
+	print $result;
+	}
+```
 
 Capturing output with modules
 -----------------------------
