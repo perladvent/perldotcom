@@ -186,7 +186,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-He also suggested [IPC::ReadpipeX](https://metacpan.org/pod/IPC::ReadpipeX), which it looks like he created shortly after I had initially written this article. Look under the hood and you'll find that pipe open again:
+He also suggested [IPC::ReadpipeX](https://metacpan.org/pod/IPC::ReadpipeX). Look under the hood and you'll find that pipe open again:
 
 ```perl
 use IPC::ReadpipeX;
