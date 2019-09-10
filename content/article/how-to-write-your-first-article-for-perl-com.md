@@ -97,7 +97,7 @@ If you're not sure how to format something, grep the `content/article` directory
 
 ### View your article locally
 
-It's all well and good drafting an article in Markdown, but it only comes to life when you can see how it looks in a browser. You can do that by running a local version of the site on your computer. You'll need to install [Hugo](http://gohugo.io). **Warning** package managers' versions of hugo are often very out of date, you're usually better off with a pre-compiled binary. The site is tested against v0.31.1 and higher.
+It's all well and good drafting an article in Markdown, but it only comes to life when you can see how it looks in a browser. You can do that by running a local version of the site on your computer. You'll need to install [Hugo](http://gohugo.io). **Warning** package managers' versions of hugo are often very out of date, you're usually better off with a pre-compiled binary. The site has been tested and build with Hugo versions 0.31.0 - 0.54.0.
 
 From the root project directory, launch a local version of the site:
 
