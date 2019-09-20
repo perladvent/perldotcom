@@ -34,7 +34,7 @@ my @bytes = split /\./, $ipv4;
 my $decimal = unpack 'N', pack 'CCCC', @bytes; # 3232235520
 ```
 
-This code splits the IPv4 string `192.168.0.0` into an array of 4 numbers (192,168,1,0). I use [pack]({{< perldoc "pack" >}}) to convert each number from Perl's representation into an unsigned 8-bit integer (the "C" is for char, the C language type). Then I use [unpack]({{< perldoc "unpack" >}}) to read all 32 bits at once (the "N" is for an unsigned long in Network order - i.e. big endian).
+This code splits the IPv4 string `192.168.0.0` into an array of 4 numbers (192,168,0,0). I use [pack]({{< perldoc "pack" >}}) to convert each number from Perl's representation into an unsigned 8-bit integer (the "C" is for char, the C language type). Then I use [unpack]({{< perldoc "unpack" >}}) to read all 32 bits at once (the "N" is for an unsigned long in Network order - i.e. big endian).
 
 Using `pack` and `unpack` is convenient, but it's not the fastest way to convert those numbers into a single 32-bit integer. We can accomplish the same feat with multiplication and exponentiation:
 
