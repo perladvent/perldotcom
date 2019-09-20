@@ -65,6 +65,8 @@ my $ipv4 = join '.', @bytes; # 192.168.1.0
 
 Here I've used the pack-unpack routine again. I'm not sure if there's a exponent/bit-shift solution that's faster. I could right shift the decimal 24 bits to get 192, then left shift 192 24 bits and subtract it from the decimal, then shift the decimal 16 bits right and so on. But that seems like a lot of work.
 
+**Edit**: Dave Cross posted a [solution](https://www.reddit.com/r/perl/comments/d6kncb/creating_ip_address_tools_from_scratch/f0vas6d?utm_source=share&utm_medium=web2x) using bitmaps.
+
 Extracting a range from CIDR notation
 -------------------------------------
 [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing) notation is shorthand way of describing a range of contiguous IP addresses belonging to a network. For instance your home network is commonly administered on `192.168.0.0/16`. This can be read as "the network begins at 192.168.0.0 and the network mask is 16 bits long". In other words the network begins at `192.168.0.0` and ends at `192.168.255.255`.
@@ -169,3 +171,5 @@ my $prefixlen = 32 - int(log(1 + $end_decimal - $start_decimal) / log(2));
 ```
 
 It uses the [log]({{< perldoc "log" >}}) function which uses the natural logarithm base *e* (like the `ln` button on a calculator), so it must be divided by `log(2)` to act like log<sub>2</sub>. Benchmarking this I was surprised to find that the `log` solution is only a few percent faster than using `sprintf`.
+
+**Edit**: Dan Book posted an IP address to decimal [solution](https://www.reddit.com/r/perl/comments/d6kncb/creating_ip_address_tools_from_scratch/f0u1flu?utm_source=share&utm_medium=web2x) that uses [Socket]({{< mcpan "Socket" >}}).
