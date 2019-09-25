@@ -18,7 +18,7 @@ Send some pull requests and get a free t-shirt! Hacktoberfest is back (seventh y
 
 ## Find something to hack
 
-[Perl.com](https://github.com/tpf/perldotcom) has some website issues you might consider. Or, you can [write an article for Perl.com](/article/how-to-write-your-first-article-for-perl-com/) and send that as a pull request.
+[Perl.com](https://github.com/tpf/perldotcom) has some website issues you might consider. Or, you can [write an article for Perl.com](/article/how-to-write-your-first-article-for-perl-com/) and send that as a pull request. Or, read some of the older articles and edit them to fix typos, new web addresses, and so on. Since Perl.com is its won GitHub project, almost anything you see is updatable. If you don't know where to change something, we'll help you figure it out.
 
 I maintain the [PerlPowerTools](https://github.com/briandfoy/PerlPowerTools) project and there are several niggling style issues that I'd like to handle so I can improve PerlPowerTool's score on [kritika.io](https://kritika.io/users/briandfoy/repos/7253941177493998/), which is currently an F based on most of this code being written in a style more palatable 20 years ago.
 
