@@ -30,6 +30,7 @@ Perl.com has a [GitHub issue](https://github.com/tpf/perldotcom/issues/203) wher
 * [LANraragi](https://github.com/Difegue/LANraragi) is a self-hosted comic/manga manager running on [Mojo](https://www.mojolicious.org).
 * [Exercism.io](https://exercism.io/) has online programming exercises and wants more for [Perl 5](https://github.com/exercism/perl6) and [Perl 6](https://github.com/exercism/perl6).
 * [ravada](https://github.com/UPC/ravada) is a Perl module for remote virtual desktops managers.
+* [Task::Kensho](https://github.com/EnlightenedPerlOrganisation/task-kensho) is a list of recommended modules for Enlightened Perl development and [needs some help](http://blogs.perl.org/users/grinnz/2019/09/taskkensho-needs-your-help.html).
 
 To help you get your Pull Request accepted, [Mohammad S Anwar](https://www.perl.com/article/how-to-get-pull-request-accepted-/#author-bio-mohammad-anwar) has some advice:
 
