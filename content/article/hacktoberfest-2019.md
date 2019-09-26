@@ -16,7 +16,8 @@ Send some pull requests and get a free t-shirt! Hacktoberfest is back (seventh y
 [Other companies have their own swag](https://hacktoberfestswaglist.com) to add to your haul when you contribute to their projects. You can even [contribute to that list](https://github.com/crweiner/hacktoberfest-swag-list) with a pull request to add your swag.
 
 
-## Find something to hack
+Find something to hack
+----------------------
 
 [Perl.com](https://github.com/tpf/perldotcom) has some website issues you might consider. Or, you can [write an article for Perl.com](/article/how-to-write-your-first-article-for-perl-com/) and send that as a pull request. Or, read some of the older articles and edit them to fix typos, new web addresses, and so on. Since Perl.com is its own GitHub project, almost anything you see is updatable. If you don't know where to change something, we'll help you figure it out.
 
@@ -38,7 +39,8 @@ To help you get your Pull Request accepted, [Mohammad S Anwar](https://www.perl.
 * [How to get your Pull Request accepted?](/article/how-to-get-pull-request-accepted-/)
 
 
-## Get help with your issues
+Get help with your issues
+-------------------------
 
 You don't have to do anything special to get help, but here are a few tips. Remember, the goal isn't necessarily to convert people to core contributors, so start with something gentle that can draw in the curious.
 
@@ -52,7 +54,8 @@ Here are some ways you can encourage that work:
 * [Offer some swag](https://github.com/crweiner/hacktoberfest-swag-list). A $5 t-shirt can get your several hundred dollars worth of work that you've been putting off.
 
 
-## Follow hacktoberfest
+Follow hacktoberfest
+--------------------
 
 * Follow [@hacktoberfest](https://twitter.com/hacktoberfest) or [#hacktoberfest](https://twitter.com/hashtag/hacktoberfest)
 * See Perl.com's [earlier articles](https://www.perl.com/tags/hacktoberfest/).
