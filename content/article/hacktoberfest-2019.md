@@ -4,7 +4,7 @@
    "thumbnail" : "/images/hacktoberfest-2019/thumb_hacktoberfest2019small.png",
    "date" : "2019-09-25T13:56:16",
    "authors" : [
-      "brian d foy"
+      "brian-d-foy"
    ],
    "tags" : [
       "hacktoberfest",
