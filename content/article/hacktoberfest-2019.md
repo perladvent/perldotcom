@@ -1,17 +1,21 @@
+{
+   "draft" : true,
+   "categories" : "community",
+   "thumbnail" : "/images/hacktoberfest-2019/thumb_hacktoberfest2019small.png",
+   "date" : "2019-09-25T13:56:16",
+   "authors" : [
+      "brian d foy"
+   ],
+   "tags" : [
+      "hacktoberfest",
+      "github"
+   ],
+   "description" : "Clone, edit, commit, PR, t-shirt",
+   "image" : "/images/hacktoberfest-2019/hacktoberfest2019small.png",
+   "title" : "Hacktoberfest 2019"
+}
 
-  {
-    "title"       : "Hacktoberfest 2019",
-    "authors"     : ["brian d foy"],
-    "date"        : "2019-09-25T13:56:16",
-    "tags"        : ["hacktoberfest", "github"],
-    "draft"       : true,
-    "image"       : "",
-    "thumbnail"   : "",
-    "description" : "Clone, edit, commit, PR, t-shirt",
-    "categories"  : "community"
-  }
-
-Send some pull requests and get a free t-shirt! Hacktoberfest is back (seventh year!) to encourage cross-project participation. [DigitalOcean](https://www.digitalocean.com) wants you to [register for Hacktoberfest](https://hacktoberfest.digitalocean.com) (no purchase required) then open five pull requests to public repositories on GitHub. Get your feet wet with open source and git; once you see how easy it is you'll probably come back for more. And, you'll get a nice Hacktoberfest t-shirt.
+Send some pull requests and get a free t-shirt! Hacktoberfest is back for a seventh year to encourage cross-project participation. [DigitalOcean](https://www.digitalocean.com) wants you to [register for Hacktoberfest](https://hacktoberfest.digitalocean.com) (no purchase required) then open five pull requests to public repositories on GitHub. Get your feet wet with open source and git; once you see how easy it is you'll probably come back for more. And you'll get a nice Hacktoberfest t-shirt.
 
 [Other companies have their own swag](https://hacktoberfestswaglist.com) to add to your haul when you contribute to their projects. You can even [contribute to that list](https://github.com/crweiner/hacktoberfest-swag-list) with a pull request to add your swag.
 
@@ -59,3 +63,8 @@ Follow hacktoberfest
 
 * Follow [@hacktoberfest](https://twitter.com/hacktoberfest) or [#hacktoberfest](https://twitter.com/hashtag/hacktoberfest)
 * See Perl.com's [earlier articles](https://www.perl.com/tags/hacktoberfest/).
+
+\
+Cover image © [DigitalOcean](https://www.digitalocean.com)
+\
+
