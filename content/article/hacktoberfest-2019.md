@@ -10,7 +10,7 @@
       "hacktoberfest",
       "github"
    ],
-   "description" : "Clone, edit, commit, PR, t-shirt",
+   "description" : "Support Open Source and get a free t-shirt",
    "image" : "/images/hacktoberfest-2019/hacktoberfest2019small.png",
    "title" : "Hacktoberfest 2019"
 }
