@@ -1,5 +1,5 @@
 {
-   "draft" : true,
+   "draft" : false,
    "categories" : "community",
    "thumbnail" : "/images/hacktoberfest-2019/thumb_hacktoberfest2019small.png",
    "date" : "2019-09-26T13:56:16",
