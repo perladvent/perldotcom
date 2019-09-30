@@ -33,7 +33,7 @@ Perl.com has a [GitHub issue](https://github.com/tpf/perldotcom/issues/203) wher
 * [Web::NewsAPI](https://github.com/jmacdotorg/newsapi-perl) is a module for communicating with NewsAPI, letting you fetch and search news headlines and stories from around the world using Perl.
 * [Sweat](https://github.com/jmacdotorg/sweat) is a fully-featured workout timer that aims to distract you from the pain of exercise by reading mildly interesting stuff from the internet.
 * [LANraragi](https://github.com/Difegue/LANraragi) is a self-hosted comic/manga manager running on [Mojo](https://www.mojolicious.org).
-* [Exercism.io](https://exercism.io/) has online programming exercises and wants more for [Perl 5](https://github.com/exercism/perl6) and [Perl 6](https://github.com/exercism/perl6).
+* [Exercism.io](https://exercism.io/) has online programming exercises and wants more for [Perl 5](https://github.com/exercism/perl5) and [Perl 6](https://github.com/exercism/perl6).
 * [ravada](https://github.com/UPC/ravada) is a Perl module for remote virtual desktops managers.
 * [Task::Kensho](https://github.com/EnlightenedPerlOrganisation/task-kensho) is a list of recommended modules for Enlightened Perl development and [needs some help](http://blogs.perl.org/users/grinnz/2019/09/taskkensho-needs-your-help.html).
 
