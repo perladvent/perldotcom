@@ -163,7 +163,5 @@ my $thirtySecsAgo = $now - 30;
 $ perldoc Time::Piece
 ```
 
-**Updated:** *Added timezone strptime example 2015-01-28. Added timezone semicolon handling 2016-03-17.*
-
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*
