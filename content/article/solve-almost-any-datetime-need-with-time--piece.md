@@ -152,7 +152,7 @@ If you need to change the datetime by seconds, with you can simply use integer a
 use Time::Piece;
 
 my $now = localtime;
-my $30SecondsAgo = $now - 30; 
+my $thirtySecsAgo = $now - 30; 
 ```
 
 ### Documentation
