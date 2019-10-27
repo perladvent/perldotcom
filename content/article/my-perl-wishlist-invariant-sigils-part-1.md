@@ -1,11 +1,11 @@
   {
     "title"       : "My Perl Wishlist: Invariant Sigils (Part 1)",
     "authors"     : ["christopher-white"],
-    "date"        : "2019-10-26T01:07:00",
+    "date"        : "2019-10-27T12:07:00",
     "tags"        : ["perl-internals", "syntax", "internals",
                     "compiler", "perl-5", "language", "language-design",
                     "sigil", "parser", "parsing", "perl-parsing", "core", "c"],
-    "draft"       : true,
+    "draft"       : false,
     "description" : "The change I would most like to see in Perl 5, and why it might not happen",
     "categories"  : "programming-languages"
   }
