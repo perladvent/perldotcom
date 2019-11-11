@@ -18,7 +18,7 @@ effectively supplanted XML as the web’s “go-to” format for representing
 structured data in APIs.
 
 For all its popularity, though, JSON carries a number of liabilities that
-make it less than ideal in many contexts where it nonetheless enjoys
+make it less than ideal in some contexts where it nonetheless enjoys
 widespread use. This article will discuss some of these and propose
 alternative formats that I think deserve your attention.
 
@@ -29,10 +29,10 @@ JSON’s chief liability is its UTF-8 restriction: all JSON documents must
 be UTF-8, from start to finish. This means any application that wants to
 exchange binary data either cannot use JSON, or—perhaps more commonly—uses
 a secondary encoding like Base64 to store binary strings as text.
-([Let’s Encrypt](https://letsencrypt.org)’s
-[ACME](https://tools.ietf.org/html/rfc8555) protocol does this.)
 Such techniques carry performance penalties and eventually create consistency
-problems, such as in the [WAMP](https://wamp-proto.org/_static/gen/wamp_latest_ietf.html) protocol, where it’s impossible to distinguish an “encoded” binary
+problems, such as in the
+[WAMP](https://wamp-proto.org/_static/gen/wamp_latest_ietf.html) protocol,
+where it’s impossible to distinguish an “encoded” binary
 string from a text string that happens to fit the pattern that the protocol
 recommends for encoding binary strings to JSON.
 
