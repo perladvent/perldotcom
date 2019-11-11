@@ -121,6 +121,6 @@ $ ./dump-catalyst-routes MetaCPAN::Web lib local/lib/perl5
 
 Postscript
 ----------
-We're just a couple of months past the 10th anniversary of the publication of [Catalyst: The Definitive Guide](https://www.apress.com/gp/book/9781430223658). Two of our core applications at work are Catalyst apps. As Perl's original MVC app, it's remarkable how resilient it's been. That's a testament to the implementation (which got a lot of things right) and more recently the work done by its maintainer [John Napiorkowski](https://metacpan.org/author/JJNAPIORK). Thanks John!
+We're just a couple of months past the 10th anniversary of the publication of [Catalyst: The Definitive Guide](https://www.apress.com/gp/book/9781430223658). Two of our core applications at work are Catalyst apps. As one of Perl's premier MVC apps, it's remarkable how resilient it's been. That's a testament to the implementation (which got a lot of things right) and more recently the work done by its maintainer [John Napiorkowski](https://metacpan.org/author/JJNAPIORK). Thanks John!
 
 If you're considering web application programming with Perl, the [Dancer2]({{< mcpan "Dancer2" >}}), [Mojolicious]({{< mcpan "Mojolicious" >}}) and [Kelp]({{< mcpan "Kelp" >}}) frameworks are modern alternatives to Catalyst.
