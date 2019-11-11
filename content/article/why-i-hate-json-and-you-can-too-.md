@@ -168,5 +168,5 @@ which appears to be unmaintained.)
 This all having been said: if you are confident that your application
 will _never_ need to serialize anything that isn’t UTF-8, and if human
 readability is of greater concern to you than performance, then by all means
-use JSON! But be aware, of course, of the limitations you’re imposing on
+use JSON! Just remember the limitations you’re imposing on
 yourself and all future maintainers by so doing.
