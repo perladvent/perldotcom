@@ -144,7 +144,7 @@ So, JSON is its own little beast.
 What to Use Instead?
 =======================
 
-I find [TOML](https://github.com/toml-lang/toml) a compelling choice for
+I find [TOML](https://github.com/toml-lang/toml) a compelling format for
 configuration files. It fixes JSON’s UTF-16 problem (by allowing both
 `\uXXXX` and `\UXXXXXXXX` formats) and allows for comments.
 Projects as diverse as Rust’s [Cargo](https://doc.rust-lang.org/cargo/)
