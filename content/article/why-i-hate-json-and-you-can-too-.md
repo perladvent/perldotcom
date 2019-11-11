@@ -47,15 +47,15 @@ JSON carries the same UTF-8 liability that JavaScript does: when using the
 `\uXXXX` notation it represents all
 UTF-8 characters via UTF-16 notation. While that’s fine for applications whose
 strings consist solely of characters from the Basic Multilingual Plane
-(BMP)—Unicode code points below 65,536—it’s awkward for representing anything
-beyond this range. Unfortunately, given the prevalence of emoji characters,
-it’s not at all unusual to need to represent Unicode characters above the BMP
+(BMP)—Unicode code points below 65,536—it’s awkward for anything
+outside this range. Given the prevalence of emoji characters nowadays,
+it’s not unlikely to need to represent Unicode characters above the BMP
 in a JSON document.
 
-This is possible, of course, but it has to be done as UTF-16 would represent
-such a character. This makes it harder for a human to read and write JSON;
-how many would intuit that `"\ud83d\udca9"` is actually the pile-of-poo
-emoji (💩, U+1f4a9)?
+You can do this by encoding the raw UTF-8, but some JSON has be encoded as
+plain ASCII. In that context we have to encode all characters as UTF-16 would
+represent them. This makes it a bit harder for a human to read and write JSON;
+for example, the pile-of-poo emoji (💩, U+1f4a9) is encoded as `"\ud83d\udca9"`.
 
 # 3. Human Unfriendliness: Comments
 
@@ -64,16 +64,20 @@ write.” This is true, but it’s only part of the picture: while it may be eas
 for a human to read and write an isolated JSON document, JSON is an
 unfriendly format for teams of humans to _maintain_.
 
-This is true firstly because of the absence of comments. While various
-JSON encoders and decoders allow comments, these are not mutually consistent,
-and interoperability problems arise when a minor deviation from a global
-standard becomes an in-house standard. The absence of comments is particularly
-problematic in configuration files, where developers making choices like:
+This is true firstly because JSON disallows comments. While some
+JSON implementations do allow them, these are not mutually consistent—for
+example, CPAN’s popular [JSON::XS](https://metacpan.org/pod/JSON::XS)
+uses `#` rather than `//` for end-of-line comments—and interoperability
+problems can arise when a deviation, however minor, from a global
+standard becomes an in-house standard.
+
+JSON’s lack of support for comments is particularly
+awkward in configuration files, which leaves developers to make choices like:
 
 1. Use a nonstandard JSON variant that allows comments. This builds in a
 dependency either on specific implementations, which defeats the point of
 having a standard format, or on a “normalization” step in the workflow,
-which adds additional complication and maintenance overhead.
+which adds additional maintenance overhead.
 
 2. Alter the data schema to incorporate strings that the application ignores
 but that developers can use to annotate the document.
@@ -83,8 +87,8 @@ but that developers can use to annotate the document.
 4. Forgo comments entirely.
 
 None of these is especially inviting. (The “normalization”
-approach—[Crockford’s recommendation](https://archive.is/8FWsA)—seems the
-least offensive.) It would be far better to keep things simple by using
+approach—[Crockford’s erstwhile recommendation](https://archive.is/8FWsA)—seems
+the least offensive.) It would be better to keep things simple by using
 a configuration format that allows comments.
 
 # 4. Human Unfriendliness: Commas
@@ -105,7 +109,15 @@ Unlike C strings, of course, JSON provides an escaping mechanism that allows
 storage of the delimiter character (for JSON, that’s `"`). That, however,
 entails a significant level of complexity for an encoder: a JSON encoder
 cannot encode a string without first inspecting it to look for characters
-that need to be escaped.
+that need to be escaped. A string of _n_ bytes can be up to _2n_ bytes in
+length, and the only way to know for certain is to inspect each individual
+character in the string. (And since these are UTF-8 strings, that means
+parsing the UTF-8 first!)
+
+It’s far more efficient—particularly for documents that are primarily
+strings—to use a serialization format that encodes string length directly
+and thus obviates any need to escape strings. Both encoding and decoding then
+become a simple copy from one buffer to another.
 
 # 6. Iffy Standardization
 
@@ -148,7 +160,7 @@ that need to communicate across multiple languages, whereas Sereal boasts
 especially good Perl support, including storage of regular
 expressions—with modifiers!
 
-(Another format, [MessagePack](https://msgpack.org/), is a “forerunner” to
+(Another format, [MessagePack](https://msgpack.org/), is a forerunner to
 CBOR in many respects. MessagePack remains in wide use but
 has only [one CPAN implementation](https://metacpan.org/pod/Data::MessagePack),
 which appears to be unmaintained.)
