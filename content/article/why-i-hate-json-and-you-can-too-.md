@@ -23,8 +23,7 @@ widespread use. This article will discuss some of these and propose
 alternative formats that I think deserve your attention.
 
 
-1. UTF-8
-========
+# 1. UTF-8
 
 JSON’s chief liability is its UTF-8 restriction: all JSON documents must
 be UTF-8, from start to finish. This means any application that wants to
@@ -42,8 +41,7 @@ themselves to a restriction that may prove to have been imprudent—sometimes
 only long after an ecosystem has already developed and a serialization change
 would be painful.
 
-2. UTF-8, Redux
-========
+# 2. UTF-8, Redux
 
 JSON carries the same UTF-8 liability that JavaScript does: when using the
 `\uXXXX` notation it represents all
@@ -59,8 +57,7 @@ such a character. This makes it harder for a human to read and write JSON;
 how many would intuit that `"\ud83d\udca9"` is actually the pile-of-poo
 emoji (💩, U+1f4a9)?
 
-3. Human Unfriendliness: Comments
-=======================
+# 3. Human Unfriendliness: Comments
 
 [json.org](https://json.org) describes JSON as “easy for humans to read and
 write.” This is true, but it’s only part of the picture: while it may be easy
@@ -90,16 +87,14 @@ approach—[Crockford’s recommendation](https://archive.is/8FWsA)—seems the
 least offensive.) It would be far better to keep things simple by using
 a configuration format that allows comments.
 
-4. Human Unfriendliness: Commas
-===================
+# 4. Human Unfriendliness: Commas
 
 A secondary displeasure that JSON brings is the annoyance at its rejection
 of trailing commas. While modern JavaScript engines now tolerate these,
 the JSON standard still forbids them, which adds additional overhead when
 maintaining JSON documents.
 
-5. Inefficiency: Strings
-===============
+# 5. Inefficiency: Strings
 
 Every C programmer deals with the two fundamental ways of encoding strings:
 either delimit them with a “special” character (in C’s case, the NUL byte)
@@ -112,8 +107,7 @@ entails a significant level of complexity for an encoder: a JSON encoder
 cannot encode a string without first inspecting it to look for characters
 that need to be escaped.
 
-6. Iffy Standardization
-===============
+# 6. Iffy Standardization
 
 I’ve been linking in this article to [json.org](https://json.org) rather than
 a formal
