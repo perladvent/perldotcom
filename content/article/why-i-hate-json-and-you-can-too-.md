@@ -41,6 +41,11 @@ themselves to a restriction that may prove to have been imprudent—sometimes
 only long after an ecosystem has already developed and a serialization change
 would be painful.
 
+The most bizarre aspect of this restriction is that it is wholly
+superfluous: the only reason why JSON strings must conform to UTF-8 is because
+its definition says so. The encoding itself could notate any
+arbitrary series of bytes as a string just as readily as it does UTF-8.
+
 # 2. UTF-8, Redux
 
 JSON carries the same UTF-8 liability that JavaScript does: when using the
@@ -52,10 +57,11 @@ outside this range. Given the prevalence of emoji characters nowadays,
 it’s not unlikely to need to represent Unicode characters above the BMP
 in a JSON document.
 
-You can do this by encoding the raw UTF-8, but some JSON has be encoded as
-plain ASCII. In that context we have to encode all characters as UTF-16 would
-represent them. This makes it a bit harder for a human to read and write JSON;
-for example, the pile-of-poo emoji (💩, U+1f4a9) is encoded as `"\ud83d\udca9"`.
+You can do this by encoding the raw UTF-8, but some applications require
+that JSON documents be plain ASCII. In that context we have to encode all
+characters as UTF-16 would represent them. This makes it a bit harder for a
+human to read and write JSON; for example, the “pile-of-poo” emoji
+(💩, U+1f4a9) is encoded as `"\ud83d\udca9"`.
 
 # 3. Human Unfriendliness: Comments
 
@@ -65,9 +71,9 @@ for a human to read and write an isolated JSON document, JSON is an
 unfriendly format for teams of humans to _maintain_.
 
 This is true firstly because JSON disallows comments. While some
-JSON implementations do allow them, these are not mutually consistent—for
+JSON implementations do allow them, these are not mutually consistent; for
 example, CPAN’s popular [JSON::XS](https://metacpan.org/pod/JSON::XS)
-uses `#` rather than `//` for end-of-line comments—and interoperability
+uses `#` rather than `//` for end-of-line comments. Interoperability
 problems can arise when a deviation, however minor, from a global
 standard becomes an in-house standard.
 
@@ -89,7 +95,7 @@ but that developers can use to annotate the document.
 None of these is especially inviting. (The “normalization”
 approach—[Crockford’s erstwhile recommendation](https://archive.is/8FWsA)—seems
 the least offensive.) It would be better to keep things simple by using
-a configuration format that allows comments.
+a configuration format that allows comments. (Heh, maybe XML?)
 
 # 4. Human Unfriendliness: Commas
 
@@ -100,7 +106,7 @@ maintaining JSON documents.
 
 # 5. Inefficiency: Strings
 
-Every C programmer deals with the two fundamental ways of encoding strings:
+Every C programmer deals with two fundamental ways of encoding strings:
 either delimit them with a “special” character (in C’s case, the NUL byte)
 or transmit their length along with their “body”.
 
@@ -109,10 +115,9 @@ Unlike C strings, of course, JSON provides an escaping mechanism that allows
 storage of the delimiter character (for JSON, that’s `"`). That, however,
 entails a significant level of complexity for an encoder: a JSON encoder
 cannot encode a string without first inspecting it to look for characters
-that need to be escaped. A string of _n_ bytes can be up to _2n_ bytes in
+that need to be escaped. A string of _n_ bytes can thus be up to _2n_ bytes in
 length, and the only way to know for certain is to inspect each individual
-character in the string. (And since these are UTF-8 strings, that means
-parsing the UTF-8 first!)
+byte in the string.
 
 It’s far more efficient—particularly for documents that are primarily
 strings—to use a serialization format that encodes string length directly
@@ -125,7 +130,7 @@ I’ve been linking in this article to [json.org](https://json.org) rather than
 a formal
 reference for the format because there **is**, in fact, no unified JSON
 standard. Both the IETF and ECMA maintain JSON standards—the IETF has
-issued no fewer than **3** recensions of theirs!
+issued no fewer than **three** recensions of theirs!
 
 Even putting that aside, JSON has some peculiar encoding nits. Contrary
 to widespread belief, JSON is _not_ a subset of JavaScript/ECMAScript
@@ -145,11 +150,11 @@ What to Use Instead?
 =======================
 
 I find [TOML](https://github.com/toml-lang/toml) a compelling format for
-configuration files. It fixes JSON’s UTF-16 problem (by allowing both
-`\uXXXX` and `\UXXXXXXXX` formats) and allows for comments.
+configuration files. It fixes JSON’s UTF-16 problem by allowing both
+`\uXXXX` and `\UXXXXXXXX` formats, and it also allows for comments.
 Projects as diverse as Rust’s [Cargo](https://doc.rust-lang.org/cargo/)
 package manager and [Hugo](https://gohugo.io/)—which powers this site!—are
-some of TOML’s most prominent users.
+some of TOML’s most prominent adopters.
 
 For applications I recommend either the IETF’s [CBOR](https://cbor.io/)
 or Booking.com’s [Sereal](https://github.com/Sereal/Sereal). (Disclaimer:
