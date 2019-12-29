@@ -19,7 +19,7 @@
 
 By some alignment of the stars, lately I've run into the same problem in different contexts and in different projects this year. What happens in an external command when an argument has spaces or other special characters?
 
-Ever wonder why web forms have weird restrictions on whitespace? It's probably because the backend can't deal with values with whitespace or other special characters. Or, at some point the programmer dealt with such a system and it scarred them for life; they are spacephobic. The mechanics of some underlying mechanism leak through and infect the your application-level experience.
+Ever wonder why web forms have weird restrictions on whitespace? It's probably because the backend can't deal with values with whitespace or other special characters. Or, at some point the programmer dealt with such a system and it scarred them for life; they are spacephobic. The mechanics of some underlying mechanism leak through and infect the application-level experience.
 
 We tend to assume that we can interpolate strings into a command line and everything will be fine, even if we actually know how that can be dangerous. I explain some of those dangers in [Mastering Perl](https://www.masteringperl.org) when I write about Perl's taint checking. You can also read about some of that in [perlsec](https://perldoc.perl.org/perlsec.html). I'll ignore all that for this short article.
 
@@ -65,9 +65,9 @@ shellwords.pl
 vicunas.txt                    	Orange
 ```
 
-We tend to write the easiest thing first even though we know it will have problems later. Some people call this [technical debt](https://www.martinfowler.com/bliki/TechnicalDebt.html); I call it being lazy. And, we all do it.
+We tend to write the easiest thing first even though we know it will have problems later. Some people call this [technical debt](https://www.martinfowler.com/bliki/TechnicalDebt.html); I call it being lazy. And we all do it.
 
-Consider what those failing commands look like. The "weird" filenames don't look like a single argument to the command. One of them is even suspicious. And I think I have many more parens in filenames that anyone ever envisioned:
+Consider what those failing commands look like. The "weird" filenames don't look like a single argument to the command. One of them is even suspicious. And I think I have many more parens in filenames than anyone ever envisioned:
 
 ```
 $ tag has spaces.txt
@@ -77,7 +77,7 @@ $ has (parens).txt
 Naive fixes
 -----------
 
-There's an easy fix; I'll just put quotes around it. That works for awhile because I'm really just playing the odds that the edge cases will be rare:
+There's an easy fix; I'll just put quotes around it. That works for a while because I'm really just playing the odds that the edge cases will be rare:
 
 ```perl
 foreach my $file ( @ARGV ) {
@@ -156,7 +156,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And, it probably misses some other special cases, such as `$` for shell interpolation and shell backticks. Single quotes might fix that in Unix but won't in Windows. I'll show [String::ShellQuote](https://metacpan.org/pod/String::ShellQuote) later.
+Blerg. That works in this case but is ugly in the service of keystrokes (but how many actual keystrokes did I use to get to the final result?). And it probably misses some other special cases, such as `$` for shell interpolation and shell backticks. Single quotes might fix that in Unix but won't in Windows. I'll show [String::ShellQuote]({{< mcpan "String::ShellQuote" >}}) later.
 
 I can open a pipe to the command and specify the command and its arguments as a list. This requires neither quoting nor escaping anything because each argument in Perl is one argument in the command (like [system](https://perldoc.perl.org/functions/system.html) in its list form):
 
@@ -175,7 +175,7 @@ Remember, it doesn't matter as much how rare the edge case is; it matters how da
 Using modules
 -------------
 
-There are some modules that can do this sort of stuff for you (with the risk of an additional dependency). Dan Book suggested this example with [String::ShellQuote](https://metacpan.org/pod/String::ShellQuote). which handles Bourne shell issues (sorry zsh):
+There are some modules that can do this sort of stuff for you (with the risk of an additional dependency). Dan Book suggested this example with [String::ShellQuote]({{< mcpan "String::ShellQuote" >}}). which handles Bourne shell issues (sorry zsh):
 
 ```perl
 use String::ShellQuote;
@@ -186,7 +186,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-He also suggested [IPC::ReadpipeX](https://metacpan.org/pod/IPC::ReadpipeX). Look under the hood and you'll find that pipe open again:
+He also suggested [IPC::ReadpipeX]({{< mcpan "IPC::ReadpipeX" >}}). Look under the hood and you'll find that pipe open again:
 
 ```perl
 use IPC::ReadpipeX;
@@ -199,7 +199,7 @@ foreach my $file ( @ARGV ) {
 Capturing output with modules
 -----------------------------
 
-I can run external commands with arguments with the core module [IPC::Open3](https://metacpan.org/pod/IPC::Open3):
+I can run external commands with arguments with the core module [IPC::Open3]({{< mcpan "IPC::Open3" >}}):
 
 ```perl
 use IPC::Open3;
@@ -214,7 +214,7 @@ foreach my $file ( @ARGV ) {
 	}
 ```
 
-The CPAN module [Capture::Tiny](https://metacpan.org/pod/Capture::Tiny) can do the same thing with a slightly more pleasing interface (at the cost of an external dependency):
+The CPAN module [Capture::Tiny]({{< mcpan "Capture::Tiny" >}}) can do the same thing with a slightly more pleasing interface (at the cost of an external dependency):
 
 ```perl
 use Capture::Tiny qw(capture_stdout);
@@ -227,11 +227,11 @@ foreach my $file ( @ARGV ) {
 A dream
 -------
 
-I've always wanted an even simpler way to construct these strings. I'd love to have [sprintf](https://github.com/briandfoy/string-sprintf)-like syntax to interpolate strings in all sorts of special ways. I even have maintainership of [String::sprintf](https://github.com/briandfoy/string-sprintf) although I've done nothing with it:
+I've always wanted an even simpler way to construct these strings. I'd love to have [sprintf](https://perldoc.pl/functions/sprintf)-like syntax to interpolate strings in all sorts of special ways. I even have maintainership of [String::Sprintf]({{< mcpan "String::Sprintf" >}}) although I've done nothing with it:
 
 ```perl
 # some fictional world
-my $command = sprintf "%C @a", $command, @args;
+my $command = sprintf '%C @a', $command, @args;
 ```
 
 \
