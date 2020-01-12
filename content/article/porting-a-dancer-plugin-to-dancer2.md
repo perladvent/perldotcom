@@ -3,7 +3,7 @@
     "authors"     : ["christopher-white"],
     "date"        : "2020-01-10T13:37:00",
     "tags"        : ["dancer","dancer2","perl","perl-5","perl-programming","web-development","porting","plugin"],
-    "draft"       : true,
+    "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "How I ported a plugin without having to know it all first",
