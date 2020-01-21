@@ -103,12 +103,13 @@ You may be wondering why this is backwards; don't you want to see a 1 when
 something is connected? The reason is pullup resistors. If a pin is 
 disconnected, it will tend to "float", picking up interference from the 
 electronics around it. That results in getting random 0's and 1's. If you 
-instead connect a resistor tied to high voltage, it will consistently get a 
-1. If you then connect that pin to ground, it will see a 0 instead. We 
+instead connect a resistor tied to high voltage, 1 is what you consistently get 
+on the pin.
+If you then connect that pin to ground, it will see a 0 instead. We 
 just have to remember that the whole thing is backwards from what we normally 
 expect--1 for disconnected, 0 for connected.
 
-The full program is at the end of the article. The `export_pin and `set_input` 
+The full program is at the end of the article. The `export_pin` and `set_input` 
 functions both take a pin number and ask the kernel to export it for 
 use or set it as input (respectively).  The `read_pin` function takes a pin 
 and returns its current value (either 1 or 0). The `write_pin` function is 
