@@ -5,7 +5,7 @@
     "date"        : "2020-01-20T17:50:11",
     "tags"        : [ "hardware", "linux", "gpio", "pi", "rockpi" ],
     "draft"       : true,
-    "image"       : "",
+    "image"       : "/images/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/rockpi.jpg",
     "thumbnail"   : "",
     "description" : "There are lots of single board computers out there, but not all of them have an simple library for getting input on a pin. Never fret, because most of them run Linux, and it's easy to access pins with just Linux.",
     "categories"  : "hardware"
