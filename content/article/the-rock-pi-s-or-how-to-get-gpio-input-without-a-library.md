@@ -108,4 +108,90 @@ instead connect a resistor tied to high voltage, it will consistently get a
 just have to remember that the whole thing is backwards from what we normally 
 expect--1 for disconnected, 0 for connected.
 
-TODO: insert program, with preable documentation
+The full program is at the end of the article. The `export_pin and `set_input` 
+functions both take a pin number and either ask the kernel to export it for 
+use or set it as input (respectively).  The `read_pin` function takes a pin 
+and returns its current value (either 1 or 0). The `write_pin` function is 
+just a helper function for doing the file IO for other functions. 
+
+At the very bottom is the code to wrap all this together. We export the pin
+passed in from the command line, set it as input, and then read the pin in a 
+loop. By outputting "\r", the previously printed value is overwritten in the 
+terminal, rather than having one long string of values. Since we're using 
+the [Time::HiRes]({{< mcpan "Time::HiRes" >}}) version of `sleep`, we can use 
+seconds in floating point to slow the output down without being too slow.
+
+I've been waiting for a board like this for a while, packing in a multicore 
+processor, networking, a full sized USB jack, and running on Linux in a sub $20 
+price range. This might be a new favorite.
+
+```perl
+#!perl
+use v5.26;
+use warnings;
+use Time::HiRes 'sleep';
+
+use constant BASE_PATH => '/sys/class/gpio';
+use constant SLEEP_TIME => 0.1;
+
+
+my $GPIO = shift or usage();
+$GPIO =~ /\A\d+\z/ or usage();
+
+
+
+sub set_input
+{
+    my ($pin) = @_;
+    return write_pin( '/gpio' . $pin . '/direction', "in" );
+}
+
+sub export_pin
+{
+    my ($pin) = @_;
+    return write_pin( '/export', $pin );
+}
+
+sub read_pin
+{
+    my ($pin) = @_;
+    my $full_path = BASE_PATH . '/gpio' . $pin . '/value';
+    open( my $in, '<', $full_path )
+        or die "Can't read from $full_path: $!\n";
+    
+    my $data = '';
+    while( my $line = <$in> ) {
+        $data .= $line;
+    }
+
+    close( $in );
+    return $data;
+}
+
+sub write_pin
+{
+    my ($path, $data) = @_;
+    my $full_path = BASE_PATH . $path;
+    open( my $out, '>', $full_path )
+        or die "Can't write to $full_path: $!\n";
+    print $out "$data";
+    close $out;
+    return;
+}
+
+sub usage
+{
+    die "Usage: rockpi_gpio.pl <pin number>\n";
+}
+
+
+export_pin( $GPIO );
+set_input( $GPIO );
+$| = 1; # Autoflush output
+while( 1 ) {
+    my $in = read_pin( $GPIO );
+    chomp $in;
+    print "$in\r";
+    sleep SLEEP_TIME;
+}
+```
