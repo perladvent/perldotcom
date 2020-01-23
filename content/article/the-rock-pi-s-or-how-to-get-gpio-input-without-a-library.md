@@ -7,7 +7,7 @@
     "draft"       : true,
     "image"       : "/images/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/rockpi.jpg",
     "thumbnail"   : "",
-    "description" : "There are lots of single board computers out there, but not all of them have an simple library for getting input on a pin. Never fret, because most of them run Linux, and it's easy to access pins with just Linux.",
+    "description" : "There are lots of single board computers out there. GPIO (General Purpose Input Output) is what we usually use to see if something is on or off, but not all of these newer boards have a simple library for accessing them in Perl. Never fret, because most of them run Linux, and it's easy to access hardware pins with just Linux.",
     "categories"  : "hardware"
   }
 
@@ -31,10 +31,19 @@ buy a micro-USB to USB-A adapter to hook up most other devices.
 You do still need a micro SD card. While there are versions of the Rock with 
 built-in flash, it's small and not meant for booting an OS. Note that the size of the built-in flash
 is listed in giga*bits*. The 4Gb version is actually 512 mega*bytes*. So get an 
-SD card, preferably one with an A1 rating, which specifies that it works well 
-for random access patterns. The traditional SD card ratings (like "class 10" or 
-"UHS-I") specify sequential read and write, which is fine for cameras, but not 
-fine for running an operating system.
+SD card.
+
+Which leaves us the question of which SD card. Some people automatically 
+reach for a class 10 or UHS-I card, since those have the highest performance on 
+the box. Trouble is, the traditional class ratings on SD cards only tell you 
+the sequential read and write performance. That's fine for cameras, but 
+running an operating system means lots of random reads. Testing often showed 
+that a good class 4 card was better than a lot of the class 10 cards out there.
+
+These days, we don't have to worry about that, because the SD Association 
+came up with the [Application Performance Classes](https://www.sdcard.org/developers/overview/application/index.html)
+of A1 and A2. These set a minimum of random IO operations per second, which 
+is just what we want. So get an A1 card and you'll be happy with the results.
 
 The big thing in the Rock's favor is a quad core ARM processor. While it's not 
 going to set any Bitcoin mining records, I've found multicore 
@@ -43,6 +52,8 @@ Linux, your program can get interrupted by something else at any time. This
 means that a program running on a mere 16MHz Arduino may run better than a 
 1GHz Raspberry Pi. A quad core processor mitigates this, since secondary 
 programs have 3 other cores to work with.
+
+![The Rock Pi S](/images/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/rockpi2.jpg)
 
 The Rock is powered over its USB-C port. I found attaching it to a 
 laptop USB port provided enough power to get going. This is also handy because 
@@ -62,10 +73,16 @@ This is perl 5, version 26, subversion 1 (v5.26.1) built for aarch64-linux-gnu-t
 ```
 
 What you won't have is an equivalent to [RPi::WiringPi]({{< mcpan "RPi::WiringPi">}})
-to control GPIO ("General Purpose Input/Output", things like blinking an LED or 
-taking input from a switch). That's OK, because it's Linux, and Linux provides a 
-simple sysfs interface to access GPIO pins. As long as there's a GPIO driver 
-for the board, you can control the pins.
+to control GPIO ("General Purpose Input/Output"). GPIO is the most basic 
+building block for hardware programming. We're either controlling the output 
+voltage to cause something to happen, like blinking an LED, or we're taking 
+input to see if something happened, like hitting a switch. It's simple, but 
+very useful. Tons of hardware projects come down to just seeing if something 
+is on, or turning something on.
+
+What we lack is a library to do that on the Rock Pi S. That's OK, because it's 
+Linux, and Linux provides a simple sysfs interface to access GPIO pins. As long 
+as there's a GPIO driver for the board, you can control the pins.
 
 The Rock has two headers, one of which is color coded and has the main pins you want to work with in most projects. Note 
 that there are a few variations of the pinout depending on the version of 
@@ -77,10 +94,7 @@ One thing to keep in mind is that the pins are specified as 3.3V input. That mea
 into them. Feeding it 5V might cause glitches, or could break the board 
 completely.
 
-The sysfs interface from Linux is documented at:
-
-https://www.kernel.org/doc/html/latest/admin-guide/gpio/sysfs.html
-
+To get at the pins, we can use the [Linux sysfs interface](https://www.kernel.org/doc/html/latest/admin-guide/gpio/sysfs.html).
 You will note a big fat deprecation warning at the top. The new way to do it 
 is with gpio-cdev, which requires some `ioctl()` calls. Since this is 
 more difficult to handle--it requires importing some constants from the 
