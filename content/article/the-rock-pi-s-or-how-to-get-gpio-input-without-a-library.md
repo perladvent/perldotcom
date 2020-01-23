@@ -1,13 +1,13 @@
 
   {
-    "title"       : "The Rock Pi S; or, How to Get GPIO Input Without a Library",
+    "title"       : "The Rock Pi S Review",
     "authors"     : ["timm-murray"],
-    "date"        : "2020-01-20T17:50:11",
-    "tags"        : [ "hardware", "linux", "gpio", "pi", "rockpi" ],
-    "draft"       : true,
+    "date"        : "2020-01-23T10:39:00",
+    "tags"        : [ "linux", "gpio", "raspberry-pi", "rpi", "raspberry_pi", "rockpi" ],
+    "draft"       : false,
     "image"       : "/images/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/rockpi.jpg",
-    "thumbnail"   : "",
-    "description" : "There are lots of single board computers out there. GPIO (General Purpose Input Output) is what we usually use to see if something is on or off, but not all of these newer boards have a simple library for accessing them in Perl. Never fret, because most of them run Linux, and it's easy to access hardware pins with just Linux.",
+    "thumbnail" : "/images/the-rock-pi-s-or-how-to-get-gpio-input-without-a-library/thumb_rockpi.jpg",
+    "description" : "How to get GPIO Input with Linux and Perl without a library",
     "categories"  : "hardware"
   }
 
@@ -17,7 +17,7 @@ and for good reason. The first Raspberry Pi ushered in a slew of Single
 Board Computers (SBCs), and one of them is the Rock Pi S, a new board from Seeed 
 Studio.
 
-In the interest of full disclosure, the Rock Pi S provided by Seeed 
+In the interest of full disclosure, the Rock Pi S was provided by Seeed 
 Studio for this review. Specifically, it's the model with 512MB of RAM and 
 4Gb of built-in flash.
 
