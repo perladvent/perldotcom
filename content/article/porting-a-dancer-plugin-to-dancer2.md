@@ -166,7 +166,7 @@ Quick reference: porting plugins from Dancer to Dancer2
 
 **Port tests:**
 
-- Import[Plack::Test]({{< mcpan "Plack::Test" >}}}) and
+- Import [Plack::Test]({{< mcpan "Plack::Test" >}}) and
   [HTTP::Request::Common]({{< mcpan "HTTP::Request::Common" >}})
   instead of Dancer::Test
 - Give the application under test a `package` statement
