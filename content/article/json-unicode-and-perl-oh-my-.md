@@ -109,10 +109,6 @@ those code points represent. For example, your Perl string might store code
 point 142 … but which character is that? Perl doesn’t know, and Perl doesn’t
 care. Without a defined character set, a code point is just a number.
 
-(Aside: Part of Perl’s world-class Unicode support includes a set of
-tools that treat Perl strings as Unicode. Treating the string as Unicode
- Unicode but is not itself, fundamentally, Unicode.)
-
 To work around this problem, our JSON libraries make reasonable—though
 not necessarily correct—assumptions about what the string’s code points
 represent.
