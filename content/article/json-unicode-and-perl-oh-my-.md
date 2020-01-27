@@ -248,7 +248,7 @@ octal escapes but Cpanel::JSON::XS’s using hex: Data::Dumper recognizes the
 UTF8 flag and renders its output based on it.
 
 As (perldoc perlunifaq)[https://perldoc.perl.org/perlunifaq.html#What-is-%22the-UTF8-flag%22%3f] makes clear, the UTF8 flag is _not_ meant for consumption
-by Perl code. Nevertheless, it is sometimes possible to regard UTF8-flagged
+by Perl code. Nevertheless, it often does work to regard UTF8-flagged
 strings as “character strings” and non-UTF8-flagged strings as “byte
 strings”—indeed, multiple
 serializers on CPAN, including two of my own, do exactly this. This isn’t
