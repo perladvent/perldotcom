@@ -16,11 +16,13 @@ Consider the following code:
     use Mojo::JSON;
     use Cpanel::JSON::XS;
     use Data::Dumper;
+    $Data::Dumper::Useqq = 1;
 
     my $e_acute = "\xc3\xa9";
 
     my $json = Mojo::JSON::encode_json([$e_acute]);
     my $decoded = Cpanel::JSON::XS->new()->decode($json)->[0];
+    print Dumper( $json, $decoded );
 
 You might think this a reasonable enough round-trip, just using two
 widely-used but different JSON libraries. In fact, though, when you run
@@ -37,8 +39,6 @@ Now invert the encoder/decoder modules:
     my $e_acute = "\xc3\xa9";
 
     my $json = Cpanel::JSON::XS->new()->encode([$e_acute]);
-use Devel::Peek;
-Dump($json);
     my $decoded = Mojo::JSON::decode_json($json)->[0];
     print Dumper( $json, $decoded );
 
@@ -51,7 +51,7 @@ To appreciate the above, we first have to grapple with what Perl strings
 _are_, fundamentally. Unlike C strings, Perl strings aren’t mere arrays
 of bytes … but unlike, say, Python 3 strings, Perl strings aren’t arrays of
 Unicode characters, either. Perl strings, rather, are arrays of “code
-points”, in no particular encoding.
+points” in an undefined character set.
 
 In particular, unlike Python, JavaScript, and many other popular high-level
 programming languages, Perl strings do not differentiate between “binary”
@@ -65,6 +65,7 @@ would be an implementation detail, of no concern to interpreted Perl code.)
 
 This point must be stressed: Perl _does not care_—and does not _want_ to
 care—whether a given string’s code points represent bytes or characters.
+(More will be said on this later.)
 
 Back to JSON
 ============
@@ -94,10 +95,10 @@ and the other using hex. This reflects another Perl interpreter
 implementation detail which, for now, is of no concern.)
 
 Our input string contains two code points, 0xc3 and 0xa9. Recall that
-there is no specific encoding associated with those code points; they’re
+there is no specific character set associated with those code points; they’re
 just numbers. JSON, per all published standards, is purely Unicode—and the
 latest standard mandates UTF-8 encoding specifically. So how do we translate
-those code points—which have no associated encoding—to UTF-8 in order to
+those code points—which have no associated character set—to UTF-8 in order to
 encode to JSON?
 
 We can’t, strictly speaking. It would be like trying
@@ -105,10 +106,12 @@ to convert 5 “currency units” to U.S. dollars: we need to know the actual
 source currency (Bitcoin? Euros?) to get an answer. Likewise, in Perl, to
 express our stored “code points” in UTF-8 we need to know what _characters_
 those code points represent. For example, your Perl string might store code
-point 42 … but which character is that? Perl doesn’t know, and Perl doesn’t
-care. Code points without an associated
-character set—which is what Perl strings are—by definition can’t indicate
-any actual characters.
+point 142 … but which character is that? Perl doesn’t know, and Perl doesn’t
+care. Without a defined character set, a code point is just a number.
+
+(Aside: Part of Perl’s world-class Unicode support includes a set of
+tools that treat Perl strings as Unicode. Treating the string as Unicode
+ Unicode but is not itself, fundamentally, Unicode.)
 
 To work around this problem, our JSON libraries make reasonable—though
 not necessarily correct—assumptions about what the string’s code points
@@ -224,7 +227,7 @@ SV = PV(0x7fc0cd004d30) at 0x7fc0cd016228
   CUR = 8
   LEN = 34
 ```
-Note the `UTF8` indications in the latter. This tells us that Perl’s
+Note the `UTF8` flag in the latter. This tells us that Perl’s
 internal storage of the string’s code points uses UTF-8 encoding. This
 difference is why, as we saw earlier, Data::Dumper encodes Mojo::JSON’s output
 using
@@ -241,13 +244,13 @@ emptor!
 Making Peace
 ============
 
-JSON and Perl are odd bedfellows. Perl’s lack of distinction between numbers
-and strings, for example, can lead to JSON that uses the wrong type for one
-value or the other. Perl’s lack of native booleans can yield a similar effect.
+JSON and Perl are odd bedfellows. Perl’s lack of distinct number and string
+types, for example, can yield JSON that uses the wrong type for one
+value or the other. Perl’s lack of native booleans produces a similar effect.
 
 The encoding problems discussed above, though, are particularly nefarious
 because correcting for them requires a deeper understanding of all of this.
-For example, most can accommodate `{"age": "9"}` easily enough
+For example, most developers can accommodate `{"age": "9"}` easily enough
 because typecasting from `"9"` (string) to `9` (number) is commonplace. But
 how many would see `"Ã©"` and think, “ah! I simply have to treat those
 characters’ code points as bytes then decode those bytes as UTF-8!” Some
@@ -265,3 +268,41 @@ which Perl does not.
 At the end of the day, communication between Perl and other modern languages
 is a challenge. The best we can do is to know of these
 problems and deal with them as they arise.
+
+Epilogue: JSON Alternatives
+===========================
+
+Being restricted to Unicode is, in my opinion, JSON’s biggest drawback,
+but there are others that compel me to prefer to avoid JSON in a lot of
+contexts:
+
+* Its lack of comments and proscription against trailing commas
+make it an awkward choice for human-maintained data structures.
+
+* Its `\uXXXX` escapes support only characters within Unicode’s
+<abbr title="Basic Multilingual Plane">BMP</abbr>; to store emoji or other
+non-BMP characters you either have to encode to UTF-8 directly or indicate
+a UTF-16 surrogate pair ([What does that mean?](https://en.wikipedia.org/wiki/UTF-16#U+010000_to_U+10FFFF)) in `\uXXXX` escapes.
+
+* It’s inefficient compared with binary formats.
+
+[TOML](https://github.com/toml-lang/toml) is a great serialization format
+for human-maintained data structures. It’s a fairly new format, but it
+already powers a number of widely-used projects
+like Rust’s [Cargo](https://doc.rust-lang.org/cargo/) package manager and
+[Hugo](https://gohugo.io/)—which powers this site!
+
+The aforementioned [CBOR](http://cbor.io) improves upon JSON’s efficiency and
+also allows for storage of binary strings. Whereas JSON encoders must
+stringify numbers and escape all strings, CBOR stores numbers “literally”
+and prefixes all strings with a length, which avoids the need
+to escape those strings. These dramatically simplify both encoding and decoding.
+
+[Sereal](https://github.com/Sereal/Sereal) is another great JSON substitute
+that confers most of the benefits of CBOR and can even serialize more
+“Perl-specific” items like regular expressions. This makes it a great choice
+for Perl-to-Perl IPC. Sereal isn’t as well supported outside Perl, though,
+as CBOR, so if you intend to communicate with non-Perl code, Sereal may
+not work as well for you.
+
+Thank you for reading!
