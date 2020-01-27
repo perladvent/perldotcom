@@ -96,10 +96,10 @@ implementation detail which, for now, is of no concern.)
 
 Our input string contains two code points, 0xc3 and 0xa9. Recall that
 there is no specific character set associated with those code points; they’re
-just numbers. JSON, per all published standards, is purely Unicode—and the
-latest standard mandates UTF-8 encoding specifically. So how do we translate
-those code points—which have no associated character set—to UTF-8 in order to
-encode to JSON?
+just numbers. JSON, though, is purely Unicode—and the
+latest standard mandates UTF-8 encoding specifically. So we need to translate
+our “no-character-set” code points to UTF-8 in order to encode to JSON. But
+how to do this?
 
 We can’t, strictly speaking. It would be like trying
 to convert 5 “currency units” to U.S. dollars: we need to know the actual
@@ -184,6 +184,23 @@ This gives:
 The `decode()` method, like `encode()`, assumes that the caller will
 handle encoding manually and so simply copies code points.
 
+Aside: Assumptions of UTF-8
+===========================
+
+Mojo::JSON’s behavior of encoding to UTF-8 has precedent: Perl itself!
+
+You may have run into something like this:
+```
+> perl -e'print "\x{100}"'
+Wide character in print at -e line 1.
+Ā
+```
+For code points 0-255 Perl just outputs the code point as an octet, but
+when asked to output a code point that exceeds 255, obviously that doesn’t
+work. In this case, Perl assumes you want UTF-8 but throws the “wide
+character” warning to tip you off to the fact that you missed something—in
+this case, you neglected to encode code point 256 to bytes.
+
 Abusing the System
 ==================
 
@@ -234,8 +251,10 @@ using
 octal escapes but Cpanel::JSON::XS’s using hex: Data::Dumper recognizes the
 UTF8 flag and renders its output based on it.
 
-It is sometimes possible to regard UTF8-flagged strings as “character
-strings” and non-UTF8-flagged strings as “byte strings”—indeed, multiple
+As (perldoc perlunifaq)[https://perldoc.perl.org/perlunifaq.html#What-is-%22the-UTF8-flag%22%3f] makes clear, the UTF8 flag is _not_ meant for consumption
+by Perl code. Nevertheless, it is sometimes possible to regard UTF8-flagged
+strings as “character strings” and non-UTF8-flagged strings as “byte
+strings”—indeed, multiple
 serializers on CPAN, including two of my own, do exactly this. This isn’t
 a supported model, though, for understanding Perl strings, and any code that
 depends on it may behave differently in different Perl versions. Caveat
@@ -265,16 +284,15 @@ though, even CBOR doesn’t really fit Perl’s “pure code points” string mo
 very well because CBOR distinguishes strongly between binary and text strings,
 which Perl does not.
 
-At the end of the day, communication between Perl and other modern languages
-is a challenge. The best we can do is to know of these
-problems and deal with them as they arise.
+At the end of the day, Perl’s data model, for all of the conveniences that it
+affords us, makes communication with other modern languages a challenge. The
+best we can do is to know of these problems and deal with them as they arise.
 
 Epilogue: JSON Alternatives
 ===========================
 
 Being restricted to Unicode is, in my opinion, JSON’s biggest drawback,
-but there are others that compel me to prefer to avoid JSON in a lot of
-contexts:
+but there are other reasons why I often prefer to avoid JSON:
 
 * Its lack of comments and proscription against trailing commas
 make it an awkward choice for human-maintained data structures.
@@ -288,21 +306,24 @@ a UTF-16 surrogate pair ([What does that mean?](https://en.wikipedia.org/wiki/UT
 
 [TOML](https://github.com/toml-lang/toml) is a great serialization format
 for human-maintained data structures. It’s a fairly new format, but it
-already powers a number of widely-used projects
+already undergirds a number of widely-used projects
 like Rust’s [Cargo](https://doc.rust-lang.org/cargo/) package manager and
-[Hugo](https://gohugo.io/)—which powers this site!
+[Hugo](https://gohugo.io/)—which powers this site! CPAN hosts several
+implementations of this serialization.
 
 The aforementioned [CBOR](http://cbor.io) improves upon JSON’s efficiency and
 also allows for storage of binary strings. Whereas JSON encoders must
 stringify numbers and escape all strings, CBOR stores numbers “literally”
-and prefixes all strings with a length, which avoids the need
-to escape those strings. These dramatically simplify both encoding and decoding.
+and prefixes all strings with a length, which avoids the need to escape those
+strings. These dramatically simplify both encoding and decoding. As with
+TOML, CPAN hosts multiple CBOR implementations. (Full disclosure: Two of these
+are of my own authorship.)
 
 [Sereal](https://github.com/Sereal/Sereal) is another great JSON substitute
 that confers most of the benefits of CBOR and can even serialize more
 “Perl-specific” items like regular expressions. This makes it a great choice
-for Perl-to-Perl IPC. Sereal isn’t as well supported outside Perl, though,
-as CBOR, so if you intend to communicate with non-Perl code, Sereal may
+for Perl-to-Perl IPC. Sereal isn’t as well-supported as CBOR outside Perl,
+though, so if you need to communicate with non-Perl code, Sereal may
 not work as well for you.
 
 Thank you for reading!
