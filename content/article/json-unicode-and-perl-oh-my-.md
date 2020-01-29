@@ -25,7 +25,9 @@ my $decoded = Cpanel::JSON::XS->new()->decode($json)->[0];
 print Dumper( $json, $decoded );
 ```
 You might think this a reasonable enough round-trip, just using two
-widely-used but different JSON libraries. In fact, though, when you run
+different JSON libraries, [Mojo::JSON](https://metacpan.org/pod/Mojo::JSON)
+and [Cpanel::JSON::XS](https://metacpan.org/pod/Cpanel::JSON::XS).
+In fact, though, when you run
 this you’ll see that $decode in the above is `"\x{c3}\x{83}\x{c2}\x{a9}"`,
 not just the `"\xc3\xa9"` that we started with.
 
@@ -90,7 +92,8 @@ This will print:
 $VAR1 = "[\"\303\203\302\251\"]";
 $VAR2 = "[\"\x{c3}\x{a9}\"]";
 ```
-(Note that Data::Dumper outputs one string using octal escapes
+(Note that [Data::Dumper](https://metacpan.org/pod/Data::Dumper)
+outputs one string using octal escapes
 and the other using hex. This reflects another Perl interpreter
 implementation detail which, for now, is of no concern.)
 
@@ -113,7 +116,7 @@ To work around this problem, our JSON libraries make reasonable—though
 not necessarily correct—assumptions about what the string’s code points
 represent.
 
-Mojo::JSON assumes that our 2 original code points are Unicode. So,
+Mojo::JSON assumes that our 2 original code points are Unicode. That means
 Mojo::JSON thinks we gave it the characters U+00C3 (Ã) and
 U+00A9 (©). The reason for the “expansion” from 2 code points to 4 in the
 encoded JSON is that
@@ -123,8 +126,8 @@ code points 0303 (0xc3) and 0203 (0x83), and U+00A9 becomes 0302 (0xc2) and
 
 Cpanel::JSON::XS makes a different assumption that suits a different
 interpretation: This encoder assumes that our 2 original code points
-represent the bytes of the characters that should go into the eventual JSON.
-Unlike with Mojo::JSON, there is no assumption about a desired encoding,
+represent whatever bytes of the characters that should go into the eventual
+JSON. Unlike with Mojo::JSON, there is no assumption about a desired encoding,
 which allows the caller full control over the encoding.
 
 (This flexibility allows the encoder’s caller to choose, e.g., UTF-16 rather
@@ -209,8 +212,8 @@ perl -MCpanel::JSON::XS -e'print Cpanel::JSON::XS->new()->encode(["\xff"])'
 because no Unicode encoding (let alone UTF-8) ever encodes a character to
 a single 0xff byte. Only special decoders that understand this “literal
 binary” JSON variant will parse this as intended. That reliance on a custom
-mode of operation undercuts JSON’s
-usefulness as a widely-supported standard—which may seem fine at first but
+mode of operation undercuts JSON’s usefulness as a widely-supported
+standard—which may seem fine at first but
 can easily bite if your application grows in scope.
 
 Applications that need to serialize strings with arbitrary octets (i.e.,
@@ -221,7 +224,8 @@ to JSON encoding. Or, better yet, prefer a binary-friendly encoding like
 About That Flag Behind the Curtain …
 ====================================
 
-If you run the output from our two encoder methods through Devel::Peek, you’ll
+If you run the output from our two encoder methods through
+[Devel::Peek](https://metacpan.org/pod/Devel::Peek), you’ll
 see something like this for Mojo::JSON’s output:
 ```
 SV = PV(0x7fdc27802f30) at 0x7fdc27e59c58
@@ -248,9 +252,12 @@ octal escapes but Cpanel::JSON::XS’s using hex: Data::Dumper recognizes the
 UTF8 flag and renders its output based on it.
 
 As [perldoc perlunifaq](https://perldoc.perl.org/perlunifaq.html#What-is-%22the-UTF8-flag%22%3f) makes clear, though, the UTF8 flag is **not** meant for
-consumption by Perl code.
+consumption by Perl code. Perl applications should regard strings as
+simple sequences of code points, without regard for how the
+Perl interpreter may store those strings in memory.
 
-In limited contexts it _may_ work to imitate the distinction between string
+That being said,
+in limited contexts it _may_ work to imitate the distinction between string
 types in languages like Python and JavaScript by regarding
 UTF8-flagged strings as “character strings” and non-UTF8-flagged strings as
 “byte strings”—indeed, [multiple](https://metacpan.org/pod/Sereal::Encoder)
@@ -269,9 +276,9 @@ JSON and Perl are odd bedfellows. Perl’s lack of distinct number and string
 types, for example, can yield JSON that uses the wrong type for one
 value or the other. Perl’s lack of native booleans produces a similar effect.
 
-The encoding problems discussed above, though, are particularly nefarious
-because correcting for them requires a deeper understanding of all of this.
-For example, most developers can accommodate `{"age": "9"}` easily enough
+The encoding problems discussed above, though, are especially nefarious
+because accommodating them requires a good understanding of all of the above.
+Most developers can accommodate something like `{"age": "9"}` easily enough
 because typecasting from `"9"` (string) to `9` (number) is commonplace. But
 how many would see `"Ã©"` and think, “ah! I simply have to treat those
 characters’ code points as bytes then decode those bytes as UTF-8!” Some
@@ -287,13 +294,13 @@ very well because CBOR distinguishes strongly between binary and text strings,
 which Perl does not.
 
 At the end of the day, Perl’s data model, for all of the conveniences that it
-affords us, makes communication with other modern languages a challenge. The
-best we can do is to know of these problems and deal with them as they arise.
+affords us, makes communication with many other languages a challenge. The
+best we can do is to anticipate these problems and deal with them as they arise.
 
 Epilogue: JSON Alternatives
 ===========================
 
-JSON’s inability to store arbitrary octet strings is, in my opinion,
+JSON’s inability to store arbitrary octet strings is, in my experience,
 its biggest liability,
 but there are other reasons why I often prefer to avoid JSON:
 
@@ -323,7 +330,7 @@ also allows for storage of binary strings. Whereas JSON encoders must
 stringify numbers and escape all strings, CBOR stores numbers “literally”
 and prefixes strings with their length, which obviates the need to escape those
 strings. These dramatically simplify both encoding and decoding. As with
-TOML, CPAN hosts [multiple](https://metacpan.org/pod/CBOR::XS)
+TOML and YAML, CPAN hosts [multiple](https://metacpan.org/pod/CBOR::XS)
 [CBOR](https://metacpan.org/pod/CBOR::Free)
 [implementations](https://metacpan.org/pod/CBOR::PP).
 (Full disclosure: Two of these are of my own authorship.)
@@ -336,5 +343,12 @@ for Perl-to-Perl IPC. The reference implementation is CPAN’s
 Sereal isn’t as well-supported as CBOR outside Perl,
 though, so if you need to communicate with non-Perl code, Sereal may
 not work as well for you.
+
+[YAML](https://yaml.org/) is another format that humans can maintain easily.
+Unlike TOML, YAML supports binary strings; in fact, it’s flexible enough
+to replace Data::Dumper in many cases. CPAN includes
+a [number](https://metacpan.org/pod/YAML::XS)
+[of](https://metacpan.org/pod/YAML::PP)
+[libraries](https://metacpan.org/pod/YAML::Old) that implement YAML.
 
 Thank you for reading!
