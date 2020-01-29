@@ -216,7 +216,7 @@ can easily bite if your application grows in scope.
 Applications that need to serialize strings with arbitrary octets (i.e.,
 binary) should apply a secondary encoding (e.g., Base64) to strings prior
 to JSON encoding. Or, better yet, prefer a binary-friendly encoding like
-[CBOR](http://cbor.io).
+[CBOR](https://cbor.io).
 
 About That Flag Behind the Curtain …
 ====================================
@@ -247,7 +247,7 @@ using
 octal escapes but Cpanel::JSON::XS’s using hex: Data::Dumper recognizes the
 UTF8 flag and renders its output based on it.
 
-As (perldoc perlunifaq)[https://perldoc.perl.org/perlunifaq.html#What-is-%22the-UTF8-flag%22%3f] makes clear, though, the UTF8 flag is **not** meant for
+As [perldoc perlunifaq](https://perldoc.perl.org/perlunifaq.html#What-is-%22the-UTF8-flag%22%3f) makes clear, though, the UTF8 flag is **not** meant for
 consumption by Perl code.
 
 In limited contexts it _may_ work to imitate the distinction between string
@@ -318,7 +318,7 @@ package manager and [Hugo](https://gohugo.io/)—which powers this site! CPAN
 [several](https://metacpan.org/pod/TOML::Parser)
 [implementations](https://metacpan.org/pod/TOML) of this serialization.
 
-The aforementioned [CBOR](http://cbor.io) improves upon JSON’s efficiency and
+The aforementioned [CBOR](https://cbor.io) improves upon JSON’s efficiency and
 also allows for storage of binary strings. Whereas JSON encoders must
 stringify numbers and escape all strings, CBOR stores numbers “literally”
 and prefixes strings with their length, which obviates the need to escape those
