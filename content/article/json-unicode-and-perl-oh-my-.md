@@ -2,9 +2,9 @@
   {
     "title"       : "JSON, Unicode, and Perl … Oh My!",
     "authors"     : ["felipe-gasper"],
-    "date"        : "2020-01-27T07:11:44",
-    "tags"        : [],
-    "draft"       : true,
+    "date"        : "2020-01-29T20:11:44",
+    "tags"        : ["unicode","json","cbor","utf8"],
+    "draft"       : false,
     "image"       : "",
     "thumbnail"   : "",
     "description" : "A look at this popular serialization’s relationship with Perl",
@@ -47,7 +47,7 @@ print Dumper( $json, $decoded );
 Now $decode is just `"\x{e9}"`. What’s going on here?
 
 What’s in a string?
-===================
+-------------------
 
 To appreciate the above, we first have to grapple with what Perl strings
 _are_, fundamentally. Unlike C strings, Perl strings aren’t mere arrays
@@ -70,7 +70,7 @@ care—whether a given string’s code points represent bytes or characters.
 (More will be said on this later.)
 
 Back to JSON
-============
+------------
 
 In our examples above we compared round-tripping using different libraries
 for the encode and decode. Let’s dig further by comparing just the
@@ -184,7 +184,7 @@ The `decode()` method, like `encode()`, assumes that the caller will
 handle encoding manually and so simply copies code points.
 
 Aside: Assumptions of UTF-8
-===========================
+---------------------------
 
 Mojo::JSON’s behavior of encoding to UTF-8 has precedent: Perl itself!
 
@@ -201,7 +201,7 @@ character” warning to tip you off to the fact that you missed something—in
 this case, you neglected to encode code point 256 to bytes.
 
 Abusing the System
-==================
+------------------
 
 Cpanel::JSON::XS’s `encode()` allows for a nonstandard use of JSON:
 literal binary data. Consider the following:
@@ -222,7 +222,7 @@ to JSON encoding. Or, better yet, prefer a binary-friendly encoding like
 [CBOR](https://cbor.io).
 
 About That Flag Behind the Curtain …
-====================================
+------------------------------------
 
 If you run the output from our two encoder methods through
 [Devel::Peek](https://metacpan.org/pod/Devel::Peek), you’ll
@@ -270,7 +270,7 @@ depends on it may behave differently in different Perl versions. Caveat
 emptor!
 
 Making Peace
-============
+------------
 
 JSON and Perl are odd bedfellows. Perl’s lack of distinct number and string
 types, for example, can yield JSON that uses the wrong type for one
@@ -298,7 +298,7 @@ affords us, makes communication with many other languages a challenge. The
 best we can do is to anticipate these problems and deal with them as they arise.
 
 Epilogue: JSON Alternatives
-===========================
+---------------------------
 
 JSON’s inability to store arbitrary octet strings is, in my experience,
 its biggest liability,
