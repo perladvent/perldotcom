@@ -243,7 +243,7 @@ World data excluding China:
 chart-daily(%countries, %per-day, exclude => 'CN');
 ```
 
-Getting data for China without its mostly affected province:
+Getting data for China without its most affected province:
 
 ```perl
 chart-daily(%countries, %per-day, cc => 'CN', exclude => 'CN/HB');
