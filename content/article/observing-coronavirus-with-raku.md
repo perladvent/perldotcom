@@ -17,7 +17,11 @@ The group at the Johns Hopkins University Center for Systems Science and Enginee
 
 I decided to work with these raw data to display them under a different perspective to reduce panic and provide a way to quickly see real numbers and trends. The result is the launched website, [covid.observer](https://covid.observer). The [source files](https://github.com/ash/covid.observer) of it are available in the GitHub repository.
 
-For years, Perl has been known for its BioPerl. Let’s see what Raku can bring to the society by being a good instrument for working with text data files and how we can use it to process and present data in the way we want. The heart of the site is a Raku program and a few modules that parses data and create static HTML pages. In this article, I would like to show a few most useful features that Raku offers to a developer.
+For years, Perl has been known for its BioPerl. Let’s see what Raku can bring to the society by being a good instrument for working with text data files and how we can use it to process and present data in the way we want. The heart of the site is a Raku program and a few modules that parses data and create static HTML pages.
+
+![covid-observer](/images/observing-coronavirus-with-raku/covid-observer.png)
+
+In this article, I would like to show a few most useful features that Raku offers to a developer.
 
 ### The `MAIN` function
 
