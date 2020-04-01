@@ -3,7 +3,7 @@
     "title"       : "Observing Coronavirus Pandemic with Raku",
     "authors"     : ["andrew-shitov"],
     "date"        : "2020-03-31T10:00:00",
-    "tags"        : ["covid-19", "data-processing", "csv", "john-hopkins", "perl6"],
+    "tags"        : ["covid-19", "data-processing", "csv", "johns-hopkins", "perl6"],
     "draft"       : true,
     "image"       : "",
     "thumbnail"   : "",
@@ -13,7 +13,7 @@
 
 Every few years a new unknown virus pops up and starts spreading around the globe. This year, the situation with COVID-19 is different not only because of the nature of the virus but also because of the Internet. Whilst we have instant access to new information (which is often alarmist in tone) we also have the ability to access data for ourselves.
 
-Johns Hopkins University Center for Systems Science and Engineering synthesizes COVID-19 data from different sources, and displays it on their [online dashboard](https://gisanddata.maps.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6). They also publish daily updates in CSV files on [GitHub]((https://github.com/CSSEGISandData/COVID-19).
+Johns Hopkins University Center for Systems Science and Engineering synthesizes COVID-19 data from different sources, and displays it on their [online dashboard](https://gisanddata.maps.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6). They also publish daily updates in CSV files on [GitHub](https://github.com/CSSEGISandData/COVID-19).
 
 I decided to ingest their CSV data and display it using different visualizations to reduce panic and provide a way to quickly see real numbers and trends. The result is the website [covid.observer](https://covid.observer). The source files are available in the GitHub [repository](https://github.com/ash/covid.observer).
 
@@ -128,7 +128,7 @@ my $active = %data<confirmed> - %data<failed> - %data<recovered>;
 Filtering data
 --------------
 
-For our second case, the hash values  are not scalars but hashes themselves The `>>` hyperoperator can be used to extract deeply located data. Let me demonstrate this on a simplified data fragment:
+For our second case, the hash values are not scalars but hashes themselves. The `>>` hyperoperator can be used to extract deeply located data. Let me demonstrate this on a simplified data fragment:
 
 ```perl
 my %data =
