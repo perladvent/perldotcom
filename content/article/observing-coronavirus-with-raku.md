@@ -2,9 +2,9 @@
   {
     "title"       : "Observing Coronavirus Pandemic with Raku",
     "authors"     : ["andrew-shitov"],
-    "date"        : "2020-03-31T10:00:00",
+    "date"        : "2020-04-02T08:45:00",
     "tags"        : ["covid-19", "data-processing", "csv", "johns-hopkins", "perl6"],
-    "draft"       : true,
+    "draft"       : false
     "image"       : "",
     "thumbnail"   : "",
     "description" : "Using the Raku programming language to process and display statistical data",
