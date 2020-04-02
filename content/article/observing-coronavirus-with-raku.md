@@ -3,7 +3,7 @@
     "title"       : "Observing Coronavirus Pandemic with Raku",
     "authors"     : ["andrew-shitov"],
     "date"        : "2020-03-31T10:00:00",
-    "tags"        : ["covid-19", "data processing", "csv"],
+    "tags"        : ["covid-19", "data-processing", "csv", "john-hopkins", "perl6"],
     "draft"       : true,
     "image"       : "",
     "thumbnail"   : "",
@@ -11,23 +11,27 @@
     "categories"  : "raku"
   }
 
-Every few years, a new unknown virus pops up and starts spreading around the globe. This year, the situation with COVID-19 is different not only because of the nature of the virus but also because of how deeply the Internet came to our lives. What is really good is not only that we have instant access to information updates (which is often seen from a panic angle) but also the ability to access raw data.
+Every few years a new unknown virus pops up and starts spreading around the globe. This year, the situation with COVID-19 is different not only because of the nature of the virus but also because of the Internet. Whilst we have instant access to new information (which is often alarmist in tone) we also have the ability to access data for ourselves.
 
-The group at the Johns Hopkins University Center for Systems Science and Engineering gathers data from a number of different sources, displays then on their [online dashboard](https://gisanddata.maps.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6) and publishes [daily updates in CSV files](https://github.com/CSSEGISandData/COVID-19) on GitHub.
+Johns Hopkins University Center for Systems Science and Engineering synthesizes COVID-19 data from different sources, and displays it on their [online dashboard](https://gisanddata.maps.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6). They also publish daily updates in CSV files on [GitHub]((https://github.com/CSSEGISandData/COVID-19).
 
-I decided to work with these raw data to display them under a different perspective to reduce panic and provide a way to quickly see real numbers and trends. The result is the launched website, [covid.observer](https://covid.observer). The [source files](https://github.com/ash/covid.observer) of it are available in the GitHub repository.
+I decided to ingest their CSV data and display it using different visualizations to reduce panic and provide a way to quickly see real numbers and trends. The result is the website [covid.observer](https://covid.observer). The source files are available in the GitHub [repository](https://github.com/ash/covid.observer).
 
-For years, Perl has been known for its BioPerl. Let’s see what Raku can bring to the society by being a good instrument for working with text data files and how we can use it to process and present data in the way we want. The heart of the site is a Raku program and a few modules that parses data and create static HTML pages.
+For years Perl has been known for BioPerl. Let’s see what Raku can bring to society as its a great at manipulating text data. The heart of the site is a Raku program and a few modules that parse data and create static HTML pages.
 
+\
 ![covid-observer](/images/observing-coronavirus-with-raku/covid-observer.png)
+\
+\
 
-In this article, I would like to show a few most useful features that Raku offers to a developer.
+I'm going to show you a few of the most useful features that Raku offers to developers.
 
-### The `MAIN` function
+The `MAIN` function
+-------------------
 
-The program works in three modes: parsing population data, getting the updates from the COVID raw data, and generating HTML files. Raku gives us a very handy way to process the command line arguments by defining different variants of the `MAIN` function. Depending on the command line parameters, a correct function is automatically called, which helps me to run the program in the desired mode.
+The program works in three modes: parsing population data, getting updates from the COVID raw data, and generating HTML files. Raku gives us a very handy way to process command line arguments by defining different variants of the `MAIN` function. Each variant is mapped to different command line parameters, and Raku automatically dispatches to the matched variant, which helps me to run the program in the desired mode.
 
-Here are the functions that make the main work:
+Here are the variants:
 
 ```perl
 multi sub MAIN('population') {
@@ -43,7 +47,7 @@ multi sub MAIN('generate') {
 }
 ```
 
-In other words, we don’t need to parse the command-line options ourselves, neither need we to use any modules such as `Getopt::Long` from Perl. Moreover, Raku generates a simple help message if you miss the command or enter a wrong one:
+We don’t need to parse the command-line options ourselves, nor use any modules such as `Getopt::Long` to do it for us. Moreover, Raku emits "usage" help text if the program is run with incorrect or missing arguments:
 
 ```bash
 $ ./covid.raku
@@ -53,7 +57,7 @@ Usage:
   ./covid.raku generate
 ```
 
-Salve J. Nilsen [proposed to add](https://github.com/ash/covid.observer/pull/5) another `MAIN` function that prints the SQL commands for initializing the database. Here, you can also see how to use Boolean flags in the command line:
+Salve J. Nilsen [proposed to add](https://github.com/ash/covid.observer/pull/5) another `MAIN` function that prints the SQL commands for initializing the database. This example shows how how to define Boolean flags for command line options:
 
 ```perl
 multi sub MAIN('setup', Bool :$force=False, Bool :$verbose=False) {
@@ -61,7 +65,7 @@ multi sub MAIN('setup', Bool :$force=False, Bool :$verbose=False) {
 }
 ```
 
-Note the `:` before the name of the parameter. We’ll see it again later.
+Note the `:` before the parameter name. We’ll see it again later.
 
 An additional POD comment can be added before each version of the function to print a better usage description, for example:
 
@@ -72,7 +76,7 @@ multi sub MAIN('fetch') {
 }
 ```
 
-Having this done, you deliver a better usage message for the user:
+Now the program prints a more helpful usage message:
 
 ```bash
 Usage:
@@ -82,13 +86,15 @@ Usage:
 
 ```
 
-### Reduction operators
 
-Reduction operators are really useful. Let me remind what a reduction operator is. Actually, this is a meta-operator having a pair of square brackets, which you use to surround any infix operator (such operators take two operands).
+Reduction operators
+-------------------
 
-In the program, the reduction operator is widely used for computing the totals across the data sets (e.g. for the world, or across China provinces). Let us examine a few cases with increasing difficulty.
+Reduction operators are really useful. Let me remind you what a reduction operator is. It's actually a meta-operator: an infix operator surrounded by square brackets.
 
-First, there’s a simple hash, and we need to add up its values:
+In the program the reduction operator is widely used for computing totals across the data sets (e.g. for the World, or across Chinese provinces). Let us examine a few cases of increasing complexity:
+
+First there’s a simple hash, and we need to add up its values:
 
 ```perl
 my %data =
@@ -100,7 +106,7 @@ my $total = [+] %data.values;
 say $total; # 169303
 ```
 
-The above example is a classical use case of the reduction operator. What I also [noticed](https://andrewshitov.com/2020/03/16/a-couple-of-syntax-sweets-in-raku/) during the work, is how the `[-]` construct helps when you need to reduce some value by a few other values:
+This is the classic use case for the reduction operator. What I [noticed](https://andrewshitov.com/2020/03/16/a-couple-of-syntax-sweets-in-raku/) during the work is that the `[-]` construct helps when you need to reduce some value by a few other values:
 
 ```perl
 my %data =
@@ -118,9 +124,11 @@ Using a hash slice in the form of `%h<a b c>` also helps to make the code more c
 my $active = %data<confirmed> - %data<failed> - %data<recovered>;
 ```
 
-### Filtering data
 
-In the second case, the values are nested hashes. The `>>` hyperoperator can be used to extract the deeply located parts: `%data.values>><confirmed>`. Let me demonstrate this on a simplified data fragment:
+Filtering data
+--------------
+
+For our second case, the hash values  are not scalars but hashes themselves The `>>` hyperoperator can be used to extract deeply located data. Let me demonstrate this on a simplified data fragment:
 
 ```perl
 my %data =
@@ -141,14 +149,14 @@ my $total = [+] %data.values>><confirmed>;
 say $total; # 169303
 ```
 
-An alternative, and probably, a cleaner way is using the `map` method to access the desired part:
+An alternative and cleaner way is using the `map` method to access the data:
 
 ```perl
 my $total2 = [+] %data.values.map: *<confirmed>;
 say $total2; # 169303
 ```
 
-Finally, to exclude a country from the results, you can `grep` the keys in-place.
+Finally, to exclude a country from the results, you can `grep` the keys in-place:
 
 ```perl
 my %x = %data.grep: *.key ne 'CN';
@@ -156,7 +164,7 @@ my $excl2 = [+] %x.values.map: *<confirmed>;
 say $excl2; # 87906
 ```
 
-Notice that calling `grep` directly on the hash (as in the above example) is much handier than trying to loop over the keys and filter them:
+Notice that calling the hash's `grep` method is much handier than trying to loop over the keys and filter them:
 
 ```perl
 my $excluding-china =
@@ -164,9 +172,11 @@ my $excluding-china =
 say $excluding-china; # 87906
 ```
 
-### Hyper operators
 
-In the previous section, we’ve already seen how to apply the same action to each element of the list using `>>`. Now, let us take a look at a real usage of the hyper operator `>>->>` that I used to compute the deltas of number series.
+Hyper operators
+---------------
+
+In the previous section I showed how to apply the same action to each element of a list using `>>`. Now let us take a look at a real example of how I used the hyper operator `>>->>` to compute the deltas of number series:
 
 ```perl
 my @confirmed = 10, 20, 40, 70, 150;
@@ -174,13 +184,15 @@ my @delta = @confirmed[1..*] >>->> @confirmed;
 say @delta; # [10 20 30 80]
 ```
 
-The array here is a series of values for the given period of time. The task is to compute how many new cases happen in each day. Instead of making a loop, it is possible to simply ‘subtract‘ an array from itself but shifted by one element.
+The array contains a series of values for the given period of time. The task is to compute how many new cases happen in each day. Instead of using a loop, it is possible to simply ‘subtract‘ an array from itself but shifted by one element.
 
 The `>>->>` operator takes two data series: the slice `@confirmed[1..*]` of the original data without the first element, and the original `@confirmed` array. For a given binary operator (`-` in this example), you can construct four hyper operators: `>>-<<`, `>>->>`, `<<->>`, `<<-<<`. The chosen form allows us to ignore the extra item at the end of `@confirmed` when it is applied against `@confirmed[1..*]`.
 
-### Junctions
 
-Let me demonstrate an example of using the junction operator `|`, which I did not discover earlier. It chooses the ending for the given ordinal number:
+Junctions
+---------
+
+Let me demonstrate a way of using the junction operator `|` which I discovered recently. It chooses the ending for the given ordinal number:
 
 ```perl
 for 1..31 -> $day {
@@ -195,11 +207,12 @@ for 1..31 -> $day {
 }
 ```
 
-The `when` blocks catch the corresponding numbers that need special endings. Junctions such as `1|21|31` look more elegant than a regular expression or a chain of comparisons.
+The `when` blocks catch the corresponding numbers that need special endings. Junctions such as `1|21|31` are more elegant than a regular expression or a chain of comparisons.
 
-### Optional and named parameters
+Optional and named parameters
+-----------------------------
 
-Passing parameters to a function is a pleasant work by itself in Raku. You can pass hashes or arrays with ease:
+Parameter processing is simple in Raku. This function accepts two positional hash parameters:
 
 ```perl
 sub chart-daily(%countries, %totals) {
@@ -207,7 +220,7 @@ sub chart-daily(%countries, %totals) {
 }
 ```
 
-What is even more attractive is how you can add optional named parameters:
+I can easily add optional named parameters:
 
 ```perl
 sub chart-daily(%countries, %totals, :$cc?, :$cont?, :$exclude?) {
@@ -215,9 +228,9 @@ sub chart-daily(%countries, %totals, :$cc?, :$cont?, :$exclude?) {
 }
 ```
 
-A column before the name makes the parameter named, and the question mark makes it optional. I am using this to modify the behaviour of the same statistical function for aggregating data over the continents, the whole world, or to exclude a single country or a region, as shown in the following examples.
+A colon before the name makes the parameter named, and the question mark makes it optional. I am using this to modify the behavior of the same statistical function for aggregating data over the whole World, the continents, or to exclude a single country or a region:
 
-Generating data for the whole world:
+Generating data for the whole World:
 
 ```perl
 chart-daily(%countries, %per-day);
@@ -249,9 +262,10 @@ Getting data for China without its most affected province:
 chart-daily(%countries, %per-day, cc => 'CN', exclude => 'CN/HB');
 ```
 
-### A built-in template engine
+A built-in template engine
+--------------------------
 
-The project generates more than 200 HTML files, so templating is an important part of it. Fortunately, Raku has a great out-of-the-box templating mechanism, which is much more powerful than simple variable interpolation.
+The project generates more than 200 HTML files, so templating is an important part of it. Fortunately Raku has a great out-of-the-box templating mechanism, which is much more powerful than simple variable interpolation.
 
 A minimal example is substituting variables:
 
@@ -265,7 +279,7 @@ return qq:to/HTML/;
 
 By the way, notice that Raku lets you keep the indentation of a multi-line string by simply indenting its closing symbol. No extra spaces at the beginning of the lines will appear in the result.
 
-A more exciting thing is that you can embed Raku code blocks into strings, and those blocks can contain any logic you need to make a right decision somewhere in the middle of the template.
+A more exciting thing is that you can embed Raku code blocks into strings, and those blocks can contain any logic you need to make a right decision somewhere in the middle of the template:
 
 ```perl
 my $content = qq:to/HTML/;
@@ -288,6 +302,7 @@ my $content = qq:to/HTML/;
 
 Here, the string builds itself depending on data. For each generated country, the string ’chooses‘ which phrase to embed and how to format the number. The `if` block is a relatively big chunk of Raku code that generates a string, which is used in place of the whole block in curly braces. Thus, inside this embedded code block you can freely manipulate data from the outside code.
 
-### Afterword
+Afterword
+---------
 
-I must say that it is quite exciting to use Raku for a real project. As you could see from the examples, many of its ‘strange‘ features demonstrate how useful they are in different circumstances. Examine the code in the [GitHub repository](https://github.com/ash/covid.observer) and follow the updates about the site [in my blog](https://andrewshitov.com/category/covid-19/).
+I must say that it is quite exciting to use Raku for a real project. As you can see from the examples, many of its ‘strange‘ features demonstrate how useful they are in different circumstances. Examine the code in the [GitHub repository](https://github.com/ash/covid.observer) and follow the updates about the site [on my blog](https://andrewshitov.com/category/covid-19/).
