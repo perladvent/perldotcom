@@ -17,7 +17,7 @@ Johns Hopkins University Center for Systems Science and Engineering synthesizes 
 
 I decided to ingest their CSV data and display it using different visualizations to reduce panic and provide a way to quickly see real numbers and trends. The result is the website [covid.observer](https://covid.observer). The source files are available in the GitHub [repository](https://github.com/ash/covid.observer).
 
-For years Perl has been known for BioPerl. Let’s see what Raku can bring to society as its a great at manipulating text data. The heart of the site is a Raku program and a few modules that parse data and create static HTML pages.
+For years Perl has been known for BioPerl. Let’s see what Raku can bring to society as its great at manipulating text data. The heart of the site is a Raku program and a few modules that parse data and create static HTML pages.
 
 \
 ![covid-observer](/images/observing-coronavirus-with-raku/covid-observer.png)
