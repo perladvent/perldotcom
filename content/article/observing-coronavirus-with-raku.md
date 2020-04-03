@@ -199,7 +199,7 @@ for 1..31 -> $day {
     my $ending = do given $day {
         when 1|21|31 {'st'}
         when 2|22    {'nd'}
-        when 3       {'rd'}
+        when 3|23    {'rd'}
         default      {'th'}
     }
 
