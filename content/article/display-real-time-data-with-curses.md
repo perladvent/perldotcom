@@ -73,11 +73,11 @@ The rest is list manipulation and Curses stuff. I won't go through the list code
 The setup for Curses is easy. It knows the screen size already:
 
 ```perl
-sub init ($self) {   
+sub init ($self) {
   initscr;
   curs_set(0); # hide cursor
   $win = Curses->new;
-    
+
   for( my $i = MAX; $i >= 0; $i-- ) {
     $self->size_at( $i, undef );
     $self->name_at( $i, '' );
@@ -107,7 +107,7 @@ sub draw ($self) {
 
 Now I have a little script that makes some fancy output to the screen as I sort the list of largest files in real time. Here's a run against my [MiniCPAN]({{<mcpan "CPAN::Mini" >}}) directory:
 
-The way I've written it, I have to run it from the directory I want to check. I can avoid all sorts of nonsense with taint-checking and weird directory names that way. You could easily make it work otherwise. You could even adapt this program to list something else. The list management stuff is already there and it doesn't really care about the particular problem. The full code is on [GitHub](https://github.com/PerlTricks/du-curses/blob/master/curses.pl).
+The way I've written it, I have to run it from the directory I want to check. I can avoid all sorts of nonsense with taint-checking and weird directory names that way. You could easily make it work otherwise. You could even adapt this program to list something else. The list management stuff is already there and it doesn't really care about the particular problem. The full code is on [GitHub as briandfoy/du-curses](https://github.com/briandfoy/du-curses/blob/master/curses.pl).
 
 \
 *This article was originally posted on [PerlTricks.com](http://perltricks.com).*
