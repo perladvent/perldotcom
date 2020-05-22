@@ -103,7 +103,9 @@ after a year, the interest started to wane. I cancelled the last one because
 I didn't get enough attendees to make it worthwhile.
 
 For many years I've run a free ninety-minute or two-hour course as part of the
-London Perl Workshop. I always get a pretty good turn-out for those.
+London Perl Workshop. I always get a pretty good turn-out for those. But, to
+be honest, that's about the only place I can guarantee much interest in Perl
+training in the UK these days.
 
 ## You previously wrote the print books [Data Munging with Perl](https://www.manning.com/books/data-munging-with-perl) (Manning Press) and [Template Toolkit](http://www.template-toolkit.org/book.html) (O'Reilly & Associates, with Andy Wardley and Darren Chamberlain). How is Perl School's process different than what you experienced with those publishers?
 
