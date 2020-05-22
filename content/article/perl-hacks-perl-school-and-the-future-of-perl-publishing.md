@@ -11,7 +11,7 @@
     "categories"  : "community"
   }
 
-Dave Cross, long-time Perl user, trainer, and author, recently released [The Best of Perl Hacks](https://perlhacks.com/2020/04/the-best-of-perl-hacks/), a curated collection of his best posts from his [Perl Hacks blog](https://perlhacks.com). His imprint, [Perl School](https://perlschool.com), has published five e-books, including two that I wrote.
+Dave Cross, long-time Perl user, trainer, and author, recently released [The Best of Perl Hacks](https://perlhacks.com/2020/04/the-best-of-perl-hacks/), a curated collection of his best posts from his [Perl Hacks blog](https://perlhacks.com). His imprint, [Perl School](https://perlschool.com), has published six e-books, including two that I wrote.
 
 There's an unrelated book, [Perl Hacks: Tips & Tools For Programming, Debugging, And Surviving](), by chromatic, Damian Conway, and Curtis "Ovid" Poe. It's also very good, but completely separate from Dave's.
 
