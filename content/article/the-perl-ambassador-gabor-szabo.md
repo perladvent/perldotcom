@@ -1,6 +1,6 @@
 {
    "date" : "2020-05-29T00:00:00",
-   "description" : "The Perl Ambassador - Gabor Szabo",
+   "description" : "The person behind the news of Perl",
    "authors" : [
       "mohammad-anwar"
    ],
@@ -13,40 +13,40 @@
    "draft" : false,
    "categories" : "community",
    "thumbnail" : "",
-   "title" : "The Perl Ambassador - Gabor Szabo"
+   "title" : "The Perl Ambassador: Gabor Szabo"
 }
 
-This is the launch interview with **Gabor Szabo**, which is part of
-the monthly series of interviews to be published on `perl.com`. It
-was **brian d foy** original idea to do interview series and I joined
-him recently.
+This is the launch interview of a monthly series of interviews I'll
+publish on `perl.com`. I can promise you, fun and entertaining
+interviews every month. So please watch this space. If you'd like me
+to interview you, or know someone you'd like me to interview, let me
+know. Take the same set of questions and send me your answers!
 
-I can promise you, fun and entertaining interviews every month. So
-please watch this space.
-
-**Gabor Szabo**, long time Perl developer and DevOps trainer. Author
-of the [Perl tutorial](https://perlmaven.com/perl-tutorial) on the
-Perl Maven site and on the [Code Maven](https://code-maven.com/) site.
-He is also [White camel](http://whitecamel.org/) awardee. He teaches
+**Gabor Szabo** is a long time Perl developer and DevOps trainer and the
+author of the [Perl tutorial](https://perlmaven.com/perl-tutorial) and
+of Perl Maven and on [Code Maven](https://code-maven.com/). He
+received a [White Camel
+Award](http://whitecamel.org/p/gabor_szabo.html) in 2008. He teaches
 [training courses in Israel](https://hostlocal.com/) and around the
-world. He has the hat of the chief editor of
-[Perl Weekly newsletter](https://perlweekly.com/).
+world. He wears the hat of the chief editor of [Perl Weekly
+newsletter](https://perlweekly.com/), and is always happy to receive
+notable Perl news items for inclusion in its next issue.
 
 \
 \
 
 #### How did you first start using Perl?
 
-I was working at a start-up company near Jerusalem that had an AI
-based software product which cost 1,000,000 USD with an additional
+I was working at a start-up company near Jerusalem that had an
+AI-based software product which cost 1,000,000 USD with an additional
 1-2 million cost for integration. That made sales a bit difficult so
-we were working on a related product that would sell for a mere
-30,000 USD. Just to get our feet in the door of the potential buyers
-of our flagship product. We were using
+we were working on a related product that would sell for a mere 30,000
+USD. Just to get our feet in the door of the potential buyers of our
+flagship product. We were using
 [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language))
 and [AWK](https://en.wikipedia.org/wiki/AWK) to write our compiler on
 Window 3.11. It was great fun, but I was also interested in all the
-sysadmin work in the company (We had a Novell NetWare 3.11
+sysadmin work in the company (we had a Novell NetWare 3.11
 [network](https://en.wikipedia.org/wiki/NetWare) and all the other
 areas that was not that interesting for the regular programmers. For
 example our build system.
@@ -54,11 +54,10 @@ example our build system.
 Then [Windows NT](https://en.wikipedia.org/wiki/Windows_NT) was
 introduced in 1993 and I got the opportunity to start setting it up.
 At around the same time our office was bought by
-[NetManage](https://en.wikipedia.org/wiki/NetManage) one of the
+[NetManage](https://en.wikipedia.org/wiki/NetManage), one of the
 pioneers in TCP/IP for MS Windows, in what is today called an
 [Acqui-hiring](https://en.wikipedia.org/wiki/Acqui-hiring). There we
-used some
-[Rational ClearCase](https://en.wikipedia.org/wiki/Rational_ClearCase)
+used some [Rational ClearCase](https://en.wikipedia.org/wiki/Rational_ClearCase)
 tools for bug tracking.
 
 That's the time when I first started to use Perl, probably in 1993 or
@@ -94,12 +93,12 @@ few. Oh and of course I love `Perl::Critic` and `Devel::Cover`.
 
 I am not sure if any. Well, maybe except of `Perl::Critic`. I just
 noticed that I configured it that it won't allow single-quotes around
-a string if there is nothing to interpolate in it.So "perl" is bad,
+a string if there is nothing to interpolate in it. So "perl" is bad,
 'perl' is good. I need to relax this.
 
 I think I hardly ever used the fun features of Perl. I almost never
-use the "do_this and do_that" construct except for the "open or die".
-I hardly use $_ and I think never use it explicitly. Maybe I was never
+use the `do\_this and do\_that` construct except for the `open or die`.
+I hardly use `$_` and I think never use it explicitly. Maybe I was never
 a real Perl programmer :)
 
 \
@@ -130,10 +129,10 @@ actually learn Perl...)
 The community. Whatever that means. I wish people were prouder of
 their work and embraced the 21st century.
 
-I wish they were more public about their work. (e.g. announcements of
+I wish they were more public about their work (e.g. announcements of
 releases of perl IMHO are only published on the p5porters list.
-Not on blogs.perl.org, not on perl.org, and not the site of
-https://news.perlfoundation.org/
+Not on [blogs.perl.org](http://blogs.perl.org), not on [perl.org](https://www.perl.org), and not on
+[https://news.perlfoundation.org/](https://news.perlfoundation.org/)).
 
 Very few module authors write about new releases of their code. There
 are very few people who write about Perl-related subjects. In many
@@ -145,10 +144,8 @@ impression that no-one uses Perl. Of course this is not new, it is
 just getting worse every year as the people who used to write about
 Perl stopped doing so or are writing about other subjects now.
 
-It also makes it much harder to fill the
-[Perl Weekly newsletter](https://perlweekly.com/)
-
-If it wasn't for the
+It also makes it much harder to fill
+[Perl Weekly newsletter](https://perlweekly.com/). If it wasn't for the
 [Perl Weekly Challenge](https://perlweeklychallenge.org/) we would
 have half the size.
 
