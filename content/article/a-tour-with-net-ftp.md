@@ -244,6 +244,10 @@ if($options{'action'} eq 'list') {
 }
 ```
 
+In addition to the previous code snippets for listing and uploading, here I added a way to **view** a file (the code actually download the file to print it) so after listing we can use the **view** to look the content of each file.
+
+Furthermore, I used `Getopt::Long` to handle command line parameters.
+
 ## More about design and security
 
 This thin wrapper can be extended to do more task like checking allowed/disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file... But remember it's still only on the client side ! 
