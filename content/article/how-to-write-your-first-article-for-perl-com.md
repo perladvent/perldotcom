@@ -106,15 +106,15 @@ From the root project directory, launch a local version of the site:
     Web Server is available at http://localhost:1313/ (bind address 127.0.0.1)
     Press Ctrl+C to stop
 
-Pay careful attention to the program output - if you see any errors, it probably means your draft article is not correctly formatted. Once those are fixed, navigate with a browser to the localhost address shown in the output, and you should see a version of Perl.com running on your computer with your draft article at the top of the homepage!
+Pay careful attention to the program output—if you see any errors, it probably means your draft article is not correctly formatted. Once those are fixed, navigate with a browser to the localhost address shown in the output, and you should see a version of Perl.com running on your computer with your draft article at the top of the homepage!
 
-If your page do not appear, check that hugo sees it well :
+If your page does not appear, check that Hugo sees it well:
 
-    hugo list drafts
+    $ hugo list drafts
 
 Or
 
-    hugo list future
+    $ hugo list future
 
 ### Refining your article
 
