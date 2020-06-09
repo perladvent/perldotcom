@@ -11,110 +11,91 @@
     "categories"  : "development"
   }
 
-When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even some *over-complex-and-slow-kind-of-fancy-artifacts-repositories* (put the name you want here)...
+When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you, S3), but the answer is often right in front of your eyes: FTP!
 
-...but the answer is often right in front of your eyes : **FTP** !
-
-**"Files Transfer Protocol"** means what it means and provides a very simple and convenient way to achieve the task.
-
-In addition it's battle-tested, requires generally almost zero maintenance when in place and provides a simple anonymous access mechanism. 
+The "File Transfer Protocol" provides a very simple and convenient way to share files. It's battle-tested, requires almost no maintenance, and has a simple anonymous access mechanism. It can be integrated with several standard auth methods and even some virtual ones, none of which I show here.
 
 ![](/images/a-tour-with-net-ftp/battlereadymeow.jpeg)
 
-It can be integrated with several standard auth methods and even some virtual one (disconnect users from any auth provider which provides more flexibility)
-
-In the next paragraphs, I will install a FTP server locally (on a GNU/Linux machine) then create a simple FTP client.
+In this article, I'll install a local FTP server and create a simple FTP client in Perl.
 
 ## Download and install ftpd
 
-As a `ftpd` I decided to use [pure-ftpd](https://www.pureftpd.org/project/pure-ftpd/) but there are some other good alternatives if you want.
+I decided to use [pure-ftpd](https://www.pureftpd.org/project/pure-ftpd/) but there are some other good alternatives if you want.
 
-First download the tarball :
-
-```bash
-wget https://download.pureftpd.org/pub/pure-ftpd/releases/pure-ftpd-1.0.49.tar.gz
-```
-
-Next we untar and go inside the directory newly created directory :
-```bash
-tar xvzf pure-ftpd-1.0.49.tar.gz
-cd pure-ftpd-1.0.49/
-```
-Next step deserves more details.. 
-
-We will configure `ftpd` so we can execute it as *casual user* (use non restricted port for instance) and we will set the destination directory to our `$HOME/ftpd` :
+First I download the tarball, untar it, and change into its directory:
 
 ```bash
-./configure --prefix=$HOME/ftpd --with-nonroot && make && make install
+$ wget https://download.pureftpd.org/pub/pure-ftpd/releases/pure-ftpd-1.0.49.tar.gz
+$ tar xvzf pure-ftpd-1.0.49.tar.gz
+$ cd pure-ftpd-1.0.49/
 ```
 
-Then we go there and create 2 directories :
+I'll configure `ftpd` so I can execute it as casual (non-root) user using a non-restricted port, and I'll set the destination directory to my `$HOME/ftpd` :
 
 ```bash
-cd $HOME/ftpd
-mkdir ftp
-mkdir run
+$ ./configure --prefix=$HOME/ftpd --with-nonroot && make && make install
 ```
 
-`ftp` is what will be published and `run` is where we will put the pidfile.
-
-Now we can start the ftp server. 
-
-We need to give some custom configurations :
-* like the `FTP_ANON_DIR` which means **"I want to publish this directory"**
-* the `-e` for anonymous access and `-M` to allow anonymous users to create directories 
-* and finally the `-g` to change where the ftp server will put the `pidfile`: :
+I create two directories. The _ftp_ is what I'll publish and _run_ is where I'll put the pidfile.
 
 ```bash
-FTP_ANON_DIR=`pwd`/ftp ; ./sbin/pure-ftpd -e -M -g run &
+$ cd $HOME/ftpd
+$ mkdir ftp
+$ mkdir run
 ```
 
-At this point we should have a running ftp server... Let's check !
+Now we can start the ftp server. I need to give some custom configurations:
+
+* `FTP_ANON_DIR` is the directory I want to publish
+* `-e` allows anonymous access
+* `-M` allows anonymous users to create directories
+* `-g` specifies the directory for the pidfile:
+
+```bash
+$ FTP_ANON_DIR=`pwd`/ftp ; ./sbin/pure-ftpd -e -M -g run &
+```
+
+At this point I should have a running ftp server. Let's check!
 
 ## Test with ftp
 
-We will test with the preinstalled `ftp` client (command line syntax can change) :
+First, I'll test with the preinstalled `ftp` client. If everything is fine I'll see the typical FTP exchange:
+
 
 ```bash
-ftp localhost 2121
-```
-
-If everything is fine it will give you :
-
-```bash
+$ ftp localhost 2121
 Connected to localhost.
 220---------- Welcome to Pure-FTPd ----------
 220-You are user number 1 of 50 allowed.
 220-Local time is now 11:56. Server port: 2121.
 220-Only anonymous FTP is allowed here
 220 You will be disconnected after 15 minutes of inactivity.
-Name (localhost:tib): 
+Name (localhost:tib):
 230 Anonymous user logged in
 Remote system type is UNIX.
 Using binary mode to transfer files.
-ftp> 
+ftp>
 ```
 
+If I get `ftp: connect: Connection refused` it's probably one of:
 
-If you get `ftp: connect: Connection refused` it's because :
-* either your ftpd is not running (check with `ps aux | grep "ftp[d]"`) 
-* or you're targetting the wrong port (if you forgot `--non-root` configure option your `ftpd` is probably serving on port `21`)
+* `ftpd` is not running (check with `ps aux | grep "ftp[d]"`)
+* I'm using the wrong port
 
-If you get `421 Can't change directory to /home/tib/ftpd/ftp/ [/]` it's probably because you haven't created the directory.
+If I get `421 Can't change directory to /home/tib/ftpd/ftp/ [/]` it's probably because I haven't created the directory I specified in `FTP_ANON_DIR`.
 
 ## Simple client in Perl
 
-Ok that's cool but what about writing some Perl now... ? 
+Ok that's cool, but I only played with ftp server and preinstalled `ftp` client until now. What about writing some Perl now?
 
 ![](/images/a-tour-with-net-ftp/whatif.jpg)
 
-We only played with ftp server and preinstalled `ftp` client until now :D 
-
-[Net::FTP](https://metacpan.org/pod/Net::FTP) is a superb [CPAN](https://metacpan.org/) module dedicated to **FTP protocol** and we will use it.
+[Net::FTP](h{{</* mcpan "Net::FTP" */>}}) is a superb [CPAN](https://metacpan.org/) module dedicated to FTP protocol and I'll use that.
 
 ### Simple listing
 
-First a very simple listing script `ls.pl` :
+First, a very simple listing script `ls.pl`. This program connects to the server, asks for a list of files, and outputs each one. It's clear that's super easy and straightforward to play with FTP in Perl!
 
 ```perl
 #!/usr/bin/env perl
@@ -127,25 +108,17 @@ my $HOST = "localhost";
 my $PORT = 2121;
 
 
-my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0) or die "Cannot connect to $HOST: $@";
+my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0)
+	or die "Cannot connect to $HOST: $@";
 $ftp->login() or die "Cannot login ", $ftp->message;
 foreach my $f ($ftp->ls()) { print "$f\n"; }
 $ftp->quit;
 ```
 
-Honestly, I don't know what to explain here, variables and functions names are self documenting.
-
-I'ts clear that's super easy and straightforward to play with FTP in Perl ! :D
-
-
-
-What next ? Maybe upload something ? :D
-
 ### Upload
 
-Here again it is super simple, believe me.
+What next  Maybe upload something? Again, it's super simple. Instead of listing files, I'm `put`ting them:
 
-In the `upload.pl` :
 ```perl
 #!/usr/bin/env perl
 
@@ -156,24 +129,25 @@ use Net::FTP;
 my $HOST = "localhost";
 my $PORT = 2121;
 
-
-my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0) or die "Cannot connect to $HOST: $@";
+my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0)
+	or die "Cannot connect to $HOST: $@";
 $ftp->login() or die "Cannot login ", $ftp->message;
 foreach my $file(@ARGV) {
-    $ftp->put("$file", "$file") or die "Cannot put $file", $ftp->message;
+    $ftp->put("$file", "$file")
+    	or die "Cannot put $file", $ftp->message;
 }
 $ftp->quit;
 ```
 
-That you can use like `perl upload.pl file1.txt file2.txt`.
+I run this and supply the files I want to upload:
 
-By default, anonymous users can't delete files (but they can overwrite files...).
+```bash
+$ perl upload.pl file1.txt file2.txt`.
+```
 
-This setup is for educational purposes, a real life design should configure a bit more the `ftpd` service so it can use **virtual users** (puredb) and/or **chrooting**.
- 
-## Put things together 
+## Put things together
 
-I propose a more complete client with some command line parsing and more actions :
+I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. [Getopt::Long]({{</* mcpan "Getopt::Long" */>}}) to handle command line parameters.
 
 ```perl
 #!/usr/bin/env perl
@@ -192,42 +166,45 @@ my %options = ();
 
 GetOptions(
 	"action|c=s" => \$options{'action'},
-	"file|f=s" => \$options{'file'},
-	"help|h" => \$options{'help'} 
+	"file|f=s"   => \$options{'file'},
+	"help|h"     => \$options{'help'}
 	);
 
-sub print_usage() { 
+sub print_usage() {
 	print "List all files :\n\t$0 -c list\n";
 	print "Upload file :\n\t$0 -c upload -f file.txt\n";
 	print "Print file :\n\t$0 -c view -f file.txt\n\n";
 }
 
-# ls / on remote ftp 
-sub list() {
-	my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0) or die "Cannot connect to $HOST: $@";
+sub get_ftp() {
+	my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0)
+		or die "Cannot connect to $HOST: $@";
 	$ftp->login() or die "Cannot login ", $ftp->message;
+}
+
+# ls / on remote ftp
+sub list() {
+	my $ftp = get_ftp();
 	foreach my $f ($ftp->ls()) { print "$f\n"; }
 	$ftp->quit;
 }
 
 # Upload a file
-sub upload($) { 
+sub upload($) {
 	my $file = shift;
-
 	(-e $file) or return 1;
 
-	my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0) or die "Cannot connect to $HOST: $@";
+	my $ftp = get_ftp();
 	$ftp->login() or die "Cannot login ", $ftp->message;
 	$ftp->put("$file") or die "Cannot put $file ", $ftp->message;
 	$ftp->quit;
-} 
+}
 
 # Read a file
-sub view($) { 
+sub view($) {
 	my $file = shift;
 
-	my $ftp = Net::FTP->new($HOST, Port => $PORT, Debug => 0) or die "Cannot connect to $HOST: $@";
-	$ftp->login() or die "Cannot login ", $ftp->message;
+	my $ftp = get_ftp();
 	$ftp->get("$file") or die "Cannot read $file ", $ftp->message;
         if(-e $file) { print read_file($file); }
 	$ftp->quit;
@@ -235,30 +212,16 @@ sub view($) {
 
 if($options{'action'} eq 'list') {
 	list();
-} elsif($options{'action'} eq 'upload') { 
+} elsif($options{'action'} eq 'upload') {
 	upload($options{'file'});
-} elsif($options{'action'} eq 'view') { 
+} elsif($options{'action'} eq 'view') {
 	view($options{'file'});
 } else {
 	print_usage();
 }
 ```
 
-In addition to the previous code snippets for listing and uploading, here I added a way to **view** a file (the code actually download the file to print it) so after listing we can use the **view** to look the content of each file.
-
-Furthermore, I used `Getopt::Long` to handle command line parameters.
-
 ## More about design and security
 
-This thin wrapper can be extended to do more task like checking allowed/disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file... But remember it's still only on the client side ! 
-
-Then if you want real garantees you would better have to implement some kind of protections on server side. 
-
-It means authenticated connections with virtual users or something else. Eventually homedirs created and chroot per user accessing the ftp server.
-
-And as an extra security activate TLS or use another SFTP implementation (there are multiple). 
-
-Anyway the goal was not to discuss security here but to play with [Net::FTP](https://metacpan.org/pod/Net::FTP) !  
-
-And I hope you had a pleasant tour with me and Net::FTP :D
+This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{</* mcpan "Net::FTP" */>}})!
 
