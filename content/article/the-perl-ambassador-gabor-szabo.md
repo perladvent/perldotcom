@@ -9,7 +9,7 @@
       "code-maven",
       "interview"
    ],
-   "image" : "",
+   "image" : "/images/the-perl-ambassador-gabor-szabo/gabor_szabo.jog",
    "draft" : false,
    "categories" : "community",
    "thumbnail" : "",
