@@ -11,15 +11,13 @@
     "categories"  : "development"
   }
 
-When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you Artifactory and S3), but the answer is often right in front of your eyes: **FTP**!
+When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you Artifactory and S3), but the answer is often right in front of your eyes: FTP!
 
-The **"File Transfer Protocol"** provides a very simple and convenient way to share files. It's battle-tested, requires almost no maintenance, and has a simple anonymous access mechanism.
-
-It can be integrated with several standard auth methods and even some virtual ones, none of which I show here.
+The "File Transfer Protocol" provides a very simple and convenient way to share files. It's battle-tested, requires almost no maintenance, and has a simple anonymous access mechanism. It can be integrated with several standard auth methods and even some virtual ones, none of which I show here.
 
 ![](/images/a-tour-with-net-ftp/battlereadymeow.jpeg)
 
-In this article, I'll install a local **FTP server** and create a simple **FTP client in Perl**.
+In this article, I'll install a local FTP server and create a simple FTP client in Perl.
 
 ## A bit of context
 
@@ -291,7 +289,5 @@ if($options{'action'} eq 'list') {
 
 ## More about design and security
 
-This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file.
-
-Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{</* mcpan "Net::FTP" */>}})!
+This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{</* mcpan "Net::FTP" */>}})!
 
