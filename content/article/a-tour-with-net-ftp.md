@@ -11,13 +11,81 @@
     "categories"  : "development"
   }
 
-When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you, S3), but the answer is often right in front of your eyes: FTP!
+When we want to have a way to exchange files between machines, we often think about rsync, scp, git or even something slow and complex (looking at you Artifactory and S3), but the answer is often right in front of your eyes: **FTP**!
 
-The "File Transfer Protocol" provides a very simple and convenient way to share files. It's battle-tested, requires almost no maintenance, and has a simple anonymous access mechanism. It can be integrated with several standard auth methods and even some virtual ones, none of which I show here.
+The **"File Transfer Protocol"** provides a very simple and convenient way to share files. It's battle-tested, requires almost no maintenance, and has a simple anonymous access mechanism.
+
+It can be integrated with several standard auth methods and even some virtual ones, none of which I show here.
 
 ![](/images/a-tour-with-net-ftp/battlereadymeow.jpeg)
 
-In this article, I'll install a local FTP server and create a simple FTP client in Perl.
+In this article, I'll install a local **FTP server** and create a simple **FTP client in Perl**.
+
+## A bit of context
+
+### Developers develop
+I initially came to this development because I needed to backup **configuration files**.
+
+At `$work` I have to carry on an army of developers that need to compile their code.
+
+As a very first step they can build locally on their laptop : in the past it was in a **specially prepared GNU/Linux environment with synchronization** of some heavy deps, now it's more inside **docker images** that mimics a build server.
+
+It's for development, but when it comes to share their code with others, they request a merge and we have some **classic pipelines checks** (warnings, coverage etc...) and **build** against production level on some *"official"* build systems.
+
+### Customized automation workspaces
+In between *local* and *official* buid, we had something else, with a mix of all these notions.
+
+It is an **user customized build system** based on automation framework and build servers.
+
+The user can use semi official **build systems** with a build flow close to *"official"* one but with more customization possibilities.
+
+From a developer point of view, the design is :
+1. The developer writes a **configuration file** to list modules and versions to use, eventually overriding flags and various options
+2. The developer gives the **configuration file** to a script that connects to automation server and creates the project and jobs thanks to API calls and using templates (that we prepared)
+3. The user then can build his project with a **"push button"** approach. He has **history**, **status**, **logs** and can **deliver** for test systems loads.
+
+The **job templates** are centralized to easy maintenance and evolution but the configurations files were totally **"out of control"** (no backup and no generation possible from the workspaces).
+
+A big new kind of support then appeared and occupied us a lot, it consisted in 2 things :
+1. Help users to write their "configuration files" : explaining/linking the spec documentation
+2. Debug job failures
+
+We have 2 types of developers concerning (1) : the ones that ask before trying (bad) and the ones that ask after trying and because they failed (better).
+
+To help them, the key is almost always the "config file" that we needed to **check**, **replay**, **edit** and **give back** to user.
+
+### Use case
+Here comes into play the file transfer use case :)
+
+I got the idea to transfer the config files to a centralized repository so that we keep a trace of what config file corresponds to what workspace.
+
+It was a good idea that solves a lot of problems like :
+- When I browse workspaces, I can **check the configuration file** that produced it
+- If a user has trouble to create his workspace, I can **test his config file** without asking him the file
+- The repository that contains configuration files is **public** and this collection of samples **helps users** when they want to create their config (reuse of compare existing configs)
+
+In term of constraints, the origin of the transfer could be a variable place (either a dev server or a laptop) with variable user (project user or personal user) transfered to a centralized place that we can then periodically backup.
+
+We were not interested in keeping the file ownership, even the contrary as it is more an annoyance than something else. And... `ftp` is also a solution for this need.
+
+### Let's do it
+Instead of only doing bulk backup of config files, I took the opportunity to design a more smart tool with various operations like create/update/delete workspaces :
+- **CREATION** : creates a remote ftp directory named from the workspace `NAME` (unique name), save `CONFIG` inside (the config file), save `$USER` in a `AUTHOR` file and add a comment in a `CHANGELOG`
+- **UPDATE** : updates `CONFIG` file, and add a comment in `CHANGELOG`
+- **DELETE** : adds a comment in `CHANGELOG` and remove all other files
+
+On server side, I put all these in git repository then croned an autocommit every 5 minutes using [git-credential-cache](https://git-scm.com/docs/git-credential-cache) to manage credentials.
+
+The `git` repository is perfect to publish our collection of config files and easily follow config changes. And of course, if there is no change, nothing is commited.
+
+To finish about this long story, I added a small cron to check that `ftpd` is alive and restart it if needed and we are all good.
+
+This setup was installed maybe 8 years ago, and we had **ZERO** maintenance since then...
+
+I MEAN REALLY ZERO MAINTENANCE !
+
+![](/images/a-tour-with-net-ftp/toolowmaintenance.jpg)
+
 
 ## Download and install ftpd
 
@@ -223,5 +291,7 @@ if($options{'action'} eq 'list') {
 
 ## More about design and security
 
-This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{</* mcpan "Net::FTP" */>}})!
+This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file.
+
+Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{</* mcpan "Net::FTP" */>}})!
 
