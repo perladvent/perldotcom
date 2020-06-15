@@ -1,23 +1,24 @@
 {
-   "date" : "2020-05-29T00:00:00",
-   "description" : "The person behind the news of Perl",
    "authors" : [
       "mohammad-anwar"
    ],
+   "draft" : false,
+   "categories" : "community",
+   "title" : "The Perl Ambassador: Gabor Szabo",
+   "thumbnail" : "/images/the-perl-ambassador-gabor-szabo/thumb_gabor_szabo.jpg",
    "tags" : [
       "perl-maven",
       "code-maven",
+      "perl-weekly",
       "interview"
    ],
-   "image" : "/images/the-perl-ambassador-gabor-szabo/gabor_szabo.jog",
-   "draft" : false,
-   "categories" : "community",
-   "thumbnail" : "",
-   "title" : "The Perl Ambassador: Gabor Szabo"
+   "image" : "/images/the-perl-ambassador-gabor-szabo/gabor_szabo.jpg",
+   "description" : "The person behind the news of Perl",
+   "date" : "2020-06-15T07:30:00"
 }
 
 This is the launch interview of a monthly series of interviews I'll
-publish on `perl.com`. I can promise you, fun and entertaining
+publish on perl.com. I can promise you, fun and entertaining
 interviews every month. So please watch this space. If you'd like me
 to interview you, or know someone you'd like me to interview, let me
 know. Take the same set of questions and send me your answers!
@@ -73,18 +74,20 @@ was running on some Unix system.
 #### Which Perl modules are you constantly using? How do they make your life easier?
 
 I hardly have any Perl-related work these days so I can't really say,
-but when I need a script here and there I often use `Capture::Tiny` and
+but when I need a script here and there I often use [Capture::Tiny]({{< mcpan "Capture::Tiny" >}}) and
 keep re-creating it (partially and badly) in other languages. I love
-testing so anything that starts with Test::* is usually interesting
+testing so anything that starts with `Test::` is usually interesting
 to me.
 
 I also run the [Perl Maven](https://perlmaven.com/) and
 [Code Maven](https://code-maven.com/) sites on a Dancer-based
 application I wrote ages ago. The source is
 [open](https://github.com/szabgab/Perl-Maven) though probably not
-very useful to anyone besides me. So I use `Dancer2`,
-`Template Toolkit`, `DateTime`, and `DateTime::Tiny` just to name a
-few. Oh and of course I love `Perl::Critic` and `Devel::Cover`.
+very useful to anyone besides me. So I use [Dancer2]({{< mcpan "Dancer2" >}}),
+[Template Toolkit]({{< mcpan "Template" >}}), [DateTime]({{< mcpan DateTime >}}),
+and [DateTime::Tiny]({{< mcpan "DateTime::Tiny" >}}) just to name a
+few. Oh and of course I love [Perl::Critic]({{< mcpan "Perl::Critic" >}}) and
+[Devel::Cover]({{< mcpan "Devel::Cover" >}}).
 
 \
 \
@@ -97,7 +100,7 @@ a string if there is nothing to interpolate in it. So "perl" is bad,
 'perl' is good. I need to relax this.
 
 I think I hardly ever used the fun features of Perl. I almost never
-use the `do\_this and do\_that` construct except for the `open or die`.
+use the `do_this and do_that` construct except for the `open or die`.
 I hardly use `$_` and I think never use it explicitly. Maybe I was never
 a real Perl programmer :)
 
