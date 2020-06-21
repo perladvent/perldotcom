@@ -5,7 +5,7 @@
    "draft" : false,
    "title" : "What's new on CPAN - May 2020",
    "description" : "A curated look at May's new CPAN uploads",
-   "date" : "2020-06-2208T13:40:05",
+   "date" : "2020-06-20T13:40:05",
    "categories" : "cpan",
    "tags" : ["libfido2", "mapzen","nauty","mojolicious","dancer2","catalyst","nauty","karabiner-elements","digi-id","platypus","json-schema"],
    "image" : "/images/176/2A6DE1D0-0ACE-11E5-A57F-EAC87F6D3C83.png",
