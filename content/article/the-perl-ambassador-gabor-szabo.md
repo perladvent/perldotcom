@@ -95,7 +95,7 @@ few. Oh and of course I love [Perl::Critic]({{< mcpan "Perl::Critic" >}}) and
 #### Which Perl feature do you overuse?
 
 I am not sure if any. Well, maybe except of `Perl::Critic`. I just
-noticed that I configured it that it won't allow single-quotes around
+noticed that I configured it that it won't allow double-quotes around
 a string if there is nothing to interpolate in it. So "perl" is bad,
 'perl' is good. I need to relax this.
 
