@@ -120,7 +120,7 @@ Not much. Some things will be disabled by default, but again, this is essentiall
 * indirect object notation
 * bareword filehandles (except maybe the standard filehandles)
 * fake multidimensional arrays and hashes (old Perl 4 trick)
-* Perl 4-style prototype definitions (use `:prototype()` instead)
+* Old-style prototype definitions (use `:prototype()` instead)
 
 ## What's appearing?
 
