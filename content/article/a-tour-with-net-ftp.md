@@ -21,68 +21,27 @@ In this article, I'll install a local FTP server and create a simple FTP client 
 
 ## A bit of context
 
-### Developers develop
-I initially came to this development because I needed to backup **configuration files**.
+At `$work` I have to carry on an army of developers that create customized build pipelines from handcrafted local configuration files.
 
-At `$work` I have to carry on an army of developers that need to compile their code.
+This file is not hosted "by design" like you would have with travis ci or a github action but it is used to feed an "heavy client" that parses, resolves templates and creates a workspace in some centralized automations servers through HTTP API calls (hello Jenkins, I hate you).
 
-As a very first step they can build locally on their laptop : in the past it was in a **specially prepared GNU/Linux environment with synchronization** of some heavy deps, now it's more inside **docker images** that mimics a build server.
+It proved to a lot of support to help developers to create this file according to the spec (yet another file format...), and we were blind later when we wanted to help them with failing workspace creation/build (no way to retrieve configuration from workspace).
 
-It's for development, but when it comes to share their code with others, they request a merge and we have some **classic pipelines checks** (warnings, coverage etc...) and **build** against production level on some *"official"* build systems.
+I got the idea to backup and centralize automatically the configuration file during the creation of the build pipeline workspace.
 
-### Customized automation workspaces
-In between *local* and *official* buid, we had something else, with a mix of all these notions.
+It was intended to help both developers (configuration "samples") and support team (see history, versioned then we can check diffs, file to replay).
 
-It is an **user customized build system** based on automation framework and build servers.
+The constraints were to be able to exchange file from various places with variable users. 
 
-The user can use semi official **build systems** with a build flow close to *"official"* one but with more customization possibilities.
+The FTP protocol is a perfect fit for that.
 
-From a developer point of view, the design is :
-1. The developer writes a **configuration file** to list modules and versions to use, eventually overriding flags and various options
-2. The developer gives the **configuration file** to a script that connects to automation server and creates the project and jobs thanks to API calls and using templates (that we prepared)
-3. The user then can build his project with a **"push button"** approach. He has **history**, **status**, **logs** and can **deliver** for test systems loads.
+I added also behind a croned job to autocommit and push to a git repository and we had magically a website listing versioned configurations files.
 
-The **job templates** are centralized to easy maintenance and evolution but the configurations files were totally **"out of control"** (no backup and no generation possible from the workspaces).
-
-A big new kind of support then appeared and occupied us a lot, it consisted in 2 things :
-1. Help users to write their "configuration files" : explaining/linking the spec documentation
-2. Debug job failures
-
-We have 2 types of developers concerning (1) : the ones that ask before trying (bad) and the ones that ask after trying and because they failed (better).
-
-To help them, the key is almost always the "config file" that we needed to **check**, **replay**, **edit** and **give back** to user.
-
-### Use case
-Here comes into play the file transfer use case :)
-
-I got the idea to transfer the config files to a centralized repository so that we keep a trace of what config file corresponds to what workspace.
-
-It was a good idea that solves a lot of problems like :
-- When I browse workspaces, I can **check the configuration file** that produced it
-- If a user has trouble to create his workspace, I can **test his config file** without asking him the file
-- The repository that contains configuration files is **public** and this collection of samples **helps users** when they want to create their config (reuse of compare existing configs)
-
-In term of constraints, the origin of the transfer could be a variable place (either a dev server or a laptop) with variable user (project user or personal user) transfered to a centralized place that we can then periodically backup.
-
-We were not interested in keeping the file ownership, even the contrary as it is more an annoyance than something else. And... `ftp` is also a solution for this need.
-
-### Let's do it
-Instead of only doing bulk backup of config files, I took the opportunity to design a more smart tool with various operations like create/update/delete workspaces :
-- **CREATION** : creates a remote ftp directory named from the workspace `NAME` (unique name), save `CONFIG` inside (the config file), save `$USER` in a `AUTHOR` file and add a comment in a `CHANGELOG`
-- **UPDATE** : updates `CONFIG` file, and add a comment in `CHANGELOG`
-- **DELETE** : adds a comment in `CHANGELOG` and remove all other files
-
-On server side, I put all these in git repository then croned an autocommit every 5 minutes using [git-credential-cache](https://git-scm.com/docs/git-credential-cache) to manage credentials.
-
-The `git` repository is perfect to publish our collection of config files and easily follow config changes. And of course, if there is no change, nothing is commited.
-
-To finish about this long story, I added a small cron to check that `ftpd` is alive and restart it if needed and we are all good.
-
-This setup was installed maybe 8 years ago, and we had **ZERO** maintenance since then...
-
-I MEAN REALLY ZERO MAINTENANCE !
+In addition, FTP proved later to also require ZERO support.
 
 ![](/images/a-tour-with-net-ftp/toolowmaintenance.jpg)
+
+I mean really ZERO maintenance ! :D
 
 
 ## Download and install ftpd
