@@ -23,7 +23,7 @@ In this article, I'll install a local FTP server and create a simple FTP client 
 
 At `$work` I have to carry on an army of developers that create customized build pipelines from handcrafted local configuration files.
 
-This file is not hosted "by design" like you would have with travis ci or a github action but it is used to feed an "heavy client" that parses, resolves templates and creates a workspace in some centralized automations servers through HTTP API calls (hello Jenkins, I hate you).
+This file is not hosted "by design" like you would have with travis ci or a github action but it is used to feed an "heavy client" that parses, resolves templates and creates a workspace in some centralized automations servers through HTTP API calls.
 
 It proved to a lot of support to help developers to create this file according to the spec (yet another file format...), and we were blind later when we wanted to help them with failing workspace creation/build (no way to retrieve configuration from workspace).
 
