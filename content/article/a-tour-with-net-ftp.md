@@ -23,26 +23,17 @@ In this article, I'll install a local FTP server and create a simple FTP client 
 
 At `$work` I have to carry on an army of developers that create customized build pipelines from handcrafted local configuration files.
 
-This file is not hosted "by design" like you would have with travis ci or a github action but it is used to feed an "heavy client" that parses, resolves templates and creates a workspace in some centralized automations servers through HTTP API calls.
+This file is not hosted "by design" like you would have with Travis CI or a GitHub Action, but it is used to feed a "heavy client" that parses, resolves templates, and creates a workspace in some centralized automations servers through HTTP API calls.
 
-It proved to a lot of support to help developers to create this file according to the spec (yet another file format...), and we were blind later when we wanted to help them with failing workspace creation/build (no way to retrieve configuration from workspace).
+It was a lot of support to help developers to create this file according to the spec (yet another file format), and we were blind when we wanted to help them with failing workspace creation/build (no way to retrieve configuration from workspace).
 
-I got the idea to backup and centralize automatically the configuration file during the creation of the build pipeline workspace.
+I got the idea to backup and centralize automatically the configuration file during the creation of the build pipeline workspace. It was intended to help both developers (configuration "samples") and support team (see history, versioned then we can check diffs, file to replay). The constraints were to be able to exchange file from various places with variable users. The FTP protocol is a perfect fit for that.
 
-It was intended to help both developers (configuration "samples") and support team (see history, versioned then we can check diffs, file to replay).
+I added also a cronjob to autocommit and push to a git repository and we had magically a website listing versioned configurations files.
 
-The constraints were to be able to exchange file from various places with variable users. 
-
-The FTP protocol is a perfect fit for that.
-
-I added also behind a croned job to autocommit and push to a git repository and we had magically a website listing versioned configurations files.
-
-In addition, FTP proved later to also require ZERO support.
+In addition, FTP proved later to also require zero support. I mean really zero maintenance!
 
 ![](/images/a-tour-with-net-ftp/toolowmaintenance.jpg)
-
-I mean really ZERO maintenance ! :D
-
 
 ## Download and install ftpd
 
@@ -56,7 +47,7 @@ $ tar xvzf pure-ftpd-1.0.49.tar.gz
 $ cd pure-ftpd-1.0.49/
 ```
 
-I'll configure `ftpd` so I can execute it as casual (non-root) user using a non-restricted port, and I'll set the destination directory to my `$HOME/ftpd` :
+I configure `ftpd` so I can execute it as casual (non-root) user using a non-restricted port, and I'll set the destination directory to my `$HOME/ftpd` :
 
 ```bash
 $ ./configure --prefix=$HOME/ftpd --with-nonroot && make && make install
@@ -85,7 +76,7 @@ At this point I should have a running ftp server. Let's check!
 
 ## Test with ftp
 
-First, I'll test with the preinstalled `ftp` client. If everything is fine I'll see the typical FTP exchange:
+First, I test with the preinstalled `ftp` client. If everything is fine I see the typical FTP exchange:
 
 
 ```bash
@@ -142,7 +133,7 @@ $ftp->quit;
 
 ### Upload
 
-What next  Maybe upload something? Again, it's super simple. Instead of listing files, I'm `put`ting them:
+What next?  Maybe upload something? Again, it's super simple. Instead of listing files, I'm `put`ting them:
 
 ```perl
 #!/usr/bin/env perl
@@ -172,7 +163,7 @@ $ perl upload.pl file1.txt file2.txt`.
 
 ## Put things together
 
-I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. [Getopt::Long]({{</* mcpan "Getopt::Long" */>}}) to handle command line parameters.
+I propose a more complete client with some command-line parsing and more actions. In addition to the previous code for listing and uploading, here I added a way to view a file. [Getopt::Long](https://metacpan.org/pod/Getopt::Long) to handle command line parameters.
 
 ```perl
 #!/usr/bin/env perl
@@ -248,5 +239,5 @@ if($options{'action'} eq 'list') {
 
 ## More about design and security
 
-This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP]({{</* mcpan "Net::FTP" */>}})!
+This thin wrapper can be extended to do more tasks, such as checking allowed or disallowed name patterns or tidying files depending the uploader or the prefix in the name of the file. Remember, this is only on the client side! If you want real garantees you would better have to implement some kind of protections on the server side too. But, the goal was not to discuss security here but to play with FTP! And I hope you had a pleasant tour with me and [Net::FTP](https://metacpan.org/pod/Net::FTP)!
 
