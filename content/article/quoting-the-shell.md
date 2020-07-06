@@ -170,6 +170,26 @@ foreach my $file ( @ARGV ) {
 
 How much work was this to get right? Hardly any. It's annoying to do this little bit more, but it's much less painful than a bunch of support tickets or angry mobs at your desk.
 
+If I didn't need the output, I could have used `system` (or `exec`) in  list forms. In that case, the `system` completely bypasses the shell:
+
+```perl
+foreach my $file ( @ARGV ) {
+	system 'tag', $file;
+	}
+```
+
+Be careful with an array, though! An array of one element is not the list form! There's a slightly weird syntax to get around this. But the first array element in braces followed by the array. I explain this more in the "Secure Programming Techniques" chapter of [Mastering Perl](https://www.masteringperl.org), but the [exec docs](https://perldoc.perl.org/functions/exec.html) explain it too:
+
+```perl
+my @array = ( "tag $file" );
+system @array;  # not list form!
+
+my @array = ( 'tag', $file );
+system @array;  # now it's the list form!
+
+system { $array[0] } @array
+```
+
 Remember, it doesn't matter as much how rare the edge case is; it matters how damaging it is. Some things I can't control, but this situation is not one of those things. A couple minutes here saves lots of time and money later.
 
 Using modules
