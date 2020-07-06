@@ -17,7 +17,7 @@ Fun with perl shebang.
 
 ## perl is a nice guy
 
-When we execute a file without explicitely giving an interpreter (for instance like `./myscript.pl`), it is the job of the shebang to give to the shell the hint of which interpren the case an interpreter is already given on the command line, it is the one that will be used. 
+When we execute a file without explicitely giving an interpreter (for instance like `./myscript.pl`), it is the job of the shebang to give to the shell/OS the hint of which interpreter to use to run the file. In the case an interpreter is already given on the command line, it is the one that will be used. 
 
 For instance `Rscript script.R` will execute `script.R` with `Rscript` interpreter.
 
@@ -205,13 +205,13 @@ eval 'exec /usr/bin/perl -S $0 ${1+"$@"} if 0;'
 
 And this code just does nothing (`eval ... if 0;`) and just get ignored and the rest of the file is interpreted normally.
 
-### Script started by a shell that recognizes shebangs
+### Script started by a shell/OS that recognizes shebangs
 
-The shell recognizes the shebang and does the handover to `perl` that start reading the first line (shebang then `eval ...`)
+The shell/OS recognizes the shebang and does the handover to `perl` that start reading the first line (shebang then `eval ...`)
 
 The execution flow is then the same than above (magic incantation does nothing and file is interpreted).
 
-### Script started by a shell that does NOT recognize shebang
+### Script started by a shell/OS that does NOT recognize shebang
 
 This is actually where this magic is useful.
 
