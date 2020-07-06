@@ -5,7 +5,7 @@
   "tags"        : ["shebang"],
   "draft"       : true,
   "image"       : "",
-  "thumbnail"   : "/images/bang-bang/santam16.jpeg",
+  "thumbnail"   : "/images/bang-bang/santam16.jpg",
   "description" : "Fun with perl shebang",
   "categories"  : "development"
 }
@@ -281,7 +281,7 @@ but I was able to retrieve and print `DATA` section with `<DATA>` (it is cool ri
 
 ### perl -x-ception
 
-If you are greedy and want to do some **"perl -x-ception"** then you will get an error (all good things come to an end).
+If you are greedy and want to do some **"perl -x-ception"** then you will get an error.
 
 For instance with this file called `minusx.pl` :
 
@@ -299,6 +299,30 @@ Will produce an error :
 ```bash
 Can't emulate -x on #! line.
 ```
+
+All good things come to an end... :D
+
+But wait, maybe we have a chance if we combine with "magic incantation trick" we can do the **"perl -x-ception"** : 
+
+```perl
+#!/bin/sh
+eval 'if [ -x /opt/myperl/bin/perl ]; then exec /opt/myperl/bin/perl -x -- $0 ${1+"$@"}; else exec /usr/bin/perl -x $0 ${1+"$@"}; fi;'
+  if 0;
+
+#!/usr/bin/perl
+
+print "$]\n";
+```
+
+This cool trick will execute my code with my own perl binary or fallback to vendor perl.
+
+*Why does it work this time whereas it failed in the first attempt ?*
+
+Because the `perl -x` is now executed in a shell process and not interpreted by perl binary like previously.
+
+This is mad.
+
+![](/images/bang-bang/mad.jpg)
 
 ## startperl
 
