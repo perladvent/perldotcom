@@ -11,6 +11,8 @@
     "categories"  : "perl-internals"
   }
 
+[**Update**: this is now [an issue for Perl 7](https://github.com/Perl/perl5/issues/17921)]
+
 If you've been programming Perl for a while, you've probably run into this exception: `Foo.pm did not return a true value`. This is a peculiar quirk of the `require` function: modules *must* return a true value else Perl interprets it as a failure:
 
 > The file must return true as the last statement to indicate
