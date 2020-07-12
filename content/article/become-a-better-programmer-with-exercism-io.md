@@ -54,9 +54,9 @@ He answers 'Whatever.' to anything else.
 
 ## Instructions
 
-Run the test file, and fix each of the errors in turn. When you get the first test to pass, go to the first pending or skipped test, and make that pass as well. When all of the tests are passing, feel free to submit. 
+Run the test file, and fix each of the errors in turn. When you get the first test to pass, go to the first pending or skipped test, and make that pass as well. When all of the tests are passing, feel free to submit.
 
-Remember that passing code is just the first step. The goal is to work towards a solution that is as readable and expressive as you can make it. 
+Remember that passing code is just the first step. The goal is to work towards a solution that is as readable and expressive as you can make it.
 
 Please make your solution as general as possible. Good code doesn't just pass the test suite, it works with any input that fits the specification.
 
@@ -102,7 +102,7 @@ This is a shell of the solution. Our "hey" subroutine returns the first input it
 
 ```perl
 $ prove bob.t
-bob.t .. 1/22 
+bob.t .. 1/22
 #   Failed test 'stating something: Tom-ay-to, tom-aaaah-to.'
 #   at bob.t line 52.
 #          got: 'Tom-ay-to, tom-aaaah-to.'
@@ -112,7 +112,7 @@ bob.t .. 1/22
 
 # Looks like you failed 19 tests of 22.
 bob.t .. Dubious, test returned 19 (wstat 4864, 0x1300)
-Failed 19/22 subtests 
+Failed 19/22 subtests
 
 Test Summary Report
 -------------------

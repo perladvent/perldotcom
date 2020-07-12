@@ -56,7 +56,7 @@ use HTTP::BrowserDetect;
 sub new {
     my ( $class, $log_line ) = @_;
     die "Error: no log string was passed to new" unless $log_line;
-    my $self = Nginx::ParseLog::parse($log_line); 
+    my $self = Nginx::ParseLog::parse($log_line);
     $self->{detector} = HTTP::BrowserDetect->new( $self->{user_agent} );
     return bless $self, $class;
 }
@@ -65,11 +65,11 @@ sub get_ip {
     my $self = shift;
     return $self->{ip};
 }
-    
+
 sub get_timezone {
     my $self = shift;
     return substr( $self->{time}, -5 );
-}   
+}
 
 sub was_robot {
     my $self = shift;
@@ -102,17 +102,17 @@ func new ($class, $log_line) {
     my $self = Nginx::ParseLog::parse($log_line);
     $self->{detector} = HTTP::BrowserDetect->new( $self->{user_agent} );
     return bless $self, $class;
-}   
+}
 
 method get_ip {
     return $self->{ip};
-}   
-    
+}
+
 method get_timezone {
     return substr( $self->{time}, -5 );
 }
-    
-method was_robot { 
+
+method was_robot {
     return $self->{detector}->robot;
 }
 
@@ -122,7 +122,7 @@ method get_status {
 
 method get_request {
     return $self->{request};
-}   
+}
 
 1;
 ```
@@ -159,7 +159,7 @@ cmpthese (100, {
                                 $entry->get_status;
                                 $entry->get_request;
                              }
-                       },      
+                       },
 });
 ```
 

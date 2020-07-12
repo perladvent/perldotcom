@@ -49,7 +49,7 @@ I wrote [Nginx::FastCGI::Cache]({{<mcpan "Nginx::FastCGI::Cache" >}}) to make it
 
 ```perl
 use Nginx::FastCGI::Cache;
- 
+
 my $nginx_cache = Nginx::FastCGI::Cache->new({ location => '/var/cache/nginx' });
 $nginx_cache->purge_file("http://perltricks.com/");
 ```

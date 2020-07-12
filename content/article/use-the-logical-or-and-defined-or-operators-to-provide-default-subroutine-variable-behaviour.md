@@ -31,7 +31,7 @@ sub process_quote_data {
     my $args = shift;
     my $dob = $args->{dob} || return 0;
     my $sex = $args->{sex} || return 0;
-    my $years_driving = 
+    my $years_driving =
         defined($args->{years_driving}) ? $args->{years_driving} : return 0;
 
     # do stuff

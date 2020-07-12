@@ -26,7 +26,7 @@ In the terminal I can use the here-doc syntax to write an entire Perl script at 
 What's happening here? The syntax `perl -` primes Perl to execute STDIN. The syntax for a shell here-doc is `<<'word'` where "word" is the value to terminate the here-doc with (I tend to use `EOF` or `END`). After typing the first line and pressing enter, the shell caret will move to a new line, prefixed with `> `. It would look like this:
 
     $ perl - <<'EOF'
-    > 
+    >
 
 At this point, you can type the lines of the Perl script, pressing enter for a new line. Or you can paste in code from an existing script. Once you type the terminating word on a new line, the terminal sends the script to `perl` via STDIN. Unlike with one-liners, you're free to use both single and double quotes in the program text. Yay!
 
